@@ -1,0 +1,31 @@
+# Claude Code local memory
+.claude/
+
+# Secrets — never commit
+.env
+frontend/.env.local
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+scraper/.venv/
+*.log
+
+# Node / Next.js
+frontend/node_modules/
+frontend/.next/
+frontend/tsconfig.tsbuildinfo
+frontend/.vercel/
+
+# macOS
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
+
+# Workbox / PWA build artifacts (generated at build time)
+frontend/public/swe-worker-*.js
+frontend/public/workbox-*.js
+frontend/public/fallback-*.js

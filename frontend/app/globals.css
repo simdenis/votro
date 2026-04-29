@@ -1,0 +1,54 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Theme variables ──────────────────────────────────────── */
+:root {
+  --bg:      #0d0d14;
+  --surface: #14141e;
+  --raised:  #1e1e2c;
+  --rim:     #252535;
+  --text:    #e0e0ed;
+  --muted:   #7070a0;
+  --faint:   #3a3a55;
+  --shimmer-base: #1a1a26;
+  --shimmer-peak: #21212f;
+}
+
+.light {
+  --bg:      #f6f6f4;
+  --surface: #ffffff;
+  --raised:  #ededeb;
+  --rim:     #dededd;
+  --text:    #18181b;
+  --muted:   #606070;
+  --faint:   #909099;
+  --shimmer-base: #e8e8e6;
+  --shimmer-peak: #dfdfdd;
+}
+
+@layer base {
+  * { box-sizing: border-box; }
+  body {
+    background-color: var(--bg);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+  }
+  td, th { font-variant-numeric: tabular-nums; }
+}
+
+@keyframes shimmer {
+  from { background-position: -200% center; }
+  to   { background-position:  200% center; }
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--shimmer-base) 25%,
+    var(--shimmer-peak) 50%,
+    var(--shimmer-base) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
