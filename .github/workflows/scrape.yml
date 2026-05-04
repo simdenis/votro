@@ -1,0 +1,55 @@
+name: Scrape votes
+
+on:
+  schedule:
+    # 06:00 UTC = 08:00 or 09:00 Romanian time — picks up yesterday's votes
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+    inputs:
+      date:
+        description: "Single date to scrape (YYYY-MM-DD). Leave blank for yesterday."
+        required: false
+      chamber:
+        description: "Which chamber: both | camera | senat"
+        required: false
+        default: "both"
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: scraper/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r scraper/requirements.txt
+
+      - name: Set date
+        id: date
+        run: |
+          if [ -n "${{ github.event.inputs.date }}" ]; then
+            echo "target=${{ github.event.inputs.date }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "target=$(date -u -d 'yesterday' '+%Y-%m-%d')" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Scrape Camera Deputaților
+        if: ${{ github.event.inputs.chamber != 'senat' }}
+        run: |
+          python scraper/camera_scraper.py --date "${{ steps.date.outputs.target }}"
+
+      - name: Scrape Senat
+        if: ${{ github.event.inputs.chamber != 'camera' }}
+        run: |
+          python scraper/senat_scraper.py --date "${{ steps.date.outputs.target }}"
