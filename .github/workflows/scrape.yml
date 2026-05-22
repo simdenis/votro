@@ -46,7 +46,9 @@ jobs:
           fi
 
       - name: Scrape Camera Deputaților
+        id: camera
         if: ${{ github.event.inputs.chamber != 'senat' }}
+        continue-on-error: true
         run: |
           python scraper/camera_scraper.py --date "${{ steps.date.outputs.target }}"
 
@@ -54,3 +56,9 @@ jobs:
         if: ${{ github.event.inputs.chamber != 'camera' }}
         run: |
           python scraper/senat_scraper.py --date "${{ steps.date.outputs.target }}"
+
+      - name: Fail if Camera errored
+        if: ${{ steps.camera.outcome == 'failure' }}
+        run: |
+          echo "Camera Deputaților scrape failed — cdep.ro may be unreachable from this runner"
+          exit 1
