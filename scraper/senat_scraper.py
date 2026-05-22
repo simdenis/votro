@@ -238,12 +238,12 @@ class SenatScraper:
 
         return r.text
 
-    def get_app_ids_for_date(self, target: datetime.date) -> list[str]:
-        """Return all AppID UUIDs for votes on `target`."""
+    def get_app_ids_for_date(self, target: datetime.date) -> Optional[list[str]]:
+        """Return all AppID UUIDs for votes on `target`, or None on network failure."""
         html = self._get_votes_html_for_date(target)
-        if not html:
-            log.warning("No index HTML for %s", target)
-            return []
+        if html is None:
+            log.error("senat.ro unreachable for %s — network failure", target)
+            return None
 
         soup = BeautifulSoup(html, "lxml")
         app_ids: list[str] = []
@@ -806,6 +806,9 @@ class SenatScraper:
     def scrape_date(self, target: datetime.date) -> None:
         log.info("=== Scraping date: %s ===", target)
         app_ids = self.get_app_ids_for_date(target)
+        if app_ids is None:
+            self._stats["errors"] += 1
+            return
         if not app_ids:
             log.info("No votes found on %s", target)
             return
@@ -974,10 +977,14 @@ def main() -> None:
     elif args.date:
         scraper.scrape_date(datetime.date.fromisoformat(args.date))
         scraper.print_summary()
+        if scraper._stats["errors"] > 0:
+            sys.exit(1)
     else:
         start = datetime.date.fromisoformat(args.start)
         end = datetime.date.fromisoformat(args.end)
         scraper.scrape_range(start, end)
+        if scraper._stats["errors"] > 0:
+            sys.exit(1)
 
 
 if __name__ == "__main__":

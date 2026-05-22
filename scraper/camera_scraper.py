@@ -267,12 +267,12 @@ class CameraScraper:
 
     # ── list page: get idv IDs for a date ─────────────────────
 
-    def get_idv_list(self, target: datetime.date) -> list[int]:
-        """Return all cdep_vote_id integers for votes on `target`."""
+    def get_idv_list(self, target: datetime.date) -> Optional[list[int]]:
+        """Return all cdep_vote_id integers for votes on `target`, or None on network failure."""
         dat_str = target.strftime("%Y%m%d")
         r = self._fetch(self.LIST_URL, params={"dat": dat_str, "idl": "1"})
         if not r:
-            return []
+            return None
 
         # cdep.ro links look like: /pls/steno/evot.lista?idv=12345&idl=1
         # We extract all idv values from the raw HTML (dedup, preserve order).
@@ -707,6 +707,10 @@ class CameraScraper:
     def scrape_date(self, target: datetime.date) -> None:
         log.info("=== Scraping Camera date: %s ===", target)
         idvs = self.get_idv_list(target)
+        if idvs is None:
+            log.error("cdep.ro unreachable for %s — network failure", target)
+            self._stats["errors"] += 1
+            return
         if not idvs:
             log.info("No votes found for %s", target)
             return
@@ -796,10 +800,14 @@ def main() -> None:
     elif args.date:
         scraper.scrape_date(datetime.date.fromisoformat(args.date))
         scraper.print_summary()
+        if scraper._stats["errors"] > 0:
+            sys.exit(1)
     else:
         start = datetime.date.fromisoformat(args.start)
         end = datetime.date.fromisoformat(args.end)
         scraper.scrape_range(start, end)
+        if scraper._stats["errors"] > 0:
+            sys.exit(1)
 
 
 if __name__ == "__main__":
