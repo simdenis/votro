@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
 import { formatDate } from '@/lib/utils'
 import { OutcomeBadge } from '@/components/outcome-badge'
+import { BaseLawBadges } from '@/components/base-law-badge'
 import type { LawStatus } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
@@ -131,6 +132,9 @@ export default async function LegiPage({
                     <Link href={`/legi/${law.law_id}`} className="line-clamp-2 text-foreground hover:underline">
                       {law.title}
                     </Link>
+                    <div className="flex gap-1 mt-1 flex-wrap">
+                      <BaseLawBadges title={law.title} />
+                    </div>
                   </td>
                   <td className="py-3 pr-4 hidden lg:table-cell">
                     {law.law_category

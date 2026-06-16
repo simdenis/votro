@@ -1,8 +1,15 @@
+export type PresidentialStatus = 'promulgat' | 'retrimis' | 'sesizat_ccr'
+export type CcrDecision = 'constitutional' | 'neconstitutional' | 'partial_neconstitutional'
+
 export interface LawStatus {
   law_id: string
   code: string
   title: string
   law_category: string | null
+  presidential_status: PresidentialStatus | null
+  presidential_date: string | null
+  ccr_decision: CcrDecision | null
+  ccr_date: string | null
   senate_vote_id: string | null
   senate_vote_date: string | null
   senate_outcome: 'adoptat' | 'respins' | null
@@ -87,6 +94,7 @@ export interface PoliticianStats {
   votes_absent: number
   deviations: number
   deviation_pct: number | null
+  presence_pct: number | null
 }
 
 export type SenatorStats = PoliticianStats
@@ -136,5 +144,18 @@ export type PoliticianVoteWithDetails = PoliticianVote & {
 }
 
 export type VoteHistoryRow = PoliticianVote & {
-  votes: Vote & { laws: Law }
+  votes: Vote & { laws: Law | null }
+}
+
+export interface PartyHistoryEntry {
+  id: string
+  politician_id: string
+  party_id: string
+  from_date: string
+  to_date: string | null
+  parties: {
+    name: string
+    abbreviation: string
+    color: string | null
+  }
 }

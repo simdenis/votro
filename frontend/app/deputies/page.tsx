@@ -22,7 +22,10 @@ export default async function DeputiesPage({
     .from('deputy_stats')
     .select('*')
     .order(
-      sort === 'deviation' ? 'deviation_pct' : sort === 'votes' ? 'total_votes' : 'name',
+      sort === 'deviation' ? 'deviation_pct'
+      : sort === 'votes'   ? 'total_votes'
+      : sort === 'presence' ? 'presence_pct'
+      : 'name',
       { ascending: !dir, nullsFirst: false }
     ) as { data: PoliticianStats[] | null }
 

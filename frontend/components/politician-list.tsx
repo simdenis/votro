@@ -50,6 +50,11 @@ export function PoliticianList({ title, basePath, people, sort, dir }: Props) {
                     Voturi {sortIcon('votes')}
                   </Link>
                 </th>
+                <th className="text-right py-2 pr-4 font-medium hidden lg:table-cell">
+                  <Link href={sortUrl('presence')} className="hover:text-foreground">
+                    Prezență {sortIcon('presence')}
+                  </Link>
+                </th>
                 <th className="text-right py-2 font-medium">
                   <Link href={sortUrl('deviation')} className="hover:text-foreground">
                     Devieri {sortIcon('deviation')}
@@ -70,6 +75,15 @@ export function PoliticianList({ title, basePath, people, sort, dir }: Props) {
                   </td>
                   <td className="py-3 pr-4 text-right text-muted tabular-nums hidden md:table-cell">
                     {s.total_votes}
+                  </td>
+                  <td className="py-3 pr-4 text-right tabular-nums hidden lg:table-cell">
+                    <span className={
+                      s.presence_pct != null && s.presence_pct < 60 ? 'text-respins font-semibold' :
+                      s.presence_pct != null && s.presence_pct < 80 ? 'text-deviere' :
+                      'text-muted'
+                    }>
+                      {pct(s.presence_pct)}
+                    </span>
                   </td>
                   <td className="py-3 text-right tabular-nums">
                     <span className={s.deviation_pct != null && s.deviation_pct > 10 ? 'text-deviere font-semibold' : 'text-muted'}>
