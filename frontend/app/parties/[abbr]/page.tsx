@@ -6,7 +6,7 @@ import { formatDate, choiceLabel, choiceColor, pct } from '@/lib/utils'
 import { OutcomeBadge } from '@/components/outcome-badge'
 import { StatsCard } from '@/components/stats-card'
 import { DonutChart } from '@/components/donut-chart'
-import type { PartyCohesion, SenatorStats, PartyMajorityVote } from '@/lib/types'
+import type { PartyCohesion, PoliticianStats, PartyMajorityVote } from '@/lib/types'
 
 export const revalidate = 3600
 
@@ -27,16 +27,18 @@ export default async function PartyPage({ params }: { params: Promise<{ abbr: st
   const { abbr } = await params
   const db = getDB()
 
-  const [r0, r1, r2] = await Promise.all([
+  const [r0, r1, r2, r3] = await Promise.all([
     db.from('party_cohesion').select('*').eq('abbreviation', abbr.toUpperCase()).maybeSingle(),
     db.from('senator_stats').select('*').eq('party_abbr', abbr.toUpperCase()).order('name'),
+    db.from('deputy_stats').select('*').eq('party_abbr', abbr.toUpperCase()).order('name'),
     db.from('party_majority_votes').select('*').eq('party_abbr', abbr.toUpperCase())
       .order('vote_date', { ascending: false }).limit(20),
   ])
 
   const cohesion    = r0.data as PartyCohesion | null
-  const members     = r1.data as SenatorStats[] | null
-  const recentVotes = r2.data as PartyMajorityVote[] | null
+  const senators    = r1.data as PoliticianStats[] | null
+  const deputies    = r2.data as PoliticianStats[] | null
+  const recentVotes = r3.data as PartyMajorityVote[] | null
 
   if (!cohesion) notFound()
 
@@ -46,7 +48,7 @@ export default async function PartyPage({ params }: { params: Promise<{ abbr: st
       <div className="flex items-center gap-6">
         <div className="border-l-4 pl-4" style={{ borderColor: cohesion.color }}>
           <h1 className="text-3xl font-semibold text-foreground">{cohesion.name}</h1>
-          <span className="text-sm text-muted">{cohesion.abbreviation} · Senat</span>
+          <span className="text-sm text-muted">{cohesion.abbreviation} · Parlament</span>
         </div>
         <DonutChart
           segments={[
@@ -67,46 +69,51 @@ export default async function PartyPage({ params }: { params: Promise<{ abbr: st
       </div>
 
       {/* Members */}
-      <div>
-        <h2 className="text-xs font-semibold uppercase tracking-widest text-muted mb-4">
-          Senatori ({members?.length ?? 0})
-        </h2>
-        {!members?.length ? (
-          <p className="text-sm text-muted">Nu există date.</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-rim text-xs uppercase tracking-widest text-muted">
-                  <th className="text-left py-2 pr-4 font-medium">Nume</th>
-                  <th className="text-right py-2 pr-4 font-medium hidden md:table-cell">Voturi</th>
-                  <th className="text-right py-2 font-medium">Devieri</th>
-                </tr>
-              </thead>
-              <tbody>
-                {members.map(m => (
-                  <tr key={m.politician_id} className="border-b border-rim hover:bg-raised transition-colors">
-                    <td className="py-2.5 pr-4">
-                      <Link href={`/senators/${m.politician_id}`} className="text-foreground hover:underline">
-                        {m.first_name} {m.name}
-                      </Link>
-                    </td>
-                    <td className="py-2.5 pr-4 text-right text-muted tabular-nums hidden md:table-cell">
-                      {m.total_votes}
-                    </td>
-                    <td className="py-2.5 text-right tabular-nums">
-                      <span className={m.deviation_pct != null && m.deviation_pct > 10 ? 'text-deviere font-semibold' : 'text-muted'}>
-                        {m.deviation_pct != null && m.deviation_pct > 10 && '⚠ '}
-                        {pct(m.deviation_pct)}
-                      </span>
-                    </td>
+      {[
+        { label: 'Senatori', members: senators, basePath: '/senators' },
+        { label: 'Deputați',  members: deputies,  basePath: '/deputies' },
+      ].map(({ label, members, basePath }) => (
+        <div key={label}>
+          <h2 className="text-xs font-semibold uppercase tracking-widest text-muted mb-4">
+            {label} ({members?.length ?? 0})
+          </h2>
+          {!members?.length ? (
+            <p className="text-sm text-muted">Nu există date.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-rim text-xs uppercase tracking-widest text-muted">
+                    <th className="text-left py-2 pr-4 font-medium">Nume</th>
+                    <th className="text-right py-2 pr-4 font-medium hidden md:table-cell">Voturi</th>
+                    <th className="text-right py-2 font-medium">Devieri</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+                </thead>
+                <tbody>
+                  {members.map(m => (
+                    <tr key={m.politician_id} className="border-b border-rim hover:bg-raised transition-colors">
+                      <td className="py-2.5 pr-4">
+                        <Link href={`${basePath}/${m.politician_id}`} className="text-foreground hover:underline">
+                          {m.first_name} {m.name}
+                        </Link>
+                      </td>
+                      <td className="py-2.5 pr-4 text-right text-muted tabular-nums hidden md:table-cell">
+                        {m.total_votes}
+                      </td>
+                      <td className="py-2.5 text-right tabular-nums">
+                        <span className={m.deviation_pct != null && m.deviation_pct > 10 ? 'text-deviere font-semibold' : 'text-muted'}>
+                          {m.deviation_pct != null && m.deviation_pct > 10 && '⚠ '}
+                          {pct(m.deviation_pct)}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      ))}
 
       {/* Vote history */}
       <div>

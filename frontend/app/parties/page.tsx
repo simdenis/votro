@@ -13,7 +13,8 @@ export default async function PartiesPage() {
   const { data: parties } = await db
     .from('party_cohesion')
     .select('*')
-    .order('cohesion_pct', { ascending: false }) as { data: PartyCohesion[] | null }
+    .gt('votes_participated', 0)
+    .order('votes_participated', { ascending: false }) as { data: PartyCohesion[] | null }
 
   return (
     <div className="space-y-6">

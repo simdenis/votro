@@ -103,11 +103,13 @@ _CHOICE_MAP: dict[str, str] = {
     "abținere": "abstention",
     "abtinere": "abstention",
     "abtinut": "abstention",
+    "ab": "abstention",
     "s-a abținut": "abstention",
     "absent": "absent",
     "nu a votat": "not_voted",
     "nu au votat": "not_voted",
     "nevot": "not_voted",
+    "-": "not_voted",
 }
 
 
@@ -121,7 +123,8 @@ def _normalise_choice(raw: str) -> str:
 # ──────────────────────────────────────────────────────────────
 _PARTY_ABBREV_MAP: dict[str, str] = {
     "alianța pentru unitatea românilor": "AUR",
-    "partidul românia în acțiune": "PIR",
+    "pace - întâi românia": "PIR",
+    "pace intai romania": "PIR",
     "partidul national liberal": "PNL",
     "partidul social democrat": "PSD",
     "uniunea democrată maghiară din românia": "UDMR",
@@ -131,29 +134,35 @@ _PARTY_ABBREV_MAP: dict[str, str] = {
     "independenți": "IND",
     "neafiliați": "IND",
     "neafiliat": "IND",
+    "neafiliati": "IND",
     "minorităților naționale": "MIN",
+    "minoritati": "MIN",
+    "minorităti": "MIN",
 }
 
 
 def _abbreviate(raw: str) -> str:
     if not raw:
         return ""
-    lower = raw.lower().strip()
+    # Strip qualifiers like "(afiliat)" before mapping
+    cleaned = re.sub(r"\(afiliat[^\)]*\)", "", raw, flags=re.IGNORECASE).strip()
+    lower = cleaned.lower()
     for key, abbr in _PARTY_ABBREV_MAP.items():
         if key in lower:
             return abbr
-    stripped = re.sub(r"\s+", "", raw).upper()
+    stripped = re.sub(r"\s+", "", cleaned).upper()
     if len(stripped) <= 6 and re.match(r"^[A-ZĂÎȘȚÂ]+$", stripped):
         return stripped
-    words = raw.split()
+    words = cleaned.split()
     acronym = "".join(w[0].upper() for w in words if w and re.match(r"^[A-ZĂÎȘȚÂ]", w))
-    return acronym[:6] if acronym else raw[:6].upper()
+    return acronym[:6] if acronym else cleaned[:6].upper()
 
 
 def _split_name(full: str) -> tuple[str, str]:
     """
-    Split 'IONESCU Ion Mihai' → last_name='IONESCU', first_name='Ion Mihai'.
-    cdep.ro names are typically FAMILY_NAME(s) Given_Name(s) with family in ALL CAPS.
+    Split 'IONESCU Ion Mihai' → ('IONESCU', 'Ion Mihai').
+    Old cdep.ro format used ALL CAPS for family name; new format uses Title Case.
+    Fallback: first word = family name, rest = given names.
     """
     parts = full.strip().split()
     if not parts:
@@ -167,9 +176,10 @@ def _split_name(full: str) -> tuple[str, str]:
         else:
             switched = True
             first_parts.append(p)
-    last_name = " ".join(last_parts) if last_parts else parts[0]
-    first_name = " ".join(first_parts) if first_parts else ""
-    return last_name, first_name
+    if last_parts:
+        return " ".join(last_parts), " ".join(first_parts)
+    # New Title Case format: first word is family name
+    return parts[0], " ".join(parts[1:])
 
 
 # ──────────────────────────────────────────────────────────────
@@ -215,7 +225,8 @@ def _txt(tag: Optional[Tag]) -> str:
 # ──────────────────────────────────────────────────────────────
 class CameraScraper:
     BASE_URL   = "https://www.cdep.ro"
-    LIST_URL   = "https://www.cdep.ro/pls/steno/evot.lista"
+    LIST_URL   = "https://www.cdep.ro/ords/pls/steno/evot2015.data"
+    DETAIL_URL = "https://www.cdep.ro/ords/pls/steno/evot2015.nominal"
 
     def __init__(
         self,
@@ -228,6 +239,7 @@ class CameraScraper:
         self.delay_max = delay_max
 
         self.session = requests.Session()
+        self.session.verify = False
         self.session.headers.update({
             "User-Agent": (
                 "VotRO/1.0 Romanian parliamentary vote tracker "
@@ -268,23 +280,45 @@ class CameraScraper:
     # ── list page: get idv IDs for a date ─────────────────────
 
     def get_idv_list(self, target: datetime.date) -> Optional[list[int]]:
-        """Return all cdep_vote_id integers for votes on `target`, or None on network failure."""
+        """Return all cdep_vote_id integers for votes on `target`, or None on network failure.
+        Joint sessions (marked CD+SE on cdep.ro) are excluded — they mix senators and deputies."""
         dat_str = target.strftime("%Y%m%d")
         r = self._fetch(self.LIST_URL, params={"dat": dat_str, "idl": "1"})
         if not r:
             return None
 
-        # cdep.ro links look like: /pls/steno/evot.lista?idv=12345&idl=1
-        # We extract all idv values from the raw HTML (dedup, preserve order).
-        found = re.findall(r"[?&]idv=(\d+)", r.text)
-        idvs = list(dict.fromkeys(int(x) for x in found))
+        from bs4 import BeautifulSoup
+        soup = BeautifulSoup(r.text, "lxml")
+
+        idvs: list[int] = []
+        seen: set[int] = set()
+        for row in soup.find_all("tr"):
+            cells = row.find_all("td")
+            if len(cells) < 3:
+                continue
+            row_text = row.get_text(" ", strip=True)
+            # cdep.ro marks joint Camera+Senat sessions as "CD+SE" in the row
+            if "CD+SE" in row_text:
+                m = re.search(r"\b(\d{5,6})\b", row_text)
+                idv = int(m.group(1)) if m else "?"
+                log.info("Date %s: skipping joint session (CD+SE) idv=%s", target, idv)
+                continue
+            # Extract idv from any link in this row
+            for a in row.find_all("a", href=True):
+                m = re.search(r"[?&]idv=(\d+)", a["href"])
+                if m:
+                    idv = int(m.group(1))
+                    if idv not in seen:
+                        seen.add(idv)
+                        idvs.append(idv)
+
         log.info("Date %s: found %d vote(s) — idv=%s", target, len(idvs), idvs)
         return idvs
 
     # ── detail page: fetch + parse ─────────────────────────────
 
     def fetch_and_parse_detail(self, idv: int) -> Optional[VoteDetail]:
-        url = self.LIST_URL
+        url = self.DETAIL_URL
         log.info("Fetching vote detail: idv=%d", idv)
         r = self._fetch(url, params={"idv": str(idv), "idl": "1"})
         if not r:
@@ -336,7 +370,7 @@ class CameraScraper:
         # cdep.ro shows the object of the vote in an "Obiect" or "Proiect" cell.
         # Law codes follow patterns like: PL 123/2026, PLx123/2026, L 95/2026, etc.
         raw_subject = ""
-        for key in ("obiect", "proiect", "obiectul votului", "denumire"):
+        for key in ("subiect vot", "obiect", "proiect", "obiectul votului", "denumire"):
             raw_subject = label_map.get(key, "")
             if raw_subject:
                 break
@@ -386,27 +420,27 @@ class CameraScraper:
             m = re.search(r"\d+", s)
             return int(m.group()) if m else 0
 
-        for key in ("total voturi exprimate", "total votanți", "total", "total voturi"):
+        for key in ("- prezenti", "total voturi exprimate", "total votanți", "total", "total voturi"):
             if key in label_map:
                 detail.totals.present = _int(label_map[key])
                 break
 
-        for key in ("pentru", "voturi pentru"):
+        for key in ("- pentru (da)", "pentru", "voturi pentru"):
             if key in label_map:
                 detail.totals.for_ = _int(label_map[key])
                 break
 
-        for key in ("împotrivă", "impotriva", "contra", "voturi împotrivă"):
+        for key in ("- contra (nu)", "împotrivă", "impotriva", "contra", "voturi împotrivă"):
             if key in label_map:
                 detail.totals.against = _int(label_map[key])
                 break
 
-        for key in ("abțineri", "abtineri", "voturi abțineri"):
+        for key in ("- abtineri (ab)", "abțineri", "abtineri", "voturi abțineri"):
             if key in label_map:
                 detail.totals.abstentions = _int(label_map[key])
                 break
 
-        for key in ("nu au votat", "nu a votat", "nevotați"):
+        for key in ("- nu au votat (-)", "nu au votat", "nu a votat", "nevotați"):
             if key in label_map:
                 detail.totals.not_voted = _int(label_map[key])
                 break
@@ -621,6 +655,29 @@ class CameraScraper:
         res2 = self.db.table("votes").select("id").eq("cdep_vote_id", detail.cdep_vote_id).execute()
         return res2.data[0]["id"] if res2.data else None
 
+    def _update_party_history(
+        self, politician_id: str, party_id: str, vote_date: datetime.date
+    ) -> None:
+        """Open a new party history entry if the politician's party has changed."""
+        res = (
+            self.db.table("politician_party_history")
+            .select("id, party_id")
+            .eq("politician_id", politician_id)
+            .is_("to_date", "null")
+            .execute()
+        )
+        if res.data:
+            current = res.data[0]
+            if current["party_id"] == party_id:
+                return
+            self.db.table("politician_party_history").update(
+                {"to_date": (vote_date - datetime.timedelta(days=1)).isoformat()}
+            ).eq("id", current["id"]).execute()
+
+        self.db.table("politician_party_history").insert(
+            {"politician_id": politician_id, "party_id": party_id, "from_date": vote_date.isoformat()}
+        ).execute()
+
     def _compute_deviations(self, vote_id: str) -> None:
         """Mark politician_votes where deputy voted against party majority."""
         pv_res = (
@@ -667,6 +724,12 @@ class CameraScraper:
                 log.error("Failed to upsert vote for idv=%d", detail.cdep_vote_id)
                 return False
 
+            # Joint sessions (Camera + Senat together) have >350 present.
+            # Skip individual vote tracking to avoid senators being recorded as deputies.
+            if detail.totals.present > 350:
+                log.info("idv=%d: joint session detected (%d present) — skipping individual votes", detail.cdep_vote_id, detail.totals.present)
+                return True
+
             party_id_map: dict[str, str] = {}
             for pb in detail.party_breakdown:
                 pid = self._upsert_party(pb.abbreviation, pb.name)
@@ -684,6 +747,9 @@ class CameraScraper:
                 if not pol_id:
                     log.warning("Could not upsert deputy %s %s", dv.first_name, dv.last_name)
                     continue
+
+                if party_id and detail.vote_date:
+                    self._update_party_history(pol_id, party_id, detail.vote_date)
 
                 self.db.table("politician_votes").upsert(
                     {

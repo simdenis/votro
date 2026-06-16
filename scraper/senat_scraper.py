@@ -709,6 +709,9 @@ class SenatScraper:
                     log.warning("Could not upsert politician %s %s", sv.first_name, sv.last_name)
                     continue
 
+                if party_id and detail.vote_date:
+                    self._update_party_history(pol_id, party_id, detail.vote_date)
+
                 self.db.table("politician_votes").upsert(
                     {
                         "politician_id": pol_id,
@@ -727,6 +730,29 @@ class SenatScraper:
         except Exception as exc:  # noqa: BLE001
             log.error("store_detail failed for AppID=%s: %s", detail.app_id, exc, exc_info=True)
             return False
+
+    def _update_party_history(
+        self, politician_id: str, party_id: str, vote_date: datetime.date
+    ) -> None:
+        """Open a new party history entry if the politician's party has changed."""
+        res = (
+            self.db.table("politician_party_history")
+            .select("id, party_id")
+            .eq("politician_id", politician_id)
+            .is_("to_date", "null")
+            .execute()
+        )
+        if res.data:
+            current = res.data[0]
+            if current["party_id"] == party_id:
+                return
+            self.db.table("politician_party_history").update(
+                {"to_date": (vote_date - datetime.timedelta(days=1)).isoformat()}
+            ).eq("id", current["id"]).execute()
+
+        self.db.table("politician_party_history").insert(
+            {"politician_id": politician_id, "party_id": party_id, "from_date": vote_date.isoformat()}
+        ).execute()
 
     def _compute_deviations(self, vote_id: str) -> None:
         """
@@ -894,7 +920,8 @@ def _classify_law(title: str) -> Optional[str]:
 # Map of known Romanian party names → canonical abbreviation
 _PARTY_ABBREV_MAP: dict[str, str] = {
     "alianța pentru unitatea românilor": "AUR",
-    "partidul România în acțiune": "PIR",
+    "pace - întâi românia": "PIR",
+    "pace intai romania": "PIR",
     "partidul national liberal": "PNL",
     "partidul social democrat": "PSD",
     "uniunea democrată maghiară din România": "UDMR",
@@ -903,6 +930,11 @@ _PARTY_ABBREV_MAP: dict[str, str] = {
     "forța dreptei": "FD",
     "independenți": "IND",
     "neafiliați": "IND",
+    "neafiliat": "IND",
+    "neafiliati": "IND",
+    "minorităților naționale": "MIN",
+    "minoritati": "MIN",
+    "minorităti": "MIN",
 }
 
 
@@ -913,18 +945,20 @@ def _abbreviate(raw: str) -> str:
     """
     if not raw:
         return ""
-    lower = raw.lower().strip()
+    # Strip qualifiers like "(afiliat)" before mapping
+    cleaned = re.sub(r"\(afiliat[^\)]*\)", "", raw, flags=re.IGNORECASE).strip()
+    lower = cleaned.lower()
     for key, abbr in _PARTY_ABBREV_MAP.items():
         if key in lower:
             return abbr
     # Use the text as-is if it's already short (≤6 chars and all caps)
-    stripped = re.sub(r"\s+", "", raw).upper()
+    stripped = re.sub(r"\s+", "", cleaned).upper()
     if len(stripped) <= 6 and re.match(r"^[A-ZĂÎȘȚÂ]+$", stripped):
         return stripped
     # Extract uppercase acronym
-    words = raw.split()
+    words = cleaned.split()
     acronym = "".join(w[0].upper() for w in words if w and re.match(r"^[A-ZĂÎȘȚÂ]", w))
-    return acronym[:6] if acronym else raw[:6].upper()
+    return acronym[:6] if acronym else cleaned[:6].upper()
 
 
 # ──────────────────────────────────────────────────────────────

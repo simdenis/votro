@@ -4,8 +4,11 @@ import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
 import { formatDate } from '@/lib/utils'
 import { OutcomeBadge } from '@/components/outcome-badge'
-import { MiniVoteBar } from '@/components/mini-vote-bar'
-import type { LawStatus } from '@/lib/types'
+import { PartyBreakdown } from '@/components/party-breakdown'
+import { SeatArc } from '@/components/seat-arc'
+import { LawTimeline } from '@/components/law-timeline'
+import { BaseLawBadges } from '@/components/base-law-badge'
+import type { LawStatus, PartyVoteBreakdown } from '@/lib/types'
 
 export const revalidate = 3600
 
@@ -25,8 +28,18 @@ export default async function LawDetail({ params }: { params: Promise<{ id: stri
   const law = data as LawStatus | null
   if (!law) notFound()
 
+  // Fetch party breakdowns for both chambers in parallel
+  const [senateBreakdown, cameraBreakdown] = await Promise.all([
+    law.senate_vote_id
+      ? db.from('party_vote_breakdown').select('*').eq('vote_id', law.senate_vote_id).then(r => r.data as PartyVoteBreakdown[] | null)
+      : Promise.resolve(null),
+    law.camera_vote_id
+      ? db.from('party_vote_breakdown').select('*').eq('vote_id', law.camera_vote_id).then(r => r.data as PartyVoteBreakdown[] | null)
+      : Promise.resolve(null),
+  ])
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
 
       {/* Breadcrumb */}
       <div className="flex items-center gap-1.5 text-xs text-muted">
@@ -44,37 +57,44 @@ export default async function LawDetail({ params }: { params: Promise<{ id: stri
               {law.law_category}
             </span>
           )}
+          <BaseLawBadges title={law.title} />
         </div>
         <h1 className="text-xl font-bold text-foreground leading-snug">{law.title}</h1>
       </div>
 
-      {/* Chamber cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <ChamberCard
-          chamber="Senat"
-          voteId={law.senate_vote_id}
-          date={law.senate_vote_date}
-          outcome={law.senate_outcome}
-          forCount={law.senate_for}
-          againstCount={law.senate_against}
-          abstentionCount={law.senate_abstentions}
-        />
-        <ChamberCard
-          chamber="Camera Deputaților"
-          voteId={law.camera_vote_id}
-          date={law.camera_vote_date}
-          outcome={law.camera_outcome}
-          forCount={law.camera_for}
-          againstCount={law.camera_against}
-          abstentionCount={law.camera_abstentions}
-        />
+      {/* Timeline */}
+      <div className="bg-surface border border-rim rounded-xl p-5">
+        <LawTimeline law={law} />
       </div>
+
+      {/* Chamber sections */}
+      <ChamberSection
+        chamber="Senat"
+        voteId={law.senate_vote_id}
+        date={law.senate_vote_date}
+        outcome={law.senate_outcome}
+        forCount={law.senate_for}
+        againstCount={law.senate_against}
+        abstentionCount={law.senate_abstentions}
+        breakdown={senateBreakdown}
+      />
+
+      <ChamberSection
+        chamber="Camera Deputaților"
+        voteId={law.camera_vote_id}
+        date={law.camera_vote_date}
+        outcome={law.camera_outcome}
+        forCount={law.camera_for}
+        againstCount={law.camera_against}
+        abstentionCount={law.camera_abstentions}
+        breakdown={cameraBreakdown}
+      />
     </div>
   )
 }
 
-function ChamberCard({
-  chamber, voteId, date, outcome, forCount, againstCount, abstentionCount,
+function ChamberSection({
+  chamber, voteId, date, outcome, forCount, againstCount, abstentionCount, breakdown,
 }: {
   chamber: string
   voteId: string | null
@@ -83,64 +103,85 @@ function ChamberCard({
   forCount: number | null
   againstCount: number | null
   abstentionCount: number | null
+  breakdown: PartyVoteBreakdown[] | null
 }) {
-  const voted = !!voteId
+  const borderColor =
+    outcome === 'adoptat' ? 'border-adoptat/30' :
+    outcome === 'respins' ? 'border-respins/30' :
+    'border-rim'
 
   return (
-    <div className={`rounded-xl border p-5 space-y-4 ${
-      voted
-        ? outcome === 'adoptat' ? 'border-adoptat/40 bg-surface'
-        : outcome === 'respins' ? 'border-respins/40 bg-surface'
-        : 'border-rim bg-surface'
-        : 'border-dashed border-rim bg-raised/50'
-    }`}>
-      <div className="flex items-center justify-between">
+    <div className={`rounded-xl border ${voteId ? borderColor : 'border-dashed border-rim'} overflow-hidden`}>
+      {/* Chamber header */}
+      <div className="flex items-center justify-between px-5 py-3 border-b border-rim bg-raised/50">
         <span className="text-xs font-semibold uppercase tracking-widest text-muted">{chamber}</span>
-        {voted ? (
-          <OutcomeBadge outcome={outcome} />
-        ) : (
-          <span className="text-xs text-faint italic">Nesupus la vot</span>
-        )}
+        {voteId
+          ? <OutcomeBadge outcome={outcome} />
+          : <span className="text-xs text-faint italic">Nesupus la vot</span>}
       </div>
 
-      {voted ? (
-        <>
-          {date && (
-            <p className="text-xs text-muted">{formatDate(date)}</p>
-          )}
-
-          <div className="flex gap-6">
-            {[
-              { label: 'Pentru',    value: forCount,         color: '#22c55e' },
-              { label: 'Împotrivă', value: againstCount,     color: '#ef4444' },
-              { label: 'Abțineri',  value: abstentionCount,  color: '#8888cc' },
-            ].map(({ label, value, color }) => (
-              <div key={label}>
-                <div className="text-2xl font-extrabold tabular-nums leading-none" style={{ color }}>
-                  {value ?? '—'}
+      {!voteId ? (
+        <p className="px-5 py-6 text-sm text-faint">Această cameră nu a votat încă acest proiect de lege.</p>
+      ) : (
+        <div className="p-5 space-y-6">
+          {/* Date + counts */}
+          <div className="flex items-end gap-8 flex-wrap">
+            {date && <p className="text-xs text-muted">{formatDate(date)}</p>}
+            <div className="flex gap-6">
+              {[
+                { label: 'Pentru',    value: forCount,         color: '#22c55e' },
+                { label: 'Împotrivă', value: againstCount,     color: '#ef4444' },
+                { label: 'Abțineri',  value: abstentionCount,  color: '#8888cc' },
+              ].map(({ label, value, color }) => (
+                <div key={label}>
+                  <div className="text-2xl font-extrabold tabular-nums leading-none" style={{ color }}>
+                    {value ?? '—'}
+                  </div>
+                  <div className="text-[10px] text-muted uppercase tracking-widest mt-1">{label}</div>
                 </div>
-                <div className="text-[10px] text-muted uppercase tracking-widest mt-1">{label}</div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
 
-          <MiniVoteBar
-            forCount={forCount}
-            againstCount={againstCount}
-            abstentionCount={abstentionCount}
-          />
+          {/* SeatArc + PartyBreakdown */}
+          {(breakdown?.length ?? 0) > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-[1fr_260px] gap-6 items-start">
+              <div className="flex flex-col items-center">
+                <SeatArc
+                  forCount={forCount ?? 0}
+                  againstCount={againstCount ?? 0}
+                  abstentionCount={abstentionCount ?? 0}
+                  notVotedCount={0}
+                  outcome={outcome}
+                />
+                <div className="flex gap-5 mt-2">
+                  {[
+                    { color: '#22c55e', label: 'Pentru',    value: forCount },
+                    { color: '#ef4444', label: 'Împotrivă', value: againstCount },
+                    { color: '#8888cc', label: 'Abțineri',  value: abstentionCount },
+                  ].map(({ color, label, value }) => (
+                    <span key={label} className="flex items-center gap-1.5 text-xs text-muted">
+                      <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
+                      {label}
+                      <strong className="text-foreground tabular-nums">{value ?? '—'}</strong>
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-widest text-muted mb-3">Poziție partide</p>
+                <PartyBreakdown rows={breakdown!} indSenators={[]} />
+              </div>
+            </div>
+          )}
 
           <Link
             href={`/votes/${voteId}`}
-            className="text-xs text-muted hover:text-foreground transition-colors"
+            className="inline-flex text-xs text-muted hover:text-foreground transition-colors"
           >
-            Vezi vot complet →
+            Vezi voturi individuale →
           </Link>
-        </>
-      ) : (
-        <p className="text-sm text-faint">
-          Această cameră nu a votat încă acest proiect de lege.
-        </p>
+        </div>
       )}
     </div>
   )

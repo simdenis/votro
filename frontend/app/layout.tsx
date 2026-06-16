@@ -39,7 +39,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ro" className={inter.variable}>
+    <html lang="ro" className={inter.variable} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html:
           `try{if(localStorage.getItem('theme')!=='dark')document.documentElement.classList.add('light')}catch(e){}`
@@ -47,10 +47,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="preconnect" href="https://zmxewrkykbxawfhzxbni.supabase.co" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
-      <body>
+      <body className="flex min-h-screen">
         <Nav />
-        <main className="max-w-5xl mx-auto px-4 py-10">{children}</main>
-        <Footer />
+        <div className="flex flex-col flex-1 min-w-0">
+          <main className="flex-1 max-w-4xl w-full mx-auto px-6 py-10">{children}</main>
+          <Footer />
+        </div>
       </body>
     </html>
   )

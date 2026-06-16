@@ -55,3 +55,17 @@ export function pct(n: number | null | undefined): string {
   if (n == null) return '—'
   return `${n.toFixed(1)}%`
 }
+
+export function formatRelativeTime(dateStr: string | null | undefined): string {
+  if (!dateStr) return '—'
+  const diff = Date.now() - new Date(dateStr).getTime()
+  const mins  = Math.floor(diff / 60_000)
+  const hours = Math.floor(diff / 3_600_000)
+  const days  = Math.floor(diff / 86_400_000)
+  if (mins  <  2)  return 'chiar acum'
+  if (hours <  1)  return `acum ${mins} min`
+  if (hours <  24) return `acum ${hours}h`
+  if (days  === 1) return 'ieri'
+  if (days  <  7)  return `acum ${days} zile`
+  return formatDateShort(dateStr.slice(0, 10))
+}

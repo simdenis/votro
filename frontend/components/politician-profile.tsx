@@ -4,17 +4,19 @@ import { PartyBadge } from '@/components/party-badge'
 import { OutcomeBadge } from '@/components/outcome-badge'
 import { LoyaltyMeter } from '@/components/loyalty-meter'
 import { ShareButtons } from '@/components/share-buttons'
-import type { PoliticianStats, VoteHistoryRow } from '@/lib/types'
+import { PartyHistory } from '@/components/party-history'
+import type { PoliticianStats, VoteHistoryRow, PartyHistoryEntry } from '@/lib/types'
 
 interface Props {
   stats: PoliticianStats
   history: VoteHistoryRow[]
+  partyHistory: PartyHistoryEntry[]
   basePath: string
   chamberLabel: string
   siteUrl: string
 }
 
-export function PoliticianProfile({ stats, history, basePath, chamberLabel, siteUrl }: Props) {
+export function PoliticianProfile({ stats, history, partyHistory, basePath, chamberLabel, siteUrl }: Props) {
   const total      = stats.total_votes
   const loyaltyPct = stats.deviation_pct != null ? Math.round(100 - stats.deviation_pct) : null
   const isHighDev  = stats.deviation_pct != null && stats.deviation_pct > 10
@@ -62,6 +64,8 @@ export function PoliticianProfile({ stats, history, basePath, chamberLabel, site
         url={`${siteUrl}${basePath}/${stats.politician_id}`}
         tweet={`${stats.first_name} ${stats.name} (${stats.party_abbr}) a deviat de la linia de partid în ${pct(stats.deviation_pct)} din voturi. ${siteUrl}${basePath}/${stats.politician_id}`}
       />
+
+      <PartyHistory history={partyHistory} />
 
       {/* ── Two-column analytics ────────────────────────── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -117,9 +121,9 @@ export function PoliticianProfile({ stats, history, basePath, chamberLabel, site
                     href={`/votes/${row.vote_id}`}
                     className="font-mono text-xs text-muted hover:text-foreground transition-colors w-20 flex-shrink-0"
                   >
-                    {row.votes.laws.code}
+                    {row.votes.laws?.code ?? '—'}
                   </Link>
-                  <span className="text-xs text-muted truncate flex-1">{row.votes.laws.title}</span>
+                  <span className="text-xs text-muted truncate flex-1">{row.votes.laws?.title ?? 'Vot fără lege asociată'}</span>
                   <span className="text-xs font-bold flex-shrink-0" style={{ color: choiceColor(row.vote_choice) }}>
                     {choiceLabel(row.vote_choice)}
                   </span>
@@ -152,7 +156,7 @@ export function PoliticianProfile({ stats, history, basePath, chamberLabel, site
                 />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                    <span className="font-mono text-xs text-muted">{row.votes.laws.code}</span>
+                    <span className="font-mono text-xs text-muted">{row.votes.laws?.code ?? '—'}</span>
                     <span className="text-[10px] text-faint">{formatDate(row.votes.vote_date)}</span>
                     {row.party_line_deviation && (
                       <span className="text-[10px] bg-deviere/10 text-deviere font-bold rounded px-1.5 py-px">
@@ -160,7 +164,7 @@ export function PoliticianProfile({ stats, history, basePath, chamberLabel, site
                       </span>
                     )}
                   </div>
-                  <p className="text-sm text-foreground truncate">{row.votes.laws.title}</p>
+                  <p className="text-sm text-foreground truncate">{row.votes.laws?.title ?? 'Vot fără lege asociată'}</p>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
                   <span className="text-sm font-bold" style={{ color: choiceColor(row.vote_choice) }}>
