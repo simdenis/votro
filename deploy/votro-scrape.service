@@ -1,0 +1,12 @@
+[Unit]
+Description=VotRO daily parliamentary vote scrape
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=votro
+WorkingDirectory=/opt/votro
+ExecStart=/opt/votro/deploy/run_daily.sh
+# .env (SUPABASE_URL / SUPABASE_KEY) is read by python-dotenv from WorkingDirectory.
+TimeoutStartSec=1800

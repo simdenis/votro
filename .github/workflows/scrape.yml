@@ -1,9 +1,8 @@
 name: Scrape votes
 
 on:
-  schedule:
-    # 06:00 UTC = 08:00 or 09:00 Romanian time — picks up yesterday's votes
-    - cron: "0 6 * * *"
+  # Daily scheduling moved to the EU VPS (see deploy/) — cdep.ro blocks GitHub's
+  # US/Azure runner IPs, so the cron could never scrape Camera. Manual only now.
   workflow_dispatch:
     inputs:
       date:
