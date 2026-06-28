@@ -8,6 +8,7 @@ import { PartyBadge } from '@/components/party-badge'
 import { PartyBreakdown } from '@/components/party-breakdown'
 import { SeatArc } from '@/components/seat-arc'
 import { ShareButtons } from '@/components/share-buttons'
+import { voteSourceUrl } from '@/lib/types'
 import type { VoteWithLaw, PoliticianVoteWithDetails, PartyVoteBreakdown } from '@/lib/types'
 
 export const revalidate = 3600
@@ -146,12 +147,22 @@ export default async function VoteDetail({
           </div>
         </div>
 
-        {/* Share row */}
-        <div className="mt-4 pt-4 border-t border-rim/50">
+        {/* Share row + official source */}
+        <div className="mt-4 pt-4 border-t border-rim/50 flex items-center justify-between gap-4 flex-wrap">
           <ShareButtons
             url={`${SITE_URL}/votes/${vote.id}`}
             tweet={`${vote.laws.code} — ${(vote.laws.title ?? '').slice(0, 80)}. ${vote.outcome === 'adoptat' ? 'Adoptat' : vote.outcome === 'respins' ? 'Respins' : ''} cu ${vote.for_count ?? 0} voturi pentru și ${vote.against_count ?? 0} împotrivă. ${SITE_URL}/votes/${vote.id}`}
           />
+          {voteSourceUrl(vote) && (
+            <a
+              href={voteSourceUrl(vote)!}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-muted hover:text-foreground transition-colors whitespace-nowrap"
+            >
+              Sursă oficială: {vote.chamber === 'deputies' ? 'cdep.ro' : 'senat.ro'} →
+            </a>
+          )}
         </div>
       </div>
 
