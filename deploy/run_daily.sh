@@ -37,5 +37,10 @@ for TARGET in "${DATES[@]}"; do
   "$PY" scraper/senat_scraper.py --date "$TARGET" >>"$LOG" 2>&1 || { rc=1; log "Senat scrape FAILED ($TARGET)"; }
 done
 
+# Presidential / CCR status is law-based, not date-based: re-check laws that
+# passed both chambers but have no promulgation status yet (senat.ro journey).
+log "=== Presidential / CCR status ==="
+"$PY" scraper/presidential_scraper.py >>"$LOG" 2>&1 || { rc=1; log "Presidential scrape FAILED"; }
+
 log "=== Done (rc=$rc) ==="
 exit $rc
