@@ -66,7 +66,7 @@ reboot/downtime won't skip a run.
 ## 5. Updating the code
 
 ```bash
-git -C /opt/votro pull --ff-only
+sudo -u votro git -C /opt/votro pull --ff-only   # pull as votro: repo is owned by that user
 sudo -u votro /opt/votro/scraper/.venv/bin/pip install -r /opt/votro/scraper/requirements.txt
 ```
 
