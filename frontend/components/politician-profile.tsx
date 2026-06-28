@@ -4,19 +4,17 @@ import { PartyBadge } from '@/components/party-badge'
 import { OutcomeBadge } from '@/components/outcome-badge'
 import { LoyaltyMeter } from '@/components/loyalty-meter'
 import { ShareButtons } from '@/components/share-buttons'
-import { PartyHistory } from '@/components/party-history'
-import type { PoliticianStats, VoteHistoryRow, PartyHistoryEntry } from '@/lib/types'
+import type { PoliticianStats, VoteHistoryRow } from '@/lib/types'
 
 interface Props {
   stats: PoliticianStats
   history: VoteHistoryRow[]
-  partyHistory: PartyHistoryEntry[]
   basePath: string
   chamberLabel: string
   siteUrl: string
 }
 
-export function PoliticianProfile({ stats, history, partyHistory, basePath, chamberLabel, siteUrl }: Props) {
+export function PoliticianProfile({ stats, history, basePath, chamberLabel, siteUrl }: Props) {
   const total      = stats.total_votes
   const loyaltyPct = stats.deviation_pct != null ? Math.round(100 - stats.deviation_pct) : null
   const isHighDev  = stats.deviation_pct != null && stats.deviation_pct > 10
@@ -46,8 +44,9 @@ export function PoliticianProfile({ stats, history, partyHistory, basePath, cham
           <h1 className="text-xl font-extrabold text-foreground tracking-tight leading-tight">
             {stats.first_name} {stats.name}
           </h1>
-          <div className="flex items-center gap-2 mt-1">
+          <div className="flex items-center gap-2 mt-1 flex-wrap">
             <PartyBadge abbreviation={stats.party_abbr} color={stats.party_color} size="md" />
+            <span className="text-[10px] text-faint" title="Partidul din care face parte acum. Voturile sunt atribuite afilierii curente.">afiliere curentă</span>
             <span className="text-xs text-muted">{chamberLabel} · {total} voturi înregistrate</span>
           </div>
         </div>
@@ -64,8 +63,6 @@ export function PoliticianProfile({ stats, history, partyHistory, basePath, cham
         url={`${siteUrl}${basePath}/${stats.politician_id}`}
         tweet={`${stats.first_name} ${stats.name} (${stats.party_abbr}) a deviat de la linia de partid în ${pct(stats.deviation_pct)} din voturi. ${siteUrl}${basePath}/${stats.politician_id}`}
       />
-
-      <PartyHistory history={partyHistory} />
 
       {/* ── Two-column analytics ────────────────────────── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
