@@ -6,6 +6,8 @@ export interface LawStatus {
   code: string
   title: string
   law_category: string | null
+  summary: string | null
+  em_url: string | null
   presidential_status: PresidentialStatus | null
   presidential_date: string | null
   ccr_decision: CcrDecision | null

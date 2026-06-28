@@ -60,6 +60,16 @@ export default async function LawDetail({ params }: { params: Promise<{ id: stri
           <BaseLawBadges title={law.title} />
         </div>
         <h1 className="text-xl font-bold text-foreground leading-snug">{law.title}</h1>
+        {law.em_url && (
+          <a
+            href={law.em_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 mt-3 text-sm text-muted hover:text-foreground transition-colors"
+          >
+            Citește expunerea de motive (PDF) →
+          </a>
+        )}
       </div>
 
       {/* Timeline */}
