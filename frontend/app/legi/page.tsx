@@ -4,7 +4,7 @@ import { getDB } from '@/lib/supabase'
 import { formatDate } from '@/lib/utils'
 import { OutcomeBadge } from '@/components/outcome-badge'
 import { BaseLawBadges } from '@/components/base-law-badge'
-import type { LawStatus } from '@/lib/types'
+import type { LawStatus, PresidentialStatus } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = {
@@ -30,6 +30,26 @@ function outcomeCell(outcome: 'adoptat' | 'respins' | null, voteId: string | nul
   return (
     <div className="flex flex-col gap-0.5">
       <OutcomeBadge outcome={outcome} />
+      {date && <span className="text-[10px] text-faint">{formatDate(date)}</span>}
+    </div>
+  )
+}
+
+function presidentCell(status: PresidentialStatus | null, date: string | null) {
+  if (!status) {
+    return <span className="text-xs text-faint">—</span>
+  }
+  const label =
+    status === 'promulgat' ? 'Promulgată'
+    : status === 'retrimis' ? 'Retrimisă'
+    : 'Sesizată CCR'
+  const color =
+    status === 'promulgat' ? 'text-adoptat'
+    : status === 'retrimis' ? 'text-respins'
+    : 'text-amber-500'
+  return (
+    <div className="flex flex-col gap-0.5">
+      <span className={`text-xs font-medium ${color}`}>{label}</span>
       {date && <span className="text-[10px] text-faint">{formatDate(date)}</span>}
     </div>
   )
@@ -117,7 +137,8 @@ export default async function LegiPage({
                 <th className="text-left py-2 pr-4 font-medium">Titlu</th>
                 <th className="text-left py-2 pr-4 font-medium hidden lg:table-cell">Categorie</th>
                 <th className="text-left py-2 pr-4 font-medium">Senat</th>
-                <th className="text-left py-2 font-medium">Camera</th>
+                <th className="text-left py-2 pr-4 font-medium">Camera</th>
+                <th className="text-left py-2 font-medium">Președinte</th>
               </tr>
             </thead>
             <tbody>
@@ -144,8 +165,11 @@ export default async function LegiPage({
                   <td className="py-3 pr-4">
                     {outcomeCell(law.senate_outcome, law.senate_vote_id, law.senate_vote_date)}
                   </td>
-                  <td className="py-3">
+                  <td className="py-3 pr-4">
                     {outcomeCell(law.camera_outcome, law.camera_vote_id, law.camera_vote_date)}
+                  </td>
+                  <td className="py-3">
+                    {presidentCell(law.presidential_status, law.presidential_date)}
                   </td>
                 </tr>
               ))}
