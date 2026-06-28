@@ -23,6 +23,29 @@ const TABS: { id: Tab; label: string }[] = [
   { id: 'purgatoriu', label: 'Purgatoriu' },
 ]
 
+type Sort = 'presedinte' | 'senat' | 'camera'
+
+const SORTS: { id: Sort; label: string }[] = [
+  { id: 'presedinte', label: 'Președinte' },
+  { id: 'senat',      label: 'Senat' },
+  { id: 'camera',     label: 'Camera' },
+]
+
+// Mirrors the scraper's law-category classifier (camera_scraper._CATEGORY_RULES).
+const CATEGORIES = [
+  'Sănătate', 'Educație', 'Justiție', 'Social', 'Infrastructură', 'Transport',
+  'Agricultură', 'Mediu', 'Energie', 'Apărare', 'Economie', 'Tehnologie',
+  'Administrație',
+] as const
+
+function chipClass(active: boolean) {
+  return `text-xs px-2.5 py-1 rounded-full border transition-colors ${
+    active
+      ? 'border-respins text-foreground bg-raised'
+      : 'border-rim text-muted hover:text-foreground hover:border-foreground/40'
+  }`
+}
+
 function outcomeCell(outcome: 'adoptat' | 'respins' | null, voteId: string | null, date: string | null) {
   if (!voteId) {
     return <span className="text-xs text-faint">—</span>
@@ -58,41 +81,57 @@ function presidentCell(status: PresidentialStatus | null, date: string | null) {
 export default async function LegiPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tab?: string; page?: string }>
+  searchParams: Promise<{ tab?: string; page?: string; sort?: string; category?: string }>
 }) {
   const sp   = await searchParams
   const tab  = (sp.tab ?? 'toate') as Tab
+  const sort = (SORTS.some(s => s.id === sp.sort) ? sp.sort : 'presedinte') as Sort
+  const category = CATEGORIES.includes(sp.category as typeof CATEGORIES[number])
+    ? (sp.category as string)
+    : null
   const page = Math.max(1, Number(sp.page) || 1)
   const db   = getDB()
 
   let q = db
     .from('law_status')
     .select('*', { count: 'exact' })
-    // Promulgated laws first (most recently promulgated on top); everything
-    // else falls back to most recent Senate vote.
-    .order('presidential_date', { ascending: false, nullsFirst: false })
-    .order('senate_vote_date', { ascending: false, nullsFirst: false })
     .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1)
 
+  // Sort
+  if (sort === 'senat') {
+    q = q.order('senate_vote_date', { ascending: false, nullsFirst: false })
+  } else if (sort === 'camera') {
+    q = q.order('camera_vote_date', { ascending: false, nullsFirst: false })
+  } else {
+    // 'presedinte': most recently promulgated first, Senate vote as fallback.
+    q = q
+      .order('presidential_date', { ascending: false, nullsFirst: false })
+      .order('senate_vote_date', { ascending: false, nullsFirst: false })
+  }
+
+  // Filters
   if (tab === 'senat')      q = q.not('senate_vote_id', 'is', null)
   if (tab === 'camera')     q = q.not('camera_vote_id', 'is', null)
   if (tab === 'purgatoriu') q = q.in('status', ['asteapta_camera', 'asteapta_senat'])
+  if (category)             q = q.eq('law_category', category)
 
   const { data, count } = await q
   const laws       = (data as LawStatus[] | null) ?? []
   const totalPages = Math.ceil((count ?? 0) / PAGE_SIZE)
 
-  function tabUrl(t: Tab) {
+  // Build a /legi URL from the current state with selective overrides.
+  // Any change other than `page` resets pagination to 1.
+  function buildUrl(over: { tab?: Tab; sort?: Sort; category?: string | null; page?: number }) {
+    const t = over.tab ?? tab
+    const s = over.sort ?? sort
+    const c = over.category !== undefined ? over.category : category
+    const pg = over.page ?? 1
     const p = new URLSearchParams()
-    if (t !== 'toate') p.set('tab', t)
+    if (t !== 'toate')      p.set('tab', t)
+    if (s !== 'presedinte') p.set('sort', s)
+    if (c)                  p.set('category', c)
+    if (pg > 1)             p.set('page', String(pg))
     return `/legi${p.size ? `?${p}` : ''}`
-  }
-
-  function pageUrl(p: number) {
-    const params = new URLSearchParams()
-    if (tab !== 'toate') params.set('tab', tab)
-    if (p > 1) params.set('page', String(p))
-    return `/legi${params.size ? `?${params}` : ''}`
   }
 
   return (
@@ -107,7 +146,7 @@ export default async function LegiPage({
         {TABS.map(t => (
           <Link
             key={t.id}
-            href={tabUrl(t.id)}
+            href={buildUrl({ tab: t.id })}
             className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${
               tab === t.id
                 ? 'border-respins text-foreground'
@@ -117,6 +156,29 @@ export default async function LegiPage({
             {t.label}
           </Link>
         ))}
+      </div>
+
+      {/* Sort + category controls */}
+      <div className="space-y-3">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-xs uppercase tracking-widest text-muted mr-1">Sortează</span>
+          {SORTS.map(s => (
+            <Link key={s.id} href={buildUrl({ sort: s.id })} className={chipClass(sort === s.id)}>
+              {s.label}
+            </Link>
+          ))}
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-xs uppercase tracking-widest text-muted mr-1">Categorie</span>
+          <Link href={buildUrl({ category: null })} className={chipClass(category === null)}>
+            Toate
+          </Link>
+          {CATEGORIES.map(c => (
+            <Link key={c} href={buildUrl({ category: c })} className={chipClass(category === c)}>
+              {c}
+            </Link>
+          ))}
+        </div>
       </div>
 
       {tab === 'purgatoriu' && (
@@ -184,11 +246,11 @@ export default async function LegiPage({
       {totalPages > 1 && (
         <div className="flex items-center gap-4 text-sm">
           {page > 1 && (
-            <Link href={pageUrl(page - 1)} className="text-muted hover:text-foreground">← Anterior</Link>
+            <Link href={buildUrl({ page: page - 1 })} className="text-muted hover:text-foreground">← Anterior</Link>
           )}
           <span className="text-muted">Pagina {page} din {totalPages}</span>
           {page < totalPages && (
-            <Link href={pageUrl(page + 1)} className="text-muted hover:text-foreground">Următor →</Link>
+            <Link href={buildUrl({ page: page + 1 })} className="text-muted hover:text-foreground">Următor →</Link>
           )}
         </div>
       )}
