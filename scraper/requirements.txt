@@ -4,3 +4,4 @@ lxml==5.2.2
 python-dotenv==1.0.1
 supabase==2.5.0
 postgrest==0.16.11
+pypdf==5.1.0

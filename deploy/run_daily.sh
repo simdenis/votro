@@ -42,5 +42,10 @@ done
 log "=== Presidential / CCR status ==="
 "$PY" scraper/presidential_scraper.py >>"$LOG" 2>&1 || { rc=1; log "Presidential scrape FAILED"; }
 
+# Law summaries from the expunere de motive PDF (no AI). Only processes laws not
+# yet checked (summary_checked_at IS NULL), so this is incremental and cheap.
+log "=== Law summaries ==="
+"$PY" scraper/law_summarizer.py >>"$LOG" 2>&1 || { rc=1; log "Law summarizer FAILED"; }
+
 log "=== Done (rc=$rc) ==="
 exit $rc
