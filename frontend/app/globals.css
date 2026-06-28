@@ -29,9 +29,9 @@
 
 @layer base {
   * { box-sizing: border-box; }
-  /* Base type scale: bump root 16→17px (+6%). All rem-based Tailwind
+  /* Base type scale: bump root 16→18px (+12.5%). All rem-based Tailwind
      utilities scale proportionally from this. */
-  html { font-size: 17px; }
+  html { font-size: 18px; }
   body {
     background-color: var(--bg);
     color: var(--text);
