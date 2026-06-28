@@ -140,6 +140,10 @@ class LawSummarizer:
         return q.execute().data or []
 
     def process_one(self, law: dict) -> None:
+        # Link-only mode: store the EM PDF URL (for a "read the full memo" link)
+        # if it exists. Auto-extracted text summaries are disabled — these PDFs
+        # have inconsistent/garbled text layers, so the text isn't display-quality
+        # without AI cleanup. The extraction helpers remain for a future AI path.
         code = law["code"]
         url = em_url_for(code)
         now = datetime.datetime.now(datetime.timezone.utc).isoformat()
@@ -152,25 +156,14 @@ class LawSummarizer:
 
         try:
             r = self.session.get(url, timeout=30)
-            if r.status_code != 200 or "pdf" not in r.headers.get("Content-Type", "").lower():
-                log.info("%s: no EM PDF (HTTP %s)", code, r.status_code)
-                self.db.table("laws").update({"summary_checked_at": now}).eq("id", law["id"]).execute()
-                self.stats["no_em"] += 1
-                return
-
-            text = _extract_text(r.content)
-            para = _scop_paragraph(text)
-
-            update: dict = {"em_url": url, "summary_checked_at": now}
-            if para and len(para) >= MIN_SUMMARY_CHARS and _is_clean(para):
-                update["summary"] = _truncate(para)
-                self.stats["summarized"] += 1
-                log.info("%s: summary stored (%d chars)", code, len(update["summary"]))
-            else:
-                reason = "no scop paragraph" if not para else ("too short" if len(para) < MIN_SUMMARY_CHARS else "garbled")
+            update: dict = {"summary_checked_at": now}
+            if r.status_code == 200 and "pdf" in r.headers.get("Content-Type", "").lower():
+                update["em_url"] = url
                 self.stats["link_only"] += 1
-                log.info("%s: link only (%s)", code, reason)
-
+                log.info("%s: em_url stored", code)
+            else:
+                self.stats["no_em"] += 1
+                log.info("%s: no EM PDF (HTTP %s)", code, r.status_code)
             self.db.table("laws").update(update).eq("id", law["id"]).execute()
 
         except Exception as exc:  # noqa: BLE001
