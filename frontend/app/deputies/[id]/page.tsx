@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
 import { PoliticianProfile } from '@/components/politician-profile'
-import type { PoliticianStats, VoteHistoryRow, PartyHistoryEntry } from '@/lib/types'
+import type { PoliticianStats, VoteHistoryRow } from '@/lib/types'
 
 export const revalidate = 3600
 
@@ -41,7 +41,7 @@ export default async function DeputyPage({
   const { id } = await params
   const db = getDB()
 
-  const [r0, r1, r2] = await Promise.all([
+  const [r0, r1] = await Promise.all([
     db.from('deputy_stats').select('*').eq('politician_id', id).maybeSingle(),
     db
       .from('politician_votes')
@@ -49,16 +49,10 @@ export default async function DeputyPage({
       .eq('politician_id', id)
       .order('created_at', { ascending: false })
       .limit(100),
-    db
-      .from('politician_party_history')
-      .select('*, parties(name, abbreviation, color)')
-      .eq('politician_id', id)
-      .order('from_date', { ascending: true }),
   ])
 
-  const stats        = r0.data as PoliticianStats | null
-  const history      = r1.data as VoteHistoryRow[] | null
-  const partyHistory = r2.data as PartyHistoryEntry[] | null
+  const stats   = r0.data as PoliticianStats | null
+  const history = r1.data as VoteHistoryRow[] | null
 
   if (!stats) notFound()
 
@@ -66,7 +60,6 @@ export default async function DeputyPage({
     <PoliticianProfile
       stats={stats}
       history={history ?? []}
-      partyHistory={partyHistory ?? []}
       basePath="/deputies"
       chamberLabel="Camera Deputaților"
       siteUrl={SITE_URL}
