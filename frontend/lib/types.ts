@@ -64,8 +64,21 @@ export interface Vote {
   abstention_count: number | null
   not_voted_count: number | null
   outcome: 'adoptat' | 'respins' | null
-  senat_app_id: string
+  chamber: 'senate' | 'deputies'
+  senat_app_id: string | null
+  cdep_vote_id: number | null
   created_at: string
+}
+
+/** Official source URL for a vote on cdep.ro / senat.ro. */
+export function voteSourceUrl(vote: Pick<Vote, 'chamber' | 'senat_app_id' | 'cdep_vote_id'>): string | null {
+  if (vote.chamber === 'deputies' && vote.cdep_vote_id != null) {
+    return `https://www.cdep.ro/ords/pls/steno/evot2015.nominal?idv=${vote.cdep_vote_id}&idl=1`
+  }
+  if (vote.chamber === 'senate' && vote.senat_app_id) {
+    return `https://www.senat.ro/VoturiPlenDetaliu.aspx?AppID=${vote.senat_app_id}`
+  }
+  return null
 }
 
 export type VoteChoice = 'for' | 'against' | 'abstention' | 'not_voted' | 'absent'
