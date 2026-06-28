@@ -68,6 +68,9 @@ export default async function LegiPage({
   let q = db
     .from('law_status')
     .select('*', { count: 'exact' })
+    // Promulgated laws first (most recently promulgated on top); everything
+    // else falls back to most recent Senate vote.
+    .order('presidential_date', { ascending: false, nullsFirst: false })
     .order('senate_vote_date', { ascending: false, nullsFirst: false })
     .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1)
 
