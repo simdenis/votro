@@ -1,0 +1,14 @@
+[Unit]
+Description=Run VotRO scrape twice daily
+
+[Timer]
+# Times are Romanian local (DST handled automatically).
+# 17:00 RO — catch today's plenary votes the same day.
+OnCalendar=*-*-* 17:00:00 Europe/Bucharest
+# 09:00 RO — catch yesterday fully (late publishes / corrections).
+OnCalendar=*-*-* 09:00:00 Europe/Bucharest
+# Catch up if the VPS was off/rebooted at the scheduled time.
+Persistent=true
+
+[Install]
+WantedBy=timers.target
