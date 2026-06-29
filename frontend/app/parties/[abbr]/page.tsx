@@ -45,17 +45,25 @@ export default async function PartyPage({ params }: { params: Promise<{ abbr: st
   return (
     <div className="space-y-10">
       {/* Header */}
-      <div className="flex items-center gap-6">
-        <div className="border-l-4 pl-4" style={{ borderColor: cohesion.color }}>
-          <h1 className="text-3xl font-semibold text-foreground">{cohesion.name}</h1>
-          <span className="text-sm text-muted">{cohesion.abbreviation} · Parlament</span>
+      <div
+        className="bg-surface border border-rim rounded-2xl shadow-sm p-5 flex items-center gap-5"
+        style={{ borderLeftWidth: 6, borderLeftColor: cohesion.color }}
+      >
+        <div className="flex-1 min-w-0">
+          <span
+            className="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-bold text-white mb-2"
+            style={{ backgroundColor: cohesion.color }}
+          >
+            {cohesion.abbreviation}
+          </span>
+          <h1 className="font-serif text-3xl font-bold text-foreground leading-tight tracking-tight">{cohesion.name}</h1>
         </div>
         <DonutChart
           segments={[
             { value: cohesion.cohesion_pct ?? 0,         color: cohesion.color },
             { value: 100 - (cohesion.cohesion_pct ?? 0), color: 'var(--rim)' },
           ]}
-          size={80}
+          size={84}
           ring={16}
           centerLabel={`${Math.round(cohesion.cohesion_pct ?? 0)}%`}
         />
@@ -81,28 +89,28 @@ export default async function PartyPage({ params }: { params: Promise<{ abbr: st
           {!members?.length ? (
             <p className="text-sm text-muted">Nu există date.</p>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="border border-rim rounded-xl overflow-hidden">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-rim text-xs uppercase tracking-widest text-muted">
-                    <th className="text-left py-2 pr-4 font-medium">Nume</th>
-                    <th className="text-right py-2 pr-4 font-medium hidden md:table-cell">Voturi</th>
-                    <th className="text-right py-2 font-medium">Devieri</th>
+                  <tr className="bg-raised text-[11px] uppercase tracking-widest text-foreground/70 border-b border-rim">
+                    <th className="text-left py-2.5 px-3 font-bold">Nume</th>
+                    <th className="text-right py-2.5 px-3 font-bold hidden md:table-cell">Voturi</th>
+                    <th className="text-right py-2.5 px-3 font-bold">Devieri</th>
                   </tr>
                 </thead>
                 <tbody>
                   {members.map(m => (
-                    <tr key={m.politician_id} className="border-b border-rim hover:bg-raised transition-colors">
-                      <td className="py-2.5 pr-4">
-                        <Link href={`${basePath}/${m.politician_id}`} className="text-foreground hover:underline">
+                    <tr key={m.politician_id} className="border-b border-rim/60 last:border-0 even:bg-raised/30 hover:bg-raised transition-colors">
+                      <td className="py-2.5 px-3">
+                        <Link href={`${basePath}/${m.politician_id}`} className="font-medium text-foreground hover:underline">
                           {m.first_name} {m.name}
                         </Link>
                       </td>
-                      <td className="py-2.5 pr-4 text-right text-muted tabular-nums hidden md:table-cell">
+                      <td className="py-2.5 px-3 text-right text-muted tabular-nums hidden md:table-cell">
                         {m.total_votes}
                       </td>
-                      <td className="py-2.5 text-right tabular-nums">
-                        <span className={m.deviation_pct != null && m.deviation_pct > 10 ? 'text-deviere font-semibold' : 'text-muted'}>
+                      <td className="py-2.5 px-3 text-right tabular-nums">
+                        <span className={m.deviation_pct != null && m.deviation_pct > 10 ? 'text-deviere font-bold' : 'text-muted'}>
                           {m.deviation_pct != null && m.deviation_pct > 10 && '⚠ '}
                           {pct(m.deviation_pct)}
                         </span>
@@ -125,36 +133,36 @@ export default async function PartyPage({ params }: { params: Promise<{ abbr: st
         {!recentVotes?.length ? (
           <p className="text-sm text-muted">Nu există date.</p>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="border border-rim rounded-xl overflow-hidden">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-rim text-xs uppercase tracking-widest text-muted">
-                  <th className="text-left py-2 pr-4 font-medium">Cod</th>
-                  <th className="text-left py-2 pr-4 font-medium hidden md:table-cell">Titlu</th>
-                  <th className="text-left py-2 pr-4 font-medium hidden sm:table-cell">Dată</th>
-                  <th className="text-left py-2 pr-4 font-medium">Poziție partid</th>
-                  <th className="text-left py-2 font-medium hidden md:table-cell">Rezultat</th>
+                <tr className="bg-raised text-[11px] uppercase tracking-widest text-foreground/70 border-b border-rim">
+                  <th className="text-left py-2.5 px-3 font-bold">Cod</th>
+                  <th className="text-left py-2.5 px-3 font-bold hidden md:table-cell">Titlu</th>
+                  <th className="text-left py-2.5 px-3 font-bold hidden sm:table-cell">Dată</th>
+                  <th className="text-left py-2.5 px-3 font-bold">Poziție partid</th>
+                  <th className="text-left py-2.5 px-3 font-bold hidden md:table-cell">Rezultat</th>
                 </tr>
               </thead>
               <tbody>
                 {recentVotes.map(v => (
-                  <tr key={v.vote_id} className="border-b border-rim hover:bg-raised transition-colors">
-                    <td className="py-2.5 pr-4">
+                  <tr key={v.vote_id} className="border-b border-rim/60 last:border-0 even:bg-raised/30 hover:bg-raised transition-colors">
+                    <td className="py-2.5 px-3">
                       <Link href={`/votes/${v.vote_id}`} className="font-mono hover:underline text-foreground">
                         {v.law_code}
                       </Link>
                     </td>
-                    <td className="py-2.5 pr-4 text-muted max-w-xs hidden md:table-cell">
+                    <td className="py-2.5 px-3 text-muted max-w-xs hidden md:table-cell">
                       <span className="line-clamp-1">{v.law_title}</span>
                     </td>
-                    <td className="py-2.5 pr-4 text-muted whitespace-nowrap hidden sm:table-cell">
+                    <td className="py-2.5 px-3 text-muted whitespace-nowrap hidden sm:table-cell">
                       {formatDate(v.vote_date)}
                     </td>
-                    <td className="py-2.5 pr-4 font-medium" style={{ color: choiceColor(v.majority_choice) }}>
+                    <td className="py-2.5 px-3 font-semibold" style={{ color: choiceColor(v.majority_choice) }}>
                       {choiceLabel(v.majority_choice)}
                       <span className="text-[#5050a0] font-normal ml-2 tabular-nums">({v.majority_count})</span>
                     </td>
-                    <td className="py-2.5 hidden md:table-cell">
+                    <td className="py-2.5 px-3 hidden md:table-cell">
                       <OutcomeBadge outcome={v.outcome} />
                     </td>
                   </tr>
