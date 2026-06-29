@@ -6,7 +6,7 @@ export function Nav() {
   return (
     <>
       {/* ── Sidebar (desktop) ───────────────────────────── */}
-      <aside className="hidden lg:flex flex-col w-52 shrink-0 border-r border-rim bg-page sticky top-0 h-screen">
+      <aside className="hidden lg:flex flex-col w-64 shrink-0 border-r border-rim bg-page sticky top-0 h-screen">
         <div className="px-6 py-5 border-b border-rim">
           <Link href="/" className="font-bold text-foreground text-xl tracking-tight">
             VotRO
