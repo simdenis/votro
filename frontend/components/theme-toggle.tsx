@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { Sun, Moon } from 'lucide-react'
 
-export function ThemeToggle() {
+export function ThemeToggle({ withLabel = false }: { withLabel?: boolean }) {
   const [isLight, setIsLight] = useState(false)
 
   useEffect(() => {
@@ -22,13 +22,17 @@ export function ThemeToggle() {
     }
   }
 
+  const label = isLight ? 'Mod întunecat' : 'Mod luminos'
+
   return (
     <button
       onClick={toggle}
-      className="text-muted hover:text-foreground transition-colors p-1"
-      title={isLight ? 'Mod întunecat' : 'Mod luminos'}
+      className="flex items-center gap-2 text-muted hover:text-foreground transition-colors p-1 text-xs"
+      title={label}
+      aria-label={label}
     >
       {isLight ? <Moon size={15} /> : <Sun size={15} />}
+      {withLabel && <span>{label}</span>}
     </button>
   )
 }

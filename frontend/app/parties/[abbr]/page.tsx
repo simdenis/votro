@@ -68,7 +68,8 @@ export default async function PartyPage({ params }: { params: Promise<{ abbr: st
         <StatsCard value={cohesion.deviation_count} label="Devieri totale" accent="#f59e0b" />
       </div>
 
-      {/* Members */}
+      {/* Members — two columns: senators | deputies */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-10">
       {[
         { label: 'Senatori', members: senators, basePath: '/senators' },
         { label: 'Deputați',  members: deputies,  basePath: '/deputies' },
@@ -114,6 +115,7 @@ export default async function PartyPage({ params }: { params: Promise<{ abbr: st
           )}
         </div>
       ))}
+      </div>
 
       {/* Vote history */}
       <div>

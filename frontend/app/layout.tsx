@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { Inter, EB_Garamond } from 'next/font/google'
 import './globals.css'
 import { Nav } from '@/components/nav'
 import { Footer } from '@/components/footer'
@@ -8,6 +8,14 @@ const inter = Inter({
   subsets: ['latin', 'latin-ext'],
   variable: '--font-inter',
   display: 'swap',
+})
+
+// Editorial display serif for headlines. Used via `font-serif`.
+const garamond = EB_Garamond({
+  subsets: ['latin', 'latin-ext'],
+  variable: '--font-serif',
+  display: 'swap',
+  style: ['normal', 'italic'],
 })
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://votro.ro'
@@ -39,7 +47,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ro" className={inter.variable} suppressHydrationWarning>
+    <html lang="ro" className={`${inter.variable} ${garamond.variable}`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html:
           `try{if(localStorage.getItem('theme')!=='dark')document.documentElement.classList.add('light')}catch(e){}`
@@ -50,7 +58,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="flex min-h-screen">
         <Nav />
         <div className="flex flex-col flex-1 min-w-0">
-          <main className="flex-1 max-w-4xl w-full px-8 py-10">{children}</main>
+          <main className="flex-1 max-w-6xl w-full px-8 py-10">{children}</main>
           <Footer />
         </div>
       </body>
