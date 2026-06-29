@@ -11,7 +11,7 @@ import { ShareButtons } from '@/components/share-buttons'
 import { voteSourceUrl } from '@/lib/types'
 import type { VoteWithLaw, PoliticianVoteWithDetails, PartyVoteBreakdown } from '@/lib/types'
 
-export const revalidate = 3600
+export const dynamic = 'force-dynamic'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://votro.ro'
 
@@ -32,9 +32,8 @@ export async function generateMetadata({
   const outcome = vote.outcome === 'adoptat' ? 'adoptat' : vote.outcome === 'respins' ? 'respins' : null
   const desc    = [
     `Proiectul ${code}${outcome ? ` a fost ${outcome}` : ''} pe ${formatDate(vote.vote_date)}.`,
-    `${vote.for_count ?? 0} senatori pentru, ${vote.against_count ?? 0} împotrivă, ${vote.abstention_count ?? 0} abțineri.`,
+    `${vote.for_count ?? 0} pentru, ${vote.against_count ?? 0} împotrivă, ${vote.abstention_count ?? 0} abțineri.`,
   ].join(' ')
-
   const ogImage = `${SITE_URL}/api/og/vote?id=${id}`
 
   return {
@@ -73,6 +72,7 @@ export default async function VoteDetail({
   const heroColor     = adopted ? '#16a34a' : vote.outcome === 'respins' ? '#dc2626' : undefined
   const heroBg        = adopted ? 'bg-[#f0fdf4] dark:bg-[#0a1f10]' : vote.outcome === 'respins' ? 'bg-[#fef2f2] dark:bg-[#200a0a]' : 'bg-surface'
   const deviatorCount = senatorVotes?.filter(sv => sv.party_line_deviation).length ?? 0
+  const sourceUrl     = voteSourceUrl(vote)
 
   const indSenators =
     senatorVotes
@@ -85,29 +85,27 @@ export default async function VoteDetail({
       })) ?? []
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
 
       {/* ── Outcome hero banner ─────────────────────────── */}
       <div
-        className={`${heroBg} rounded-xl p-5`}
+        className={`${heroBg} rounded-xl p-4`}
         style={heroColor ? { borderBottom: `2px solid ${heroColor}33` } : undefined}
       >
         {/* Breadcrumb */}
-        <div className="flex items-center gap-1.5 text-xs text-muted mb-4">
+        <div className="flex items-center gap-1.5 text-xs text-muted mb-3">
           <Link href="/votes" className="hover:text-foreground transition-colors">Voturi</Link>
           <span className="text-faint">›</span>
           <Link href={`/legi/${vote.law_id}`} className="hover:text-foreground transition-colors font-semibold">
             {vote.laws.code}
           </Link>
-          <span className="text-faint">›</span>
-          <span>Vot</span>
         </div>
 
-        <div className="flex items-center gap-5 flex-wrap">
+        <div className="flex items-center gap-4 flex-wrap">
           {/* Outcome icon */}
           {vote.outcome && (
             <div
-              className="w-14 h-14 rounded-xl flex items-center justify-center text-3xl font-black text-white flex-shrink-0"
+              className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl font-black text-white flex-shrink-0"
               style={{ backgroundColor: heroColor }}
             >
               {adopted ? '✓' : '✗'}
@@ -116,7 +114,7 @@ export default async function VoteDetail({
 
           {/* Title block */}
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
               <span className="font-mono text-xs font-bold" style={{ color: heroColor }}>
                 {vote.laws.code}
               </span>
@@ -127,18 +125,18 @@ export default async function VoteDetail({
               )}
               <span className="text-xs text-muted">{formatDate(vote.vote_date)}</span>
             </div>
-            <h1 className="text-xl font-bold text-foreground leading-snug">{vote.laws.title}</h1>
+            <h1 className="text-lg font-bold text-foreground leading-snug">{vote.laws.title}</h1>
           </div>
 
           {/* Vote counts */}
-          <div className="flex gap-6 flex-shrink-0">
+          <div className="flex gap-5 flex-shrink-0">
             {[
               { label: 'Pentru',    value: vote.for_count,        color: '#16a34a' },
               { label: 'Împotrivă', value: vote.against_count,    color: '#dc2626' },
               { label: 'Abțineri',  value: vote.abstention_count, color: '#6666aa' },
             ].map(({ label, value, color }) => (
               <div key={label} className="text-center">
-                <div className="text-3xl font-extrabold tabular-nums leading-none" style={{ color }}>
+                <div className="text-2xl font-extrabold tabular-nums leading-none" style={{ color }}>
                   {value ?? '—'}
                 </div>
                 <div className="text-[10px] text-muted uppercase tracking-widest mt-1">{label}</div>
@@ -148,14 +146,14 @@ export default async function VoteDetail({
         </div>
 
         {/* Share row + official source */}
-        <div className="mt-4 pt-4 border-t border-rim/50 flex items-center justify-between gap-4 flex-wrap">
+        <div className="mt-3 pt-3 border-t border-rim/50 flex items-center justify-between gap-4 flex-wrap">
           <ShareButtons
             url={`${SITE_URL}/votes/${vote.id}`}
-            tweet={`${vote.laws.code} — ${(vote.laws.title ?? '').slice(0, 80)}. ${vote.outcome === 'adoptat' ? 'Adoptat' : vote.outcome === 'respins' ? 'Respins' : ''} cu ${vote.for_count ?? 0} voturi pentru și ${vote.against_count ?? 0} împotrivă. ${SITE_URL}/votes/${vote.id}`}
+            tweet={`${vote.laws.code} — ${(vote.laws.title ?? '').slice(0, 80)}. ${vote.outcome === 'adoptat' ? 'Adoptat' : vote.outcome === 'respins' ? 'Respins' : ''} cu ${vote.for_count ?? 0} pentru și ${vote.against_count ?? 0} împotrivă. ${SITE_URL}/votes/${vote.id}`}
           />
-          {voteSourceUrl(vote) && (
+          {sourceUrl && (
             <a
-              href={voteSourceUrl(vote)!}
+              href={sourceUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="text-xs text-muted hover:text-foreground transition-colors whitespace-nowrap"
@@ -167,17 +165,17 @@ export default async function VoteDetail({
       </div>
 
       {/* ── Two-column body ─────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6 items-start">
+      <div className="grid grid-cols-1 xl:grid-cols-[1fr_240px] gap-5 items-start">
 
         {/* Left: seat arc + senator table */}
-        <div className="space-y-6">
+        <div className="space-y-5">
 
           {/* Seat arc */}
           <div>
             <h2 className="text-xs font-semibold uppercase tracking-widest text-muted mb-3">
               Distribuție în plen — {vote.present_count ?? '—'} senatori prezenți
             </h2>
-            <div className="bg-surface border border-rim rounded-xl p-5 flex flex-col items-center">
+            <div className="bg-surface border border-rim rounded-xl p-4 flex flex-col items-center">
               <SeatArc
                 forCount={vote.for_count ?? 0}
                 againstCount={vote.against_count ?? 0}
@@ -185,7 +183,7 @@ export default async function VoteDetail({
                 notVotedCount={vote.not_voted_count ?? 0}
                 outcome={vote.outcome}
               />
-              <div className="flex gap-5 mt-3">
+              <div className="flex gap-4 mt-3 flex-wrap justify-center">
                 {[
                   { color: '#22c55e', label: 'Pentru',    value: vote.for_count },
                   { color: '#ef4444', label: 'Împotrivă', value: vote.against_count },
@@ -234,7 +232,6 @@ export default async function VoteDetail({
                     <PartyBadge
                       abbreviation={sv.politicians.parties.abbreviation}
                       color={sv.politicians.parties.color}
-                      noLink
                     />
                     <span
                       className="text-sm font-bold w-20 text-right tabular-nums"

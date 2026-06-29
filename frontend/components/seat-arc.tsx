@@ -6,13 +6,15 @@ interface Props {
   abstentionCount: number
   notVotedCount?: number
   outcome: 'adoptat' | 'respins' | null
-  /** SVG width. Height is automatically ~half + margin. Default 460 */
+  /** Internal SVG coordinate width. The SVG is responsive and fills its
+   *  container regardless — this only sets the drawing resolution. Default 400 */
   width?: number
 }
 
 /**
  * Semicircular parliament seating diagram.
- * Seats are arranged in 4 concentric arcs, coloured by vote choice.
+ * Responsive: scales to fill its container via viewBox (no fixed pixel width).
+ * Seats arranged in 4 concentric arcs, coloured by vote choice.
  * Order: for (green) → against (red) → abstention (purple) → not_voted (grey)
  */
 export function SeatArc({
@@ -21,14 +23,14 @@ export function SeatArc({
   abstentionCount,
   notVotedCount = 0,
   outcome,
-  width = 460,
+  width = 400,
 }: Props) {
-  const h = Math.round(width * 0.5) + 30
+  const h = Math.round(width * 0.5) + 28
   const cx = width / 2
   const cy = Math.round(width * 0.46)
   const rStart = Math.round(width * 0.18)
   const rowGap = Math.round(width * 0.048)
-  const dotR = Math.round(width * 0.013)
+  const dotR = Math.round(width * 0.0135)
 
   const order: string[] = [
     ...Array(forCount).fill('#22c55e'),
@@ -57,7 +59,13 @@ export function SeatArc({
   const heroSymbol = outcome === 'adoptat' ? '✓' : outcome === 'respins' ? '✗' : '—'
 
   return (
-    <svg width={width} height={h} style={{ overflow: 'visible' }}>
+    <svg
+      viewBox={`0 0 ${width} ${h}`}
+      width="100%"
+      style={{ maxWidth: width, height: 'auto', overflow: 'visible' }}
+      role="img"
+      aria-label="Distribuția voturilor în plen"
+    >
       {dots.map((d, i) => (
         <circle key={i} cx={d.x} cy={d.y} r={dotR} fill={d.fill} opacity={0.9} />
       ))}
@@ -74,10 +82,10 @@ export function SeatArc({
       </text>
       <text
         x={cx}
-        y={cy + Math.round(width * 0.055)}
+        y={cy + Math.round(width * 0.058)}
         textAnchor="middle"
         fill="var(--muted)"
-        fontSize={Math.round(width * 0.024)}
+        fontSize={Math.round(width * 0.026)}
         letterSpacing={2}
         fontFamily="system-ui, sans-serif"
       >
