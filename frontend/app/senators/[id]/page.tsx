@@ -45,7 +45,7 @@ export default async function SenatorProfile({
   const { id } = await params
   const db = getDB()
 
-  const [r0, r1] = await Promise.all([
+  const [r0, r1, r2] = await Promise.all([
     db.from('senator_stats').select('*').eq('politician_id', id).maybeSingle(),
     db
       .from('politician_votes')
@@ -53,10 +53,12 @@ export default async function SenatorProfile({
       .eq('politician_id', id)
       .order('created_at', { ascending: false })
       .limit(100),
+    db.from('politician_participation').select('participation_pct').eq('politician_id', id).maybeSingle(),
   ])
 
   const stats   = r0.data as SenatorStats | null
   const history = r1.data as VoteHistoryRow[] | null
+  const participationPct = (r2.data as { participation_pct: number | null } | null)?.participation_pct ?? null
 
   if (!stats) notFound()
 
@@ -95,6 +97,11 @@ export default async function SenatorProfile({
             <PartyBadge abbreviation={stats.party_abbr} color={stats.party_color} size="md" />
             <span className="text-[10px] text-faint" title="Partidul din care face parte acum. Voturile sunt atribuite afilierii curente.">afiliere curentă</span>
             <span className="text-xs text-muted">Senat · {total} voturi înregistrate</span>
+            {participationPct != null && (
+              <span className="text-xs text-muted" title="Voturi active împărțite la voturile din Senat din perioada activă. Estimativ — istoricul nostru e parțial.">
+                · participare ~{participationPct}% <span className="text-faint">(est.)</span>
+              </span>
+            )}
           </div>
         </div>
 
