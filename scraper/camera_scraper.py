@@ -130,6 +130,8 @@ _PARTY_ABBREV_MAP: dict[str, str] = {
     "uniți pentru românia": "POT",
     "uniti pentru romania": "POT",
     "uniți pentru": "POT",
+    "upr": "POT",                # vote pages label the group with the short code "UPR"
+    "pir": "PACE",               # likewise the senate "PACE - Întâi România" short code
     "partidul national liberal": "PNL",
     "partidul social democrat": "PSD",
     "uniunea democrată maghiară din românia": "UDMR",
