@@ -285,6 +285,10 @@ class CameraScraper:
         self.db: Client = create_client(supabase_url, supabase_key)
         self._stats = {"votes_scraped": 0, "votes_skipped": 0, "errors": 0}
         self._seen_politicians: set[str] = set()
+        # In-memory ID caches — avoid re-resolving the same politician/party on
+        # every vote (a day can have 40+ votes sharing the same ~280 deputies).
+        self._pol_id_cache: dict[str, str] = {}
+        self._party_id_cache: dict[str, str] = {}
 
     # ── network helpers ────────────────────────────────────────
 
@@ -598,30 +602,28 @@ class CameraScraper:
     def _upsert_party(self, abbreviation: str, name: str) -> Optional[str]:
         if not abbreviation:
             return None
+        if abbreviation in self._party_id_cache:
+            return self._party_id_cache[abbreviation]
         full_name = _PARTY_FULL_NAME.get(abbreviation, name or abbreviation)
         res = (
             self.db.table("parties")
             .upsert({"abbreviation": abbreviation, "name": full_name}, on_conflict="abbreviation")
             .execute()
         )
-        if res.data:
-            return res.data[0]["id"]
-        res2 = self.db.table("parties").select("id").eq("abbreviation", abbreviation).execute()
-        return res2.data[0]["id"] if res2.data else None
+        pid = res.data[0]["id"] if res.data else None
+        if not pid:
+            res2 = self.db.table("parties").select("id").eq("abbreviation", abbreviation).execute()
+            pid = res2.data[0]["id"] if res2.data else None
+        if pid:
+            self._party_id_cache[abbreviation] = pid
+        return pid
 
     def _upsert_politician(self, last_name: str, first_name: str, party_id: Optional[str]) -> Optional[str]:
         if not last_name:
             return None
         key = f"{last_name}|{first_name}"
-        if key in self._seen_politicians:
-            res = (
-                self.db.table("politicians")
-                .select("id")
-                .eq("name", last_name)
-                .eq("first_name", first_name)
-                .execute()
-            )
-            return res.data[0]["id"] if res.data else None
+        if key in self._pol_id_cache:           # in-memory hit — no DB round-trip
+            return self._pol_id_cache[key]
 
         payload: dict = {"name": last_name, "first_name": first_name, "chamber": "deputies"}
         if party_id:
@@ -632,21 +634,19 @@ class CameraScraper:
             .upsert(payload, on_conflict="name,first_name")
             .execute()
         )
-        if res.data:
-            self._seen_politicians.add(key)
-            return res.data[0]["id"]
-
-        res2 = (
-            self.db.table("politicians")
-            .select("id")
-            .eq("name", last_name)
-            .eq("first_name", first_name)
-            .execute()
-        )
-        if res2.data:
-            self._seen_politicians.add(key)
-            return res2.data[0]["id"]
-        return None
+        pid = res.data[0]["id"] if res.data else None
+        if not pid:
+            res2 = (
+                self.db.table("politicians")
+                .select("id")
+                .eq("name", last_name)
+                .eq("first_name", first_name)
+                .execute()
+            )
+            pid = res2.data[0]["id"] if res2.data else None
+        if pid:
+            self._pol_id_cache[key] = pid
+        return pid
 
     def _upsert_law(self, code: str, title: str) -> Optional[str]:
         if not code:
@@ -768,6 +768,17 @@ class CameraScraper:
                 if pid:
                     party_id_map[pb.abbreviation] = pid
 
+            # Party-line majority per party, computed in memory (no extra DB pass).
+            from collections import Counter
+            active = ("for", "against", "abstention")
+            by_party: dict[str, list[str]] = {}
+            for dv in detail.deputy_votes:
+                if dv.vote_choice in active:
+                    by_party.setdefault(dv.party_abbr, []).append(dv.vote_choice)
+            majority = {ab: Counter(c).most_common(1)[0][0] for ab, c in by_party.items() if c}
+
+            # Resolve ids (cached) and batch all politician_votes into ONE upsert.
+            rows: list[dict] = []
             for dv in detail.deputy_votes:
                 party_id = party_id_map.get(dv.party_abbr)
                 if not party_id and dv.party_abbr:
@@ -777,23 +788,21 @@ class CameraScraper:
 
                 pol_id = self._upsert_politician(dv.last_name, dv.first_name, party_id)
                 if not pol_id:
-                    log.warning("Could not upsert deputy %s %s", dv.first_name, dv.last_name)
                     continue
 
-                if party_id and detail.vote_date:
-                    self._update_party_history(pol_id, party_id, detail.vote_date)
+                rows.append({
+                    "politician_id": pol_id,
+                    "vote_id": vote_id,
+                    "vote_choice": dv.vote_choice,
+                    "party_line_deviation": (
+                        dv.vote_choice in active
+                        and dv.party_abbr in majority
+                        and dv.vote_choice != majority[dv.party_abbr]
+                    ),
+                })
 
-                self.db.table("politician_votes").upsert(
-                    {
-                        "politician_id": pol_id,
-                        "vote_id": vote_id,
-                        "vote_choice": dv.vote_choice,
-                        "party_line_deviation": False,
-                    },
-                    on_conflict="politician_id,vote_id",
-                ).execute()
-
-            self._compute_deviations(vote_id)
+            if rows:
+                self.db.table("politician_votes").upsert(rows, on_conflict="politician_id,vote_id").execute()
             return True
 
         except Exception as exc:  # noqa: BLE001
