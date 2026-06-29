@@ -248,6 +248,13 @@ export default async function LegiPage({
         </div>
       )}
 
+      {laws.some(l => !!l.presidential_status && (!l.senate_vote_id || !l.camera_vote_id)) && (
+        <p className="text-xs text-faint">
+          <span className="text-adoptat/80">Adoptată*</span> — legea a trecut prin ambele camere (e promulgată/la președinte),
+          dar nu avem votul în plen al unei camere: adoptare tacită, sau votul nu e încă în baza de date.
+        </p>
+      )}
+
       {totalPages > 1 && (
         <div className="flex items-center gap-4 text-sm">
           {page > 1 && (
