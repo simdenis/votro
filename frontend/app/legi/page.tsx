@@ -192,6 +192,13 @@ export default async function LegiPage({
         </p>
       )}
 
+      {laws.some(l => !!l.presidential_status && (!l.senate_vote_id || !l.camera_vote_id)) && (
+        <p className="text-xs text-faint">
+          <span className="text-adoptat/80">Adoptată*</span> — legea a trecut prin ambele camere (e promulgată/la președinte),
+          dar nu avem votul în plen al unei camere: adoptare tacită, sau votul nu e încă în baza de date.
+        </p>
+      )}
+
       {!laws.length ? (
         <p className="text-sm text-muted py-8">
           {tab === 'camera'
@@ -246,13 +253,6 @@ export default async function LegiPage({
             </tbody>
           </table>
         </div>
-      )}
-
-      {laws.some(l => !!l.presidential_status && (!l.senate_vote_id || !l.camera_vote_id)) && (
-        <p className="text-xs text-faint">
-          <span className="text-adoptat/80">Adoptată*</span> — legea a trecut prin ambele camere (e promulgată/la președinte),
-          dar nu avem votul în plen al unei camere: adoptare tacită, sau votul nu e încă în baza de date.
-        </p>
       )}
 
       {totalPages > 1 && (

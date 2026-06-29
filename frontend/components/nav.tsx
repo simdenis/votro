@@ -6,7 +6,7 @@ export function Nav() {
   return (
     <>
       {/* ── Sidebar (desktop) ───────────────────────────── */}
-      <aside className="hidden lg:flex flex-col w-64 shrink-0 border-r border-rim bg-page sticky top-0 h-screen">
+      <aside className="hidden lg:flex flex-col w-72 shrink-0 border-r border-rim bg-page sticky top-0 h-screen">
         <div className="px-6 py-5 border-b border-rim">
           <Link href="/" className="font-bold text-foreground text-xl tracking-tight">
             VotRO
@@ -25,7 +25,7 @@ export function Nav() {
               <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
             </svg>
           </Link>
-          <ThemeToggle />
+          <ThemeToggle withLabel />
         </div>
       </aside>
 

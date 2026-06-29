@@ -3,8 +3,8 @@ import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
 import { formatDate } from '@/lib/utils'
 import { OutcomeBadge } from '@/components/outcome-badge'
-import { MiniVoteBar } from '@/components/mini-vote-bar'
 import { ParliamentBar } from '@/components/parliament-bar'
+import { DonutChart } from '@/components/donut-chart'
 import type { VoteWithLaw, PartyCohesion } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
@@ -15,14 +15,8 @@ export default async function Dashboard() {
 
   const [r0, r1, r2, r3, r4, r5, r6] = await Promise.all([
     db.from('votes').select('*', { count: 'exact', head: true }),
-    db.from('party_cohesion')
-      .select('*')
-      .gte('votes_participated', 3)
-      .order('cohesion_pct', { ascending: false }),
-    db.from('votes')
-      .select('*, laws(*)')
-      .order('vote_date', { ascending: false })
-      .limit(8),
+    db.from('party_cohesion').select('*').gte('votes_participated', 3).order('cohesion_pct', { ascending: false }),
+    db.from('votes').select('*, laws(*)').order('vote_date', { ascending: false }).limit(8),
     db.from('votes').select('*', { count: 'exact', head: true }).eq('outcome', 'adoptat'),
     db.from('votes').select('*', { count: 'exact', head: true }).eq('outcome', 'respins'),
     db.from('parties').select('abbreviation, color, name'),
@@ -39,110 +33,147 @@ export default async function Dashboard() {
   const knownOutcomes = adoptedCount + respinsCount
   const adoptedPct    = knownOutcomes > 0 ? Math.round((adoptedCount / knownOutcomes) * 100) : 0
 
-  // Build senator counts per party from politicians table
   const senatorCounts: Record<string, number> = {}
   for (const p of (r6.data ?? []) as any[]) {
     const abbr = p.parties?.abbreviation
     if (abbr) senatorCounts[abbr] = (senatorCounts[abbr] ?? 0) + 1
   }
-
   const parliamentParties = allParties
     .map(p => ({ ...p, senator_count: senatorCounts[p.abbreviation] ?? 0 }))
     .filter(p => p.senator_count > 0)
     .sort((a, b) => b.senator_count - a.senator_count)
-
   const totalSenators = parliamentParties.reduce((s, p) => s + p.senator_count, 0)
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
 
-      {/* ── Hero ───────────────────────────────────────────── */}
-      <div className="bg-surface border border-rim rounded-xl p-4">
-        <p className="text-xs uppercase tracking-widest text-muted mb-3">
-          Sesiunea curentă
+      {/* ── Masthead ───────────────────────────────────────── */}
+      <header className="border-b border-foreground/15 pb-4">
+        <p className="text-[11px] uppercase tracking-[0.22em] text-muted mb-1.5">
+          Parlamentul României · Legislatura 2024
         </p>
-        <div className="flex items-end justify-between gap-5 flex-wrap mb-5">
+        <h1 className="font-serif text-[2.1rem] font-semibold text-foreground leading-[1.05] tracking-tight">
+          Cum votează Parlamentul
+        </h1>
+      </header>
+
+      {/* ── Hero with depth + donut ───────────────────────── */}
+      <div className="bg-surface border border-rim rounded-2xl shadow-sm overflow-hidden">
+        <div className="p-5 flex items-center gap-6 flex-wrap">
           <div>
-            <div className="text-3xl font-extrabold text-foreground tabular-nums leading-none tracking-tight">
+            <div className="font-serif text-5xl font-semibold text-foreground tabular-nums leading-none tracking-tight">
               {totalVotes}
             </div>
-            <div className="text-sm text-muted mt-1.5">voturi înregistrate în Senat</div>
+            <div className="text-sm text-muted mt-2">voturi înregistrate</div>
           </div>
+
           {knownOutcomes > 0 && (
-            <div className="flex gap-6">
-              <div className="text-right">
-                <div className="text-xl font-extrabold text-adoptat tabular-nums leading-none">{adoptedPct}%</div>
-                <div className="text-[11px] text-muted uppercase tracking-widest mt-1">adoptate</div>
+            <div className="flex items-center gap-3 sm:ml-auto">
+              <div className="relative">
+                <DonutChart
+                  segments={[
+                    { value: adoptedPct,        color: '#22c55e' },
+                    { value: 100 - adoptedPct,  color: '#ef4444' },
+                  ]}
+                  size={84}
+                  ring={13}
+                />
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="font-serif text-lg font-bold text-foreground leading-none">{adoptedPct}%</span>
+                  <span className="text-[9px] text-muted uppercase tracking-wider">adopt.</span>
+                </div>
               </div>
-              <div className="text-right">
-                <div className="text-xl font-extrabold text-respins tabular-nums leading-none">{100 - adoptedPct}%</div>
-                <div className="text-[11px] text-muted uppercase tracking-widest mt-1">respinse</div>
-              </div>
-              <div className="text-right">
-                <div className="text-xl font-extrabold text-foreground tabular-nums leading-none">{totalSenators}</div>
-                <div className="text-[11px] text-muted uppercase tracking-widest mt-1">senatori</div>
+              <div className="space-y-1.5 text-xs">
+                <span className="flex items-center gap-1.5 text-muted">
+                  <span className="w-2 h-2 rounded-full bg-adoptat" /> Adoptate
+                  <strong className="text-foreground tabular-nums">{adoptedCount}</strong>
+                </span>
+                <span className="flex items-center gap-1.5 text-muted">
+                  <span className="w-2 h-2 rounded-full bg-respins" /> Respinse
+                  <strong className="text-foreground tabular-nums">{respinsCount}</strong>
+                </span>
+                <span className="flex items-center gap-1.5 text-muted">
+                  <span className="w-2 h-2 rounded-full bg-faint" /> Parlamentari
+                  <strong className="text-foreground tabular-nums">{totalSenators}</strong>
+                </span>
               </div>
             </div>
           )}
         </div>
 
-        {/* Parliament composition bar */}
         {parliamentParties.length > 0 && (
-          <ParliamentBar parties={parliamentParties} total={totalSenators} />
+          <div className="px-5 py-4 border-t border-rim bg-raised/30">
+            <ParliamentBar parties={parliamentParties} total={totalSenators} />
+          </div>
         )}
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-[1fr_240px] gap-4 items-start">
+      {/* ── Two columns ───────────────────────────────────── */}
+      <div className="grid grid-cols-1 xl:grid-cols-[1fr_240px] gap-x-7 gap-y-8 items-start">
 
-        {/* ── Recent votes ───────────────────────────────── */}
+        {/* Recent votes */}
         <div>
-          <h2 className="text-xs font-semibold uppercase tracking-widest text-muted mb-3">
+          <h2 className="font-serif text-xl font-semibold text-foreground border-b border-foreground/15 pb-2 mb-4">
             Voturi recente
           </h2>
-          <div className="flex flex-col gap-2">
-            {recentVotes.map(vote => (
-              <Link
-                key={vote.id}
-                href={`/votes/${vote.id}`}
-                className="bg-surface border border-rim rounded-xl px-4 py-2.5 flex items-center gap-3 hover:-translate-y-px hover:shadow-sm transition-all"
-                style={{
-                  borderLeftWidth: 4,
-                  borderLeftColor: vote.outcome === 'adoptat' ? '#22c55e' : vote.outcome === 'respins' ? '#ef4444' : 'var(--rim)',
-                }}
-              >
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1 flex-wrap">
-                    <span className="font-mono text-xs text-muted font-semibold">{vote.laws?.code ?? '—'}</span>
-                    {vote.laws?.law_category && (
-                      <span className="text-[10px] text-faint bg-raised border border-rim rounded px-1.5 py-px">
-                        {vote.laws.law_category}
-                      </span>
-                    )}
-                    <span className="text-[10px] text-faint ml-auto">{formatDate(vote.vote_date)}</span>
+          <div className="flex flex-col gap-2.5">
+            {recentVotes.map(vote => {
+              const oc = vote.outcome === 'adoptat' ? '#22c55e' : vote.outcome === 'respins' ? '#ef4444' : 'var(--rim)'
+              return (
+                <Link
+                  key={vote.id}
+                  href={`/votes/${vote.id}`}
+                  className="group block bg-surface border border-rim rounded-xl px-4 py-3 hover:-translate-y-px hover:shadow-md transition-all"
+                  style={{ borderLeftWidth: 4, borderLeftColor: oc }}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <span className="font-mono text-xs text-muted font-semibold">{vote.laws?.code ?? '—'}</span>
+                        <span className="text-[10px] uppercase tracking-wide font-semibold text-foreground/60 bg-raised border border-rim rounded px-1.5 py-px">
+                          {vote.chamber === 'deputies' ? 'Camera' : 'Senat'}
+                        </span>
+                        {vote.laws?.law_category && (
+                          <span className="text-[10px] text-faint bg-raised border border-rim rounded px-1.5 py-px">
+                            {vote.laws.law_category}
+                          </span>
+                        )}
+                        <span className="text-[10px] text-faint ml-auto">{formatDate(vote.vote_date)}</span>
+                      </div>
+                      <p className="font-serif text-[17px] text-foreground leading-snug line-clamp-2 group-hover:underline decoration-foreground/30 underline-offset-2">
+                        {vote.laws?.title ?? '—'}
+                      </p>
+                    </div>
+                    <div className="flex-shrink-0">
+                      <OutcomeBadge outcome={vote.outcome} />
+                    </div>
                   </div>
-                  <p className="text-sm text-foreground font-medium truncate">{vote.laws?.title ?? '—'}</p>
-                </div>
-                <div className="flex-shrink-0 flex flex-col items-end gap-1.5">
-                  <OutcomeBadge outcome={vote.outcome} />
-                  <MiniVoteBar
-                    forCount={vote.for_count}
-                    againstCount={vote.against_count}
-                    abstentionCount={vote.abstention_count}
-                  />
-                  <span className="text-[10px] text-muted tabular-nums">
-                    <span className="text-adoptat font-semibold">{vote.for_count ?? 0}</span>
-                    {' · '}
-                    <span className="text-respins font-semibold">{vote.against_count ?? 0}</span>
-                    {' · '}
-                    <span className="text-[#8888cc] font-semibold">{vote.abstention_count ?? 0}</span>
-                  </span>
-                </div>
-              </Link>
-            ))}
+
+                  {/* Full-width vote breakdown bar */}
+                  <div className="mt-3 flex items-center gap-3">
+                    <div
+                      className="flex h-3 flex-1 rounded-full overflow-hidden bg-raised"
+                      title={`${vote.for_count ?? 0} pentru · ${vote.against_count ?? 0} împotrivă · ${vote.abstention_count ?? 0} abțineri`}
+                    >
+                      {(vote.for_count ?? 0) > 0 && <div style={{ flex: vote.for_count ?? 0, backgroundColor: '#22c55e' }} />}
+                      {(vote.against_count ?? 0) > 0 && <div style={{ flex: vote.against_count ?? 0, backgroundColor: '#ef4444' }} />}
+                      {(vote.abstention_count ?? 0) > 0 && <div style={{ flex: vote.abstention_count ?? 0, backgroundColor: '#8888cc' }} />}
+                    </div>
+                    <span className="text-xs text-muted tabular-nums flex-shrink-0 font-medium">
+                      <span className="text-adoptat font-bold">{vote.for_count ?? 0}</span>
+                      {' · '}
+                      <span className="text-respins font-bold">{vote.against_count ?? 0}</span>
+                      {' · '}
+                      <span className="text-[#8888cc] font-bold">{vote.abstention_count ?? 0}</span>
+                    </span>
+                  </div>
+                </Link>
+              )
+            })}
             {totalVotes > 8 && (
               <Link
                 href="/votes"
-                className="text-center text-sm text-muted py-3 border border-dashed border-rim rounded-xl hover:text-foreground transition-colors"
+                className="text-center text-sm text-muted py-3 border border-dashed border-rim rounded-xl hover:text-foreground hover:bg-raised/40 transition-colors"
               >
                 Toate voturile →
               </Link>
@@ -150,42 +181,37 @@ export default async function Dashboard() {
           </div>
         </div>
 
-        {/* ── Sidebar ────────────────────────────────────── */}
-        <div className="space-y-4">
+        {/* Sidebar */}
+        <aside className="space-y-8">
+
           {/* Party cohesion */}
           {cohesionData.length > 0 && (
             <div>
-              <h2 className="text-xs font-semibold uppercase tracking-widest text-muted mb-3">
+              <h3 className="font-serif text-lg font-semibold text-foreground border-b border-foreground/15 pb-2 mb-3">
                 Coeziune partide
-              </h2>
-              <div className="bg-surface border border-rim rounded-xl p-4 space-y-2.5">
+              </h3>
+              <div className="space-y-2.5">
                 {cohesionData.map(c => (
-                  <div key={c.party_id}>
-                    <div className="flex items-center justify-between mb-1.5">
-                      <Link href={`/parties/${c.abbreviation}`}>
-                        <span
-                          className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-bold hover:opacity-75 transition-opacity"
-                          style={{ backgroundColor: c.color, color: '#fff' }}
-                        >
-                          {c.abbreviation}
-                        </span>
-                      </Link>
-                      <span className="text-xs font-bold text-foreground tabular-nums">
-                        {c.cohesion_pct?.toFixed(1)}%
+                  <Link key={c.party_id} href={`/parties/${c.abbreviation}`} className="group block">
+                    <div className="flex items-center justify-between mb-1">
+                      <span
+                        className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-bold"
+                        style={{ backgroundColor: c.color, color: '#fff' }}
+                      >
+                        {c.abbreviation}
                       </span>
+                      <span className="text-xs font-bold text-foreground tabular-nums">{c.cohesion_pct?.toFixed(0)}%</span>
                     </div>
-                    <div className="h-1 bg-raised rounded-full overflow-hidden">
-                      <div
-                        className="h-full rounded-full transition-all duration-500"
-                        style={{ width: `${c.cohesion_pct ?? 0}%`, backgroundColor: c.color }}
-                      />
+                    <div className="h-1.5 bg-raised rounded-full overflow-hidden">
+                      <div className="h-full rounded-full" style={{ width: `${c.cohesion_pct ?? 0}%`, backgroundColor: c.color }} />
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
             </div>
           )}
-        </div>
+
+        </aside>
       </div>
     </div>
   )
