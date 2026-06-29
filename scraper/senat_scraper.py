@@ -920,8 +920,9 @@ def _classify_law(title: str) -> Optional[str]:
 # Map of known Romanian party names → canonical abbreviation
 _PARTY_ABBREV_MAP: dict[str, str] = {
     "alianța pentru unitatea românilor": "AUR",
-    "pace - întâi românia": "PIR",
-    "pace intai romania": "PIR",
+    "pace": "PACE",          # "PACE - Întâi România" — same party in both chambers (was split PACE/PIR)
+    "pace - întâi românia": "PACE",
+    "pace intai romania": "PACE",
     "partidul national liberal": "PNL",
     "partidul social democrat": "PSD",
     "uniunea democrată maghiară din România": "UDMR",
