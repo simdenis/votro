@@ -35,27 +35,27 @@ export function PoliticianList({ title, basePath, people, sort, dir }: Props) {
       {!people.length ? (
         <p className="text-sm text-muted">Nu există date.</p>
       ) : (
-        <div className="overflow-x-auto">
+        <div className="border border-rim rounded-xl overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-rim text-xs uppercase tracking-widest text-muted">
-                <th className="text-left py-2 pr-4 font-medium">
+              <tr className="bg-raised text-[11px] uppercase tracking-widest text-foreground/70 border-b border-rim">
+                <th className="text-left py-2.5 pr-4 pl-3 font-bold">
                   <Link href={sortUrl('name')} className="hover:text-foreground">
                     Nume {sortIcon('name')}
                   </Link>
                 </th>
-                <th className="text-left py-2 pr-4 font-medium">Partid</th>
-                <th className="text-right py-2 pr-4 font-medium hidden md:table-cell">
+                <th className="text-left py-2.5 pr-4 font-bold">Partid</th>
+                <th className="text-right py-2.5 pr-4 font-bold hidden md:table-cell">
                   <Link href={sortUrl('votes')} className="hover:text-foreground">
                     Voturi {sortIcon('votes')}
                   </Link>
                 </th>
-                <th className="text-right py-2 pr-4 font-medium hidden lg:table-cell">
+                <th className="text-right py-2.5 pr-4 font-bold hidden lg:table-cell">
                   <Link href={sortUrl('presence')} className="hover:text-foreground">
                     Prezență {sortIcon('presence')}
                   </Link>
                 </th>
-                <th className="text-right py-2 font-medium">
+                <th className="text-right py-2.5 pr-4 font-bold">
                   <Link href={sortUrl('deviation')} className="hover:text-foreground">
                     Devieri {sortIcon('deviation')}
                   </Link>
@@ -64,8 +64,8 @@ export function PoliticianList({ title, basePath, people, sort, dir }: Props) {
             </thead>
             <tbody>
               {people.map(s => (
-                <tr key={s.politician_id} className="border-b border-rim hover:bg-raised transition-colors">
-                  <td className="py-3 pr-4">
+                <tr key={s.politician_id} className="border-b border-rim/60 last:border-0 hover:bg-raised transition-colors">
+                  <td className="py-3 pr-4 pl-3">
                     <Link href={`${basePath}/${s.politician_id}`} className="text-foreground hover:underline">
                       {s.first_name} {s.name}
                     </Link>

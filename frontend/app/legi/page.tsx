@@ -206,21 +206,21 @@ export default async function LegiPage({
             : 'Nu există legi pentru filtrul selectat.'}
         </p>
       ) : (
-        <div className="overflow-x-auto">
+        <div className="border border-rim rounded-xl overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-rim text-xs uppercase tracking-widest text-muted">
-                <th className="text-left py-2 pr-4 font-medium">Cod</th>
-                <th className="text-left py-2 pr-4 font-medium">Titlu</th>
-                <th className="text-left py-2 pr-4 font-medium hidden lg:table-cell">Categorie</th>
-                <th className="text-left py-2 pr-4 font-medium">Senat</th>
-                <th className="text-left py-2 pr-4 font-medium">Camera</th>
-                <th className="text-left py-2 font-medium">Președinte</th>
+              <tr className="bg-raised text-[11px] uppercase tracking-widest text-foreground/70 border-b border-rim">
+                <th className="text-left py-2.5 pr-4 pl-3 font-bold">Cod</th>
+                <th className="text-left py-2.5 pr-4 font-bold">Titlu</th>
+                <th className="text-left py-2.5 pr-4 font-bold hidden lg:table-cell">Categorie</th>
+                <th className="text-left py-2.5 pr-4 font-bold">Senat</th>
+                <th className="text-left py-2.5 pr-4 font-bold">Camera</th>
+                <th className="text-left py-2.5 pr-4 font-bold">Președinte</th>
               </tr>
             </thead>
             <tbody>
               {laws.map(law => (
-                <tr key={law.law_id} className="border-b border-rim hover:bg-raised transition-colors">
+                <tr key={law.law_id} className="border-b border-rim/60 last:border-0 hover:bg-raised transition-colors">
                   <td className="py-3 pr-4 pl-3">
                     <Link href={`/legi/${law.law_id}`} className="font-mono text-foreground hover:underline whitespace-nowrap">
                       {law.code}

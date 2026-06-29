@@ -100,7 +100,7 @@ export default async function PartyPage({ params }: { params: Promise<{ abbr: st
                 </thead>
                 <tbody>
                   {members.map(m => (
-                    <tr key={m.politician_id} className="border-b border-rim/60 last:border-0 even:bg-raised/30 hover:bg-raised transition-colors">
+                    <tr key={m.politician_id} className="border-b border-rim/60 last:border-0 hover:bg-raised transition-colors">
                       <td className="py-2.5 px-3">
                         <Link href={`${basePath}/${m.politician_id}`} className="font-medium text-foreground hover:underline">
                           {m.first_name} {m.name}
@@ -146,7 +146,7 @@ export default async function PartyPage({ params }: { params: Promise<{ abbr: st
               </thead>
               <tbody>
                 {recentVotes.map(v => (
-                  <tr key={v.vote_id} className="border-b border-rim/60 last:border-0 even:bg-raised/30 hover:bg-raised transition-colors">
+                  <tr key={v.vote_id} className="border-b border-rim/60 last:border-0 hover:bg-raised transition-colors">
                     <td className="py-2.5 px-3">
                       <Link href={`/votes/${v.vote_id}`} className="font-mono hover:underline text-foreground">
                         {v.law_code}
