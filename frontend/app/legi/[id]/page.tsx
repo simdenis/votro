@@ -87,6 +87,7 @@ export default async function LawDetail({ params }: { params: Promise<{ id: stri
         againstCount={law.senate_against}
         abstentionCount={law.senate_abstentions}
         breakdown={senateBreakdown}
+        passed={!!law.presidential_status}
       />
 
       <ChamberSection
@@ -98,13 +99,14 @@ export default async function LawDetail({ params }: { params: Promise<{ id: stri
         againstCount={law.camera_against}
         abstentionCount={law.camera_abstentions}
         breakdown={cameraBreakdown}
+        passed={!!law.presidential_status}
       />
     </div>
   )
 }
 
 function ChamberSection({
-  chamber, voteId, date, outcome, forCount, againstCount, abstentionCount, breakdown,
+  chamber, voteId, date, outcome, forCount, againstCount, abstentionCount, breakdown, passed,
 }: {
   chamber: string
   voteId: string | null
@@ -114,6 +116,7 @@ function ChamberSection({
   againstCount: number | null
   abstentionCount: number | null
   breakdown: PartyVoteBreakdown[] | null
+  passed: boolean
 }) {
   const borderColor =
     outcome === 'adoptat' ? 'border-adoptat/30' :
@@ -127,11 +130,17 @@ function ChamberSection({
         <span className="text-xs font-semibold uppercase tracking-widest text-muted">{chamber}</span>
         {voteId
           ? <OutcomeBadge outcome={outcome} />
-          : <span className="text-xs text-faint italic">Nesupus la vot</span>}
+          : passed
+            ? <span className="text-xs text-adoptat/80 italic">Adoptată — fără vot în plen</span>
+            : <span className="text-xs text-faint italic">Nesupus la vot</span>}
       </div>
 
       {!voteId ? (
-        <p className="px-5 py-6 text-sm text-faint">Această cameră nu a votat încă acest proiect de lege.</p>
+        <p className="px-5 py-6 text-sm text-faint">
+          {passed
+            ? 'Adoptată fără vot în plen înregistrat (adoptare tacită, sau votul nu este încă în baza de date). Legea a parcurs ambele camere — vezi statutul prezidențial.'
+            : 'Această cameră nu a votat încă acest proiect de lege.'}
+        </p>
       ) : (
         <div className="p-5 space-y-6">
           {/* Date + counts */}

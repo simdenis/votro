@@ -46,8 +46,13 @@ function chipClass(active: boolean) {
   }`
 }
 
-function outcomeCell(outcome: 'adoptat' | 'respins' | null, voteId: string | null, date: string | null) {
+function outcomeCell(outcome: 'adoptat' | 'respins' | null, voteId: string | null, date: string | null, passed = false) {
   if (!voteId) {
+    // A promulgated/forwarded law passed both chambers even if we have no plenary
+    // vote for one of them (tacit adoption, or vote not yet scraped).
+    if (passed) {
+      return <span className="text-xs text-adoptat/80" title="Adoptată fără vot în plen (tacit) sau vot neînregistrat">Adoptată*</span>
+    }
     return <span className="text-xs text-faint">—</span>
   }
   return (
@@ -228,10 +233,10 @@ export default async function LegiPage({
                       : <span className="text-faint text-xs">—</span>}
                   </td>
                   <td className="py-3 pr-4">
-                    {outcomeCell(law.senate_outcome, law.senate_vote_id, law.senate_vote_date)}
+                    {outcomeCell(law.senate_outcome, law.senate_vote_id, law.senate_vote_date, !!law.presidential_status)}
                   </td>
                   <td className="py-3 pr-4">
-                    {outcomeCell(law.camera_outcome, law.camera_vote_id, law.camera_vote_date)}
+                    {outcomeCell(law.camera_outcome, law.camera_vote_id, law.camera_vote_date, !!law.presidential_status)}
                   </td>
                   <td className="py-3">
                     {presidentCell(law.presidential_status, law.presidential_date)}

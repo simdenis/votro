@@ -40,6 +40,10 @@ export function LawTimeline({ law }: { law: LawStatus }) {
     !law.camera_vote_date ||
     law.senate_vote_date <= law.camera_vote_date
 
+  // A promulgated / forwarded / CCR-referred law passed both chambers, even if
+  // we have no plenary vote for one of them (tacit adoption or unscraped vote).
+  const passed = !!law.presidential_status
+
   const steps: Step[] = []
 
   // First chamber
@@ -55,22 +59,22 @@ export function LawTimeline({ law }: { law: LawStatus }) {
     label: firstChamber.label,
     date: firstChamber.date,
     status: !firstChamber.date
-      ? 'waiting'
+      ? (passed ? 'done' : 'waiting')
       : firstChamber.outcome === 'adoptat' ? 'done'
       : firstChamber.outcome === 'respins' ? 'failed'
       : 'pending',
-    detail: firstChamber.outcome ?? undefined,
+    detail: firstChamber.outcome ?? (!firstChamber.date && passed ? 'fără vot în plen' : undefined),
   })
 
   steps.push({
     label: secondChamber.label,
     date: secondChamber.date,
     status: !secondChamber.date
-      ? 'waiting'
+      ? (passed ? 'done' : 'waiting')
       : secondChamber.outcome === 'adoptat' ? 'done'
       : secondChamber.outcome === 'respins' ? 'failed'
       : 'pending',
-    detail: secondChamber.outcome ?? undefined,
+    detail: secondChamber.outcome ?? (!secondChamber.date && passed ? 'fără vot în plen' : undefined),
   })
 
   // CCR (only if referred)
