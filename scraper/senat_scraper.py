@@ -573,9 +573,10 @@ class SenatScraper:
     def _upsert_party(self, abbreviation: str, name: str) -> Optional[str]:
         if not abbreviation:
             return None
+        full_name = _PARTY_FULL_NAME.get(abbreviation, name or abbreviation)
         res = (
             self.db.table("parties")
-            .upsert({"abbreviation": abbreviation, "name": name}, on_conflict="abbreviation")
+            .upsert({"abbreviation": abbreviation, "name": full_name}, on_conflict="abbreviation")
             .execute()
         )
         if res.data:
@@ -923,6 +924,10 @@ _PARTY_ABBREV_MAP: dict[str, str] = {
     "pace": "PACE",          # "PACE - Întâi România" — same party in both chambers (was split PACE/PIR)
     "pace - întâi românia": "PACE",
     "pace intai romania": "PACE",
+    "oamenilor tineri": "POT",   # Partidul Oamenilor Tineri == grupul "Uniți pentru România" (was split POT/UPR)
+    "uniți pentru românia": "POT",
+    "uniti pentru romania": "POT",
+    "uniți pentru": "POT",
     "partidul national liberal": "PNL",
     "partidul social democrat": "PSD",
     "uniunea democrată maghiară din România": "UDMR",
@@ -936,6 +941,24 @@ _PARTY_ABBREV_MAP: dict[str, str] = {
     "minorităților naționale": "MIN",
     "minoritati": "MIN",
     "minorităti": "MIN",
+}
+
+# Canonical full names per abbreviation, so the parties table stores real names
+# instead of the bare acronym. Used by _upsert_party.
+_PARTY_FULL_NAME: dict[str, str] = {
+    "PSD":   "Partidul Social Democrat",
+    "PNL":   "Partidul Național Liberal",
+    "USR":   "Uniunea Salvați România",
+    "AUR":   "Alianța pentru Unirea Românilor",
+    "UDMR":  "Uniunea Democrată Maghiară din România",
+    "POT":   "Partidul Oamenilor Tineri",
+    "SOSRO": "S.O.S. România",
+    "PACE":  "PACE - Întâi România",
+    "PRO":   "PRO România",
+    "FD":    "Forța Dreptei",
+    "PSDA":  "Afiliați PSD",
+    "IND":   "Neafiliați",
+    "MIN":   "Minoritățile naționale",
 }
 
 
