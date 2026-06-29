@@ -50,7 +50,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="flex min-h-screen">
         <Nav />
         <div className="flex flex-col flex-1 min-w-0">
-          <main className="flex-1 max-w-4xl w-full mx-auto px-6 py-10">{children}</main>
+          <main className="flex-1 max-w-4xl w-full px-8 py-10">{children}</main>
           <Footer />
         </div>
       </body>
