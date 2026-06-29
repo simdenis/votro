@@ -198,35 +198,20 @@ class PresidentialScraper:
     # ── database operations ────────────────────────────────────
 
     def _pending_laws(self, all_laws: bool = False) -> list[dict]:
-        """Return laws eligible for presidential status scraping."""
-        # Get all complet law_ids from the view
-        complet_res = (
+        """Laws eligible for presidential status scraping — every law with a vote,
+        not just 'complet'. We're often missing one chamber's vote (Camera data
+        started late), but a law can still be promulgated, and senat.ro's
+        legislative journey is available by code regardless of what we hold."""
+        res = (
             self.db.from_("law_status")
-            .select("law_id, code")
-            .eq("status", "complet")
+            .select("law_id, code, presidential_status")
             .execute()
         )
-        complet = {r["law_id"]: r["code"] for r in (complet_res.data or [])}
-        if not complet:
-            return []
-
-        if all_laws:
-            return [{"law_id": k, "code": v} for k, v in complet.items()]
-
-        # Filter those without presidential_status from the laws table
-        ids = list(complet.keys())
-        laws_res = (
-            self.db.table("laws")
-            .select("id")
-            .in_("id", ids)
-            .is_("presidential_status", "null")
-            .execute()
-        )
-        pending_ids = {r["id"] for r in (laws_res.data or [])}
+        rows = res.data or []
         return [
-            {"law_id": k, "code": v}
-            for k, v in complet.items()
-            if k in pending_ids
+            {"law_id": r["law_id"], "code": r["code"]}
+            for r in rows
+            if all_laws or r.get("presidential_status") is None
         ]
 
     def _update_law(self, law_id: str, result: PresidentialResult) -> bool:
