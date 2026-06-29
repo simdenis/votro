@@ -962,6 +962,14 @@ _PARTY_FULL_NAME: dict[str, str] = {
 }
 
 
+def _norm(s: str) -> str:
+    """Lowercase + strip all diacritics, so 'ţ' (cedilla) and 'ț' (comma) match."""
+    import unicodedata
+    return "".join(
+        c for c in unicodedata.normalize("NFKD", s.lower()) if not unicodedata.combining(c)
+    )
+
+
 def _abbreviate(raw: str) -> str:
     """
     Return a short abbreviation for a party name.
@@ -971,9 +979,10 @@ def _abbreviate(raw: str) -> str:
         return ""
     # Strip qualifiers like "(afiliat)" before mapping
     cleaned = re.sub(r"\(afiliat[^\)]*\)", "", raw, flags=re.IGNORECASE).strip()
+    norm = _norm(cleaned)
     lower = cleaned.lower()
     for key, abbr in _PARTY_ABBREV_MAP.items():
-        if key in lower:
+        if _norm(key) in norm:
             return abbr
     # Use the text as-is if it's already short (≤6 chars and all caps)
     stripped = re.sub(r"\s+", "", cleaned).upper()

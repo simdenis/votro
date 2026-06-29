@@ -164,14 +164,22 @@ _PARTY_FULL_NAME: dict[str, str] = {
 }
 
 
+def _norm(s: str) -> str:
+    """Lowercase + strip all diacritics, so 'ţ' (cedilla) and 'ț' (comma) match."""
+    import unicodedata
+    return "".join(
+        c for c in unicodedata.normalize("NFKD", s.lower()) if not unicodedata.combining(c)
+    )
+
+
 def _abbreviate(raw: str) -> str:
     if not raw:
         return ""
     # Strip qualifiers like "(afiliat)" before mapping
     cleaned = re.sub(r"\(afiliat[^\)]*\)", "", raw, flags=re.IGNORECASE).strip()
-    lower = cleaned.lower()
+    norm = _norm(cleaned)
     for key, abbr in _PARTY_ABBREV_MAP.items():
-        if key in lower:
+        if _norm(key) in norm:
             return abbr
     stripped = re.sub(r"\s+", "", cleaned).upper()
     if len(stripped) <= 6 and re.match(r"^[A-ZĂÎȘȚÂ]+$", stripped):
