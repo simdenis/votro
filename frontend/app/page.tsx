@@ -102,7 +102,7 @@ export default async function Dashboard() {
         </div>
 
         {parliamentParties.length > 0 && (
-          <div className="px-5 py-4 border-t border-rim bg-raised/30">
+          <div className="px-5 py-4 border-t border-rim">
             <ParliamentBar parties={parliamentParties} total={totalSenators} />
           </div>
         )}

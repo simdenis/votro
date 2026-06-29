@@ -68,21 +68,21 @@ export default async function VotesPage({
       {!votes?.length ? (
         <p className="text-sm text-muted py-8">Nu există voturi pentru filtrele selectate.</p>
       ) : (
-        <div className="overflow-x-auto">
+        <div className="border border-rim rounded-xl overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-rim text-xs uppercase tracking-widest text-muted">
-                <th className="text-left py-2 pr-4 font-medium">Cod</th>
-                <th className="text-left py-2 pr-4 font-medium">Titlu</th>
-                <th className="text-left py-2 pr-4 font-medium hidden lg:table-cell">Categorie</th>
-                <th className="text-left py-2 pr-4 font-medium hidden md:table-cell">Dată</th>
-                <th className="text-left py-2 pr-4 font-medium">Rezultat</th>
+              <tr className="bg-raised text-[11px] uppercase tracking-widest text-foreground/70 border-b border-rim">
+                <th className="text-left py-2.5 pr-4 pl-3 font-bold">Cod</th>
+                <th className="text-left py-2.5 pr-4 font-bold">Titlu</th>
+                <th className="text-left py-2.5 pr-4 font-bold hidden lg:table-cell">Categorie</th>
+                <th className="text-left py-2.5 pr-4 font-bold hidden md:table-cell">Dată</th>
+                <th className="text-left py-2.5 pr-4 font-bold">Rezultat</th>
                 <th className="hidden xl:table-cell" />
               </tr>
             </thead>
             <tbody>
               {votes.map(vote => (
-                <tr key={vote.id} className="border-b border-rim hover:bg-raised transition-colors">
+                <tr key={vote.id} className="border-b border-rim/60 last:border-0 hover:bg-raised transition-colors">
                   <td className={`py-3 pr-4 pl-3 border-l-2 ${
                     vote.outcome === 'adoptat' ? 'border-adoptat' :
                     vote.outcome === 'respins' ? 'border-respins' :
