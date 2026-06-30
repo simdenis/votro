@@ -26,5 +26,5 @@ alter table politicians
 alter table laws
   add column if not exists search_text text
   generated always as (
-    f_unaccent(coalesce(title, '') || ' ' || coalesce(code, ''))
+    f_unaccent(coalesce(title, '') || ' ' || coalesce(code, '') || ' ' || coalesce(law_category, ''))
   ) stored;
