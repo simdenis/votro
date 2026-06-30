@@ -19,22 +19,19 @@ export function NavLinks({ variant }: { variant?: 'sidebar' | 'top' }) {
 
   if (variant === 'sidebar') {
     return (
-      <nav className="flex flex-col gap-1 px-3 py-5 flex-1">
+      <nav className="flex flex-col gap-0.5 flex-1">
         {LINKS.map(({ href, label }) => {
           const active = path === href || path.startsWith(`${href}/`)
           return (
             <Link
               key={href}
               href={href}
-              className={`px-3.5 py-3 rounded-lg border text-[17px] font-semibold tracking-tight transition-colors duration-150 ${
+              className={`px-[11px] py-[7px] rounded-md text-[13px] transition-colors ${
                 active
-                  ? 'bg-raised border-foreground/25 text-foreground shadow-sm'
-                  : 'bg-surface border-rim text-foreground/70 hover:text-foreground hover:border-foreground/30 hover:bg-raised/50'
+                  ? 'font-semibold text-white bg-white/[0.12]'
+                  : 'font-medium text-white/45 hover:text-white/75 hover:bg-white/[0.06]'
               }`}
             >
-              {active && (
-                <span className="inline-block w-1.5 h-1.5 rounded-full bg-respins mr-2 mb-px" />
-              )}
               {label}
             </Link>
           )
@@ -43,17 +40,17 @@ export function NavLinks({ variant }: { variant?: 'sidebar' | 'top' }) {
     )
   }
 
-  // top bar fallback (mobile)
+  // top bar fallback (mobile) — navy bar, white text
   return (
-    <div className="flex gap-5 text-sm overflow-x-auto">
+    <div className="flex gap-5 text-[13px] overflow-x-auto">
       {LINKS.map(({ href, label }) => {
         const active = path === href || path.startsWith(`${href}/`)
         return (
           <Link
             key={href}
             href={href}
-            className={`whitespace-nowrap transition-colors duration-150 ${
-              active ? 'text-foreground font-medium' : 'text-muted hover:text-foreground'
+            className={`whitespace-nowrap transition-colors ${
+              active ? 'text-white font-semibold' : 'text-white/55 hover:text-white'
             }`}
           >
             {label}

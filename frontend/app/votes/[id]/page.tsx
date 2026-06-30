@@ -69,8 +69,7 @@ export default async function VoteDetail({
   if (!vote) notFound()
 
   const adopted       = vote.outcome === 'adoptat'
-  const heroColor     = adopted ? '#16a34a' : vote.outcome === 'respins' ? '#dc2626' : undefined
-  const heroBg        = adopted ? 'bg-[#f0fdf4] dark:bg-[#0a1f10]' : vote.outcome === 'respins' ? 'bg-[#fef2f2] dark:bg-[#200a0a]' : 'bg-surface'
+  const heroColor     = adopted ? 'var(--color-for)' : vote.outcome === 'respins' ? 'var(--color-against)' : 'var(--muted)'
   const deviatorCount = senatorVotes?.filter(sv => sv.party_line_deviation).length ?? 0
   const sourceUrl     = voteSourceUrl(vote)
 
@@ -88,10 +87,7 @@ export default async function VoteDetail({
     <div className="space-y-6">
 
       {/* ── Outcome hero banner ─────────────────────────── */}
-      <div
-        className={`${heroBg} rounded-xl p-4`}
-        style={heroColor ? { borderBottom: `2px solid ${heroColor}33` } : undefined}
-      >
+      <div className="bg-surface" style={{ borderLeft: `3px solid ${heroColor}`, paddingLeft: 16 }}>
         {/* Breadcrumb */}
         <div className="flex items-center gap-1.5 text-xs text-muted mb-3">
           <Link href="/votes" className="hover:text-foreground transition-colors">Voturi</Link>
@@ -102,38 +98,33 @@ export default async function VoteDetail({
         </div>
 
         <div className="flex items-center gap-4 flex-wrap">
-          {/* Outcome icon */}
-          {vote.outcome && (
-            <div
-              className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl font-black text-white flex-shrink-0"
-              style={{ backgroundColor: heroColor }}
-            >
-              {adopted ? '✓' : '✗'}
-            </div>
-          )}
-
           {/* Title block */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1 flex-wrap">
+              {vote.outcome && (
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={heroColor} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
+                  {adopted ? <path d="M20 6 9 17l-5-5" /> : <path d="M18 6 6 18M6 6l12 12" />}
+                </svg>
+              )}
               <span className="font-mono text-xs font-bold" style={{ color: heroColor }}>
                 {vote.laws.code}
               </span>
               {vote.laws.law_category && (
-                <span className="text-[10px] bg-white dark:bg-raised border border-rim text-muted rounded px-1.5 py-px">
+                <span className="text-[11px] bg-raised text-faint rounded-[3px] px-1.5 py-px">
                   {vote.laws.law_category}
                 </span>
               )}
               <span className="text-xs text-muted">{formatDate(vote.vote_date)}</span>
             </div>
-            <h1 className="text-lg font-bold text-foreground leading-snug">{vote.laws.title}</h1>
+            <h1 className="font-serif text-[26px] font-normal text-foreground leading-[1.1]">{vote.laws.title}</h1>
           </div>
 
           {/* Vote counts */}
           <div className="flex gap-5 flex-shrink-0">
             {[
-              { label: 'Pentru',    value: vote.for_count,        color: '#16a34a' },
-              { label: 'Împotrivă', value: vote.against_count,    color: '#dc2626' },
-              { label: 'Abțineri',  value: vote.abstention_count, color: '#6666aa' },
+              { label: 'Pentru',    value: vote.for_count,        color: 'var(--color-for)' },
+              { label: 'Împotrivă', value: vote.against_count,    color: 'var(--color-against)' },
+              { label: 'Abțineri',  value: vote.abstention_count, color: 'var(--color-abstention)' },
             ].map(({ label, value, color }) => (
               <div key={label} className="text-center">
                 <div className="text-2xl font-extrabold tabular-nums leading-none" style={{ color }}>
@@ -185,9 +176,9 @@ export default async function VoteDetail({
               />
               <div className="flex gap-4 mt-3 flex-wrap justify-center">
                 {[
-                  { color: '#22c55e', label: 'Pentru',    value: vote.for_count },
-                  { color: '#ef4444', label: 'Împotrivă', value: vote.against_count },
-                  { color: '#8888cc', label: 'Abțineri',  value: vote.abstention_count },
+                  { color: 'var(--color-for)',        label: 'Pentru',    value: vote.for_count },
+                  { color: 'var(--color-against)',    label: 'Împotrivă', value: vote.against_count },
+                  { color: 'var(--color-abstention)', label: 'Abțineri',  value: vote.abstention_count },
                 ].map(({ color, label, value }) => (
                   <span key={label} className="flex items-center gap-1.5 text-sm text-muted">
                     <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
@@ -208,7 +199,7 @@ export default async function VoteDetail({
               {deviatorCount > 0 && (
                 <p className="text-sm text-muted mb-3">
                   <span className="text-deviere font-semibold">
-                    ⚠ {deviatorCount} senator{deviatorCount !== 1 ? 'i' : ''}
+                    {deviatorCount} senator{deviatorCount !== 1 ? 'i' : ''}
                   </span>{' '}
                   au votat împotriva liniei de partid.
                 </p>
@@ -218,14 +209,15 @@ export default async function VoteDetail({
                   <Link
                     key={sv.id}
                     href={`/senators/${sv.politician_id}`}
-                    className="flex items-center gap-3 px-4 py-2.5 hover:bg-raised transition-colors"
-                    style={sv.party_line_deviation ? { backgroundColor: 'oklch(98% 0.02 80)' } : undefined}
+                    className="flex items-center gap-3 px-4 py-3 hover:bg-raised transition-colors"
+                    style={sv.party_line_deviation ? { borderLeft: '2px solid var(--color-deviation)' } : undefined}
                   >
-                    <span className="text-sm text-foreground font-medium flex-1">
+                    <span className="text-sm text-foreground font-medium flex-1 flex items-center gap-1.5">
                       {sv.politicians.first_name} {sv.politicians.name}
                       {sv.party_line_deviation && (
-                        <span className="ml-2 text-[10px] text-deviere font-bold bg-deviere/10 px-1.5 py-px rounded">
-                          ⚠ deviere
+                        <span className="inline-flex items-center gap-1 text-[10px] text-deviere font-bold bg-deviere/10 px-1.5 py-px rounded-[3px]">
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+                          deviere
                         </span>
                       )}
                     </span>
