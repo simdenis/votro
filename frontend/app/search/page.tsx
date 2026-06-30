@@ -16,6 +16,9 @@ export default async function SearchPage({
 }) {
   const sp = await searchParams
   const q  = sp.q?.trim() ?? ''
+  // Diacritic-insensitive: strip accents + lowercase, matching the DB's
+  // generated search columns (migration 016).
+  const nq = q.normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
 
   let politicians: any[] = []
   let laws: any[]        = []
@@ -26,13 +29,13 @@ export default async function SearchPage({
       db
         .from('politicians')
         .select('id, name, first_name, chamber, parties(abbreviation, color)')
-        .or(`name.ilike.%${q}%,first_name.ilike.%${q}%`)
+        .ilike('search_name', `%${nq}%`)
         .order('name')
         .limit(15),
       db
         .from('laws')
         .select('id, code, title, law_category')
-        .or(`title.ilike.%${q}%,code.ilike.%${q}%`)
+        .ilike('search_text', `%${nq}%`)
         .order('code', { ascending: false })
         .limit(15),
     ])
