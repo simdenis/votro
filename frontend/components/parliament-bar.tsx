@@ -15,25 +15,28 @@ export function ParliamentBar({ parties, total }: Props) {
   return (
     <div>
       {/* Stacked bar */}
-      <div className="flex h-3 rounded overflow-hidden gap-0.5">
-        {parties.map(p => (
-          <div
-            key={p.abbreviation}
-            title={`${p.abbreviation}: ${p.senator_count}`}
-            style={{
-              flex: p.senator_count,
-              backgroundColor: p.color,
-            }}
-          />
-        ))}
+      <div className="flex h-[34px] rounded-[7px] overflow-hidden gap-[2px]">
+        {parties.map(p => {
+          const share = sum > 0 ? p.senator_count / sum : 0
+          return (
+            <div
+              key={p.abbreviation}
+              title={`${p.abbreviation}: ${p.senator_count}`}
+              className="flex items-center justify-center text-[11px] font-semibold text-white overflow-hidden"
+              style={{ flex: p.senator_count, backgroundColor: p.color }}
+            >
+              {share > 0.05 && p.abbreviation}
+            </div>
+          )
+        })}
       </div>
 
       {/* Legend */}
-      <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2.5">
+      <div className="flex flex-wrap gap-x-5 gap-y-1.5 mt-3">
         {parties.map(p => (
-          <span key={p.abbreviation} className="flex items-center gap-1.5 text-xs text-muted">
+          <span key={p.abbreviation} className="flex items-center gap-1.5 text-[12.5px] text-muted">
             <span
-              className="inline-block w-2 h-2 rounded-sm flex-shrink-0"
+              className="inline-block w-[9px] h-[9px] rounded-[2px] flex-shrink-0"
               style={{ backgroundColor: p.color }}
             />
             {p.abbreviation}
