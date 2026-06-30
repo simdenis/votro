@@ -90,7 +90,7 @@ export default async function PartyPage({ params }: { params: Promise<{ abbr: st
             <p className="text-sm text-muted">Nu există date.</p>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full text-[15px]">
                 <thead>
                   <tr className="border-b-2 border-sidebar text-[11px] uppercase tracking-[0.14em] text-faint">
                     <th className="text-left py-2.5 px-3 font-medium">Nume</th>
@@ -134,7 +134,7 @@ export default async function PartyPage({ params }: { params: Promise<{ abbr: st
           <p className="text-sm text-muted">Nu există date.</p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-[15px]">
               <thead>
                 <tr className="border-b-2 border-sidebar text-[11px] uppercase tracking-[0.14em] text-faint">
                   <th className="text-left py-2.5 px-3 font-medium">Cod</th>

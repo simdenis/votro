@@ -207,7 +207,7 @@ export default async function LegiPage({
         </p>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-[15px]">
             <thead>
               <tr className="border-b-2 border-sidebar text-[11px] uppercase tracking-[0.14em] text-faint">
                 <th className="text-left py-2.5 pr-4 font-medium">Cod</th>
