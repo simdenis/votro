@@ -22,7 +22,7 @@ export function ParliamentBar({ parties, total }: Props) {
             <div
               key={p.abbreviation}
               title={`${p.abbreviation}: ${p.senator_count}`}
-              className="flex items-center justify-center text-[11px] font-semibold text-white overflow-hidden"
+              className="flex items-center justify-center text-[12.5px] font-bold text-white overflow-hidden"
               style={{ flex: p.senator_count, backgroundColor: p.color }}
             >
               {share > 0.05 && p.abbreviation}
