@@ -6,8 +6,8 @@ wired into the daily scrape (`deploy/run_daily.sh`).
 
 ## How it works
 
-1. **Image** — `frontend/app/api/og/post/route.tsx` renders a 1080×1080 PNG at
-   `https://votro.ro/api/og/post?vote=<vote_id>`. It's a public URL so the
+1. **Image** — `frontend/app/api/og/votecard/route.tsx` renders a 1080×1080 PNG at
+   `https://votro.ro/api/og/votecard?vote=<vote_id>`. It's a public URL so the
    Instagram Graph API can fetch it.
 2. **Publish** — `instagram_poster.py` builds the caption from Supabase, then:
    creates a media container (`/{ig-user-id}/media`), waits for it to be ready,
@@ -51,4 +51,4 @@ python instagram_poster.py --image-url <url> --caption "..."   # post anything
 - The image URL must be publicly reachable (Vercel prod, not localhost).
 - Carousels, Reels, and Stories use a different flow — not implemented yet.
 - The caption hashtags and image design are a starting point; tune in
-  `build_vote_caption()` and the `/api/og/post` route.
+  `build_vote_caption()` and the `/api/og/votecard` route + `components/cards/vote-card.tsx`.
