@@ -56,7 +56,7 @@ export default async function PartyPage({ params }: { params: Promise<{ abbr: st
           >
             {cohesion.abbreviation}
           </span>
-          <h1 className="font-serif text-3xl font-bold text-foreground leading-tight tracking-tight">{cohesion.name}</h1>
+          <h1 className="font-serif text-[34px] font-normal text-foreground leading-[1.05] tracking-tight">{cohesion.name}</h1>
         </div>
         <DonutChart
           segments={[
@@ -89,18 +89,18 @@ export default async function PartyPage({ params }: { params: Promise<{ abbr: st
           {!members?.length ? (
             <p className="text-sm text-muted">Nu există date.</p>
           ) : (
-            <div className="border border-rim rounded-xl overflow-hidden">
+            <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="bg-raised text-[11px] uppercase tracking-widest text-foreground/70 border-b border-rim">
-                    <th className="text-left py-2.5 px-3 font-bold">Nume</th>
-                    <th className="text-right py-2.5 px-3 font-bold hidden md:table-cell">Voturi</th>
-                    <th className="text-right py-2.5 px-3 font-bold">Devieri</th>
+                  <tr className="border-b-2 border-sidebar text-[11px] uppercase tracking-[0.14em] text-faint">
+                    <th className="text-left py-2.5 px-3 font-medium">Nume</th>
+                    <th className="text-right py-2.5 px-3 font-medium hidden md:table-cell">Voturi</th>
+                    <th className="text-right py-2.5 px-3 font-medium">Devieri</th>
                   </tr>
                 </thead>
                 <tbody>
                   {members.map(m => (
-                    <tr key={m.politician_id} className="border-b border-rim/60 last:border-0 hover:bg-raised transition-colors">
+                    <tr key={m.politician_id} className="border-b border-rim hover:bg-raised transition-colors">
                       <td className="py-2.5 px-3">
                         <Link href={`${basePath}/${m.politician_id}`} className="font-medium text-foreground hover:underline">
                           {m.first_name} {m.name}
@@ -133,20 +133,20 @@ export default async function PartyPage({ params }: { params: Promise<{ abbr: st
         {!recentVotes?.length ? (
           <p className="text-sm text-muted">Nu există date.</p>
         ) : (
-          <div className="border border-rim rounded-xl overflow-hidden">
+          <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-raised text-[11px] uppercase tracking-widest text-foreground/70 border-b border-rim">
-                  <th className="text-left py-2.5 px-3 font-bold">Cod</th>
-                  <th className="text-left py-2.5 px-3 font-bold hidden md:table-cell">Titlu</th>
-                  <th className="text-left py-2.5 px-3 font-bold hidden sm:table-cell">Dată</th>
-                  <th className="text-left py-2.5 px-3 font-bold">Poziție partid</th>
-                  <th className="text-left py-2.5 px-3 font-bold hidden md:table-cell">Rezultat</th>
+                <tr className="border-b-2 border-sidebar text-[11px] uppercase tracking-[0.14em] text-faint">
+                  <th className="text-left py-2.5 px-3 font-medium">Cod</th>
+                  <th className="text-left py-2.5 px-3 font-medium hidden md:table-cell">Titlu</th>
+                  <th className="text-left py-2.5 px-3 font-medium hidden sm:table-cell">Dată</th>
+                  <th className="text-left py-2.5 px-3 font-medium">Poziție partid</th>
+                  <th className="text-left py-2.5 px-3 font-medium hidden md:table-cell">Rezultat</th>
                 </tr>
               </thead>
               <tbody>
                 {recentVotes.map(v => (
-                  <tr key={v.vote_id} className="border-b border-rim/60 last:border-0 hover:bg-raised transition-colors">
+                  <tr key={v.vote_id} className="border-b border-rim hover:bg-raised transition-colors">
                     <td className="py-2.5 px-3">
                       <Link href={`/votes/${v.vote_id}`} className="font-mono hover:underline text-foreground">
                         {v.law_code}

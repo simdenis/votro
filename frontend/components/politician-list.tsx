@@ -27,35 +27,35 @@ export function PoliticianList({ title, basePath, people, sort, dir }: Props) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-baseline justify-between">
-        <h1 className="text-2xl font-semibold text-foreground">{title}</h1>
-        <span className="text-sm text-muted">{people.length} {title.toLowerCase()}</span>
+      <div className="flex items-baseline justify-between gap-4">
+        <h1 className="font-serif text-[40px] font-normal tracking-[-0.01em] leading-[1.05] text-foreground">{title}</h1>
+        <span className="text-[12.5px] text-muted">{people.length} {title.toLowerCase()}</span>
       </div>
 
       {!people.length ? (
         <p className="text-sm text-muted">Nu există date.</p>
       ) : (
-        <div className="border border-rim rounded-xl overflow-x-auto">
+        <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-raised text-[11px] uppercase tracking-widest text-foreground/70 border-b border-rim">
-                <th className="text-left py-2.5 pr-4 pl-3 font-bold">
+              <tr className="border-b-2 border-sidebar text-[11px] uppercase tracking-[0.14em] text-faint">
+                <th className="text-left py-2.5 pr-4 font-medium">
                   <Link href={sortUrl('name')} className="hover:text-foreground">
                     Nume {sortIcon('name')}
                   </Link>
                 </th>
-                <th className="text-left py-2.5 pr-4 font-bold">Partid</th>
-                <th className="text-right py-2.5 pr-4 font-bold hidden md:table-cell">
+                <th className="text-left py-2.5 pr-4 font-medium">Partid</th>
+                <th className="text-right py-2.5 pr-4 font-medium hidden md:table-cell">
                   <Link href={sortUrl('votes')} className="hover:text-foreground">
                     Voturi {sortIcon('votes')}
                   </Link>
                 </th>
-                <th className="text-right py-2.5 pr-4 font-bold hidden lg:table-cell">
+                <th className="text-right py-2.5 pr-4 font-medium hidden lg:table-cell">
                   <Link href={sortUrl('presence')} className="hover:text-foreground">
                     Prezență {sortIcon('presence')}
                   </Link>
                 </th>
-                <th className="text-right py-2.5 pr-4 font-bold">
+                <th className="text-right py-2.5 font-medium">
                   <Link href={sortUrl('deviation')} className="hover:text-foreground">
                     Devieri {sortIcon('deviation')}
                   </Link>
@@ -64,8 +64,8 @@ export function PoliticianList({ title, basePath, people, sort, dir }: Props) {
             </thead>
             <tbody>
               {people.map(s => (
-                <tr key={s.politician_id} className="border-b border-rim/60 last:border-0 hover:bg-raised transition-colors">
-                  <td className="py-3 pr-4 pl-3">
+                <tr key={s.politician_id} className="border-b border-rim hover:bg-raised transition-colors">
+                  <td className="py-3 pr-4">
                     <Link href={`${basePath}/${s.politician_id}`} className="text-foreground hover:underline">
                       {s.first_name} {s.name}
                     </Link>

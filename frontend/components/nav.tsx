@@ -29,11 +29,16 @@ export function Nav() {
           >
             <SearchIcon /> Căutare
           </Link>
-          {/* Romanian flag stripe */}
-          <div className="flex h-[3px] rounded-sm overflow-hidden mt-3.5 gap-px">
-            <div className="flex-1" style={{ backgroundColor: 'var(--flag-blue)' }} />
-            <div className="flex-1" style={{ backgroundColor: 'var(--flag-yellow)' }} />
-            <div className="flex-1" style={{ backgroundColor: 'var(--flag-red)' }} />
+          {/* Romanian flag stripe + label */}
+          <div className="mt-4">
+            <div className="flex h-[4px] rounded-sm overflow-hidden gap-px">
+              <div className="flex-1" style={{ backgroundColor: 'var(--flag-blue)' }} />
+              <div className="flex-1" style={{ backgroundColor: 'var(--flag-yellow)' }} />
+              <div className="flex-1" style={{ backgroundColor: 'var(--flag-red)' }} />
+            </div>
+            <div className="text-[9px] uppercase tracking-[0.16em] text-white/35 mt-1.5">
+              Parlamentul României
+            </div>
           </div>
         </div>
       </aside>
