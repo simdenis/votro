@@ -19,10 +19,10 @@
   --bg:      #f6f6f4;
   --surface: #ffffff;
   --raised:  #ededeb;
-  --rim:     #dededd;
-  --text:    #18181b;
-  --muted:   #606070;
-  --faint:   #909099;
+  --rim:     #d6d6d4;
+  --text:    #0b0b0d;   /* near-black body text */
+  --muted:   #3a3a42;   /* darker secondary text (was grey) */
+  --faint:   #6a6a72;   /* darker tertiary/labels */
   --shimmer-base: #e8e8e6;
   --shimmer-peak: #dfdfdd;
 }
