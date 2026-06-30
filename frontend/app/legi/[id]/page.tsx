@@ -59,7 +59,7 @@ export default async function LawDetail({ params }: { params: Promise<{ id: stri
           )}
           <BaseLawBadges title={law.title} />
         </div>
-        <h1 className="text-xl font-bold text-foreground leading-snug">{law.title}</h1>
+        <h1 className="font-serif text-[30px] font-normal text-foreground leading-[1.12] tracking-[-0.01em]">{law.title}</h1>
         {law.em_url && (
           <a
             href={law.em_url}
