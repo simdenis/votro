@@ -59,8 +59,8 @@ export default async function VotesPage({
   return (
     <div className="space-y-6">
       <div className="flex items-baseline justify-between">
-        <h1 className="text-2xl font-semibold text-foreground">Voturi</h1>
-        <span className="text-sm text-muted">{count ?? 0} total</span>
+        <h1 className="font-serif text-[40px] font-normal tracking-[-0.01em] leading-[1.05] text-foreground">Voturi</h1>
+        <span className="text-[12.5px] text-muted">{count ?? 0} total</span>
       </div>
 
       <VoteFilter categories={categories} />
@@ -68,27 +68,23 @@ export default async function VotesPage({
       {!votes?.length ? (
         <p className="text-sm text-muted py-8">Nu există voturi pentru filtrele selectate.</p>
       ) : (
-        <div className="border border-rim rounded-xl overflow-x-auto">
+        <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-raised text-[11px] uppercase tracking-widest text-foreground/70 border-b border-rim">
-                <th className="text-left py-2.5 pr-4 pl-3 font-bold">Cod</th>
-                <th className="text-left py-2.5 pr-4 font-bold">Titlu</th>
-                <th className="text-left py-2.5 pr-4 font-bold hidden lg:table-cell">Categorie</th>
-                <th className="text-left py-2.5 pr-4 font-bold hidden md:table-cell">Dată</th>
-                <th className="text-left py-2.5 pr-4 font-bold">Rezultat</th>
+              <tr className="border-b-2 border-sidebar text-[11px] uppercase tracking-[0.14em] text-faint">
+                <th className="text-left py-2.5 pr-4 font-medium">Cod</th>
+                <th className="text-left py-2.5 pr-4 font-medium">Titlu</th>
+                <th className="text-left py-2.5 pr-4 font-medium hidden lg:table-cell">Categorie</th>
+                <th className="text-left py-2.5 pr-4 font-medium hidden md:table-cell">Dată</th>
+                <th className="text-left py-2.5 pr-4 font-medium">Rezultat</th>
                 <th className="hidden xl:table-cell" />
               </tr>
             </thead>
             <tbody>
               {votes.map(vote => (
-                <tr key={vote.id} className="border-b border-rim/60 last:border-0 hover:bg-raised transition-colors">
-                  <td className={`py-3 pr-4 pl-3 border-l-2 ${
-                    vote.outcome === 'adoptat' ? 'border-adoptat' :
-                    vote.outcome === 'respins' ? 'border-respins' :
-                    'border-rim'
-                  }`}>
-                    <Link href={`/votes/${vote.id}`} className="font-mono text-foreground hover:underline">
+                <tr key={vote.id} className="border-b border-rim hover:bg-raised transition-colors">
+                  <td className="py-3 pr-4">
+                    <Link href={`/votes/${vote.id}`} className="font-mono text-foreground hover:underline" style={{ color: 'var(--sidebar-bg)' }}>
                       {vote.laws?.code ?? '—'}
                     </Link>
                   </td>

@@ -19,8 +19,8 @@ export default async function PartiesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-foreground">Partide</h1>
-        <p className="text-xs text-muted mt-1">
+        <h1 className="font-serif text-[40px] font-normal tracking-[-0.01em] leading-[1.05] text-foreground">Partide</h1>
+        <p className="text-[12.5px] text-muted mt-1.5">
           Coeziunea se calculează pe baza <strong className="text-foreground">afilierii curente</strong> a parlamentarilor.
         </p>
       </div>
@@ -37,7 +37,7 @@ export default async function PartiesPage() {
               <div className="flex items-start justify-between mb-4">
                 <div>
                   <span
-                    className="inline-flex items-center rounded-full px-2.5 py-1 text-sm font-semibold"
+                    className="inline-flex items-center rounded-[4px] px-2.5 py-1 text-sm font-semibold"
                     style={{ backgroundColor: p.color, color: textOnColor(p.color) }}
                   >
                     {p.abbreviation}

@@ -41,7 +41,7 @@ const CATEGORIES = [
 function chipClass(active: boolean) {
   return `text-xs px-2.5 py-1 rounded-full border transition-colors ${
     active
-      ? 'border-respins text-foreground bg-raised'
+      ? 'border-sidebar text-foreground bg-raised'
       : 'border-rim text-muted hover:text-foreground hover:border-foreground/40'
   }`
 }
@@ -142,8 +142,8 @@ export default async function LegiPage({
   return (
     <div className="space-y-6">
       <div className="flex items-baseline justify-between">
-        <h1 className="text-2xl font-semibold text-foreground">Legi</h1>
-        <span className="text-sm text-muted">{count ?? 0} total</span>
+        <h1 className="font-serif text-[40px] font-normal tracking-[-0.01em] leading-[1.05] text-foreground">Legi</h1>
+        <span className="text-[12.5px] text-muted">{count ?? 0} total</span>
       </div>
 
       {/* Tabs */}
@@ -154,7 +154,7 @@ export default async function LegiPage({
             href={buildUrl({ tab: t.id })}
             className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${
               tab === t.id
-                ? 'border-respins text-foreground'
+                ? 'border-sidebar text-foreground'
                 : 'border-transparent text-muted hover:text-foreground'
             }`}
           >
@@ -206,23 +206,23 @@ export default async function LegiPage({
             : 'Nu există legi pentru filtrul selectat.'}
         </p>
       ) : (
-        <div className="border border-rim rounded-xl overflow-x-auto">
+        <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-raised text-[11px] uppercase tracking-widest text-foreground/70 border-b border-rim">
-                <th className="text-left py-2.5 pr-4 pl-3 font-bold">Cod</th>
-                <th className="text-left py-2.5 pr-4 font-bold">Titlu</th>
-                <th className="text-left py-2.5 pr-4 font-bold hidden lg:table-cell">Categorie</th>
-                <th className="text-left py-2.5 pr-4 font-bold">Senat</th>
-                <th className="text-left py-2.5 pr-4 font-bold">Camera</th>
-                <th className="text-left py-2.5 pr-4 font-bold">Președinte</th>
+              <tr className="border-b-2 border-sidebar text-[11px] uppercase tracking-[0.14em] text-faint">
+                <th className="text-left py-2.5 pr-4 font-medium">Cod</th>
+                <th className="text-left py-2.5 pr-4 font-medium">Titlu</th>
+                <th className="text-left py-2.5 pr-4 font-medium hidden lg:table-cell">Categorie</th>
+                <th className="text-left py-2.5 pr-4 font-medium">Senat</th>
+                <th className="text-left py-2.5 pr-4 font-medium">Camera</th>
+                <th className="text-left py-2.5 pr-4 font-medium">Președinte</th>
               </tr>
             </thead>
             <tbody>
               {laws.map(law => (
-                <tr key={law.law_id} className="border-b border-rim/60 last:border-0 hover:bg-raised transition-colors">
-                  <td className="py-3 pr-4 pl-3">
-                    <Link href={`/legi/${law.law_id}`} className="font-mono text-foreground hover:underline whitespace-nowrap">
+                <tr key={law.law_id} className="border-b border-rim hover:bg-raised transition-colors">
+                  <td className="py-3 pr-4">
+                    <Link href={`/legi/${law.law_id}`} className="font-mono hover:underline whitespace-nowrap" style={{ color: 'var(--sidebar-bg)' }}>
                       {law.code}
                     </Link>
                   </td>
