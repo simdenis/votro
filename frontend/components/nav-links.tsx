@@ -26,10 +26,10 @@ export function NavLinks({ variant }: { variant?: 'sidebar' | 'top' }) {
             <Link
               key={href}
               href={href}
-              className={`px-[11px] py-[8px] rounded-md text-[14.5px] transition-colors ${
+              className={`px-[12px] py-[10px] rounded-md text-[17px] transition-colors ${
                 active
-                  ? 'font-semibold text-white bg-white/[0.12]'
-                  : 'font-medium text-white/70 hover:text-white hover:bg-white/[0.06]'
+                  ? 'font-semibold text-white bg-white/[0.14]'
+                  : 'font-medium text-white/85 hover:text-white hover:bg-white/[0.08]'
               }`}
             >
               {label}
