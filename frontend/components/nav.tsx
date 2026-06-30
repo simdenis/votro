@@ -17,7 +17,7 @@ export function Nav() {
       >
         <Link href="/" className="block mb-7">
           <div className="font-serif text-[26px] text-white leading-none">VotRO</div>
-          <div className="text-[10px] uppercase tracking-[0.14em] text-white/35 mt-1">Senat · Cameră · 2024</div>
+          <div className="text-[10px] uppercase tracking-[0.14em] text-white/35 mt-1">Senat · Cameră · 2026</div>
         </Link>
 
         <NavLinks variant="sidebar" />
