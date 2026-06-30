@@ -1,4 +1,8 @@
 import type { VoteCardData, PartyVote } from '@/components/cards/vote-card'
+import type { SenatorCardData } from '@/components/cards/senator-card'
+import type { LawCardData, JourneyStep } from '@/components/cards/law-card'
+import type { PoliticianStats, LawStatus } from '@/lib/types'
+import { formatDate } from '@/lib/utils'
 
 interface BreakdownRow { party_abbr: string; vote_choice: string; count: number }
 
@@ -33,6 +37,69 @@ export function mapVoteToCard(vote: any, rows: BreakdownRow[]): VoteCardData {
     votesAbsent: vote.not_voted_count ?? 0,
     source: isDep ? 'cdep.ro' : 'senat.ro',
     parties: toParties(rows),
+  }
+}
+
+// ── Senator/deputy ──────────────────────────────────────────────────────────
+export function mapSenatorToCard(s: PoliticianStats, chamber: 'senate' | 'deputies'): SenatorCardData {
+  const noLine = s.party_abbr === 'IND' || s.party_abbr === 'MIN'
+  return {
+    fullName: `${s.first_name} ${s.name}`.trim(),
+    partyAbbr: s.party_abbr,
+    partyColor: s.party_color || '#9e9e9e',
+    chamberLabel: chamber === 'deputies' ? 'DEPUTAT' : 'SENATOR',
+    year: new Date().getFullYear(),
+    totalVotes: s.total_votes ?? 0,
+    votesFor: s.votes_for ?? 0,
+    votesAgainst: s.votes_against ?? 0,
+    votesAbstain: s.votes_abstention ?? 0,
+    votesAbsent: s.votes_absent ?? 0,
+    loyaltyPct: s.deviation_pct != null ? Math.round(100 - s.deviation_pct) : null,
+    deviations: s.deviations ?? 0,
+    deviationPct: s.deviation_pct != null ? Math.round(s.deviation_pct) : null,
+    noLine,
+  }
+}
+
+// ── Law journey ──────────────────────────────────────────────────────────────
+export function mapLawToCard(law: LawStatus): LawCardData {
+  const promulgat = law.presidential_status === 'promulgat'
+  const senateDone = law.senate_outcome === 'adoptat' || !!law.presidential_status
+  const cameraDone = law.camera_outcome === 'adoptat' || !!law.presidential_status
+  const rejected = law.senate_outcome === 'respins' || law.camera_outcome === 'respins'
+
+  let finalStep: JourneyStep
+  if (promulgat) finalStep = { label: 'Lege', done: true, final: true }
+  else if (law.presidential_status === 'retrimis') finalStep = { label: 'Retrimisă', done: false, final: true }
+  else if (law.presidential_status === 'sesizat_ccr') finalStep = { label: 'CCR', done: false, final: true }
+  else finalStep = { label: 'Președinte', done: false, final: true }
+
+  let statusLabel = 'ÎN DEZBATERE'
+  let statusColor = '#0f2464'
+  if (promulgat) { statusLabel = 'PROMULGATĂ'; statusColor = '#0f2464' }
+  else if (rejected) { statusLabel = 'RESPINSĂ'; statusColor = '#c4362e' }
+  else if (senateDone && cameraDone) { statusLabel = 'ADOPTATĂ'; statusColor = '#1a7a42' }
+
+  const dateLine = promulgat && law.presidential_date
+    ? `Promulgată · ${formatDate(law.presidential_date)}`
+    : cameraDone && law.camera_vote_date
+      ? `Adoptată · ${formatDate(law.camera_vote_date)}`
+      : null
+
+  const dateForYear = law.presidential_date || law.camera_vote_date || law.senate_vote_date
+  return {
+    lawCode: law.code,
+    lawTitle: law.title ?? '—',
+    category: law.law_category ?? null,
+    year: dateForYear ? new Date(dateForYear).getFullYear() : new Date().getFullYear(),
+    statusLabel,
+    statusColor,
+    dateLine,
+    journey: [
+      { label: 'Senat', done: senateDone },
+      { label: 'Cameră', done: cameraDone },
+      finalStep,
+    ],
   }
 }
 

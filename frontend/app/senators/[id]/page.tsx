@@ -6,6 +6,7 @@ import { formatDate, choiceLabel, choiceColor, pct } from '@/lib/utils'
 import { PartyBadge } from '@/components/party-badge'
 import { OutcomeBadge } from '@/components/outcome-badge'
 import { LoyaltyMeter } from '@/components/loyalty-meter'
+import { CardDownload } from '@/components/card-download'
 import type { SenatorStats, VoteHistoryRow } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
@@ -111,6 +112,11 @@ export default async function SenatorProfile({
             <LoyaltyMeter loyaltyPct={loyaltyPct} size={96} />
           </div>
         )}
+      </div>
+
+      {/* Download card */}
+      <div className="flex">
+        <CardDownload href={`/api/og/senatorcard?id=${id}`} filename={`votro-${stats.first_name}-${stats.name}.png`.replace(/\s+/g, '-')} />
       </div>
 
       {/* ── Two-column analytics ────────────────────────── */}
