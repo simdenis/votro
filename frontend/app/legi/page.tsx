@@ -41,7 +41,7 @@ const CATEGORIES = [
 function chipClass(active: boolean) {
   return `text-[13.5px] px-3.5 py-1.5 rounded-full border font-medium transition-colors ${
     active
-      ? 'border-sidebar text-white bg-sidebar'
+      ? 'border-[#0f2464] text-white bg-[#0f2464]'
       : 'border-rim text-foreground/75 hover:text-foreground hover:border-foreground/40 hover:bg-raised'
   }`
 }
