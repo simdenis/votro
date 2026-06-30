@@ -34,7 +34,7 @@ export default async function SaptamanaPage() {
   return (
     <div className="space-y-8">
       <div className="flex items-baseline justify-between">
-        <h1 className="text-2xl font-semibold text-foreground">Această săptămână</h1>
+        <h1 className="font-serif text-[40px] font-normal tracking-[-0.01em] leading-[1.05] text-foreground">Această săptămână</h1>
         <span className="text-sm text-muted">{votes.length} voturi</span>
       </div>
 

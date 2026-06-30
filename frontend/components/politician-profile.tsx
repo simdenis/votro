@@ -41,7 +41,7 @@ export function PoliticianProfile({ stats, history, basePath, chamberLabel, site
         </div>
 
         <div className="flex-1 min-w-0">
-          <h1 className="text-xl font-extrabold text-foreground tracking-tight leading-tight">
+          <h1 className="font-serif text-[28px] font-normal text-foreground tracking-[-0.01em] leading-[1.1]">
             {stats.first_name} {stats.name}
           </h1>
           <div className="flex items-center gap-2 mt-1 flex-wrap">

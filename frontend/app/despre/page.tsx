@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 export default function DesprePage() {
   return (
     <div className="max-w-2xl space-y-10">
-      <h1 className="text-2xl font-semibold text-foreground">Despre VotRO</h1>
+      <h1 className="font-serif text-[40px] font-normal tracking-[-0.01em] leading-[1.05] text-foreground">Despre VotRO</h1>
 
       <section className="space-y-3">
         <h2 className="text-sm font-semibold uppercase tracking-widest text-muted">Ce este VotRO</h2>
