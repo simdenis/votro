@@ -167,7 +167,7 @@ def post_vote(cfg: Config, vote_id: str, dry_run: bool = False) -> str | None:
     vote = fetch_vote(cfg, vote_id)
     if not vote:
         sys.exit(f"vote {vote_id} not found")
-    image_url = f"{cfg.site_url}/api/og/post?vote={vote_id}"
+    image_url = f"{cfg.site_url}/api/og/votecard?vote={vote_id}"
     caption = build_vote_caption(cfg, vote)
     if dry_run:
         print("── DRY RUN ──")
