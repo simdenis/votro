@@ -18,6 +18,12 @@ export function Nav() {
         <Link href="/" className="block mb-7">
           <div className="font-serif text-[26px] text-white leading-none">VotRO</div>
           <div className="text-[10px] uppercase tracking-[0.14em] text-white/35 mt-1">Senat · Cameră · 2026</div>
+          {/* Romanian flag stripe — right under the wordmark, always visible */}
+          <div className="flex h-[4px] rounded-sm overflow-hidden gap-px mt-3.5">
+            <div className="flex-1" style={{ backgroundColor: 'var(--flag-blue)' }} />
+            <div className="flex-1" style={{ backgroundColor: 'var(--flag-yellow)' }} />
+            <div className="flex-1" style={{ backgroundColor: 'var(--flag-red)' }} />
+          </div>
         </Link>
 
         <NavLinks variant="sidebar" />
@@ -29,17 +35,6 @@ export function Nav() {
           >
             <SearchIcon /> Căutare
           </Link>
-          {/* Romanian flag stripe + label */}
-          <div className="mt-4">
-            <div className="flex h-[4px] rounded-sm overflow-hidden gap-px">
-              <div className="flex-1" style={{ backgroundColor: 'var(--flag-blue)' }} />
-              <div className="flex-1" style={{ backgroundColor: 'var(--flag-yellow)' }} />
-              <div className="flex-1" style={{ backgroundColor: 'var(--flag-red)' }} />
-            </div>
-            <div className="text-[9px] uppercase tracking-[0.16em] text-white/35 mt-1.5">
-              Parlamentul României
-            </div>
-          </div>
         </div>
       </aside>
 
