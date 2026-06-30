@@ -11,7 +11,7 @@ interface Props {
 export function PartyBadge({ abbreviation, color, size = 'sm', noLink }: Props) {
   const bg = color ?? '#9e9e9e'
   const fg = textOnColor(bg)
-  const cls = `inline-flex items-center rounded-full font-semibold ${size === 'sm' ? 'px-2 py-0.5 text-xs' : 'px-2.5 py-1 text-sm'}`
+  const cls = `inline-flex items-center rounded-[4px] font-semibold ${size === 'sm' ? 'px-2 py-0.5 text-xs' : 'px-2.5 py-1 text-sm'}`
   if (noLink) {
     return (
       <span className={cls} style={{ backgroundColor: bg, color: fg }}>

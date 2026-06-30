@@ -1,21 +1,23 @@
 import type { Metadata } from 'next'
-import { Inter, EB_Garamond } from 'next/font/google'
+import { DM_Serif_Display, DM_Sans } from 'next/font/google'
 import './globals.css'
 import { Nav } from '@/components/nav'
 import { Footer } from '@/components/footer'
 
-const inter = Inter({
+// Display serif for headlines. Used via `font-serif`.
+const dmSerif = DM_Serif_Display({
   subsets: ['latin', 'latin-ext'],
-  variable: '--font-inter',
+  weight: ['400'],
+  style: ['normal', 'italic'],
+  variable: '--font-serif',
   display: 'swap',
 })
 
-// Editorial display serif for headlines. Used via `font-serif`.
-const garamond = EB_Garamond({
+// Body sans. Used via `font-sans` / default body font.
+const dmSans = DM_Sans({
   subsets: ['latin', 'latin-ext'],
-  variable: '--font-serif',
+  variable: '--font-sans',
   display: 'swap',
-  style: ['normal', 'italic'],
 })
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://votro.ro'
@@ -47,18 +49,15 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ro" className={`${inter.variable} ${garamond.variable}`} suppressHydrationWarning>
+    <html lang="ro" className={`${dmSerif.variable} ${dmSans.variable}`} suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html:
-          `try{if(localStorage.getItem('theme')!=='dark')document.documentElement.classList.add('light')}catch(e){}`
-        }} />
         <link rel="preconnect" href="https://zmxewrkykbxawfhzxbni.supabase.co" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
       <body className="flex min-h-screen">
         <Nav />
         <div className="flex flex-col flex-1 min-w-0">
-          <main className="flex-1 max-w-6xl w-full px-8 py-10">{children}</main>
+          <main className="flex-1 max-w-[1040px] w-full px-14 py-11">{children}</main>
           <Footer />
         </div>
       </body>
