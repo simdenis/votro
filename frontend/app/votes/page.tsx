@@ -69,15 +69,15 @@ export default async function VotesPage({
         <p className="text-sm text-muted py-8">Nu există voturi pentru filtrele selectate.</p>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-[15px]">
             <thead>
               <tr className="border-b-2 border-sidebar text-[11px] uppercase tracking-[0.14em] text-faint">
-                <th className="text-left py-2.5 pr-4 font-medium">Cod</th>
-                <th className="text-left py-2.5 pr-4 font-medium">Titlu</th>
-                <th className="text-left py-2.5 pr-4 font-medium hidden lg:table-cell">Categorie</th>
-                <th className="text-left py-2.5 pr-4 font-medium hidden md:table-cell">Dată</th>
-                <th className="text-left py-2.5 pr-4 font-medium">Rezultat</th>
-                <th className="hidden xl:table-cell" />
+                <th className="text-left py-3 pr-4 font-medium">Cod</th>
+                <th className="text-left py-3 pr-4 font-medium">Titlu</th>
+                <th className="text-left py-3 pr-4 font-medium hidden lg:table-cell">Categorie</th>
+                <th className="text-left py-3 pr-4 font-medium hidden md:table-cell">Dată</th>
+                <th className="text-left py-3 pr-4 font-medium">Rezultat</th>
+                <th className="text-left py-3 pr-4 font-medium hidden sm:table-cell">Voturi</th>
               </tr>
             </thead>
             <tbody>
@@ -107,7 +107,7 @@ export default async function VotesPage({
                   <td className="py-3 pr-4">
                     <OutcomeBadge outcome={vote.outcome} />
                   </td>
-                  <td className="py-3 pl-4 hidden xl:table-cell">
+                  <td className="py-3 pr-4 hidden sm:table-cell">
                     <MiniVoteBar
                       forCount={vote.for_count}
                       againstCount={vote.against_count}

@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { pct } from '@/lib/utils'
+import { pct, textOnColor } from '@/lib/utils'
 import { PartyBadge } from '@/components/party-badge'
 import type { PoliticianStats } from '@/lib/types'
 
@@ -33,66 +33,87 @@ export function PoliticianList({ title, basePath, people, sort, dir }: Props) {
       </div>
 
       {!people.length ? (
-        <p className="text-sm text-muted">Nu există date.</p>
+        <p className="text-[15px] text-muted">Nu există date.</p>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-[15px]">
             <thead>
               <tr className="border-b-2 border-sidebar text-[11px] uppercase tracking-[0.14em] text-faint">
-                <th className="text-left py-2.5 pr-4 font-medium">
+                <th className="text-left py-3 pr-4 font-medium">
                   <Link href={sortUrl('name')} className="hover:text-foreground">
                     Nume {sortIcon('name')}
                   </Link>
                 </th>
-                <th className="text-left py-2.5 pr-4 font-medium">Partid</th>
-                <th className="text-right py-2.5 pr-4 font-medium hidden md:table-cell">
+                <th className="text-left py-3 pr-4 font-medium">Partid</th>
+                <th className="text-left py-3 pr-4 font-medium hidden lg:table-cell">
                   <Link href={sortUrl('votes')} className="hover:text-foreground">
-                    Voturi {sortIcon('votes')}
+                    Comportament vot {sortIcon('votes')}
                   </Link>
                 </th>
-                <th className="text-right py-2.5 pr-4 font-medium hidden lg:table-cell">
-                  <Link href={sortUrl('presence')} className="hover:text-foreground">
-                    Prezență {sortIcon('presence')}
-                  </Link>
-                </th>
-                <th className="text-right py-2.5 font-medium">
+                <th className="text-right py-3 font-medium w-[160px]">
                   <Link href={sortUrl('deviation')} className="hover:text-foreground">
-                    Devieri {sortIcon('deviation')}
+                    Devieri de la partid {sortIcon('deviation')}
                   </Link>
                 </th>
               </tr>
             </thead>
             <tbody>
-              {people.map(s => (
-                <tr key={s.politician_id} className="border-b border-rim hover:bg-raised transition-colors">
-                  <td className="py-3 pr-4">
-                    <Link href={`${basePath}/${s.politician_id}`} className="text-foreground hover:underline">
-                      {s.first_name} {s.name}
-                    </Link>
-                  </td>
-                  <td className="py-3 pr-4">
-                    <PartyBadge abbreviation={s.party_abbr} color={s.party_color} />
-                  </td>
-                  <td className="py-3 pr-4 text-right text-muted tabular-nums hidden md:table-cell">
-                    {s.total_votes}
-                  </td>
-                  <td className="py-3 pr-4 text-right tabular-nums hidden lg:table-cell">
-                    <span className={
-                      s.presence_pct != null && s.presence_pct < 60 ? 'text-respins font-semibold' :
-                      s.presence_pct != null && s.presence_pct < 80 ? 'text-deviere' :
-                      'text-muted'
-                    }>
-                      {pct(s.presence_pct)}
-                    </span>
-                  </td>
-                  <td className="py-3 text-right tabular-nums">
-                    <span className={s.deviation_pct != null && s.deviation_pct > 10 ? 'text-deviere font-semibold' : 'text-muted'}>
-                      {s.deviation_pct != null && s.deviation_pct > 10 && '⚠ '}
-                      {pct(s.deviation_pct)}
-                    </span>
-                  </td>
-                </tr>
-              ))}
+              {people.map(s => {
+                const dev  = s.deviation_pct ?? 0
+                const high = dev > 10
+                // Independents / national-minority deputies have no party line to deviate from.
+                const noLine = s.party_abbr === 'IND' || s.party_abbr === 'MIN'
+                const initials = `${s.first_name?.[0] ?? ''}${s.name?.[0] ?? ''}`
+                const beh = [
+                  { v: s.votes_for ?? 0,        c: 'var(--color-for)' },
+                  { v: s.votes_against ?? 0,    c: 'var(--color-against)' },
+                  { v: s.votes_abstention ?? 0, c: 'var(--color-abstention)' },
+                  { v: s.votes_absent ?? 0,     c: 'var(--rim)' },
+                ]
+                const behTitle = `${s.votes_for ?? 0} pentru · ${s.votes_against ?? 0} împotrivă · ${s.votes_abstention ?? 0} abțineri · ${s.votes_absent ?? 0} absent`
+                return (
+                  <tr key={s.politician_id} className="border-b border-rim hover:bg-raised transition-colors">
+                    <td className="py-3 pr-4">
+                      <Link href={`${basePath}/${s.politician_id}`} className="flex items-center gap-3 group">
+                        <span
+                          className="w-9 h-9 rounded-full flex items-center justify-center text-[12px] font-bold flex-shrink-0 select-none"
+                          style={{ backgroundColor: s.party_color ?? '#9e9e9e', color: textOnColor(s.party_color ?? '#9e9e9e') }}
+                        >
+                          {initials}
+                        </span>
+                        <span className="font-medium text-foreground group-hover:underline">
+                          {s.first_name} {s.name}
+                        </span>
+                      </Link>
+                    </td>
+                    <td className="py-3 pr-4">
+                      <PartyBadge abbreviation={s.party_abbr} color={s.party_color} />
+                    </td>
+                    <td className="py-3 pr-4 hidden lg:table-cell">
+                      <div className="flex h-[7px] w-[170px] rounded-full overflow-hidden bg-raised" title={behTitle}>
+                        {beh.map((b, i) => b.v > 0 && <div key={i} style={{ flex: b.v, backgroundColor: b.c }} />)}
+                      </div>
+                    </td>
+                    <td className="py-3">
+                      {noLine ? (
+                        <div className="text-right text-[13px] text-faint pr-1" title="Fără linie de partid">—</div>
+                      ) : (
+                        <div className="flex items-center gap-2 justify-end">
+                          <div className="h-[6px] w-[70px] rounded-full bg-raised overflow-hidden">
+                            <div
+                              className="h-full rounded-full"
+                              style={{ width: `${Math.min(dev, 100)}%`, backgroundColor: high ? 'var(--color-deviation)' : 'var(--muted)' }}
+                            />
+                          </div>
+                          <span className={`tabular-nums text-[13px] w-12 text-right ${high ? 'text-deviere font-semibold' : 'text-muted'}`}>
+                            {pct(s.deviation_pct)}
+                          </span>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </div>
