@@ -39,10 +39,10 @@ const CATEGORIES = [
 ] as const
 
 function chipClass(active: boolean) {
-  return `text-xs px-2.5 py-1 rounded-full border transition-colors ${
+  return `text-[13.5px] px-3.5 py-1.5 rounded-full border font-medium transition-colors ${
     active
-      ? 'border-sidebar text-foreground bg-raised'
-      : 'border-rim text-muted hover:text-foreground hover:border-foreground/40'
+      ? 'border-sidebar text-white bg-sidebar'
+      : 'border-rim text-foreground/75 hover:text-foreground hover:border-foreground/40 hover:bg-raised'
   }`
 }
 
@@ -152,10 +152,10 @@ export default async function LegiPage({
           <Link
             key={t.id}
             href={buildUrl({ tab: t.id })}
-            className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${
+            className={`px-4 py-2.5 text-[15px] font-semibold transition-colors border-b-2 -mb-px ${
               tab === t.id
                 ? 'border-sidebar text-foreground'
-                : 'border-transparent text-muted hover:text-foreground'
+                : 'border-transparent text-foreground/55 hover:text-foreground'
             }`}
           >
             {t.label}
@@ -166,7 +166,7 @@ export default async function LegiPage({
       {/* Sort + category controls */}
       <div className="space-y-3">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-xs uppercase tracking-widest text-muted mr-1">Sortează</span>
+          <span className="text-[12px] uppercase tracking-[0.12em] font-semibold text-faint mr-1">Sortează</span>
           {SORTS.map(s => (
             <Link key={s.id} href={buildUrl({ sort: s.id })} className={chipClass(sort === s.id)}>
               {s.label}
@@ -174,7 +174,7 @@ export default async function LegiPage({
           ))}
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-xs uppercase tracking-widest text-muted mr-1">Categorie</span>
+          <span className="text-[12px] uppercase tracking-[0.12em] font-semibold text-faint mr-1">Categorie</span>
           <Link href={buildUrl({ category: null })} className={chipClass(category === null)}>
             Toate
           </Link>
