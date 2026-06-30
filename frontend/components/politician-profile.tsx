@@ -4,6 +4,7 @@ import { PartyBadge } from '@/components/party-badge'
 import { OutcomeBadge } from '@/components/outcome-badge'
 import { LoyaltyMeter } from '@/components/loyalty-meter'
 import { ShareButtons } from '@/components/share-buttons'
+import { CardDownload } from '@/components/card-download'
 import type { PoliticianStats, VoteHistoryRow } from '@/lib/types'
 
 interface Props {
@@ -59,10 +60,13 @@ export function PoliticianProfile({ stats, history, basePath, chamberLabel, site
       </div>
 
       {/* Share row */}
-      <ShareButtons
-        url={`${siteUrl}${basePath}/${stats.politician_id}`}
-        tweet={`${stats.first_name} ${stats.name} (${stats.party_abbr}) a deviat de la linia de partid în ${pct(stats.deviation_pct)} din voturi. ${siteUrl}${basePath}/${stats.politician_id}`}
-      />
+      <div className="flex items-center gap-3 flex-wrap">
+        <ShareButtons
+          url={`${siteUrl}${basePath}/${stats.politician_id}`}
+          tweet={`${stats.first_name} ${stats.name} (${stats.party_abbr}) a deviat de la linia de partid în ${pct(stats.deviation_pct)} din voturi. ${siteUrl}${basePath}/${stats.politician_id}`}
+        />
+        <CardDownload href={`/api/og/senatorcard?id=${stats.politician_id}`} filename={`votro-${stats.first_name}-${stats.name}.png`.replace(/\s+/g, '-')} />
+      </div>
 
       {/* ── Two-column analytics ────────────────────────── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -8,6 +8,7 @@ import { PartyBreakdown } from '@/components/party-breakdown'
 import { SeatArc } from '@/components/seat-arc'
 import { LawTimeline } from '@/components/law-timeline'
 import { BaseLawBadges } from '@/components/base-law-badge'
+import { CardDownload } from '@/components/card-download'
 import type { LawStatus, PartyVoteBreakdown } from '@/lib/types'
 
 export const revalidate = 3600
@@ -70,6 +71,9 @@ export default async function LawDetail({ params }: { params: Promise<{ id: stri
             Citește expunerea de motive (PDF) →
           </a>
         )}
+        <div className="mt-4 flex">
+          <CardDownload href={`/api/og/lawcard?id=${law.law_id}`} filename={`votro-${law.code.replace(/[^\w]+/g, '-')}.png`} />
+        </div>
       </div>
 
       {/* Timeline */}

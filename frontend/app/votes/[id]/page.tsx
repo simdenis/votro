@@ -8,6 +8,7 @@ import { PartyBadge } from '@/components/party-badge'
 import { PartyBreakdown } from '@/components/party-breakdown'
 import { SeatArc } from '@/components/seat-arc'
 import { ShareButtons } from '@/components/share-buttons'
+import { CardDownload } from '@/components/card-download'
 import { voteSourceUrl } from '@/lib/types'
 import type { VoteWithLaw, PoliticianVoteWithDetails, PartyVoteBreakdown } from '@/lib/types'
 
@@ -138,10 +139,13 @@ export default async function VoteDetail({
 
         {/* Share row + official source */}
         <div className="mt-3 pt-3 border-t border-rim/50 flex items-center justify-between gap-4 flex-wrap">
-          <ShareButtons
-            url={`${SITE_URL}/votes/${vote.id}`}
-            tweet={`${vote.laws.code} — ${(vote.laws.title ?? '').slice(0, 80)}. ${vote.outcome === 'adoptat' ? 'Adoptat' : vote.outcome === 'respins' ? 'Respins' : ''} cu ${vote.for_count ?? 0} pentru și ${vote.against_count ?? 0} împotrivă. ${SITE_URL}/votes/${vote.id}`}
-          />
+          <div className="flex items-center gap-3 flex-wrap">
+            <ShareButtons
+              url={`${SITE_URL}/votes/${vote.id}`}
+              tweet={`${vote.laws.code} — ${(vote.laws.title ?? '').slice(0, 80)}. ${vote.outcome === 'adoptat' ? 'Adoptat' : vote.outcome === 'respins' ? 'Respins' : ''} cu ${vote.for_count ?? 0} pentru și ${vote.against_count ?? 0} împotrivă. ${SITE_URL}/votes/${vote.id}`}
+            />
+            <CardDownload href={`/api/og/votecard?vote=${vote.id}`} filename={`votro-${vote.laws.code.replace(/[^\w]+/g, '-')}.png`} />
+          </div>
           {sourceUrl && (
             <a
               href={sourceUrl}
