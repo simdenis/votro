@@ -18,16 +18,18 @@ export default async function SenatorsPage({
   const sort = sp.sort ?? 'name'
   const dir  = sp.dir === 'desc'
 
-  const { data } = await getDB()
-    .from('senator_stats')
-    .select('*')
-    .order(
+  let query = getDB().from('senator_stats').select('*')
+  if (sort === 'party') {
+    query = query.order('party_abbr', { ascending: !dir, nullsFirst: false }).order('name', { ascending: true })
+  } else {
+    query = query.order(
       sort === 'deviation' ? 'deviation_pct'
       : sort === 'votes'   ? 'total_votes'
-      : sort === 'presence' ? 'presence_pct'
       : 'name',
       { ascending: !dir, nullsFirst: false }
-    ) as { data: PoliticianStats[] | null }
+    )
+  }
+  const { data } = await query as { data: PoliticianStats[] | null }
 
   return (
     <PoliticianList

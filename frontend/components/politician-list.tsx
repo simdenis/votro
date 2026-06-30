@@ -44,7 +44,11 @@ export function PoliticianList({ title, basePath, people, sort, dir }: Props) {
                     Nume {sortIcon('name')}
                   </Link>
                 </th>
-                <th className="text-left py-3 pr-4 font-medium">Partid</th>
+                <th className="text-left py-3 pr-4 font-medium">
+                  <Link href={sortUrl('party')} className="hover:text-foreground">
+                    Partid {sortIcon('party')}
+                  </Link>
+                </th>
                 <th className="text-left py-3 pr-4 font-medium hidden lg:table-cell">
                   <Link href={sortUrl('votes')} className="hover:text-foreground">
                     Comportament vot {sortIcon('votes')}
