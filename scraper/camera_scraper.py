@@ -246,6 +246,24 @@ def _classify_law(title: str) -> Optional[str]:
     return None
 
 
+# cdep serves the vote object as a description prefixed with vote boilerplate, e.g.
+#   "Vot final - PL-x 446/2026 - Vot final adoptare Adoptare PL 446/2026 <real title>"
+#   "Vot final - PH CD 37/2026 - Vot final adoptare PHCD 37/2026 <real title>"
+# Strip that prefix so only the actual law description remains.
+_VOTE_TITLE_BOILERPLATE = re.compile(
+    r"^\s*Vot final\s*-\s*.*?\s*-\s*Vot final\s+\w+\s+"
+    r"(?:(?:Adoptare|Respingere|Adoptarea|Respingerea)\s+)?"
+    r"(?:PL-?x?|PLCD|PHCD|PH\s*CD|PL)\s*[\d/]+\s+",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _clean_law_title(raw: str) -> str:
+    """Remove the cdep 'Vot final …' vote boilerplate that prefixes vote-derived
+    titles. Leaves already-clean titles untouched."""
+    return _VOTE_TITLE_BOILERPLATE.sub("", raw).strip()
+
+
 # ──────────────────────────────────────────────────────────────
 # Text helper
 # ──────────────────────────────────────────────────────────────
@@ -418,7 +436,7 @@ class CameraScraper:
             raw_subject = _txt(h) if h else ""
 
         if raw_subject:
-            detail.law_title = raw_subject[:500]
+            detail.law_title = _clean_law_title(raw_subject)[:500]
             # Extract law code from subject text
             m = re.search(
                 r"(?:PL[x\s]?|L|lege\s+nr\.?\s*)(\d+)\s*/\s*(\d{4})",
