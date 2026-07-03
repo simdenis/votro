@@ -66,7 +66,9 @@ class PresidentialScraper:
     LEGIS_URL = "https://www.senat.ro/legis/lista.aspx"
 
     # Regex to split code like "L125/2025" or "L95/2026"
-    CODE_RE = re.compile(r"^([A-Z]+\d+)/(\d{4})$", re.IGNORECASE)
+    # Senate registry codes only ("L123/2026"). Camera-registry codes
+    # (PLx…/PHCD…) have no senat.ro legislative-journey page — skip them.
+    CODE_RE = re.compile(r"^L(\d+)/(\d{4})$")
 
     def __init__(
         self,
@@ -242,7 +244,9 @@ class PresidentialScraper:
             return None
 
         nr_cls, an_cls = m.group(1), m.group(2)
-        url = f"{self.LEGIS_URL}?nr_cls={nr_cls}&an_cls={an_cls}"
+        # senat.ro expects the registry prefix in nr_cls ("L26", not "26") —
+        # without it the page renders as an empty search form.
+        url = f"{self.LEGIS_URL}?nr_cls=L{nr_cls}&an_cls={an_cls}"
         log.info("Fetching %s (%s)", code, url)
 
         self._delay()

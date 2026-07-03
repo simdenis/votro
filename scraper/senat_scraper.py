@@ -630,6 +630,18 @@ class SenatScraper:
     def _upsert_law(self, code: str, title: str) -> Optional[str]:
         if not code:
             return None
+        if title and _has_mojibake(title):
+            title = _repair_mojibake(title)
+        if title and _has_mojibake(title):
+            # Source title is mangled ('?' instead of ș/ț). Never overwrite an
+            # existing clean title with it.
+            existing = self.db.table("laws").select("id, title").eq("code", code).execute()
+            if existing.data:
+                ex = existing.data[0]
+                if ex.get("title") and not _has_mojibake(ex["title"]):
+                    log.warning("%s: keeping existing clean title (incoming has '?' mojibake)", code)
+                    return ex["id"]
+            log.warning("%s: title has '?' mojibake from source: %r", code, title[:80])
         payload: dict = {"code": code, "title": title}
         category = _classify_law(title)
         if category:
@@ -962,6 +974,32 @@ _PARTY_FULL_NAME: dict[str, str] = {
     "IND":   "Neafiliați",
     "MIN":   "Minoritățile naționale",
 }
+
+
+# Sources sometimes emit literal "?" where ș/ț (comma-below) should be — their
+# legacy encoding can't represent them. A "?" immediately followed by a letter
+# ("?i", "educa?iei") never occurs in a legitimate title, while a real question
+# mark is always followed by space/punctuation/end.
+_MOJIBAKE = re.compile(r"\?\w")
+
+
+def _has_mojibake(title: str) -> bool:
+    return bool(_MOJIBAKE.search(title))
+
+
+def _repair_mojibake(title: str) -> str:
+    """Fix only the unambiguous '?' patterns:
+      - standalone word '?i' → 'și'; clitic '?i-' → 'ți-'
+      - '?' before a consonant → 'ș' (Romanian never has ț+consonant: știre,
+        școală, șpagă — while ț is always followed by a vowel)
+    '?' before a vowel stays as-is: both ș and ț occur there (șa/ța, dețin/ieșire)
+    and guessing is unsafe."""
+    t = re.sub(r"(?<!\w)\?i\b(?!-)", "și", title)
+    t = re.sub(r"(?<!\w)\?I\b(?!-)", "Și", t)
+    t = re.sub(r"(?<!\w)\?i-", "ți-", t)
+    t = re.sub(r"\?(?=[bcdfghjklmnpqrstvwxz])", "ș", t)
+    t = re.sub(r"\?(?=[BCDFGHJKLMNPQRSTVWXZ])", "Ș", t)
+    return t
 
 
 def _norm(s: str) -> str:
