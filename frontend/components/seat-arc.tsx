@@ -30,7 +30,6 @@ export function SeatArc({
   const cy = Math.round(width * 0.46)
   const rStart = Math.round(width * 0.18)
   const rowGap = Math.round(width * 0.048)
-  const dotR = Math.round(width * 0.0135)
 
   const order: string[] = [
     ...Array(forCount).fill('#22c55e'),
@@ -39,17 +38,29 @@ export function SeatArc({
     ...Array(notVotedCount).fill('#d1d5db'),
   ]
 
-  const rowCounts = [36, 38, 34, 28]
+  // Rows scale with the vote size: 4 rows fit the Senate (~136), Camera
+  // votes (~330) need more. Seats are split across rows proportional to
+  // radius so every vote is drawn — nothing gets silently truncated.
+  const total = order.length
+  const numRows = total <= 140 ? 4 : total <= 240 ? 5 : 6
+  const dotR = width * (total <= 140 ? 0.0135 : total <= 240 ? 0.011 : 0.009)
+  const radii = Array.from({ length: numRows }, (_, i) => rStart + i * rowGap)
+  const sumR = radii.reduce((a, b) => a + b, 0)
+  const seats = radii.map(r => Math.round((total * r) / sumR))
+  seats[numRows - 1] += total - seats.reduce((a, b) => a + b, 0) // fix rounding drift
+
   const dots: { x: number; y: number; fill: string }[] = []
   let idx = 0
 
-  rowCounts.forEach((count, ri) => {
-    const r = rStart + ri * rowGap
+  seats.forEach((count, ri) => {
+    const r = radii[ri]
     for (let i = 0; i < count && idx < order.length; i++, idx++) {
       const angle = Math.PI * (i / Math.max(count - 1, 1))
+      // round to 2dp: raw Math.sin/cos differ in the last ulp between
+      // server and client, causing hydration attribute mismatches
       dots.push({
-        x: cx - r * Math.cos(angle),
-        y: cy - r * Math.sin(angle),
+        x: Math.round((cx - r * Math.cos(angle)) * 100) / 100,
+        y: Math.round((cy - r * Math.sin(angle)) * 100) / 100,
         fill: order[idx],
       })
     }

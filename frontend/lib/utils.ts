@@ -51,6 +51,18 @@ export function textOnColor(bgHex: string): string {
   return bgHex === '#ffdd00' ? '#000000' : '#ffffff'
 }
 
+/** Romanian numerals take "de" before the noun when the last two digits are
+ *  00 or ≥20: 4 devieri / 20 de devieri / 101 senatori / 120 de senatori. */
+export function needsDe(n: number): boolean {
+  const r = Math.abs(n) % 100
+  return n !== 0 && (r === 0 || r >= 20)
+}
+
+/** Romanian count + noun: 1 deviere / 4 devieri / 20 de devieri. */
+export function countNoun(n: number, one: string, many: string): string {
+  return n === 1 ? one : needsDe(n) ? `de ${many}` : many
+}
+
 export function pct(n: number | null | undefined): string {
   if (n == null) return '—'
   return `${n.toFixed(1)}%`

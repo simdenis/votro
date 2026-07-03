@@ -6,12 +6,14 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
 async function fetchSenator(id: string) {
-  const url = `${SUPABASE_URL}/rest/v1/senator_stats?politician_id=eq.${id}&limit=1`
-  const res = await fetch(url, {
-    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` },
-  })
-  const rows = await res.json()
-  return rows?.[0] ?? null
+  const headers = { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+  // Try senator_stats first, fall back to deputy_stats (deputy pages share this route).
+  for (const view of ['senator_stats', 'deputy_stats']) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${view}?politician_id=eq.${id}&limit=1`, { headers })
+    const rows = await res.json()
+    if (rows?.[0]) return rows[0]
+  }
+  return null
 }
 
 export async function GET(request: Request) {
@@ -41,7 +43,7 @@ export async function GET(request: Request) {
         {party && (
           <div
             style={{
-              display: 'inline-flex', alignSelf: 'flex-start',
+              display: 'flex', alignSelf: 'flex-start',
               padding: '6px 18px', borderRadius: 999,
               background: color, color: color === '#ffdd00' ? '#000' : '#fff',
               fontSize: 20, fontWeight: 900, letterSpacing: 1,

@@ -32,7 +32,8 @@ export function LoyaltyMeter({ loyaltyPct, size = 128 }: Props) {
 
   const filledAngle = startAngle + (loyaltyPct / 100) * sweep
   const filled = toXY(filledAngle)
-  const largeArcFilled = loyaltyPct > 50 ? 1 : 0
+  // large-arc kicks in once the filled sweep exceeds 180° (i.e. 180/270 ≈ 66.7%)
+  const largeArcFilled = (loyaltyPct / 100) * 270 > 180 ? 1 : 0
 
   const color =
     loyaltyPct >= 90 ? '#16a34a' : loyaltyPct >= 70 ? '#d97706' : '#dc2626'
@@ -76,8 +77,8 @@ export function LoyaltyMeter({ loyaltyPct, size = 128 }: Props) {
         y={cy + size * 0.18}
         textAnchor="middle"
         fill="var(--muted)"
-        fontSize={size * 0.085}
-        letterSpacing={1.5}
+        fontSize={size * 0.07}
+        letterSpacing={0.5}
         fontFamily="system-ui, sans-serif"
       >
         LOIALITATE

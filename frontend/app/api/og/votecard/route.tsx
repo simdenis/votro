@@ -30,5 +30,13 @@ export async function GET(request: Request) {
     : SAMPLE_VOTE_CARD
 
   const fonts = await getCardFonts()
-  return new ImageResponse(<VoteCard data={data} />, { width: 1080, height: 1080, fonts })
+  // Render at 2× (2160px) — a 1080px PNG looks soft on hi-dpi screens.
+  return new ImageResponse(
+    (
+      <div style={{ display: 'flex', width: 1080, height: 1080, transform: 'scale(2)', transformOrigin: 'top left' }}>
+        <VoteCard data={data} />
+      </div>
+    ),
+    { width: 2160, height: 2160, fonts },
+  )
 }

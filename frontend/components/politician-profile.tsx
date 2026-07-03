@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { formatDate, choiceLabel, choiceColor, pct } from '@/lib/utils'
+import { formatDate, choiceLabel, choiceColor, pct, countNoun } from '@/lib/utils'
 import { PartyBadge } from '@/components/party-badge'
 import { OutcomeBadge } from '@/components/outcome-badge'
 import { LoyaltyMeter } from '@/components/loyalty-meter'
@@ -10,14 +10,16 @@ import type { PoliticianStats, VoteHistoryRow } from '@/lib/types'
 interface Props {
   stats: PoliticianStats
   history: VoteHistoryRow[]
+  /** Fetched directly — deviations can be older than the history window. */
+  deviationRows?: VoteHistoryRow[]
   basePath: string
   chamberLabel: string
   siteUrl: string
 }
 
-export function PoliticianProfile({ stats, history, basePath, chamberLabel, siteUrl }: Props) {
+export function PoliticianProfile({ stats, history, deviationRows, basePath, chamberLabel, siteUrl }: Props) {
   const total      = stats.total_votes
-  const loyaltyPct = stats.deviation_pct != null ? Math.round(100 - stats.deviation_pct) : null
+  const loyaltyPct = stats.deviation_pct != null ? Math.floor(100 - stats.deviation_pct) : null
   const isHighDev  = stats.deviation_pct != null && stats.deviation_pct > 10
 
   const behaviorRows = [
@@ -27,7 +29,7 @@ export function PoliticianProfile({ stats, history, basePath, chamberLabel, site
     { label: 'Absent',    value: stats.votes_absent,     color: 'var(--faint)', icon: '·' },
   ]
 
-  const deviations = history.filter(r => r.party_line_deviation)
+  const deviations = deviationRows ?? history.filter(r => r.party_line_deviation)
 
   return (
     <div className="space-y-6">
@@ -48,7 +50,7 @@ export function PoliticianProfile({ stats, history, basePath, chamberLabel, site
           <div className="flex items-center gap-2 mt-1 flex-wrap">
             <PartyBadge abbreviation={stats.party_abbr} color={stats.party_color} size="md" />
             <span className="text-[10px] text-faint" title="Partidul din care face parte acum. Voturile sunt atribuite afilierii curente.">afiliere curentă</span>
-            <span className="text-xs text-muted">{chamberLabel} · {total} voturi înregistrate</span>
+            <span className="text-xs text-muted">{chamberLabel} · {total} {countNoun(total, 'vot înregistrat', 'voturi înregistrate')}</span>
           </div>
         </div>
 
@@ -104,7 +106,7 @@ export function PoliticianProfile({ stats, history, basePath, chamberLabel, site
           </h2>
           <p className="text-sm mb-4">
             <span className={isHighDev ? 'text-deviere font-semibold' : 'text-muted'}>
-              {stats.deviations} devieri
+              {stats.deviations} {countNoun(stats.deviations, 'deviere', 'devieri')}
             </span>
             <span className="text-faint mx-1.5">·</span>
             <span className={isHighDev ? 'text-deviere font-semibold' : 'text-muted'}>

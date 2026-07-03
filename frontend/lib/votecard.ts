@@ -26,8 +26,8 @@ export function toParties(rows: BreakdownRow[]): PartyVote[] {
 export function mapVoteToCard(vote: any, rows: BreakdownRow[]): VoteCardData {
   const isDep = vote.chamber === 'deputies'
   return {
-    lawCode: vote.laws?.code ?? '—',
-    lawTitle: vote.laws?.title ?? 'Transparență parlamentară',
+    lawCode: vote.laws?.code ?? 'VOT DE PLEN',
+    lawTitle: vote.laws?.title ?? 'Vot fără lege asociată',
     chamber: isDep ? 'CAMERĂ' : 'SENAT',
     result: vote.outcome === 'respins' ? 'RESPINS' : 'ADOPTAT',
     year: vote.vote_date ? new Date(vote.vote_date).getFullYear() : 2026,
@@ -54,7 +54,8 @@ export function mapSenatorToCard(s: PoliticianStats, chamber: 'senate' | 'deputi
     votesAgainst: s.votes_against ?? 0,
     votesAbstain: s.votes_abstention ?? 0,
     votesAbsent: s.votes_absent ?? 0,
-    loyaltyPct: s.deviation_pct != null ? Math.round(100 - s.deviation_pct) : null,
+    // floor: 0.4% deviation must not display as "100% loialitate"
+    loyaltyPct: s.deviation_pct != null ? Math.floor(100 - s.deviation_pct) : null,
     deviations: s.deviations ?? 0,
     deviationPct: s.deviation_pct != null ? Math.round(s.deviation_pct) : null,
     noLine,
@@ -62,7 +63,14 @@ export function mapSenatorToCard(s: PoliticianStats, chamber: 'senate' | 'deputi
 }
 
 // ── Law journey ──────────────────────────────────────────────────────────────
-export function mapLawToCard(law: LawStatus): LawCardData {
+/** The vote whose party breakdown the law card shows: Camera when it voted, else Senat. */
+export function lawDecisiveVoteId(law: LawStatus): { voteId: string; chamber: 'camera' | 'senate' } | null {
+  if (law.camera_vote_id) return { voteId: law.camera_vote_id, chamber: 'camera' }
+  if (law.senate_vote_id) return { voteId: law.senate_vote_id, chamber: 'senate' }
+  return null
+}
+
+export function mapLawToCard(law: LawStatus, breakdownRows: BreakdownRow[] = []): LawCardData {
   const promulgat = law.presidential_status === 'promulgat'
   const senateDone = law.senate_outcome === 'adoptat' || !!law.presidential_status
   const cameraDone = law.camera_outcome === 'adoptat' || !!law.presidential_status
@@ -87,6 +95,8 @@ export function mapLawToCard(law: LawStatus): LawCardData {
       : null
 
   const dateForYear = law.presidential_date || law.camera_vote_date || law.senate_vote_date
+  const decisive = lawDecisiveVoteId(law)
+  const isCam = decisive?.chamber === 'camera'
   return {
     lawCode: law.code,
     lawTitle: law.title ?? '—',
@@ -100,6 +110,11 @@ export function mapLawToCard(law: LawStatus): LawCardData {
       { label: 'Cameră', done: cameraDone },
       finalStep,
     ],
+    voteChamber: decisive ? (isCam ? 'CAMERA DEPUTAȚILOR' : 'SENAT') : null,
+    votesFor: isCam ? law.camera_for : law.senate_for,
+    votesAgainst: isCam ? law.camera_against : law.senate_against,
+    votesAbstain: isCam ? law.camera_abstentions : law.senate_abstentions,
+    parties: toParties(breakdownRows),
   }
 }
 

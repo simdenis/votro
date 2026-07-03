@@ -55,7 +55,7 @@ export interface Law {
 
 export interface Vote {
   id: string
-  law_id: string
+  law_id: string | null
   vote_date: string
   vote_type: string | null
   present_count: number | null
@@ -152,7 +152,7 @@ export interface PartyMajorityVote {
 
 // ── Joined / enriched shapes returned by Supabase nested selects ────
 
-export type VoteWithLaw = Vote & { laws: Law }
+export type VoteWithLaw = Vote & { laws: Law | null }
 
 export type PoliticianVoteWithDetails = PoliticianVote & {
   politicians: Politician & { parties: Party }

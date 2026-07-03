@@ -1,5 +1,7 @@
 // 1080×1080 law-journey card — same brand language as VoteCard.
 
+import type { PartyVote } from './vote-card'
+
 export interface JourneyStep { label: string; done: boolean; final?: boolean }
 
 export interface LawCardData {
@@ -11,6 +13,12 @@ export interface LawCardData {
   statusColor: string
   dateLine: string | null // e.g. "Promulgată · 24 mai 2026"
   journey: JourneyStep[]
+  // Decisive plenary vote (Camera if voted there, else Senat) — optional
+  voteChamber: 'CAMERA DEPUTAȚILOR' | 'SENAT' | null
+  votesFor: number | null
+  votesAgainst: number | null
+  votesAbstain: number | null
+  parties: PartyVote[]
 }
 
 const C = {
@@ -18,12 +26,35 @@ const C = {
   text: '#0a0a14',
   navy: '#0f2464',
   for: '#1a7a42',
+  against: '#c4362e',
+  abstain: '#8a7fb0',
+  absentDot: '#d0cfc8',
   hair: '#e6e5e1',
 }
 const SERIF = 'DM Serif Display'
 const SANS = 'DM Sans'
 
+/** Shrink the serif title as it grows so it always fits — never clip it. */
+function titleFont(len: number): number {
+  if (len <= 70) return 50
+  if (len <= 120) return 42
+  if (len <= 180) return 37
+  if (len <= 260) return 32
+  if (len <= 360) return 28
+  if (len <= 500) return 24
+  return 20
+}
+
 export function LawCard({ data }: { data: LawCardData }) {
+  const seg = (count: number, color: string) =>
+    count > 0 ? <div style={{ flexGrow: count, flexShrink: 1, flexBasis: 0, background: color }} /> : null
+
+  const voteCounts = [
+    data.votesFor != null ? `${data.votesFor} pentru` : null,
+    data.votesAgainst != null ? `${data.votesAgainst} împotrivă` : null,
+    data.votesAbstain != null ? `${data.votesAbstain} ${data.votesAbstain === 1 ? 'abținere' : 'abțineri'}` : null,
+  ].filter(Boolean).join(' · ')
+
   return (
     <div style={{ width: 1080, height: 1080, display: 'flex', flexDirection: 'column', background: C.bg, color: C.text, fontFamily: SANS }}>
       <div style={{ display: 'flex', height: 12 }}>
@@ -45,7 +76,7 @@ export function LawCard({ data }: { data: LawCardData }) {
             <div style={{ display: 'flex', fontSize: 13, opacity: 0.4, textTransform: 'uppercase', letterSpacing: 1.5 }}>{data.category}</div>
           )}
         </div>
-        <div style={{ fontFamily: SERIF, fontSize: 50, lineHeight: 1.12, color: C.text, marginBottom: 28, maxHeight: 300, overflow: 'hidden' }}>{data.lawTitle}</div>
+        <div style={{ fontFamily: SERIF, fontSize: titleFont(data.lawTitle.length), lineHeight: 1.14, color: C.text, marginBottom: 28 }}>{data.lawTitle}</div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 22 }}>
           <div style={{ display: 'flex', background: data.statusColor, color: '#fff', fontSize: 18, fontWeight: 600, letterSpacing: 4, textTransform: 'uppercase', padding: '11px 30px', borderRadius: 3 }}>
@@ -54,7 +85,35 @@ export function LawCard({ data }: { data: LawCardData }) {
           {data.dateLine && <div style={{ display: 'flex', fontSize: 17, opacity: 0.4 }}>{data.dateLine}</div>}
         </div>
 
-        <div style={{ display: 'flex', flex: 1 }} />
+        <div style={{ display: 'flex', flex: 1, minHeight: 10 }} />
+
+        {/* Party vote — decisive plenary vote */}
+        {data.parties.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', marginBottom: 24 }}>
+            <div style={{ display: 'flex', height: 1, background: C.hair, marginBottom: 14 }} />
+            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 10 }}>
+              <div style={{ display: 'flex', fontSize: 11, fontWeight: 600, color: C.navy, letterSpacing: 4, textTransform: 'uppercase', opacity: 0.65 }}>
+                {`Vot pe partide${data.voteChamber ? ` · ${data.voteChamber}` : ''}`}
+              </div>
+              {voteCounts && <div style={{ display: 'flex', fontSize: 13, opacity: 0.35 }}>{voteCounts}</div>}
+            </div>
+            {data.parties.slice(0, 5).map(p => {
+              const t = p.for + p.against + p.abstain + p.absent
+              return (
+                <div key={p.name} style={{ display: 'flex', alignItems: 'center', height: 36 }}>
+                  <div style={{ display: 'flex', width: 62, justifyContent: 'flex-end', fontSize: 13, fontWeight: 600, opacity: 0.5, paddingRight: 10 }}>{p.name}</div>
+                  <div style={{ display: 'flex', flexGrow: 1, flexShrink: 1, flexBasis: 0, height: 14, borderRadius: 2, overflow: 'hidden', background: C.hair }}>
+                    {seg(p.for, C.for)}
+                    {seg(p.against, C.against)}
+                    {seg(p.abstain, C.abstain)}
+                    {seg(p.absent, C.absentDot)}
+                  </div>
+                  <div style={{ display: 'flex', width: 34, fontSize: 11, opacity: 0.26, paddingLeft: 8 }}>{t}</div>
+                </div>
+              )
+            })}
+          </div>
+        )}
 
         {/* Legislative journey */}
         <div style={{ display: 'flex', height: 1, background: C.hair, marginBottom: 22 }} />

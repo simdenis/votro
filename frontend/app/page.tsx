@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
-import { formatDate } from '@/lib/utils'
+import { formatDate, countNoun } from '@/lib/utils'
 import { OutcomeBadge } from '@/components/outcome-badge'
 import { ParliamentBar } from '@/components/parliament-bar'
 import type { VoteWithLaw, PartyCohesion } from '@/lib/types'
@@ -82,7 +82,7 @@ export default async function Dashboard() {
         <section className="mb-12">
           <div className="flex items-baseline justify-between mb-3.5">
             <h2 className="font-serif text-[20px] font-normal text-foreground">Componența Parlamentului</h2>
-            <span className="text-[12.5px] text-muted">{totalSenators} <span className="font-semibold">parlamentari</span></span>
+            <span className="text-[12.5px] text-muted">{totalSenators} <span className="font-semibold">{countNoun(totalSenators, 'parlamentar', 'parlamentari')}</span></span>
           </div>
           <ParliamentBar parties={parliamentParties} total={totalSenators} />
         </section>

@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
-import { formatDate, formatDateShort } from '@/lib/utils'
+import { formatDate, formatDateShort, countNoun } from '@/lib/utils'
 import { OutcomeBadge } from '@/components/outcome-badge'
 import { MiniVoteBar } from '@/components/mini-vote-bar'
 import type { VoteWithLaw } from '@/lib/types'
@@ -35,7 +35,7 @@ export default async function SaptamanaPage() {
     <div className="space-y-8">
       <div className="flex items-baseline justify-between">
         <h1 className="font-serif text-[40px] font-normal tracking-[-0.01em] leading-[1.05] text-foreground">Această săptămână</h1>
-        <span className="text-sm text-muted">{votes.length} voturi</span>
+        <span className="text-sm text-muted">{votes.length} {countNoun(votes.length, 'vot', 'voturi')}</span>
       </div>
 
       {votes.length === 0 && (
@@ -47,7 +47,7 @@ export default async function SaptamanaPage() {
       {Array.from(byDate.entries()).map(([date, dayVotes]) => (
         <div key={date} className="space-y-2">
           <h2 className="text-xs font-semibold uppercase tracking-widest text-muted sticky top-0 bg-page py-1">
-            {formatDate(date)} — {dayVotes.length} {dayVotes.length === 1 ? 'vot' : 'voturi'}
+            {formatDate(date)} — {dayVotes.length} {countNoun(dayVotes.length, 'vot', 'voturi')}
           </h2>
           <div className="flex flex-col gap-2">
             {dayVotes.map(vote => (
@@ -67,6 +67,9 @@ export default async function SaptamanaPage() {
                   <div className="flex items-center gap-2 mb-1 flex-wrap">
                     <span className="font-mono text-xs text-muted font-semibold">
                       {vote.laws?.code ?? '—'}
+                    </span>
+                    <span className="text-[10px] uppercase font-semibold text-faint bg-raised border border-rim rounded px-1.5 py-px">
+                      {vote.chamber === 'deputies' ? 'Camera' : 'Senat'}
                     </span>
                     {vote.laws?.law_category && (
                       <span className="text-[10px] text-faint bg-raised border border-rim rounded px-1.5 py-px">
