@@ -1,6 +1,6 @@
 import { ImageResponse } from 'next/og'
 import { LawCard, type LawCardData } from '@/components/cards/law-card'
-import { mapLawToCard } from '@/lib/votecard'
+import { mapLawToCard, lawDecisiveVoteId } from '@/lib/votecard'
 import { getCardFonts } from '@/lib/og-fonts'
 import type { LawStatus } from '@/lib/types'
 
@@ -18,6 +18,14 @@ const SAMPLE: LawCardData = {
     { label: 'Cameră', done: true },
     { label: 'Lege', done: true, final: true },
   ],
+  voteChamber: 'CAMERA DEPUTAȚILOR', votesFor: 187, votesAgainst: 45, votesAbstain: 12,
+  parties: [
+    { name: 'PSD', for: 60, against: 2, abstain: 1, absent: 5 },
+    { name: 'PNL', for: 50, against: 1, abstain: 2, absent: 4 },
+    { name: 'AUR', for: 5, against: 30, abstain: 3, absent: 6 },
+    { name: 'USR', for: 40, against: 2, abstain: 1, absent: 3 },
+    { name: 'UDMR', for: 18, against: 1, abstain: 1, absent: 2 },
+  ],
 }
 
 export async function GET(request: Request) {
@@ -25,7 +33,26 @@ export async function GET(request: Request) {
   const law = id
     ? ((await (await fetch(`${U}/rest/v1/law_status?law_id=eq.${id}&select=*&limit=1`, { headers: SB })).json())?.[0] as LawStatus | undefined)
     : undefined
-  const data = law ? mapLawToCard(law) : SAMPLE
+
+  let breakdown: { party_abbr: string; vote_choice: string; count: number }[] = []
+  const decisive = law ? lawDecisiveVoteId(law) : null
+  if (decisive) {
+    const r = await fetch(
+      `${U}/rest/v1/party_vote_breakdown?vote_id=eq.${decisive.voteId}&select=party_abbr,vote_choice,count`,
+      { headers: SB },
+    )
+    breakdown = (await r.json()) ?? []
+  }
+
+  const data = law ? mapLawToCard(law, breakdown) : SAMPLE
   const fonts = await getCardFonts()
-  return new ImageResponse(<LawCard data={data} />, { width: 1080, height: 1080, fonts })
+  // Render at 2× (2160px) — a 1080px PNG looks soft on hi-dpi screens.
+  return new ImageResponse(
+    (
+      <div style={{ display: 'flex', width: 1080, height: 1080, transform: 'scale(2)', transformOrigin: 'top left' }}>
+        <LawCard data={data} />
+      </div>
+    ),
+    { width: 2160, height: 2160, fonts },
+  )
 }

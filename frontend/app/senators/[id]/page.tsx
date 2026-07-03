@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
-import { formatDate, choiceLabel, choiceColor, pct } from '@/lib/utils'
+import { formatDate, choiceLabel, choiceColor, pct, countNoun } from '@/lib/utils'
 import { PartyBadge } from '@/components/party-badge'
 import { OutcomeBadge } from '@/components/outcome-badge'
 import { LoyaltyMeter } from '@/components/loyalty-meter'
@@ -27,7 +27,7 @@ export async function generateMetadata({
   if (!data) return { title: 'Senator' }
 
   const name    = `${data.first_name} ${data.name}`
-  const desc    = `${data.name} (${data.party_abbr}) a votat în ${data.total_votes} ședințe. Rată deviere: ${data.deviation_pct != null ? `${data.deviation_pct.toFixed(1)}%` : '—'}.`
+  const desc    = `${data.name} (${data.party_abbr}) a votat în ${data.total_votes} ${countNoun(data.total_votes, 'ședință', 'ședințe')}. Rată deviere: ${data.deviation_pct != null ? `${data.deviation_pct.toFixed(1)}%` : '—'}.`
   const ogImage = `${SITE_URL}/api/og/senator?id=${id}`
 
   return {
@@ -46,25 +46,34 @@ export default async function SenatorProfile({
   const { id } = await params
   const db = getDB()
 
-  const [r0, r1, r2] = await Promise.all([
+  const [r0, r1, r2, r3] = await Promise.all([
     db.from('senator_stats').select('*').eq('politician_id', id).maybeSingle(),
     db
       .from('politician_votes')
-      .select('*, votes!inner(*, laws!inner(*))')
+      .select('*, votes!inner(*, laws(*))')
       .eq('politician_id', id)
       .order('created_at', { ascending: false })
       .limit(100),
     db.from('politician_participation').select('participation_pct').eq('politician_id', id).maybeSingle(),
+    // deviations fetched directly — they may be older than the 100-vote history window
+    db
+      .from('politician_votes')
+      .select('*, votes!inner(*, laws(*))')
+      .eq('politician_id', id)
+      .eq('party_line_deviation', true)
+      .order('created_at', { ascending: false })
+      .limit(8),
   ])
 
   const stats   = r0.data as SenatorStats | null
   const history = r1.data as VoteHistoryRow[] | null
   const participationPct = (r2.data as { participation_pct: number | null } | null)?.participation_pct ?? null
+  const deviationRows = (r3.data as VoteHistoryRow[] | null) ?? []
 
   if (!stats) notFound()
 
   const total         = stats.total_votes
-  const loyaltyPct    = stats.deviation_pct != null ? Math.round(100 - stats.deviation_pct) : null
+  const loyaltyPct    = stats.deviation_pct != null ? Math.floor(100 - stats.deviation_pct) : null
   const isHighDev     = stats.deviation_pct != null && stats.deviation_pct > 10
 
   const behaviorRows = [
@@ -74,7 +83,7 @@ export default async function SenatorProfile({
     { label: 'Absent',    value: stats.votes_absent,      color: 'var(--faint)', icon: '·' },
   ]
 
-  const deviations = history?.filter(r => r.party_line_deviation) ?? []
+  const deviations = deviationRows
 
   return (
     <div className="space-y-5">
@@ -97,7 +106,7 @@ export default async function SenatorProfile({
           <div className="flex items-center gap-2 mt-1 flex-wrap">
             <PartyBadge abbreviation={stats.party_abbr} color={stats.party_color} size="md" />
             <span className="text-[10px] text-faint" title="Partidul din care face parte acum. Voturile sunt atribuite afilierii curente.">afiliere curentă</span>
-            <span className="text-xs text-muted">Senat · {total} voturi înregistrate</span>
+            <span className="text-xs text-muted">Senat · {total} {countNoun(total, 'vot înregistrat', 'voturi înregistrate')}</span>
             {participationPct != null && (
               <span className="text-xs text-muted" title="Voturi active împărțite la voturile din Senat din perioada activă. Estimativ — istoricul nostru e parțial.">
                 · participare ~{participationPct}% <span className="text-faint">(est.)</span>
@@ -157,7 +166,7 @@ export default async function SenatorProfile({
           </h2>
           <p className="text-sm mb-3">
             <span className={isHighDev ? 'text-deviere font-semibold' : 'text-muted'}>
-              {stats.deviations} devieri
+              {stats.deviations} {countNoun(stats.deviations, 'deviere', 'devieri')}
             </span>
             <span className="text-faint mx-1.5">·</span>
             <span className={isHighDev ? 'text-deviere font-semibold' : 'text-muted'}>
@@ -175,9 +184,9 @@ export default async function SenatorProfile({
                     href={`/votes/${row.vote_id}`}
                     className="font-mono text-xs text-muted hover:text-foreground transition-colors w-20 flex-shrink-0"
                   >
-                    {row.votes.laws?.code}
+                    {row.votes.laws?.code ?? '—'}
                   </Link>
-                  <span className="text-xs text-muted truncate flex-1">{row.votes.laws?.title}</span>
+                  <span className="text-xs text-muted truncate flex-1">{row.votes.laws?.title ?? 'Vot fără lege asociată'}</span>
                   <span className="text-xs font-bold flex-shrink-0" style={{ color: choiceColor(row.vote_choice) }}>
                     {choiceLabel(row.vote_choice)}
                   </span>
@@ -211,7 +220,7 @@ export default async function SenatorProfile({
                 />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                    <span className="font-mono text-xs text-muted">{row.votes.laws?.code}</span>
+                    <span className="font-mono text-xs text-muted">{row.votes.laws?.code ?? '—'}</span>
                     <span className="text-[10px] text-faint">{formatDate(row.votes.vote_date)}</span>
                     {row.party_line_deviation && (
                       <span className="text-[10px] bg-deviere/10 text-deviere font-bold rounded px-1.5 py-px">
@@ -219,7 +228,7 @@ export default async function SenatorProfile({
                       </span>
                     )}
                   </div>
-                  <p className="text-sm text-foreground truncate">{row.votes.laws?.title}</p>
+                  <p className="text-sm text-foreground truncate">{row.votes.laws?.title ?? 'Vot fără lege asociată'}</p>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
                   <span className="text-sm font-bold" style={{ color: choiceColor(row.vote_choice) }}>

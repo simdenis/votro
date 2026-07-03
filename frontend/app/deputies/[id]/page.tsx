@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
 import { PoliticianProfile } from '@/components/politician-profile'
+import { countNoun } from '@/lib/utils'
 import type { PoliticianStats, VoteHistoryRow } from '@/lib/types'
 
 export const revalidate = 3600
@@ -22,7 +23,7 @@ export async function generateMetadata({
   if (!data) return { title: 'Deputat' }
 
   const name    = `${data.first_name} ${data.name}`
-  const desc    = `${data.name} (${data.party_abbr}) a votat în ${data.total_votes} ședințe. Rată deviere: ${data.deviation_pct != null ? `${data.deviation_pct.toFixed(1)}%` : '—'}.`
+  const desc    = `${data.name} (${data.party_abbr}) a votat în ${data.total_votes} ${countNoun(data.total_votes, 'ședință', 'ședințe')}. Rată deviere: ${data.deviation_pct != null ? `${data.deviation_pct.toFixed(1)}%` : '—'}.`
   const ogImage = `${SITE_URL}/api/og/senator?id=${id}`
 
   return {
@@ -41,7 +42,7 @@ export default async function DeputyPage({
   const { id } = await params
   const db = getDB()
 
-  const [r0, r1] = await Promise.all([
+  const [r0, r1, r2] = await Promise.all([
     db.from('deputy_stats').select('*').eq('politician_id', id).maybeSingle(),
     db
       .from('politician_votes')
@@ -49,6 +50,14 @@ export default async function DeputyPage({
       .eq('politician_id', id)
       .order('created_at', { ascending: false })
       .limit(100),
+    // deviations fetched directly — they may be older than the 100-vote history window
+    db
+      .from('politician_votes')
+      .select('*, votes!inner(*, laws(*))')
+      .eq('politician_id', id)
+      .eq('party_line_deviation', true)
+      .order('created_at', { ascending: false })
+      .limit(8),
   ])
 
   const stats   = r0.data as PoliticianStats | null
@@ -60,6 +69,7 @@ export default async function DeputyPage({
     <PoliticianProfile
       stats={stats}
       history={history ?? []}
+      deviationRows={(r2.data as VoteHistoryRow[] | null) ?? []}
       basePath="/deputies"
       chamberLabel="Camera Deputaților"
       siteUrl={SITE_URL}

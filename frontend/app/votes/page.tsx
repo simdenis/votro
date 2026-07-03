@@ -87,6 +87,9 @@ export default async function VotesPage({
                     <Link href={`/votes/${vote.id}`} className="font-mono text-foreground hover:underline" style={{ color: 'var(--sidebar-bg)' }}>
                       {vote.laws?.code ?? '—'}
                     </Link>
+                    <span className="block text-[9px] uppercase font-semibold text-faint mt-0.5">
+                      {vote.chamber === 'deputies' ? 'Camera' : 'Senat'}
+                    </span>
                   </td>
                   <td className="py-3 pr-4 max-w-sm">
                     <Link href={`/votes/${vote.id}`} className="line-clamp-2 text-foreground hover:underline">

@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { pct, textOnColor } from '@/lib/utils'
+import { pct, textOnColor, needsDe } from '@/lib/utils'
 import { PartyBadge } from '@/components/party-badge'
 import type { PoliticianStats } from '@/lib/types'
 
@@ -29,7 +29,7 @@ export function PoliticianList({ title, basePath, people, sort, dir }: Props) {
     <div className="space-y-6">
       <div className="flex items-baseline justify-between gap-4">
         <h1 className="font-serif text-[40px] font-normal tracking-[-0.01em] leading-[1.05] text-foreground">{title}</h1>
-        <span className="text-[12.5px] text-muted">{people.length} {title.toLowerCase()}</span>
+        <span className="text-[12.5px] text-muted">{people.length}{needsDe(people.length) ? ' de' : ''} {title.toLowerCase()}</span>
       </div>
 
       {!people.length ? (

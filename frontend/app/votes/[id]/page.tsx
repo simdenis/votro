@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
-import { formatDate, choiceLabel, choiceColor } from '@/lib/utils'
+import { formatDate, choiceLabel, choiceColor, countNoun } from '@/lib/utils'
 import { OutcomeBadge } from '@/components/outcome-badge'
 import { PartyBadge } from '@/components/party-badge'
 import { PartyBreakdown } from '@/components/party-breakdown'
@@ -27,12 +27,12 @@ export async function generateMetadata({
   const vote = data as VoteWithLaw | null
   if (!vote) return { title: 'Vot' }
 
-  const code    = vote.laws?.code ?? ''
-  const title   = vote.laws?.title ?? ''
+  const code    = vote.laws?.code ?? 'Vot de plen'
+  const title   = vote.laws?.title ?? 'Vot fără lege asociată'
   const short   = title.length > 60 ? title.slice(0, 60) + '…' : title
   const outcome = vote.outcome === 'adoptat' ? 'adoptat' : vote.outcome === 'respins' ? 'respins' : null
   const desc    = [
-    `Proiectul ${code}${outcome ? ` a fost ${outcome}` : ''} pe ${formatDate(vote.vote_date)}.`,
+    `${vote.laws?.code ? `Proiectul ${vote.laws.code}` : 'Votul'}${outcome ? ` a fost ${outcome}` : ''} pe ${formatDate(vote.vote_date)}.`,
     `${vote.for_count ?? 0} pentru, ${vote.against_count ?? 0} împotrivă, ${vote.abstention_count ?? 0} abțineri.`,
   ].join(' ')
   const ogImage = `${SITE_URL}/api/og/vote?id=${id}`
@@ -54,7 +54,7 @@ export default async function VoteDetail({
   const db = getDB()
 
   const [r0, r1, r2] = await Promise.all([
-    db.from('votes').select('*, laws!inner(*)').eq('id', id).maybeSingle(),
+    db.from('votes').select('*, laws(*)').eq('id', id).maybeSingle(),
     db
       .from('politician_votes')
       .select('*, politicians!inner(*, parties!inner(*))')
@@ -73,6 +73,10 @@ export default async function VoteDetail({
   const heroColor     = adopted ? 'var(--color-for)' : vote.outcome === 'respins' ? 'var(--color-against)' : 'var(--muted)'
   const deviatorCount = senatorVotes?.filter(sv => sv.party_line_deviation).length ?? 0
   const sourceUrl     = voteSourceUrl(vote)
+  const isDep         = vote.chamber === 'deputies'
+  const memberPath    = isDep ? '/deputies' : '/senators'
+  const memberNoun    = (n: number) =>
+    isDep ? countNoun(n, 'deputat', 'deputați') : countNoun(n, 'senator', 'senatori')
 
   const indSenators =
     senatorVotes
@@ -93,9 +97,13 @@ export default async function VoteDetail({
         <div className="flex items-center gap-1.5 text-xs text-muted mb-3">
           <Link href="/votes" className="hover:text-foreground transition-colors">Voturi</Link>
           <span className="text-faint">›</span>
-          <Link href={`/legi/${vote.law_id}`} className="hover:text-foreground transition-colors font-semibold">
-            {vote.laws.code}
-          </Link>
+          {vote.law_id && vote.laws ? (
+            <Link href={`/legi/${vote.law_id}`} className="hover:text-foreground transition-colors font-semibold">
+              {vote.laws.code}
+            </Link>
+          ) : (
+            <span className="font-semibold">Vot de plen</span>
+          )}
         </div>
 
         <div className="flex items-center gap-4 flex-wrap">
@@ -108,16 +116,16 @@ export default async function VoteDetail({
                 </svg>
               )}
               <span className="font-mono text-xs font-bold" style={{ color: heroColor }}>
-                {vote.laws.code}
+                {vote.laws?.code ?? 'Vot de plen'}
               </span>
-              {vote.laws.law_category && (
+              {vote.laws?.law_category && (
                 <span className="text-[11px] bg-raised text-faint rounded-[3px] px-1.5 py-px">
                   {vote.laws.law_category}
                 </span>
               )}
               <span className="text-xs text-muted">{formatDate(vote.vote_date)}</span>
             </div>
-            <h1 className="font-serif text-[26px] font-normal text-foreground leading-[1.1]">{vote.laws.title}</h1>
+            <h1 className="font-serif text-[26px] font-normal text-foreground leading-[1.1]">{vote.laws?.title ?? 'Vot fără lege asociată'}</h1>
           </div>
 
           {/* Vote counts */}
@@ -142,9 +150,9 @@ export default async function VoteDetail({
           <div className="flex items-center gap-3 flex-wrap">
             <ShareButtons
               url={`${SITE_URL}/votes/${vote.id}`}
-              tweet={`${vote.laws.code} — ${(vote.laws.title ?? '').slice(0, 80)}. ${vote.outcome === 'adoptat' ? 'Adoptat' : vote.outcome === 'respins' ? 'Respins' : ''} cu ${vote.for_count ?? 0} pentru și ${vote.against_count ?? 0} împotrivă. ${SITE_URL}/votes/${vote.id}`}
+              tweet={`${vote.laws?.code ?? 'Vot de plen'} — ${(vote.laws?.title ?? 'vot fără lege asociată').slice(0, 80)}. ${vote.outcome === 'adoptat' ? 'Adoptat' : vote.outcome === 'respins' ? 'Respins' : ''} cu ${vote.for_count ?? 0} pentru și ${vote.against_count ?? 0} împotrivă. ${SITE_URL}/votes/${vote.id}`}
             />
-            <CardDownload href={`/api/og/votecard?vote=${vote.id}`} filename={`votro-${vote.laws.code.replace(/[^\w]+/g, '-')}.png`} />
+            <CardDownload href={`/api/og/votecard?vote=${vote.id}`} filename={`votro-${(vote.laws?.code ?? 'vot').replace(/[^\w]+/g, '-')}.png`} />
           </div>
           {sourceUrl && (
             <a
@@ -168,7 +176,7 @@ export default async function VoteDetail({
           {/* Seat arc */}
           <div>
             <h2 className="text-xs font-semibold uppercase tracking-widest text-muted mb-3">
-              Distribuție în plen — {vote.present_count ?? '—'} senatori prezenți
+              Distribuție în plen — {vote.present_count ?? '—'} {memberNoun(vote.present_count ?? 2)} prezenți
             </h2>
             <div className="bg-surface border border-rim rounded-xl p-4 flex flex-col items-center">
               <SeatArc
@@ -183,6 +191,10 @@ export default async function VoteDetail({
                   { color: 'var(--color-for)',        label: 'Pentru',    value: vote.for_count },
                   { color: 'var(--color-against)',    label: 'Împotrivă', value: vote.against_count },
                   { color: 'var(--color-abstention)', label: 'Abțineri',  value: vote.abstention_count },
+                  // grey dots in the arc — present but didn't press a button
+                  ...((vote.not_voted_count ?? 0) > 0
+                    ? [{ color: '#d1d5db', label: 'Nu au votat', value: vote.not_voted_count }]
+                    : []),
                 ].map(({ color, label, value }) => (
                   <span key={label} className="flex items-center gap-1.5 text-sm text-muted">
                     <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
@@ -203,16 +215,16 @@ export default async function VoteDetail({
               {deviatorCount > 0 && (
                 <p className="text-sm text-muted mb-3">
                   <span className="text-deviere font-semibold">
-                    {deviatorCount} senator{deviatorCount !== 1 ? 'i' : ''}
+                    {deviatorCount} {memberNoun(deviatorCount)}
                   </span>{' '}
-                  au votat împotriva liniei de partid.
+                  {deviatorCount === 1 ? 'a votat' : 'au votat'} împotriva liniei de partid.
                 </p>
               )}
               <div className="bg-surface border border-rim rounded-xl overflow-hidden divide-y divide-rim">
                 {senatorVotes.map(sv => (
                   <Link
                     key={sv.id}
-                    href={`/senators/${sv.politician_id}`}
+                    href={`${memberPath}/${sv.politician_id}`}
                     className="flex items-center gap-3 px-4 py-3 hover:bg-raised transition-colors"
                     style={sv.party_line_deviation ? { borderLeft: '2px solid var(--color-deviation)' } : undefined}
                   >
@@ -225,9 +237,11 @@ export default async function VoteDetail({
                         </span>
                       )}
                     </span>
+                    {/* noLink: this badge sits inside the row <Link>; nested <a> breaks hydration */}
                     <PartyBadge
                       abbreviation={sv.politicians.parties.abbreviation}
                       color={sv.politicians.parties.color}
+                      noLink
                     />
                     <span
                       className="text-sm font-bold w-20 text-right tabular-nums"

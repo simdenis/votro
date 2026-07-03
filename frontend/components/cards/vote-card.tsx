@@ -1,3 +1,5 @@
+import { countNoun } from '@/lib/utils'
+
 // ── Data model (handoff) ──────────────────────────────────────────────────────
 export interface PartyVote {
   name: string
@@ -35,6 +37,16 @@ const C = {
 }
 const SERIF = 'DM Serif Display'
 const SANS = 'DM Sans'
+
+/** Shrink the serif title as it grows so it always fits — never clip it. */
+function titleFont(len: number): number {
+  if (len <= 70) return 46
+  if (len <= 130) return 36
+  if (len <= 200) return 30
+  if (len <= 300) return 26
+  if (len <= 450) return 22
+  return 19
+}
 
 // ── Parliament arc (handoff algorithm) ─────────────────────────────────────────
 export function computeArcDots(forN: number, againstN: number, abstainN: number, absentN: number) {
@@ -109,23 +121,29 @@ export function VoteCard({ data }: { data: VoteCardData }) {
       {/* Content */}
       <div style={{ display: 'flex', flexDirection: 'column', flex: 1, padding: '36px 64px 0' }}>
         <div style={{ display: 'flex', fontSize: 14, fontWeight: 500, color: C.navy, letterSpacing: 5, textTransform: 'uppercase', marginBottom: 12 }}>{data.lawCode}</div>
-        <div style={{ fontFamily: SERIF, fontSize: 46, lineHeight: 1.12, color: C.text, marginBottom: 18, maxHeight: 160, overflow: 'hidden' }}>{data.lawTitle}</div>
+        <div style={{ fontFamily: SERIF, fontSize: titleFont(data.lawTitle.length), lineHeight: 1.14, color: C.text, marginBottom: 18 }}>{data.lawTitle}</div>
 
-        {/* Parliament arc */}
-        <div style={{ display: 'flex', width: '100%', height: 308, overflow: 'hidden', marginBottom: 14 }}>
-          <svg width={952} height={308} viewBox="0 0 952 308">
-            {dots.map((d, i) => (
-              <circle key={i} cx={d.x} cy={d.y} r={4.5} fill={d.color} />
-            ))}
-          </svg>
-        </div>
+        {/* Parliament arc — scales down when a long title needs the room */}
+        {(() => {
+          const arcH = data.lawTitle.length > 200 ? 240 : 308
+          const arcW = Math.round(952 * (arcH / 308))
+          return (
+            <div style={{ display: 'flex', width: '100%', height: arcH, justifyContent: 'center', marginBottom: 14 }}>
+              <svg width={arcW} height={arcH} viewBox="0 0 952 308">
+                {dots.map((d, i) => (
+                  <circle key={i} cx={d.x} cy={d.y} r={4.5} fill={d.color} />
+                ))}
+              </svg>
+            </div>
+          )
+        })()}
 
         {/* Badge + total */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 22, marginBottom: 20 }}>
           <div style={{ display: 'flex', background: badgeBg, color: '#fff', fontSize: 18, fontWeight: 600, letterSpacing: 4, textTransform: 'uppercase', padding: '11px 30px', borderRadius: 3 }}>
             {data.result}
           </div>
-          <div style={{ display: 'flex', fontSize: 15, opacity: 0.3 }}>{`${total} parlamentari`}</div>
+          <div style={{ display: 'flex', fontSize: 15, opacity: 0.3 }}>{`${total} ${countNoun(total, 'parlamentar', 'parlamentari')}`}</div>
         </div>
 
         {/* 4-column breakdown */}
@@ -147,9 +165,13 @@ export function VoteCard({ data }: { data: VoteCardData }) {
         {/* Spacer */}
         <div style={{ display: 'flex', flex: 1, minHeight: 8 }} />
 
-        {/* Vot pe partide */}
-        <div style={{ display: 'flex', height: 1, background: C.hair, marginBottom: 14 }} />
-        <div style={{ display: 'flex', fontSize: 11, fontWeight: 600, color: C.navy, letterSpacing: 4, textTransform: 'uppercase', opacity: 0.65, marginBottom: 10 }}>Vot pe partide</div>
+        {/* Vot pe partide — hidden when there's no breakdown data */}
+        {data.parties.length > 0 && (
+          <div style={{ display: 'flex', height: 1, background: C.hair, marginBottom: 14 }} />
+        )}
+        {data.parties.length > 0 && (
+          <div style={{ display: 'flex', fontSize: 11, fontWeight: 600, color: C.navy, letterSpacing: 4, textTransform: 'uppercase', opacity: 0.65, marginBottom: 10 }}>Vot pe partide</div>
+        )}
         {data.parties.slice(0, 5).map(p => {
           const t = p.for + p.against + p.abstain + p.absent
           return (
