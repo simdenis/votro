@@ -258,10 +258,44 @@ _VOTE_TITLE_BOILERPLATE = re.compile(
 )
 
 
+_AGENDA_BOILERPLATE = re.compile(
+    r"^\s*Introducerea pe ordinea de zi a\s+(?:Pl-?x?\s*[\d/]+\s*)?(?:PL\s*[\d/]+\s*)?",
+    re.IGNORECASE,
+)
+
+
 def _clean_law_title(raw: str) -> str:
-    """Remove the cdep 'Vot final …' vote boilerplate that prefixes vote-derived
-    titles. Leaves already-clean titles untouched."""
-    return _VOTE_TITLE_BOILERPLATE.sub("", raw).strip()
+    """Remove the cdep 'Vot final …' / 'Introducerea pe ordinea de zi …' vote
+    boilerplate that prefixes vote-derived titles. Leaves clean titles untouched."""
+    t = _VOTE_TITLE_BOILERPLATE.sub("", raw)
+    t = _AGENDA_BOILERPLATE.sub("", t)
+    return t.strip()
+
+
+# cdep.ro's backend sometimes emits literal "?" where ș/ț (comma-below) should
+# be — their legacy encoding can't represent them. A "?" immediately followed by
+# a letter ("?i", "educa?iei") never occurs in a legitimate title, while a real
+# question mark is always followed by space/punctuation/end.
+_MOJIBAKE = re.compile(r"\?\w")
+
+
+def _has_mojibake(title: str) -> bool:
+    return bool(_MOJIBAKE.search(title))
+
+
+def _repair_mojibake(title: str) -> str:
+    """Fix only the unambiguous '?' patterns:
+      - standalone word '?i' → 'și'; clitic '?i-' → 'ți-'
+      - '?' before a consonant → 'ș' (Romanian never has ț+consonant: știre,
+        școală, șpagă — while ț is always followed by a vowel)
+    '?' before a vowel stays as-is: both ș and ț occur there (șa/ța, dețin/ieșire)
+    and guessing is unsafe."""
+    t = re.sub(r"(?<!\w)\?i\b(?!-)", "și", title)
+    t = re.sub(r"(?<!\w)\?I\b(?!-)", "Și", t)
+    t = re.sub(r"(?<!\w)\?i-", "ți-", t)
+    t = re.sub(r"\?(?=[bcdfghjklmnpqrstvwxz])", "ș", t)
+    t = re.sub(r"\?(?=[BCDFGHJKLMNPQRSTVWXZ])", "Ș", t)
+    return t
 
 
 # ──────────────────────────────────────────────────────────────
@@ -309,6 +343,9 @@ class CameraScraper:
         # every vote (a day can have 40+ votes sharing the same ~280 deputies).
         self._pol_id_cache: dict[str, str] = {}
         self._party_id_cache: dict[str, str] = {}
+        # PLx → (L code, senate title) resolution cache; None = unresolvable
+        self._plx_cache: dict[str, Optional[tuple[str, str]]] = {}
+        self._senat_search = None  # lazy resolve_plx.SenatSearch
 
     # ── network helpers ────────────────────────────────────────
 
@@ -437,19 +474,22 @@ class CameraScraper:
 
         if raw_subject:
             detail.law_title = _clean_law_title(raw_subject)[:500]
-            # Extract law code from subject text
-            m = re.search(
-                r"(?:PL[x\s]?|L|lege\s+nr\.?\s*)(\d+)\s*/\s*(\d{4})",
-                raw_subject,
-                re.IGNORECASE,
-            )
-            if m:
+            # Extract law code from subject text.
+            # IMPORTANT: cdep cites the CAMERA registry number (PL-x nr/an),
+            # which is independent from the Senate's L nr/an registry. Never
+            # store a PL-x number as an L code — that attaches the vote to a
+            # different (Senate) bill. PLx/PHCD live in their own namespace;
+            # a resolver can later map PLx → the real Senate L code.
+            if m := re.search(r"PL[-\s]?x?\s*(\d+)\s*/\s*(\d{4})", raw_subject, re.IGNORECASE):
+                detail.law_code = f"PLx{m.group(1)}/{m.group(2)}"
+            elif m := re.search(r"PH\s*CD\s*(\d+)\s*/\s*(\d{4})", raw_subject, re.IGNORECASE):
+                detail.law_code = f"PHCD{m.group(1)}/{m.group(2)}"
+            elif m := re.search(r"(?<![A-Za-z])L\s*(\d+)\s*/\s*(\d{4})", raw_subject):
+                # genuine Senate reference (rare in cdep subjects)
                 detail.law_code = f"L{m.group(1)}/{m.group(2)}"
-            else:
-                # Broader fallback: any Nnn/YYYY pattern
-                m2 = re.search(r"\b(\d{1,4})\s*/\s*(20\d{2})\b", raw_subject)
-                if m2:
-                    detail.law_code = f"L{m2.group(1)}/{m2.group(2)}"
+            # NOTE: no bare "nnn/yyyy" fallback — it would catch references to
+            # existing laws ("Legii nr.349/2002") and mislink the vote. A vote
+            # without a recognizable code stays law-less ("vot de plen").
 
         if not detail.law_code:
             log.warning("idv=%d: could not extract law code from %r", idv, raw_subject[:80])
@@ -668,9 +708,52 @@ class CameraScraper:
             self._pol_id_cache[key] = pid
         return pid
 
+    def _resolve_plx(self, code: str) -> Optional[tuple[str, str]]:
+        """PLx{n}/{an} → (senate L code, senate title) via senat.ro's legislative
+        search (it accepts PLX numbers). Cached per run; None when unresolved."""
+        if code in self._plx_cache:
+            return self._plx_cache[code]
+        result = None
+        m = re.match(r"^PLx(\d+)/(\d{4})$", code)
+        if m:
+            if self._senat_search is None:
+                from resolve_plx import SenatSearch
+                self._senat_search = SenatSearch()
+            try:
+                result = self._senat_search.resolve(m.group(1), m.group(2))
+            except Exception as exc:  # resolution is best-effort
+                log.warning("%s: senat.ro resolution failed: %s", code, exc)
+        self._plx_cache[code] = result
+        return result
+
     def _upsert_law(self, code: str, title: str) -> Optional[str]:
         if not code:
             return None
+        if code.startswith("PLx"):
+            resolved = self._resolve_plx(code)
+            if resolved:
+                l_code, l_title = resolved
+                log.info("%s → %s (senat.ro)", code, l_code)
+                code = l_code
+                title = l_title or title  # senate bill title is authoritative
+        if title and _has_mojibake(title):
+            title = _repair_mojibake(title)
+        if title and _has_mojibake(title):
+            # Source title is mangled ('?' instead of ș/ț). Never overwrite an
+            # existing clean title with it.
+            existing = self.db.table("laws").select("id, title").eq("code", code).execute()
+            if existing.data:
+                ex = existing.data[0]
+                if ex.get("title") and not _has_mojibake(ex["title"]):
+                    log.warning("%s: keeping existing clean title (incoming has '?' mojibake)", code)
+                    return ex["id"]
+            log.warning("%s: title has '?' mojibake from cdep source: %r", code, title[:80])
+        if code.startswith("L"):
+            # Senate-registry law: the Senate scraper's bill title is the
+            # authoritative one — don't overwrite it with a cdep vote subject.
+            existing = self.db.table("laws").select("id, title").eq("code", code).execute()
+            if existing.data and (existing.data[0].get("title") or "").strip():
+                return existing.data[0]["id"]
         payload: dict = {"code": code, "title": title}
         category = _classify_law(title)
         if category:
