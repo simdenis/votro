@@ -20,13 +20,22 @@ async function fetchBreakdown(id: string) {
   const r = await fetch(`${SUPABASE_URL}/rest/v1/party_vote_breakdown?vote_id=eq.${id}&select=party_abbr,vote_choice,count`, { headers: SB })
   return (await r.json()) ?? []
 }
+/** Current chamber size — lets the card compute true absentees. */
+async function fetchSeats(chamber: string): Promise<number | null> {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/politicians?chamber=eq.${chamber}&select=id&limit=1`, {
+    headers: { ...SB, Prefer: 'count=exact' },
+  })
+  const range = r.headers.get('content-range') // "0-0/136"
+  const total = range?.split('/')[1]
+  return total && total !== '*' ? Number(total) : null
+}
 
 export async function GET(request: Request) {
   const id = new URL(request.url).searchParams.get('vote')
   const vote = id ? await fetchVote(id) : null
 
   const data: VoteCardData = vote
-    ? mapVoteToCard(vote, await fetchBreakdown(id!))
+    ? mapVoteToCard(vote, await fetchBreakdown(id!), await fetchSeats(vote.chamber))
     : SAMPLE_VOTE_CARD
 
   const fonts = await getCardFonts()

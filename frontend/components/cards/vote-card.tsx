@@ -18,7 +18,12 @@ export interface VoteCardData {
   votesFor: number
   votesAgainst: number
   votesAbstain: number
+  /** present but didn't press a button (cdep "nu au votat") */
+  votesNotVoted: number
+  /** true absentees: chamber seats − participants (0 when seats unknown) */
   votesAbsent: number
+  /** total chamber seats, when known — enables "X din Y prezenți" */
+  seats: number | null
   source: 'senat.ro' | 'cdep.ro'
   parties: PartyVote[]
 }
@@ -31,7 +36,8 @@ const C = {
   for: '#1a7a42',
   against: '#c4362e',
   abstain: '#8a7fb0',
-  absentDot: '#d0cfc8',
+  notVotedDot: '#b8b7b0', // present, didn't vote — darker than true absents
+  absentDot: '#e3e2dc',
   absentNum: '#9e9d97',
   hair: '#e6e5e1', // hex hairline — Satori rejects rgba in border shorthands
 }
@@ -49,8 +55,8 @@ function titleFont(len: number): number {
 }
 
 // ── Parliament arc (handoff algorithm) ─────────────────────────────────────────
-export function computeArcDots(forN: number, againstN: number, abstainN: number, absentN: number) {
-  const total = forN + againstN + abstainN + absentN
+export function computeArcDots(forN: number, againstN: number, abstainN: number, notVotedN: number, absentN = 0) {
+  const total = forN + againstN + abstainN + notVotedN + absentN
   if (!total) return [] as { x: number; y: number; color: string }[]
 
   const cx = 476, cy = 302
@@ -67,6 +73,7 @@ export function computeArcDots(forN: number, againstN: number, abstainN: number,
     ...Array(Math.max(0, forN)).fill(C.for),
     ...Array(Math.max(0, againstN)).fill(C.against),
     ...Array(Math.max(0, abstainN)).fill(C.abstain),
+    ...Array(Math.max(0, notVotedN)).fill(C.notVotedDot),
     ...Array(Math.max(0, absentN)).fill(C.absentDot),
   ]
 
@@ -88,15 +95,22 @@ export function computeArcDots(forN: number, againstN: number, abstainN: number,
 
 // ── Component ───────────────────────────────────────────────────────────────────
 export function VoteCard({ data }: { data: VoteCardData }) {
-  const total = data.votesFor + data.votesAgainst + data.votesAbstain + data.votesAbsent
-  const dots = computeArcDots(data.votesFor, data.votesAgainst, data.votesAbstain, data.votesAbsent)
+  const participants = data.votesFor + data.votesAgainst + data.votesAbstain + data.votesNotVoted
+  // arc shows the full chamber when we know its size: participants + true absents
+  const dots = computeArcDots(data.votesFor, data.votesAgainst, data.votesAbstain, data.votesNotVoted, data.votesAbsent)
   const badgeBg = data.result === 'ADOPTAT' ? C.for : C.against
+
+  const presenceLine = data.seats
+    ? `${participants} din ${data.seats} prezenți`
+    : `${participants} ${countNoun(participants, 'parlamentar', 'parlamentari')}`
 
   const cols: { value: number; label: string; color: string }[] = [
     { value: data.votesFor, label: 'pentru', color: C.for },
     { value: data.votesAgainst, label: 'împotrivă', color: C.against },
     { value: data.votesAbstain, label: 'abțineri', color: C.abstain },
-    { value: data.votesAbsent, label: 'absenți', color: C.absentNum },
+    // present-but-not-voting only exists in Camera data
+    ...(data.votesNotVoted > 0 ? [{ value: data.votesNotVoted, label: 'n-au votat', color: C.absentNum }] : []),
+    ...(data.votesAbsent > 0 ? [{ value: data.votesAbsent, label: 'absenți', color: C.absentNum }] : []),
   ]
 
   const seg = (count: number, color: string) =>
@@ -143,7 +157,7 @@ export function VoteCard({ data }: { data: VoteCardData }) {
           <div style={{ display: 'flex', background: badgeBg, color: '#fff', fontSize: 18, fontWeight: 600, letterSpacing: 4, textTransform: 'uppercase', padding: '11px 30px', borderRadius: 3 }}>
             {data.result}
           </div>
-          <div style={{ display: 'flex', fontSize: 15, opacity: 0.3 }}>{`${total} ${countNoun(total, 'parlamentar', 'parlamentari')}`}</div>
+          <div style={{ display: 'flex', fontSize: 15, opacity: 0.3 }}>{presenceLine}</div>
         </div>
 
         {/* 4-column breakdown */}

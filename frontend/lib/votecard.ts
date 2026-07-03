@@ -22,19 +22,28 @@ export function toParties(rows: BreakdownRow[]): PartyVote[] {
     .slice(0, 5)
 }
 
-/** Map a votes row (with joined laws) + breakdown rows to the VoteCard model. */
-export function mapVoteToCard(vote: any, rows: BreakdownRow[]): VoteCardData {
+/** Map a votes row (with joined laws) + breakdown rows to the VoteCard model.
+ *  `seats` = current chamber size; enables true absentees (seats − participants)
+ *  and the "X din Y prezenți" line. */
+export function mapVoteToCard(vote: any, rows: BreakdownRow[], seats: number | null = null): VoteCardData {
   const isDep = vote.chamber === 'deputies'
+  const forC = vote.for_count ?? 0
+  const againstC = vote.against_count ?? 0
+  const abstainC = vote.abstention_count ?? 0
+  const notVoted = vote.not_voted_count ?? 0
+  const participants = forC + againstC + abstainC + notVoted
   return {
     lawCode: vote.laws?.code ?? 'VOT DE PLEN',
     lawTitle: vote.laws?.title ?? 'Vot fără lege asociată',
     chamber: isDep ? 'CAMERĂ' : 'SENAT',
     result: vote.outcome === 'respins' ? 'RESPINS' : 'ADOPTAT',
     year: vote.vote_date ? new Date(vote.vote_date).getFullYear() : 2026,
-    votesFor: vote.for_count ?? 0,
-    votesAgainst: vote.against_count ?? 0,
-    votesAbstain: vote.abstention_count ?? 0,
-    votesAbsent: vote.not_voted_count ?? 0,
+    votesFor: forC,
+    votesAgainst: againstC,
+    votesAbstain: abstainC,
+    votesNotVoted: notVoted,
+    votesAbsent: seats ? Math.max(0, seats - participants) : 0,
+    seats,
     source: isDep ? 'cdep.ro' : 'senat.ro',
     parties: toParties(rows),
   }
@@ -70,7 +79,13 @@ export function lawDecisiveVoteId(law: LawStatus): { voteId: string; chamber: 'c
   return null
 }
 
-export function mapLawToCard(law: LawStatus, breakdownRows: BreakdownRow[] = []): LawCardData {
+/** `forChamber` pins the party-vote section to one chamber (IG carousel slides);
+ *  default keeps the decisive-vote behaviour. */
+export function mapLawToCard(
+  law: LawStatus,
+  breakdownRows: BreakdownRow[] = [],
+  forChamber: 'camera' | 'senate' | null = null,
+): LawCardData {
   const promulgat = law.presidential_status === 'promulgat'
   const senateDone = law.senate_outcome === 'adoptat' || !!law.presidential_status
   const cameraDone = law.camera_outcome === 'adoptat' || !!law.presidential_status
@@ -95,7 +110,11 @@ export function mapLawToCard(law: LawStatus, breakdownRows: BreakdownRow[] = [])
       : null
 
   const dateForYear = law.presidential_date || law.camera_vote_date || law.senate_vote_date
-  const decisive = lawDecisiveVoteId(law)
+  const decisive = forChamber
+    ? (forChamber === 'camera' && law.camera_vote_id ? { voteId: law.camera_vote_id, chamber: 'camera' as const }
+      : forChamber === 'senate' && law.senate_vote_id ? { voteId: law.senate_vote_id, chamber: 'senate' as const }
+      : null)
+    : lawDecisiveVoteId(law)
   const isCam = decisive?.chamber === 'camera'
   return {
     lawCode: law.code,
@@ -111,16 +130,16 @@ export function mapLawToCard(law: LawStatus, breakdownRows: BreakdownRow[] = [])
       finalStep,
     ],
     voteChamber: decisive ? (isCam ? 'CAMERA DEPUTAȚILOR' : 'SENAT') : null,
-    votesFor: isCam ? law.camera_for : law.senate_for,
-    votesAgainst: isCam ? law.camera_against : law.senate_against,
-    votesAbstain: isCam ? law.camera_abstentions : law.senate_abstentions,
-    parties: toParties(breakdownRows),
+    votesFor: decisive ? (isCam ? law.camera_for : law.senate_for) : null,
+    votesAgainst: decisive ? (isCam ? law.camera_against : law.senate_against) : null,
+    votesAbstain: decisive ? (isCam ? law.camera_abstentions : law.senate_abstentions) : null,
+    parties: decisive ? toParties(breakdownRows) : [],
   }
 }
 
 export const SAMPLE_VOTE_CARD: VoteCardData = {
   lawCode: 'L 412/2026', lawTitle: 'Transparență parlamentară', chamber: 'SENAT', result: 'ADOPTAT', year: 2026,
-  votesFor: 187, votesAgainst: 45, votesAbstain: 12, votesAbsent: 23, source: 'senat.ro',
+  votesFor: 187, votesAgainst: 45, votesAbstain: 12, votesNotVoted: 0, votesAbsent: 23, seats: 267, source: 'senat.ro',
   parties: [
     { name: 'PSD', for: 60, against: 2, abstain: 1, absent: 5 },
     { name: 'PNL', for: 50, against: 1, abstain: 2, absent: 4 },
