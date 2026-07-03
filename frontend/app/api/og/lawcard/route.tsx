@@ -29,13 +29,25 @@ const SAMPLE: LawCardData = {
 }
 
 export async function GET(request: Request) {
-  const id = new URL(request.url).searchParams.get('id')
+  const url = new URL(request.url)
+  const id = url.searchParams.get('id')
+  // ?chamber=senate|camera pins the party-vote section — two IG carousel
+  // slides for laws voted in both chambers. Default: decisive vote.
+  const chamberParam = url.searchParams.get('chamber')
+  const forChamber = chamberParam === 'senate' || chamberParam === 'camera' ? chamberParam : null
+
   const law = id
     ? ((await (await fetch(`${U}/rest/v1/law_status?law_id=eq.${id}&select=*&limit=1`, { headers: SB })).json())?.[0] as LawStatus | undefined)
     : undefined
 
   let breakdown: { party_abbr: string; vote_choice: string; count: number }[] = []
-  const decisive = law ? lawDecisiveVoteId(law) : null
+  const decisive = law
+    ? forChamber
+      ? (forChamber === 'camera' && law.camera_vote_id ? { voteId: law.camera_vote_id }
+        : forChamber === 'senate' && law.senate_vote_id ? { voteId: law.senate_vote_id }
+        : null)
+      : lawDecisiveVoteId(law)
+    : null
   if (decisive) {
     const r = await fetch(
       `${U}/rest/v1/party_vote_breakdown?vote_id=eq.${decisive.voteId}&select=party_abbr,vote_choice,count`,
@@ -44,7 +56,7 @@ export async function GET(request: Request) {
     breakdown = (await r.json()) ?? []
   }
 
-  const data = law ? mapLawToCard(law, breakdown) : SAMPLE
+  const data = law ? mapLawToCard(law, breakdown, forChamber) : SAMPLE
   const fonts = await getCardFonts()
   // Render at 2× (2160px) — a 1080px PNG looks soft on hi-dpi screens.
   return new ImageResponse(

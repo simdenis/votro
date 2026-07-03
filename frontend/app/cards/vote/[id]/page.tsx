@@ -17,7 +17,12 @@ export default async function VoteCardPreview({ params }: { params: Promise<{ id
   ])
   if (!voteRes.data) notFound()
 
-  const data = mapVoteToCard(voteRes.data, bdRes.data ?? [])
+  const { count: seats } = await db
+    .from('politicians')
+    .select('id', { count: 'exact', head: true })
+    .eq('chamber', voteRes.data.chamber)
+
+  const data = mapVoteToCard(voteRes.data, bdRes.data ?? [], seats ?? null)
 
   return (
     <>
