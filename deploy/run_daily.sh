@@ -28,6 +28,10 @@ fi
 
 cd "$REPO_DIR" || { log "FATAL: repo dir $REPO_DIR missing"; exit 1; }
 
+# Stay current: scraper fixes land on main and must apply from the next run
+# (a stale scraper once re-introduced wrong PL-x→L law links). Non-fatal.
+git pull --ff-only >>"$LOG" 2>&1 || log "WARN: git pull failed — running existing code"
+
 rc=0
 for TARGET in "${DATES[@]}"; do
   log "=== Camera Deputatilor — $TARGET ==="
