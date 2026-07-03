@@ -4,6 +4,7 @@ import { getDB } from '@/lib/supabase'
 import { formatDate, formatDateShort, countNoun } from '@/lib/utils'
 import { OutcomeBadge } from '@/components/outcome-badge'
 import { MiniVoteBar } from '@/components/mini-vote-bar'
+import { CardDownload } from '@/components/card-download'
 import type { VoteWithLaw } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
@@ -36,6 +37,10 @@ export default async function SaptamanaPage() {
       <div className="flex items-baseline justify-between">
         <h1 className="font-serif text-[40px] font-normal tracking-[-0.01em] leading-[1.05] text-foreground">Această săptămână</h1>
         <span className="text-sm text-muted">{votes.length} {countNoun(votes.length, 'vot', 'voturi')}</span>
+      </div>
+
+      <div className="flex">
+        <CardDownload href="/api/og/weekcard" filename="votro-saptamana.png" label="Card recap săptămânal" />
       </div>
 
       {votes.length === 0 && (
