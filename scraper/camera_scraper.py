@@ -165,6 +165,10 @@ _PARTY_FULL_NAME: dict[str, str] = {
     "MIN":   "Minoritățile naționale",
 }
 
+# Catch-all labels for members without a real party (unaffiliated, national
+# minorities) — no party line exists, so no party_line_deviation is computed.
+NO_LINE_PARTIES = {"IND", "MIN"}
+
 
 def _norm(s: str) -> str:
     """Lowercase + strip all diacritics, so 'ţ' (cedilla) and 'ț' (comma) match."""
@@ -814,10 +818,11 @@ class CameraScraper:
         ).execute()
 
     def _compute_deviations(self, vote_id: str) -> None:
-        """Mark politician_votes where deputy voted against party majority."""
+        """Mark politician_votes where deputy voted against party majority.
+        IND/MIN are catch-all labels for unaffiliated singles — no party line."""
         pv_res = (
             self.db.table("politician_votes")
-            .select("id, politician_id, vote_choice, politicians(party_id)")
+            .select("id, politician_id, vote_choice, politicians(party_id, parties(abbreviation))")
             .eq("vote_id", vote_id)
             .execute()
         )
@@ -827,8 +832,10 @@ class CameraScraper:
         # Group by party → majority choice
         party_choices: dict[str, list[str]] = {}
         for row in rows:
-            pid = (row.get("politicians") or {}).get("party_id")
-            if pid:
+            pol = row.get("politicians") or {}
+            pid = pol.get("party_id")
+            abbr = (pol.get("parties") or {}).get("abbreviation")
+            if pid and abbr not in NO_LINE_PARTIES:
                 party_choices.setdefault(pid, []).append(row["vote_choice"])
 
         majority: dict[str, str] = {}
@@ -872,11 +879,12 @@ class CameraScraper:
                     party_id_map[pb.abbreviation] = pid
 
             # Party-line majority per party, computed in memory (no extra DB pass).
+            # IND/MIN members are singles — no party line, never a deviation.
             from collections import Counter
             active = ("for", "against", "abstention")
             by_party: dict[str, list[str]] = {}
             for dv in detail.deputy_votes:
-                if dv.vote_choice in active:
+                if dv.vote_choice in active and dv.party_abbr not in NO_LINE_PARTIES:
                     by_party.setdefault(dv.party_abbr, []).append(dv.vote_choice)
             majority = {ab: Counter(c).most_common(1)[0][0] for ab, c in by_party.items() if c}
 
