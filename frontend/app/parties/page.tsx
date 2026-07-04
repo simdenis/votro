@@ -21,7 +21,7 @@ export default async function PartiesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-serif text-[40px] font-normal tracking-[-0.01em] leading-[1.05] text-foreground">Partide</h1>
+        <h1 className="font-serif text-[30px] sm:text-[40px] font-normal tracking-[-0.01em] leading-[1.05] text-foreground">Partide</h1>
         <p className="text-[12.5px] text-muted mt-1.5">
           Coeziunea se calculează pe baza <strong className="text-foreground">afilierii curente</strong> a parlamentarilor.
         </p>

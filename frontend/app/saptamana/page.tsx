@@ -35,7 +35,7 @@ export default async function SaptamanaPage() {
   return (
     <div className="space-y-8">
       <div className="flex items-baseline justify-between">
-        <h1 className="font-serif text-[40px] font-normal tracking-[-0.01em] leading-[1.05] text-foreground">Această săptămână</h1>
+        <h1 className="font-serif text-[30px] sm:text-[40px] font-normal tracking-[-0.01em] leading-[1.05] text-foreground">Această săptămână</h1>
         <span className="text-sm text-muted">{votes.length} {countNoun(votes.length, 'vot', 'voturi')}</span>
       </div>
 
