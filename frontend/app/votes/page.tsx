@@ -61,7 +61,7 @@ export default async function VotesPage({
   return (
     <div className="space-y-6">
       <div className="flex items-baseline justify-between">
-        <h1 className="font-serif text-[40px] font-normal tracking-[-0.01em] leading-[1.05] text-foreground">Voturi</h1>
+        <h1 className="font-serif text-[30px] sm:text-[40px] font-normal tracking-[-0.01em] leading-[1.05] text-foreground">Voturi</h1>
         <span className="text-[12.5px] text-muted">{count ?? 0} total</span>
       </div>
 

@@ -28,7 +28,7 @@ export function PoliticianList({ title, basePath, people, sort, dir }: Props) {
   return (
     <div className="space-y-6">
       <div className="flex items-baseline justify-between gap-4">
-        <h1 className="font-serif text-[40px] font-normal tracking-[-0.01em] leading-[1.05] text-foreground">{title}</h1>
+        <h1 className="font-serif text-[30px] sm:text-[40px] font-normal tracking-[-0.01em] leading-[1.05] text-foreground">{title}</h1>
         <span className="text-[12.5px] text-muted">{people.length}{needsDe(people.length) ? ' de' : ''} {title.toLowerCase()}</span>
       </div>
 

@@ -48,7 +48,7 @@ export default async function SearchPage({
 
   return (
     <div className="space-y-8 max-w-2xl">
-      <h1 className="font-serif text-[40px] font-normal tracking-[-0.01em] leading-[1.05] text-foreground">Căutare</h1>
+      <h1 className="font-serif text-[30px] sm:text-[40px] font-normal tracking-[-0.01em] leading-[1.05] text-foreground">Căutare</h1>
 
       {/* Search form */}
       <form method="GET" action="/search">
