@@ -42,7 +42,8 @@ export default function DesprePage() {
         </p>
         <p className="text-sm text-muted leading-relaxed">
           Nota: absenții și cei care nu au votat nu sunt considerați în calculul devierilor — doar voturile
-          exprimate (pentru / împotrivă / abținere) contează.
+          exprimate (pentru / împotrivă / abținere) contează. Parlamentarii neafiliați și grupul
+          minorităților naționale nu au o linie de partid, deci nu calculăm devieri sau coeziune pentru ei.
         </p>
       </section>
 

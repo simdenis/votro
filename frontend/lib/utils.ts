@@ -46,6 +46,14 @@ export function choiceColor(choice: VoteChoice | string): string {
   return map[choice] ?? '#9ca3af'
 }
 
+/** Catch-all labels for members without a real party (unaffiliated, national
+ *  minorities). No party line exists for them: no deviations, no cohesion. */
+export const NO_LINE_PARTIES: readonly string[] = ['IND', 'MIN']
+
+export function hasPartyLine(abbr: string | null | undefined): boolean {
+  return !!abbr && !NO_LINE_PARTIES.includes(abbr)
+}
+
 export function textOnColor(bgHex: string): string {
   // PNL yellow needs black text; everything else uses white
   return bgHex === '#ffdd00' ? '#000000' : '#ffffff'

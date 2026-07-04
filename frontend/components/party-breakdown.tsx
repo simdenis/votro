@@ -53,6 +53,9 @@ export function PartyBreakdown({ rows, indSenators }: Props) {
   return (
     <div className="space-y-2">
       {parties.map(p => {
+        // MIN is one label over unrelated minority organizations — showing a
+        // collective "stance" would imply a group line that doesn't exist.
+        const noStance = p.abbr === 'MIN'
         const stance: 'for' | 'against' | 'abstention' =
           p.for > p.against ? 'for' : p.against > p.for ? 'against' : 'abstention'
         const stanceLabel =
@@ -69,9 +72,13 @@ export function PartyBreakdown({ rows, indSenators }: Props) {
             {/* Header row */}
             <div className="flex items-center justify-between mb-2">
               <PartyBadge abbreviation={p.abbr} color={p.color} />
-              <span className="text-xs font-bold" style={{ color: stanceColor }}>
-                {stanceLabel}
-              </span>
+              {noStance ? (
+                <span className="text-[10px] text-faint" title="Grup fără linie comună — voturi individuale">vot individual</span>
+              ) : (
+                <span className="text-xs font-bold" style={{ color: stanceColor }}>
+                  {stanceLabel}
+                </span>
+              )}
             </div>
 
             {/* Stacked bar */}

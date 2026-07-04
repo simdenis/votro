@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
-import { pct, textOnColor } from '@/lib/utils'
+import { pct, textOnColor, hasPartyLine } from '@/lib/utils'
 import { DonutChart } from '@/components/donut-chart'
 import type { PartyCohesion } from '@/lib/types'
 
@@ -10,11 +10,13 @@ export const metadata: Metadata = { title: 'Partide', description: 'Coeziunea in
 
 export default async function PartiesPage() {
   const db = getDB()
-  const { data: parties } = await db
+  const { data } = await db
     .from('party_cohesion')
     .select('*')
     .gt('votes_participated', 0)
     .order('votes_participated', { ascending: false }) as { data: PartyCohesion[] | null }
+  // IND/MIN are catch-all labels, not parties — "cohesion" is meaningless there
+  const parties = data?.filter(p => hasPartyLine(p.abbreviation))
 
   return (
     <div className="space-y-6">

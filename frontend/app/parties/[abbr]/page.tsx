@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
-import { formatDate, choiceLabel, choiceColor, pct } from '@/lib/utils'
+import { formatDate, choiceLabel, choiceColor, pct, hasPartyLine } from '@/lib/utils'
 import { OutcomeBadge } from '@/components/outcome-badge'
 import { StatsCard } from '@/components/stats-card'
 import { DonutChart } from '@/components/donut-chart'
@@ -15,7 +15,9 @@ export async function generateMetadata({ params }: { params: Promise<{ abbr: str
   const db = getDB()
   const { data } = await db.from('party_cohesion').select('name, abbreviation, cohesion_pct').eq('abbreviation', abbr.toUpperCase()).maybeSingle()
   if (!data) return { title: abbr.toUpperCase() }
-  const desc = `Coeziune internă ${data.cohesion_pct != null ? `${data.cohesion_pct.toFixed(1)}%` : '—'}. Vezi cum au votat senatorii și deputații ${data.abbreviation}.`
+  const desc = hasPartyLine(data.abbreviation)
+    ? `Coeziune internă ${data.cohesion_pct != null ? `${data.cohesion_pct.toFixed(1)}%` : '—'}. Vezi cum au votat senatorii și deputații ${data.abbreviation}.`
+    : `Vezi cum au votat parlamentarii din grupul ${data.name}.`
   return {
     title: `${data.abbreviation} — Coeziune și voturi`,
     description: desc,
@@ -42,6 +44,10 @@ export default async function PartyPage({ params }: { params: Promise<{ abbr: st
 
   if (!cohesion) notFound()
 
+  // IND/MIN are catch-all labels, not parties — no party line, so cohesion,
+  // deviations and "party position" make no sense for them.
+  const noLine = !hasPartyLine(cohesion.abbreviation)
+
   return (
     <div className="space-y-10">
       {/* Header */}
@@ -57,23 +63,30 @@ export default async function PartyPage({ params }: { params: Promise<{ abbr: st
             {cohesion.abbreviation}
           </span>
           <h1 className="font-serif text-[34px] font-normal text-foreground leading-[1.05] tracking-tight">{cohesion.name}</h1>
+          {noLine && (
+            <p className="text-sm text-muted mt-1.5">
+              Grup de parlamentari fără partid comun — nu există linie de partid, deci nu calculăm coeziune sau devieri.
+            </p>
+          )}
         </div>
-        <DonutChart
-          segments={[
-            { value: cohesion.cohesion_pct ?? 0,         color: cohesion.color },
-            { value: 100 - (cohesion.cohesion_pct ?? 0), color: 'var(--rim)' },
-          ]}
-          size={84}
-          ring={16}
-          centerLabel={`${Math.round(cohesion.cohesion_pct ?? 0)}%`}
-        />
+        {!noLine && (
+          <DonutChart
+            segments={[
+              { value: cohesion.cohesion_pct ?? 0,         color: cohesion.color },
+              { value: 100 - (cohesion.cohesion_pct ?? 0), color: 'var(--rim)' },
+            ]}
+            size={84}
+            ring={16}
+            centerLabel={`${Math.round(cohesion.cohesion_pct ?? 0)}%`}
+          />
+        )}
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-        <StatsCard value={pct(cohesion.cohesion_pct)} label="Coeziune" accent={cohesion.color} />
+        {!noLine && <StatsCard value={pct(cohesion.cohesion_pct)} label="Coeziune" accent={cohesion.color} />}
         <StatsCard value={cohesion.votes_participated} label="Voturi" />
-        <StatsCard value={cohesion.deviation_count} label="Devieri totale" accent="#f59e0b" />
+        {!noLine && <StatsCard value={cohesion.deviation_count} label="Devieri totale" accent="#f59e0b" />}
       </div>
 
       {/* Members — two columns: senators | deputies */}
@@ -110,10 +123,14 @@ export default async function PartyPage({ params }: { params: Promise<{ abbr: st
                         {m.total_votes}
                       </td>
                       <td className="py-2.5 px-3 text-right tabular-nums">
-                        <span className={m.deviation_pct != null && m.deviation_pct > 10 ? 'text-deviere font-bold' : 'text-muted'}>
-                          {m.deviation_pct != null && m.deviation_pct > 10 && '⚠ '}
-                          {pct(m.deviation_pct)}
-                        </span>
+                        {noLine ? (
+                          <span className="text-faint" title="Fără linie de partid">—</span>
+                        ) : (
+                          <span className={m.deviation_pct != null && m.deviation_pct > 10 ? 'text-deviere font-bold' : 'text-muted'}>
+                            {m.deviation_pct != null && m.deviation_pct > 10 && '⚠ '}
+                            {pct(m.deviation_pct)}
+                          </span>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -125,7 +142,8 @@ export default async function PartyPage({ params }: { params: Promise<{ abbr: st
       ))}
       </div>
 
-      {/* Vote history */}
+      {/* Vote history — a "party position" only exists for real parties */}
+      {!noLine && (
       <div>
         <h2 className="text-xs font-semibold uppercase tracking-widest text-muted mb-4">
           Poziție partid (ultimele 20 voturi)
@@ -172,6 +190,7 @@ export default async function PartyPage({ params }: { params: Promise<{ abbr: st
           </div>
         )}
       </div>
+      )}
     </div>
   )
 }
