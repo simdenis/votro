@@ -1,4 +1,5 @@
 import { ImageResponse } from 'next/og'
+import { hasPartyLine } from '@/lib/utils'
 
 export const runtime = 'edge'
 
@@ -24,7 +25,8 @@ export async function GET(request: Request) {
   const name      = s ? `${s.first_name} ${s.name}` : 'Senator'
   const party     = s?.party_abbr  ?? ''
   const color     = s?.party_color ?? '#9e9e9e'
-  const devPct    = s?.deviation_pct != null ? s.deviation_pct : null
+  // IND/MIN have no party line — a deviation stat would be meaningless
+  const devPct    = s?.deviation_pct != null && hasPartyLine(s?.party_abbr) ? s.deviation_pct : null
   const totalV    = s?.total_votes ?? 0
   const isHighDev = devPct != null && devPct > 10
 

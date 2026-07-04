@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
-import { formatDate, countNoun } from '@/lib/utils'
+import { formatDate, countNoun, hasPartyLine } from '@/lib/utils'
 import { OutcomeBadge } from '@/components/outcome-badge'
 import { ParliamentBar } from '@/components/parliament-bar'
 import type { VoteWithLaw, PartyCohesion } from '@/lib/types'
@@ -24,7 +24,8 @@ export default async function Dashboard() {
   ])
 
   const totalVotes    = r0.count ?? 0
-  const cohesionData  = (r1.data as PartyCohesion[] | null) ?? []
+  // IND/MIN are catch-all labels, not parties — "cohesion" is meaningless there
+  const cohesionData  = ((r1.data as PartyCohesion[] | null) ?? []).filter(c => hasPartyLine(c.abbreviation))
   const recentVotes   = (r2.data as VoteWithLaw[] | null) ?? []
   const adoptedCount  = r3.count ?? 0
   const respinsCount  = r4.count ?? 0

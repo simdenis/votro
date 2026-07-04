@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
-import { formatDate, choiceLabel, choiceColor, pct, countNoun } from '@/lib/utils'
+import { formatDate, choiceLabel, choiceColor, pct, countNoun, hasPartyLine } from '@/lib/utils'
 import { PartyBadge } from '@/components/party-badge'
 import { OutcomeBadge } from '@/components/outcome-badge'
 import { LoyaltyMeter } from '@/components/loyalty-meter'
@@ -27,7 +27,7 @@ export async function generateMetadata({
   if (!data) return { title: 'Senator' }
 
   const name    = `${data.first_name} ${data.name}`
-  const desc    = `${data.name} (${data.party_abbr}) a votat în ${data.total_votes} ${countNoun(data.total_votes, 'ședință', 'ședințe')}. Rată deviere: ${data.deviation_pct != null ? `${data.deviation_pct.toFixed(1)}%` : '—'}.`
+  const desc    = `${data.name} (${data.party_abbr}) a votat în ${data.total_votes} ${countNoun(data.total_votes, 'ședință', 'ședințe')}.${hasPartyLine(data.party_abbr) ? ` Rată deviere: ${data.deviation_pct != null ? `${data.deviation_pct.toFixed(1)}%` : '—'}.` : ''}`
   const ogImage = `${SITE_URL}/api/og/senator?id=${id}`
 
   return {
@@ -73,7 +73,9 @@ export default async function SenatorProfile({
   if (!stats) notFound()
 
   const total         = stats.total_votes
-  const loyaltyPct    = stats.deviation_pct != null ? Math.floor(100 - stats.deviation_pct) : null
+  // IND/MIN have no party line — loyalty/deviation framing would be meaningless
+  const noLine        = !hasPartyLine(stats.party_abbr)
+  const loyaltyPct    = !noLine && stats.deviation_pct != null ? Math.floor(100 - stats.deviation_pct) : null
   const isHighDev     = stats.deviation_pct != null && stats.deviation_pct > 10
 
   const behaviorRows = [
@@ -164,6 +166,12 @@ export default async function SenatorProfile({
           <h2 className="text-xs font-semibold uppercase tracking-widest text-muted mb-1">
             Devieri de la linia de partid
           </h2>
+          {noLine ? (
+            <p className="text-sm text-faint mt-3">
+              {stats.party_abbr === 'MIN' ? 'Grupul minorităților naționale nu are' : 'Neafiliat — nu are'} o
+              linie de partid de la care să devieze, deci nu calculăm devieri.
+            </p>
+          ) : (<>
           <p className="text-sm mb-3">
             <span className={isHighDev ? 'text-deviere font-semibold' : 'text-muted'}>
               {stats.deviations} {countNoun(stats.deviations, 'deviere', 'devieri')}
@@ -194,6 +202,7 @@ export default async function SenatorProfile({
               ))}
             </div>
           )}
+          </>)}
         </div>
       </div>
 

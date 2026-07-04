@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { formatDate, choiceLabel, choiceColor, pct, countNoun } from '@/lib/utils'
+import { formatDate, choiceLabel, choiceColor, pct, countNoun, hasPartyLine } from '@/lib/utils'
 import { PartyBadge } from '@/components/party-badge'
 import { OutcomeBadge } from '@/components/outcome-badge'
 import { LoyaltyMeter } from '@/components/loyalty-meter'
@@ -19,7 +19,9 @@ interface Props {
 
 export function PoliticianProfile({ stats, history, deviationRows, basePath, chamberLabel, siteUrl }: Props) {
   const total      = stats.total_votes
-  const loyaltyPct = stats.deviation_pct != null ? Math.floor(100 - stats.deviation_pct) : null
+  // IND/MIN have no party line — loyalty/deviation framing would be meaningless
+  const noLine     = !hasPartyLine(stats.party_abbr)
+  const loyaltyPct = !noLine && stats.deviation_pct != null ? Math.floor(100 - stats.deviation_pct) : null
   const isHighDev  = stats.deviation_pct != null && stats.deviation_pct > 10
 
   const behaviorRows = [
@@ -65,7 +67,9 @@ export function PoliticianProfile({ stats, history, deviationRows, basePath, cha
       <div className="flex items-center gap-3 flex-wrap">
         <ShareButtons
           url={`${siteUrl}${basePath}/${stats.politician_id}`}
-          tweet={`${stats.first_name} ${stats.name} (${stats.party_abbr}) a deviat de la linia de partid în ${pct(stats.deviation_pct)} din voturi. ${siteUrl}${basePath}/${stats.politician_id}`}
+          tweet={noLine
+            ? `Cum votează ${stats.first_name} ${stats.name} în Parlament: ${siteUrl}${basePath}/${stats.politician_id}`
+            : `${stats.first_name} ${stats.name} (${stats.party_abbr}) a deviat de la linia de partid în ${pct(stats.deviation_pct)} din voturi. ${siteUrl}${basePath}/${stats.politician_id}`}
         />
         <CardDownload href={`/api/og/senatorcard?id=${stats.politician_id}`} filename={`votro-${stats.first_name}-${stats.name}.png`.replace(/\s+/g, '-')} />
       </div>
@@ -104,6 +108,12 @@ export function PoliticianProfile({ stats, history, deviationRows, basePath, cha
           <h2 className="text-xs font-semibold uppercase tracking-widest text-muted mb-1">
             Devieri de la linia de partid
           </h2>
+          {noLine ? (
+            <p className="text-sm text-faint mt-3">
+              {stats.party_abbr === 'MIN' ? 'Grupul minorităților naționale nu are' : 'Neafiliat — nu are'} o
+              linie de partid de la care să devieze, deci nu calculăm devieri.
+            </p>
+          ) : (<>
           <p className="text-sm mb-4">
             <span className={isHighDev ? 'text-deviere font-semibold' : 'text-muted'}>
               {stats.deviations} {countNoun(stats.deviations, 'deviere', 'devieri')}
@@ -134,6 +144,7 @@ export function PoliticianProfile({ stats, history, deviationRows, basePath, cha
               ))}
             </div>
           )}
+          </>)}
         </div>
       </div>
 

@@ -7,18 +7,24 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://votro.ro'
   const db = getDB()
 
-  const [votes, senators, parties] = await Promise.all([
+  const [votes, senators, deputies, laws, parties] = await Promise.all([
     db.from('votes').select('id, vote_date').order('vote_date', { ascending: false }),
     db.from('senator_stats').select('politician_id'),
+    db.from('deputy_stats').select('politician_id'),
+    db.from('laws').select('id'),
     db.from('party_cohesion').select('abbreviation'),
   ])
 
   const statics: MetadataRoute.Sitemap = [
     { url: base, changeFrequency: 'daily', priority: 1 },
     { url: `${base}/votes`, changeFrequency: 'daily', priority: 0.9 },
+    { url: `${base}/legi`, changeFrequency: 'daily', priority: 0.9 },
+    { url: `${base}/saptamana`, changeFrequency: 'daily', priority: 0.8 },
     { url: `${base}/senators`, changeFrequency: 'weekly', priority: 0.8 },
+    { url: `${base}/deputies`, changeFrequency: 'weekly', priority: 0.8 },
     { url: `${base}/parties`, changeFrequency: 'weekly', priority: 0.7 },
     { url: `${base}/despre`, changeFrequency: 'monthly', priority: 0.4 },
+    { url: `${base}/contribuie`, changeFrequency: 'monthly', priority: 0.3 },
   ]
 
   const voteUrls: MetadataRoute.Sitemap = (votes.data ?? []).map(v => ({
@@ -28,8 +34,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }))
 
+  const lawUrls: MetadataRoute.Sitemap = (laws.data ?? []).map(l => ({
+    url: `${base}/legi/${l.id}`,
+    changeFrequency: 'weekly',
+    priority: 0.6,
+  }))
+
   const senatorUrls: MetadataRoute.Sitemap = (senators.data ?? []).map(s => ({
     url: `${base}/senators/${s.politician_id}`,
+    changeFrequency: 'weekly',
+    priority: 0.5,
+  }))
+
+  const deputyUrls: MetadataRoute.Sitemap = (deputies.data ?? []).map(d => ({
+    url: `${base}/deputies/${d.politician_id}`,
     changeFrequency: 'weekly',
     priority: 0.5,
   }))
@@ -40,5 +58,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.5,
   }))
 
-  return [...statics, ...voteUrls, ...senatorUrls, ...partyUrls]
+  return [...statics, ...voteUrls, ...lawUrls, ...senatorUrls, ...deputyUrls, ...partyUrls]
 }

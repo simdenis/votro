@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
 import { PoliticianProfile } from '@/components/politician-profile'
-import { countNoun } from '@/lib/utils'
+import { countNoun, hasPartyLine } from '@/lib/utils'
 import type { PoliticianStats, VoteHistoryRow } from '@/lib/types'
 
 export const revalidate = 3600
@@ -23,7 +23,7 @@ export async function generateMetadata({
   if (!data) return { title: 'Deputat' }
 
   const name    = `${data.first_name} ${data.name}`
-  const desc    = `${data.name} (${data.party_abbr}) a votat în ${data.total_votes} ${countNoun(data.total_votes, 'ședință', 'ședințe')}. Rată deviere: ${data.deviation_pct != null ? `${data.deviation_pct.toFixed(1)}%` : '—'}.`
+  const desc    = `${data.name} (${data.party_abbr}) a votat în ${data.total_votes} ${countNoun(data.total_votes, 'ședință', 'ședințe')}.${hasPartyLine(data.party_abbr) ? ` Rată deviere: ${data.deviation_pct != null ? `${data.deviation_pct.toFixed(1)}%` : '—'}.` : ''}`
   const ogImage = `${SITE_URL}/api/og/senator?id=${id}`
 
   return {

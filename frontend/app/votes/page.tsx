@@ -23,9 +23,11 @@ export default async function VotesPage({
 
   const [votesRes, catRes] = await Promise.all([
     (() => {
+      // inner join only when filtering on a law column — a plain join would
+      // hide the ~100 plenary votes that have no law attached
       let q = db
         .from('votes')
-        .select('*, laws!inner(*)', { count: 'exact' })
+        .select(sp.category ? '*, laws!inner(*)' : '*, laws(*)', { count: 'exact' })
         .order('vote_date', { ascending: false })
         .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1)
       if (sp.outcome)  q = q.eq('outcome', sp.outcome)
