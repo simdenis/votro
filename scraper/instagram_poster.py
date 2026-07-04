@@ -1,24 +1,28 @@
-"""Publish VotRO posts to Instagram via the Instagram Graph API.
+"""Publish VotRO posts to Instagram via the Instagram API (Instagram Login).
 
 This is the publishing pipeline only — it never runs automatically. You invoke
 it explicitly (CLI below) once you have set the credentials. The post image is
 served by the Next.js route `/api/og/post?vote=<id>` (public URL on Vercel),
-which the Graph API fetches when creating the media container.
+which the API fetches when creating the media container.
 
 Required environment (in scraper/.env or the shell):
     SUPABASE_URL, SUPABASE_KEY      already used by the scrapers
     SITE_URL                        e.g. https://votro.ro (no trailing slash)
-    IG_USER_ID                      Instagram *Business/Creator* account id
-    IG_ACCESS_TOKEN                 long-lived token with instagram_basic +
-                                    instagram_content_publish + pages_read_engagement
+    IG_USER_ID                      Instagram professional account id
+    IG_ACCESS_TOKEN                 long-lived Instagram User token with
+                                    instagram_business_basic +
+                                    instagram_business_content_publish
+    IG_APP_SECRET                   only for --exchange-token
     GRAPH_API_VERSION               optional, defaults to v21.0
 
-Flow (Instagram Content Publishing API):
+Flow (Content Publishing, host graph.instagram.com):
     1. POST /{ig-user-id}/media          -> creation_id  (container)
     2. GET  /{creation_id}?fields=status_code  -> poll until FINISHED
     3. POST /{ig-user-id}/media_publish  -> media_id     (goes live)
 
 Usage:
+    python instagram_poster.py --exchange-token <short>  # short-lived -> 60-day token
+    python instagram_poster.py --refresh-token          # extend the current token 60 days
     python instagram_poster.py --verify                 # check the token
     python instagram_poster.py --vote <vote_id>         # build + publish a vote post
     python instagram_poster.py --vote <vote_id> --dry-run   # print, do not publish
@@ -34,7 +38,7 @@ import time
 import requests
 from dotenv import load_dotenv
 
-GRAPH = "https://graph.facebook.com"
+GRAPH = "https://graph.instagram.com"
 _TIMEOUT = 30
 
 
@@ -46,6 +50,7 @@ class Config:
         self.site_url     = os.environ.get("SITE_URL", "https://votro.ro").rstrip("/")
         self.ig_user_id   = os.environ.get("IG_USER_ID", "")
         self.token        = os.environ.get("IG_ACCESS_TOKEN", "")
+        self.app_secret   = os.environ.get("IG_APP_SECRET", "")
         self.version      = os.environ.get("GRAPH_API_VERSION", "v21.0")
 
     def require_publishing(self) -> None:
@@ -102,7 +107,39 @@ def build_vote_caption(cfg: Config, vote: dict) -> str:
     return "\n".join(lines)
 
 
-# ── Instagram Graph API ───────────────────────────────────────────────────────
+# ── Instagram API ─────────────────────────────────────────────────────────────
+def exchange_token(cfg: Config, short_lived: str) -> dict:
+    """Exchange a short-lived token for a 60-day one. Unversioned endpoint."""
+    if not cfg.app_secret:
+        sys.exit("ERROR: IG_APP_SECRET must be set for --exchange-token")
+    r = requests.get(
+        f"{GRAPH}/access_token",
+        params={
+            "grant_type": "ig_exchange_token",
+            "client_secret": cfg.app_secret,
+            "access_token": short_lived,
+        },
+        timeout=_TIMEOUT,
+    )
+    if not r.ok:
+        sys.exit(f"token exchange failed ({r.status_code}): {r.text}")
+    return r.json()
+
+
+def refresh_token(cfg: Config) -> dict:
+    """Extend the current long-lived token by another 60 days (must be >24h old)."""
+    if not cfg.token:
+        sys.exit("ERROR: IG_ACCESS_TOKEN must be set for --refresh-token")
+    r = requests.get(
+        f"{GRAPH}/refresh_access_token",
+        params={"grant_type": "ig_refresh_token", "access_token": cfg.token},
+        timeout=_TIMEOUT,
+    )
+    if not r.ok:
+        sys.exit(f"token refresh failed ({r.status_code}): {r.text}")
+    return r.json()
+
+
 def verify_token(cfg: Config) -> dict:
     """Return basic info about the IG account the token can publish to."""
     cfg.require_publishing()
@@ -185,6 +222,10 @@ def main() -> None:
     cfg = Config()
 
     ap = argparse.ArgumentParser(description="Publish a VotRO post to Instagram.")
+    ap.add_argument("--exchange-token", metavar="SHORT_TOKEN",
+                    help="exchange a short-lived token for a 60-day one")
+    ap.add_argument("--refresh-token", action="store_true",
+                    help="extend the current IG_ACCESS_TOKEN by 60 days")
     ap.add_argument("--verify", action="store_true", help="check the access token / account")
     ap.add_argument("--vote", help="vote id to build and publish a post for")
     ap.add_argument("--image-url", help="post an arbitrary image URL (with --caption)")
@@ -192,6 +233,16 @@ def main() -> None:
     ap.add_argument("--dry-run", action="store_true", help="print instead of publishing")
     args = ap.parse_args()
 
+    if args.exchange_token:
+        info = exchange_token(cfg, args.exchange_token)
+        print(f"IG_ACCESS_TOKEN={info['access_token']}")
+        print(f"# expires in {info['expires_in'] // 86400} days — put it in scraper/.env")
+        return
+    if args.refresh_token:
+        info = refresh_token(cfg)
+        print(f"IG_ACCESS_TOKEN={info['access_token']}")
+        print(f"# expires in {info['expires_in'] // 86400} days — put it in scraper/.env")
+        return
     if args.verify:
         print(verify_token(cfg))
         return
