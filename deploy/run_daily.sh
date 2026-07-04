@@ -41,6 +41,12 @@ for TARGET in "${DATES[@]}"; do
   "$PY" scraper/senat_scraper.py --date "$TARGET" >>"$LOG" 2>&1 || { rc=1; log "Senat scrape FAILED ($TARGET)"; }
 done
 
+# Merge Camera-registry duplicates (PLx…) into their Senate L laws. Needs
+# cdep.ro (project fisa), so it must run here on the EU VPS — the senat.ro
+# PLX search the old resolver used returns zero results.
+log "=== PLx → L resolution ==="
+"$PY" scraper/resolve_plx.py >>"$LOG" 2>&1 || { rc=1; log "PLx resolver FAILED"; }
+
 # Presidential / CCR status is law-based, not date-based: re-check laws that
 # passed both chambers but have no promulgation status yet (senat.ro journey).
 log "=== Presidential / CCR status ==="
