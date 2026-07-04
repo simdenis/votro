@@ -771,10 +771,12 @@ class SenatScraper:
         """
         For each party in this vote, find the plurality choice (for/against/abstention).
         Any senator who voted differently gets party_line_deviation = True.
+        IND/MIN are catch-all labels for unaffiliated singles, not parties —
+        they have no party line, so their members never deviate.
         """
         res = (
             self.db.table("politician_votes")
-            .select("id, vote_choice, politicians(party_id)")
+            .select("id, vote_choice, politicians(party_id, parties(abbreviation))")
             .eq("vote_id", vote_id)
             .execute()
         )
@@ -784,8 +786,10 @@ class SenatScraper:
         # Group choices by party
         party_choices: dict[str, list[str]] = {}
         for row in res.data:
-            party_id = (row.get("politicians") or {}).get("party_id")
-            if not party_id:
+            pol = row.get("politicians") or {}
+            party_id = pol.get("party_id")
+            abbr = (pol.get("parties") or {}).get("abbreviation")
+            if not party_id or abbr in NO_LINE_PARTIES:
                 continue
             party_choices.setdefault(party_id, []).append(row["vote_choice"])
 
@@ -974,6 +978,10 @@ _PARTY_FULL_NAME: dict[str, str] = {
     "IND":   "Neafiliați",
     "MIN":   "Minoritățile naționale",
 }
+
+# Catch-all labels for members without a real party (unaffiliated, national
+# minorities) — no party line exists, so no party_line_deviation is computed.
+NO_LINE_PARTIES = {"IND", "MIN"}
 
 
 # Sources sometimes emit literal "?" where ș/ț (comma-below) should be — their
