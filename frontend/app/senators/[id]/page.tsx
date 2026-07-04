@@ -1,12 +1,8 @@
 import { notFound } from 'next/navigation'
-import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
-import { formatDate, choiceLabel, choiceColor, pct, countNoun, hasPartyLine } from '@/lib/utils'
-import { PartyBadge } from '@/components/party-badge'
-import { OutcomeBadge } from '@/components/outcome-badge'
-import { LoyaltyMeter } from '@/components/loyalty-meter'
-import { CardDownload } from '@/components/card-download'
+import { PoliticianProfile } from '@/components/politician-profile'
+import { countNoun, hasPartyLine } from '@/lib/utils'
 import type { SenatorStats, VoteHistoryRow } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
@@ -65,191 +61,18 @@ export default async function SenatorProfile({
       .limit(8),
   ])
 
-  const stats   = r0.data as SenatorStats | null
-  const history = r1.data as VoteHistoryRow[] | null
-  const participationPct = (r2.data as { participation_pct: number | null } | null)?.participation_pct ?? null
-  const deviationRows = (r3.data as VoteHistoryRow[] | null) ?? []
-
+  const stats = r0.data as SenatorStats | null
   if (!stats) notFound()
 
-  const total         = stats.total_votes
-  // IND/MIN have no party line — loyalty/deviation framing would be meaningless
-  const noLine        = !hasPartyLine(stats.party_abbr)
-  const loyaltyPct    = !noLine && stats.deviation_pct != null ? Math.floor(100 - stats.deviation_pct) : null
-  const isHighDev     = stats.deviation_pct != null && stats.deviation_pct > 10
-
-  const behaviorRows = [
-    { label: 'Pentru',    value: stats.votes_for,         color: '#16a34a', icon: '▲' },
-    { label: 'Împotrivă', value: stats.votes_against,     color: '#dc2626', icon: '▼' },
-    { label: 'Abțineri',  value: stats.votes_abstention,  color: '#8888cc', icon: '—' },
-    { label: 'Absent',    value: stats.votes_absent,      color: 'var(--faint)', icon: '·' },
-  ]
-
-  const deviations = deviationRows
-
   return (
-    <div className="space-y-5">
-
-      {/* ── Header card ─────────────────────────────────── */}
-      <div
-        className="bg-surface border border-rim rounded-xl p-4 flex items-center gap-4"
-        style={{ borderLeftWidth: 4, borderLeftColor: stats.party_color }}
-      >
-        {/* Avatar */}
-        <div className="w-11 h-11 rounded-lg bg-raised border border-rim flex items-center justify-center text-base font-extrabold text-muted flex-shrink-0 select-none">
-          {stats.first_name?.[0]}{stats.name?.[0]}
-        </div>
-
-        {/* Name + party */}
-        <div className="flex-1 min-w-0">
-          <h1 className="font-serif text-[28px] font-normal text-foreground tracking-[-0.01em] leading-[1.1]">
-            {stats.first_name} {stats.name}
-          </h1>
-          <div className="flex items-center gap-2 mt-1 flex-wrap">
-            <PartyBadge abbreviation={stats.party_abbr} color={stats.party_color} size="md" />
-            <span className="text-[10px] text-faint" title="Partidul din care face parte acum. Voturile sunt atribuite afilierii curente.">afiliere curentă</span>
-            <span className="text-xs text-muted">Senat · {total} {countNoun(total, 'vot înregistrat', 'voturi înregistrate')}</span>
-            {participationPct != null && (
-              <span className="text-xs text-muted" title="Voturi active împărțite la voturile din Senat din perioada activă. Estimativ — istoricul nostru e parțial.">
-                · participare ~{participationPct}% <span className="text-faint">(est.)</span>
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* Loyalty meter */}
-        {loyaltyPct != null && (
-          <div className="flex-shrink-0">
-            <LoyaltyMeter loyaltyPct={loyaltyPct} size={96} />
-          </div>
-        )}
-      </div>
-
-      {/* Download card */}
-      <div className="flex">
-        <CardDownload href={`/api/og/senatorcard?id=${id}`} filename={`votro-${stats.first_name}-${stats.name}.png`.replace(/\s+/g, '-')} />
-      </div>
-
-      {/* ── Two-column analytics ────────────────────────── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-        {/* Voting behavior */}
-        <div className="bg-surface border border-rim rounded-xl p-4">
-          <h2 className="text-xs font-semibold uppercase tracking-widest text-muted mb-3">
-            Comportament vot
-          </h2>
-          <div className="space-y-2.5">
-            {behaviorRows.map(row => (
-              <div key={row.label}>
-                <div className="flex justify-between mb-1">
-                  <span className="text-sm text-muted">{row.icon} {row.label}</span>
-                  <span className="text-sm font-bold tabular-nums" style={{ color: row.color }}>
-                    {row.value}
-                    <span className="text-xs font-normal text-faint ml-1.5">
-                      ({total > 0 ? Math.round((row.value / total) * 100) : 0}%)
-                    </span>
-                  </span>
-                </div>
-                <div className="h-1.5 bg-raised rounded-full overflow-hidden">
-                  <div
-                    className="h-full rounded-full transition-all duration-500"
-                    style={{ width: `${total > 0 ? (row.value / total) * 100 : 0}%`, backgroundColor: row.color }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Deviation log */}
-        <div className="bg-surface border border-rim rounded-xl p-4">
-          <h2 className="text-xs font-semibold uppercase tracking-widest text-muted mb-1">
-            Devieri de la linia de partid
-          </h2>
-          {noLine ? (
-            <p className="text-sm text-faint mt-3">
-              {stats.party_abbr === 'MIN' ? 'Grupul minorităților naționale nu are' : 'Neafiliat — nu are'} o
-              linie de partid de la care să devieze, deci nu calculăm devieri.
-            </p>
-          ) : (<>
-          <p className="text-sm mb-3">
-            <span className={isHighDev ? 'text-deviere font-semibold' : 'text-muted'}>
-              {stats.deviations} {countNoun(stats.deviations, 'deviere', 'devieri')}
-            </span>
-            <span className="text-faint mx-1.5">·</span>
-            <span className={isHighDev ? 'text-deviere font-semibold' : 'text-muted'}>
-              {pct(stats.deviation_pct)}
-            </span>
-          </p>
-          {deviations.length === 0 ? (
-            <p className="text-sm text-faint">Nicio deviere înregistrată.</p>
-          ) : (
-            <div className="space-y-2">
-              {deviations.slice(0, 8).map(row => (
-                <div key={row.id} className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-deviere flex-shrink-0" />
-                  <Link
-                    href={`/votes/${row.vote_id}`}
-                    className="font-mono text-xs text-muted hover:text-foreground transition-colors w-20 flex-shrink-0"
-                  >
-                    {row.votes.laws?.code ?? '—'}
-                  </Link>
-                  <span className="text-xs text-muted truncate flex-1">{row.votes.laws?.title ?? 'Vot fără lege asociată'}</span>
-                  <span className="text-xs font-bold flex-shrink-0" style={{ color: choiceColor(row.vote_choice) }}>
-                    {choiceLabel(row.vote_choice)}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-          </>)}
-        </div>
-      </div>
-
-      {/* ── Vote history timeline ────────────────────────── */}
-      <div>
-        <h2 className="text-xs font-semibold uppercase tracking-widest text-muted mb-3">
-          Activitate recentă
-        </h2>
-        {!history?.length ? (
-          <p className="text-sm text-muted">Nu există voturi înregistrate.</p>
-        ) : (
-          <div className="bg-surface border border-rim rounded-xl overflow-hidden divide-y divide-rim">
-            {history.map(row => (
-              <Link
-                key={row.id}
-                href={`/votes/${row.vote_id}`}
-                className="flex items-center gap-3 px-4 py-2.5 hover:bg-raised transition-colors"
-                style={row.party_line_deviation ? { backgroundColor: 'oklch(98% 0.02 80)' } : undefined}
-              >
-                {/* Choice colour stripe */}
-                <div
-                  className="w-0.5 h-9 rounded-full flex-shrink-0"
-                  style={{ backgroundColor: choiceColor(row.vote_choice) }}
-                />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                    <span className="font-mono text-xs text-muted">{row.votes.laws?.code ?? '—'}</span>
-                    <span className="text-[10px] text-faint">{formatDate(row.votes.vote_date)}</span>
-                    {row.party_line_deviation && (
-                      <span className="text-[10px] bg-deviere/10 text-deviere font-bold rounded px-1.5 py-px">
-                        ⚠ deviere
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-sm text-foreground truncate">{row.votes.laws?.title ?? 'Vot fără lege asociată'}</p>
-                </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <span className="text-sm font-bold" style={{ color: choiceColor(row.vote_choice) }}>
-                    {choiceLabel(row.vote_choice)}
-                  </span>
-                  <OutcomeBadge outcome={row.votes.outcome} />
-                </div>
-              </Link>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
+    <PoliticianProfile
+      stats={stats}
+      history={(r1.data as VoteHistoryRow[] | null) ?? []}
+      deviationRows={(r3.data as VoteHistoryRow[] | null) ?? []}
+      participationPct={(r2.data as { participation_pct: number | null } | null)?.participation_pct ?? null}
+      basePath="/senators"
+      chamberLabel="Senat"
+      siteUrl={SITE_URL}
+    />
   )
 }
