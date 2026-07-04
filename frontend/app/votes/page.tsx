@@ -87,7 +87,7 @@ export default async function VotesPage({
                 <tr key={vote.id} className="border-b border-rim hover:bg-raised transition-colors">
                   <td className="py-3 pr-4">
                     <Link href={`/votes/${vote.id}`} className="font-mono text-foreground hover:underline" style={{ color: 'var(--sidebar-bg)' }}>
-                      {vote.laws?.code ?? '—'}
+                      {vote.laws?.code ?? 'Plen'}
                     </Link>
                     <span className="block text-[9px] uppercase font-semibold text-faint mt-0.5">
                       {vote.chamber === 'deputies' ? 'Camera' : 'Senat'}
@@ -95,7 +95,7 @@ export default async function VotesPage({
                   </td>
                   <td className="py-3 pr-4 max-w-sm">
                     <Link href={`/votes/${vote.id}`} className="line-clamp-2 text-foreground hover:underline">
-                      {vote.laws?.title ?? '—'}
+                      {vote.laws?.title ?? vote.description ?? 'Vot de plen fără lege asociată'}
                     </Link>
                   </td>
                   <td className="py-3 pr-4 hidden lg:table-cell">

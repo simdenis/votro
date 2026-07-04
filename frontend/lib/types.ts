@@ -67,6 +67,8 @@ export interface Vote {
   chamber: 'senate' | 'deputies'
   senat_app_id: string | null
   cdep_vote_id: number | null
+  /** Vote subject from the source page — the only text for law-less votes. */
+  description: string | null
   created_at: string
 }
 

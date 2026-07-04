@@ -34,7 +34,7 @@ export function mapVoteToCard(vote: any, rows: BreakdownRow[], seats: number | n
   const participants = forC + againstC + abstainC + notVoted
   return {
     lawCode: vote.laws?.code ?? 'VOT DE PLEN',
-    lawTitle: vote.laws?.title ?? 'Vot fără lege asociată',
+    lawTitle: vote.laws?.title ?? vote.description ?? 'Vot fără lege asociată',
     chamber: isDep ? 'CAMERĂ' : 'SENAT',
     result: vote.outcome === 'respins' ? 'RESPINS' : 'ADOPTAT',
     year: vote.vote_date ? new Date(vote.vote_date).getFullYear() : 2026,

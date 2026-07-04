@@ -773,8 +773,13 @@ class CameraScraper:
         if not outcome and detail.totals.for_ > 0 and detail.totals.against >= 0:
             outcome = "adoptat" if detail.totals.for_ > detail.totals.against else "respins"
 
+        description = detail.law_title[:500] or None
+        if description and _has_mojibake(description):
+            description = _repair_mojibake(description)
+
         payload: dict = {
             "cdep_vote_id": detail.cdep_vote_id,
+            "description": description,
             "chamber": "deputies",
             "vote_date": detail.vote_date.isoformat() if detail.vote_date else None,
             "vote_type": detail.vote_type or None,

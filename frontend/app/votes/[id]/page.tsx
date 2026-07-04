@@ -28,7 +28,7 @@ export async function generateMetadata({
   if (!vote) return { title: 'Vot' }
 
   const code    = vote.laws?.code ?? 'Vot de plen'
-  const title   = vote.laws?.title ?? 'Vot fără lege asociată'
+  const title   = vote.laws?.title ?? vote.description ?? 'Vot fără lege asociată'
   const short   = title.length > 60 ? title.slice(0, 60) + '…' : title
   const outcome = vote.outcome === 'adoptat' ? 'adoptat' : vote.outcome === 'respins' ? 'respins' : null
   const desc    = [
@@ -68,6 +68,16 @@ export default async function VoteDetail({
   const breakdown    = r2.data as PartyVoteBreakdown[] | null
 
   if (!vote) notFound()
+
+  // True absentees: chamber seats − everyone counted on the vote page.
+  // Distinct from not_voted_count (present, but didn't press a button).
+  const { count: seats } = await db
+    .from('politicians')
+    .select('id', { count: 'exact', head: true })
+    .eq('chamber', vote.chamber)
+  const participants = (vote.for_count ?? 0) + (vote.against_count ?? 0)
+    + (vote.abstention_count ?? 0) + (vote.not_voted_count ?? 0)
+  const absentCount = seats ? Math.max(0, seats - participants) : null
 
   const adopted       = vote.outcome === 'adoptat'
   const heroColor     = adopted ? 'var(--color-for)' : vote.outcome === 'respins' ? 'var(--color-against)' : 'var(--muted)'
@@ -125,7 +135,7 @@ export default async function VoteDetail({
               )}
               <span className="text-xs text-muted">{formatDate(vote.vote_date)}</span>
             </div>
-            <h1 className="font-serif text-[26px] font-normal text-foreground leading-[1.1]">{vote.laws?.title ?? 'Vot fără lege asociată'}</h1>
+            <h1 className="font-serif text-[26px] font-normal text-foreground leading-[1.1]">{vote.laws?.title ?? vote.description ?? 'Vot fără lege asociată'}</h1>
           </div>
 
           {/* Vote counts */}
@@ -150,7 +160,7 @@ export default async function VoteDetail({
           <div className="flex items-center gap-3 flex-wrap">
             <ShareButtons
               url={`${SITE_URL}/votes/${vote.id}`}
-              tweet={`${vote.laws?.code ?? 'Vot de plen'} — ${(vote.laws?.title ?? 'vot fără lege asociată').slice(0, 80)}. ${vote.outcome === 'adoptat' ? 'Adoptat' : vote.outcome === 'respins' ? 'Respins' : ''} cu ${vote.for_count ?? 0} pentru și ${vote.against_count ?? 0} împotrivă. ${SITE_URL}/votes/${vote.id}`}
+              tweet={`${vote.laws?.code ?? 'Vot de plen'} — ${(vote.laws?.title ?? vote.description ?? 'vot fără lege asociată').slice(0, 80)}. ${vote.outcome === 'adoptat' ? 'Adoptat' : vote.outcome === 'respins' ? 'Respins' : ''} cu ${vote.for_count ?? 0} pentru și ${vote.against_count ?? 0} împotrivă. ${SITE_URL}/votes/${vote.id}`}
             />
             <CardDownload href={`/api/og/votecard?vote=${vote.id}`} filename={`votro-${(vote.laws?.code ?? 'vot').replace(/[^\w]+/g, '-')}.png`} />
             {deviatorCount > 0 && (
@@ -200,7 +210,10 @@ export default async function VoteDetail({
                   { color: 'var(--color-abstention)', label: 'Abțineri',  value: vote.abstention_count },
                   // grey dots in the arc — present but didn't press a button
                   ...((vote.not_voted_count ?? 0) > 0
-                    ? [{ color: '#d1d5db', label: 'Nu au votat', value: vote.not_voted_count }]
+                    ? [{ color: '#d1d5db', label: 'Prezenți, nu au votat', value: vote.not_voted_count }]
+                    : []),
+                  ...(absentCount
+                    ? [{ color: '#efeee9', label: 'Absenți', value: absentCount }]
                     : []),
                 ].map(({ color, label, value }) => (
                   <span key={label} className="flex items-center gap-1.5 text-sm text-muted">

@@ -82,8 +82,8 @@ def fetch_vote(cfg: Config, vote_id: str) -> dict | None:
 # ── Caption builder ───────────────────────────────────────────────────────────
 def build_vote_caption(cfg: Config, vote: dict) -> str:
     law = vote.get("laws") or {}
-    code = law.get("code") or "—"
-    title = (law.get("title") or "").strip()
+    code = law.get("code") or "Vot de plen"
+    title = (law.get("title") or vote.get("description") or "").strip()
     chamber = "Camera Deputaților" if vote.get("chamber") == "deputies" else "Senat"
     outcome = vote.get("outcome")
     verdict = {"adoptat": "ADOPTAT ✅", "respins": "RESPINS ❌"}.get(outcome, "")
