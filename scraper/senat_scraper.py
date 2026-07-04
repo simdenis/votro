@@ -666,8 +666,13 @@ class SenatScraper:
             outcome = "adoptat" if t.for_ > t.against else "respins"
         else:
             outcome = None
+        description = detail.law_title[:500] or None
+        if description and _has_mojibake(description):
+            description = _repair_mojibake(description)
+
         payload = {
             "senat_app_id": detail.app_id,
+            "description": description,
             "vote_date": detail.vote_date.isoformat() if detail.vote_date else None,
             "vote_type": detail.vote_type,
             "present_count": t.present,
