@@ -345,7 +345,7 @@ class CameraScraper:
         self._party_id_cache: dict[str, str] = {}
         # PLx → (L code, senate title) resolution cache; None = unresolvable
         self._plx_cache: dict[str, Optional[tuple[str, str]]] = {}
-        self._senat_search = None  # lazy resolve_plx.SenatSearch
+        self._senat_search = None  # lazy resolve_plx.PlxResolver
 
     # ── network helpers ────────────────────────────────────────
 
@@ -709,20 +709,20 @@ class CameraScraper:
         return pid
 
     def _resolve_plx(self, code: str) -> Optional[tuple[str, str]]:
-        """PLx{n}/{an} → (senate L code, senate title) via senat.ro's legislative
-        search (it accepts PLX numbers). Cached per run; None when unresolved."""
+        """PLx{n}/{an} → (senate L code, senate title) via the cdep project
+        fisa's Senate cross-reference. Cached per run; None when unresolved."""
         if code in self._plx_cache:
             return self._plx_cache[code]
         result = None
         m = re.match(r"^PLx(\d+)/(\d{4})$", code)
         if m:
             if self._senat_search is None:
-                from resolve_plx import SenatSearch
-                self._senat_search = SenatSearch()
+                from resolve_plx import PlxResolver
+                self._senat_search = PlxResolver()
             try:
                 result = self._senat_search.resolve(m.group(1), m.group(2))
             except Exception as exc:  # resolution is best-effort
-                log.warning("%s: senat.ro resolution failed: %s", code, exc)
+                log.warning("%s: PLx resolution failed: %s", code, exc)
         self._plx_cache[code] = result
         return result
 
@@ -733,7 +733,7 @@ class CameraScraper:
             resolved = self._resolve_plx(code)
             if resolved:
                 l_code, l_title = resolved
-                log.info("%s → %s (senat.ro)", code, l_code)
+                log.info("%s → %s (cdep fisa)", code, l_code)
                 code = l_code
                 title = l_title or title  # senate bill title is authoritative
         if title and _has_mojibake(title):
