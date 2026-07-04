@@ -15,16 +15,21 @@ wired into the daily scrape (`deploy/run_daily.sh`).
 
 ## One-time setup (you must do this — I can't create accounts or tokens)
 
+Uses the **Instagram API with Instagram Login** (host `graph.instagram.com`) —
+no Facebook Page needed.
+
 1. Convert the VotRO Instagram account to a **Business or Creator** account.
-2. Connect it to a **Facebook Page** (Instagram requires this for publishing).
-3. Create a **Meta app** at <https://developers.facebook.com> and add the
-   *Instagram Graph API* product.
-4. Generate a **long-lived access token** with scopes:
-   `instagram_basic`, `instagram_content_publish`, `pages_read_engagement`
-   (and `pages_show_list`). Long-lived user tokens last ~60 days; refresh before
-   expiry, or use a System User token for a non-expiring one.
-5. Find your **Instagram Business account id** (`IG_USER_ID`) via
-   `GET /me/accounts` → page → `GET /{page-id}?fields=instagram_business_account`.
+2. Create a **Meta app** at <https://developers.facebook.com> (type Business)
+   and add the *Instagram* product → *API setup with Instagram login*.
+3. In the app dashboard, add the VotRO account as an Instagram tester (or use
+   *Generate token* directly) and log in with it. Scopes:
+   `instagram_business_basic`, `instagram_business_content_publish`.
+   This gives you the **account id** (`IG_USER_ID`) and a **short-lived token**.
+4. Exchange it for a 60-day token (needs the app secret from the dashboard):
+
+   ```bash
+   IG_APP_SECRET=... python instagram_poster.py --exchange-token <short_token>
+   ```
 
 Then add to `scraper/.env`:
 
@@ -32,8 +37,12 @@ Then add to `scraper/.env`:
 SITE_URL=https://votro.ro
 IG_USER_ID=...
 IG_ACCESS_TOKEN=...
+IG_APP_SECRET=...           # only needed for --exchange-token
 # GRAPH_API_VERSION=v21.0   # optional
 ```
+
+No Meta App Review is needed while posting only to your own account
+(Development Mode is enough).
 
 ## Usage
 
@@ -43,7 +52,11 @@ python instagram_poster.py --verify              # confirm the token + account
 python instagram_poster.py --vote <id> --dry-run # preview image URL + caption
 python instagram_poster.py --vote <id>           # publish it
 python instagram_poster.py --image-url <url> --caption "..."   # post anything
+python instagram_poster.py --refresh-token       # extend the token 60 days
 ```
+
+Tokens last 60 days; run `--refresh-token` before expiry (token must be >24h
+old) and put the new value in `.env`. Worth a monthly cron once this is stable.
 
 ## Notes / limits
 
