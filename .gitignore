@@ -29,3 +29,4 @@ frontend/.vercel/
 frontend/public/swe-worker-*.js
 frontend/public/workbox-*.js
 frontend/public/fallback-*.js
+votro-*.png
