@@ -25,7 +25,13 @@ export function ParliamentBar({ parties, total }: Props) {
               className="flex items-center justify-center text-[12.5px] font-bold text-white overflow-hidden"
               style={{ flex: p.senator_count, backgroundColor: p.color }}
             >
-              {share > 0.05 && p.abbreviation}
+              {share > 0.05 ? (
+                p.abbreviation
+              ) : share > 0.02 ? (
+                <span className="text-[9.5px] tracking-tight" style={{ writingMode: 'vertical-rl' }}>
+                  {p.abbreviation}
+                </span>
+              ) : null}
             </div>
           )
         })}

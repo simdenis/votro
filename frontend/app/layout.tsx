@@ -3,7 +3,6 @@ import { DM_Serif_Display, DM_Sans } from 'next/font/google'
 import './globals.css'
 import { Nav } from '@/components/nav'
 import { Footer } from '@/components/footer'
-import { SearchBar } from '@/components/search-bar'
 
 // Display serif for headlines. Used via `font-serif`.
 const dmSerif = DM_Serif_Display({
@@ -58,10 +57,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="flex min-h-screen">
         <Nav />
         <div className="flex flex-col flex-1 min-w-0">
-          <div className="w-full max-w-[1040px] px-14 pt-7 flex justify-end">
-            <SearchBar />
-          </div>
-          <main className="flex-1 max-w-[1040px] w-full px-14 pt-5 pb-16">{children}</main>
+          <main className="flex-1 max-w-[1040px] w-full px-14 pt-7 pb-16">{children}</main>
           <Footer />
         </div>
       </body>
