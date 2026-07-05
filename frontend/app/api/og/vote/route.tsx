@@ -20,7 +20,7 @@ export async function GET(request: Request) {
 
   const vote = id ? await fetchVote(id) : null
   const code   = vote?.laws?.code  ?? 'VotRO'
-  const title  = vote?.laws?.title ?? 'Transparență parlamentară'
+  const title  = vote?.laws?.title ?? vote?.description ?? 'Transparență parlamentară'
   const short  = title.length > 72 ? title.slice(0, 72) + '…' : title
   const outcome = vote?.outcome
   const forC   = vote?.for_count   ?? 0

@@ -41,7 +41,7 @@ export async function GET(request: Request) {
       const n = devs.length
       data = {
         lawCode: vote.laws?.code ?? 'VOT DE PLEN',
-        lawTitle: vote.laws?.title ?? 'Vot fără lege asociată',
+        lawTitle: vote.laws?.title ?? vote.description ?? 'Vot fără lege asociată',
         chamber: isDep ? 'CAMERĂ' : 'SENAT',
         year: vote.vote_date ? new Date(vote.vote_date).getFullYear() : 2026,
         memberNoun: isDep ? countNoun(n, 'deputat', 'deputați') : countNoun(n, 'senator', 'senatori'),

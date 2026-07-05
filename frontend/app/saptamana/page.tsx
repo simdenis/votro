@@ -71,7 +71,7 @@ export default async function SaptamanaPage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1 flex-wrap">
                     <span className="font-mono text-xs text-muted font-semibold">
-                      {vote.laws?.code ?? '—'}
+                      {vote.laws?.code ?? 'Plen'}
                     </span>
                     <span className="text-[10px] uppercase font-semibold text-faint bg-raised border border-rim rounded px-1.5 py-px">
                       {vote.chamber === 'deputies' ? 'Camera' : 'Senat'}
@@ -86,7 +86,7 @@ export default async function SaptamanaPage() {
                     )}
                   </div>
                   <p className="text-sm text-foreground font-medium truncate">
-                    {vote.laws?.title ?? '—'}
+                    {vote.laws?.title ?? vote.description ?? 'Vot de plen fără lege asociată'}
                   </p>
                 </div>
                 <div className="flex-shrink-0 flex flex-col items-end gap-1.5">
