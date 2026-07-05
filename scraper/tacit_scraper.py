@@ -44,11 +44,16 @@ def parse_bills(html: str) -> list[dict]:
         link = re.search(r'href="([^"]*upl_pck2015\.proiect\?[^"]*idp=\d+[^"]*)"', row)
         cells = [re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", c)).strip()
                  for c in re.findall(r"<td[^>]*>(.*?)</td>", row, re.S)]
-        # [nr, "186/16.03.2026", title, committee, "45 prelungit la 60 zile", "04.09.2026"]
+        # [nr, "186/16.03.2026", title, committee, "45 prelungit la 60 zile",
+        #  "04.09.2026", "la comisii (Termen raport: ...)"] — the deadline is
+        # the last cell that is exactly a date, not the last cell.
         if len(cells) < 6 or not link:
             continue
         reg = re.match(r"(\d+)\s*/\s*(\d{2})\.(\d{2})\.(\d{4})", cells[1])
-        deadline = re.match(r"(\d{2})\.(\d{2})\.(\d{4})", cells[-1])
+        deadline = next(
+            (m for c in reversed(cells) if (m := re.fullmatch(r"(\d{2})\.(\d{2})\.(\d{4})", c))),
+            None,
+        )
         if not reg or not deadline:
             continue
         bills.append({
