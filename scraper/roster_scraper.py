@@ -92,10 +92,20 @@ class Member:
 
 
 # ── Source parsing ────────────────────────────────────────────────────────────
-def fetch(url: str) -> str:
-    r = requests.get(url, headers=UA, timeout=_TIMEOUT)
-    r.raise_for_status()
-    return r.text
+def fetch(url: str, tries: int = 3) -> str:
+    # senat.ro intermittently serves empty/near-empty pages; retry with backoff.
+    last: Exception | None = None
+    for attempt in range(tries):
+        try:
+            r = requests.get(url, headers=UA, timeout=_TIMEOUT)
+            r.raise_for_status()
+            if len(r.text) > 5000:
+                return r.text
+            last = RuntimeError(f"suspiciously small response ({len(r.text)}B)")
+        except requests.RequestException as e:
+            last = e
+        time.sleep(2 * (attempt + 1))
+    raise last if isinstance(last, requests.RequestException) else requests.RequestException(str(last))
 
 
 # Sources disagree on everything after "nr.N" — senat.ro: "nr.13 Cluj în data
