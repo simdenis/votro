@@ -10,6 +10,8 @@ const LINKS = [
   { href: '/senators',   label: 'Senatori' },
   { href: '/deputies',   label: 'Deputați' },
   { href: '/parties',    label: 'Partide' },
+  { href: '/parlamentarul-tau', label: 'Parlamentarul tău' },
+  { href: '/tacite',     label: 'Termene tacite' },
   { href: '/contribuie', label: 'Contribuie' },
   { href: '/despre',     label: 'Despre' },
 ]

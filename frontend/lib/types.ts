@@ -112,6 +112,20 @@ export interface PoliticianStats {
   deviations: number
   deviation_pct: number | null
   presence_pct: number | null
+  active: boolean
+  county: string | null
+}
+
+export interface PendingBill {
+  id: string
+  code: string
+  title: string | null
+  chamber: 'senate' | 'deputies'
+  committee: string | null
+  term_days: string | null
+  tacit_deadline: string | null
+  source_url: string | null
+  scraped_at: string
 }
 
 export type SenatorStats = PoliticianStats
