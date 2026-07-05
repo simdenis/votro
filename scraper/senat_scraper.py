@@ -352,6 +352,17 @@ class SenatScraper:
             if candidates:
                 detail.law_title = max(candidates, key=len)
 
+        if not detail.law_title:
+            # Procedural votes (numiri, moțiuni…) have no h5/keyword text; the
+            # subject sits between the "VOTUL ELECTRONIC din <date>" header and
+            # the "Prezenţi:" totals in the page text.
+            m = re.search(
+                r"VOTUL ELECTRONIC\s+din\s+\d{2}/\d{2}/\d{4}\s+(.+?)\s+Prezen",
+                full_text,
+            )
+            if m and 3 <= len(m.group(1)) <= 500:
+                detail.law_title = m.group(1).strip()
+
         # ── vote totals ───────────────────────────────────────
         detail.totals = self._parse_totals(soup)
 
