@@ -9,13 +9,8 @@ export function MobileNav() {
   const [open, setOpen] = useState(false)
   const path = usePathname()
 
-  // close the drawer whenever navigation happens
+  // collapse the menu whenever navigation happens
   useEffect(() => setOpen(false), [path])
-  // no body scroll behind the open drawer
-  useEffect(() => {
-    document.body.style.overflow = open ? 'hidden' : ''
-    return () => { document.body.style.overflow = '' }
-  }, [open])
 
   return (
     <>
@@ -32,32 +27,31 @@ export function MobileNav() {
         </svg>
       </button>
 
-      {open && (
-        <div
-          className="fixed inset-x-0 top-12 bottom-0 z-20 overflow-y-auto"
-          style={{ backgroundColor: 'var(--sidebar-bg)' }}
-        >
-          <nav className="flex flex-col px-4 py-3">
-            {NAV_LINKS.map(({ href, label }) => {
-              const active = path === href || path.startsWith(`${href}/`)
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  className={`px-3 py-3.5 rounded-md text-[17px] border-b border-white/[0.06] last:border-0 ${
-                    active ? 'font-semibold text-white bg-white/[0.10]' : 'font-medium text-white/85'
-                  }`}
-                >
-                  {label}
-                </Link>
-              )
-            })}
-            <Link href="/search" className="px-3 py-3.5 text-[17px] font-medium text-white/60">
-              Căutare
-            </Link>
-          </nav>
-        </div>
-      )}
+      {/* The navy bar simply grows downward to reveal the menu — no overlay */}
+      <div
+        className="absolute left-0 right-0 top-full overflow-hidden transition-[max-height] duration-300 ease-out"
+        style={{ maxHeight: open ? 520 : 0, backgroundColor: 'var(--sidebar-bg)' }}
+      >
+        <nav className="flex flex-col px-4 pb-3">
+          {NAV_LINKS.map(({ href, label }) => {
+            const active = path === href || path.startsWith(`${href}/`)
+            return (
+              <Link
+                key={href}
+                href={href}
+                className={`px-3 py-3 rounded-md text-[16px] border-b border-white/[0.06] last:border-0 ${
+                  active ? 'font-semibold text-white bg-white/[0.10]' : 'font-medium text-white/85'
+                }`}
+              >
+                {label}
+              </Link>
+            )
+          })}
+          <Link href="/search" className="px-3 py-3 text-[16px] font-medium text-white/60">
+            Căutare
+          </Link>
+        </nav>
+      </div>
     </>
   )
 }

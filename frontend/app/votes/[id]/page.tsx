@@ -8,7 +8,7 @@ import { PartyBadge } from '@/components/party-badge'
 import { PartyBreakdown } from '@/components/party-breakdown'
 import { SeatArc } from '@/components/seat-arc'
 import { ShareButtons } from '@/components/share-buttons'
-import { HoverNames } from '@/components/hover-names'
+import { HoverNames, type HoverPerson } from '@/components/hover-names'
 import { CardDownload } from '@/components/card-download'
 import { voteSourceUrl } from '@/lib/types'
 import type { VoteWithLaw, PoliticianVoteWithDetails, PartyVoteBreakdown } from '@/lib/types'
@@ -90,14 +90,17 @@ export default async function VoteDetail({
   const memberNoun    = (n: number) =>
     isDep ? countNoun(n, 'deputat', 'deputați') : countNoun(n, 'senator', 'senatori')
 
-  const fullName = (sv: PoliticianVoteWithDetails) =>
-    `${sv.politicians.first_name} ${sv.politicians.name}`.trim()
-  const deviatorNames = senatorVotes?.filter(sv => sv.party_line_deviation).map(fullName) ?? []
-  // party -> vote_choice -> names, for hoverable numbers in the breakdown
-  const voters: Record<string, Record<string, string[]>> = {}
+  const person = (sv: PoliticianVoteWithDetails): HoverPerson => ({
+    name: `${sv.politicians.first_name} ${sv.politicians.name}`.trim(),
+    color: sv.politicians.parties.color,
+    party: sv.politicians.parties.abbreviation,
+  })
+  const deviatorPeople = senatorVotes?.filter(sv => sv.party_line_deviation).map(person) ?? []
+  // party -> vote_choice -> people, for hoverable numbers in the breakdown
+  const voters: Record<string, Record<string, HoverPerson[]>> = {}
   for (const sv of senatorVotes ?? []) {
     const party = sv.politicians.parties.abbreviation
-    ;((voters[party] ??= {})[sv.vote_choice] ??= []).push(fullName(sv))
+    ;((voters[party] ??= {})[sv.vote_choice] ??= []).push(person(sv))
   }
 
   const indSenators =
@@ -246,7 +249,7 @@ export default async function VoteDetail({
               </h2>
               {deviatorCount > 0 && (
                 <p className="text-sm text-muted mb-3">
-                  <HoverNames names={deviatorNames} title="Au deviat de la linia de partid">
+                  <HoverNames people={deviatorPeople} title="Au deviat de la linia de partid">
                     <span className="text-deviere font-semibold">
                       {deviatorCount} {memberNoun(deviatorCount)}
                     </span>

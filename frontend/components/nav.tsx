@@ -44,7 +44,7 @@ export function Nav() {
       </aside>
 
       {/* ── Top bar (mobile) ────────────────────────────── */}
-      <nav className="lg:hidden sticky top-0 z-10" style={{ backgroundColor: 'var(--sidebar-bg)' }}>
+      <nav className="lg:hidden sticky top-0 z-20 relative" style={{ backgroundColor: 'var(--sidebar-bg)' }}>
         <div className="px-4 h-12 flex items-center justify-between gap-4">
           <Link href="/" className="flex items-center gap-2 shrink-0">
             {/* eslint-disable-next-line @next/next/no-img-element */}

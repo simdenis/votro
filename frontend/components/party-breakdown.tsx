@@ -1,6 +1,6 @@
 import type { PartyVoteBreakdown, VoteChoice } from '@/lib/types'
 import { PartyBadge } from './party-badge'
-import { HoverNames } from './hover-names'
+import { HoverNames, type HoverPerson } from './hover-names'
 import { choiceLabel, choiceColor } from '@/lib/utils'
 
 interface IndSenator {
@@ -23,7 +23,7 @@ interface Props {
   rows: PartyVoteBreakdown[]
   indSenators?: IndSenator[]
   /** party -> vote_choice -> full names; enables hover lists on the counts */
-  voters?: Record<string, Record<string, string[]>>
+  voters?: Record<string, Record<string, HoverPerson[]>>
 }
 
 export function PartyBreakdown({ rows, indSenators, voters }: Props) {
@@ -100,17 +100,17 @@ export function PartyBreakdown({ rows, indSenators, voters }: Props) {
             {/* Counts — hover a number to see who */}
             <div className="flex gap-3 mt-1.5 text-xs text-muted tabular-nums">
               {p.for > 0 && (
-                <HoverNames names={voters?.[p.abbr]?.for ?? []} title={`${p.abbr} — pentru`}>
+                <HoverNames people={voters?.[p.abbr]?.for ?? []} title={`${p.abbr} — pentru`}>
                   <span><span className="text-adoptat font-semibold">{p.for}</span> pentru</span>
                 </HoverNames>
               )}
               {p.against > 0 && (
-                <HoverNames names={voters?.[p.abbr]?.against ?? []} title={`${p.abbr} — împotrivă`}>
+                <HoverNames people={voters?.[p.abbr]?.against ?? []} title={`${p.abbr} — împotrivă`}>
                   <span><span className="text-respins font-semibold">{p.against}</span> împotrivă</span>
                 </HoverNames>
               )}
               {p.abstention > 0 && (
-                <HoverNames names={voters?.[p.abbr]?.abstention ?? []} title={`${p.abbr} — abțineri`}>
+                <HoverNames people={voters?.[p.abbr]?.abstention ?? []} title={`${p.abbr} — abțineri`}>
                   <span><span className="text-[#8888cc] font-semibold">{p.abstention}</span> abțineri</span>
                 </HoverNames>
               )}
