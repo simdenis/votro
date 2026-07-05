@@ -972,6 +972,8 @@ _PARTY_ABBREV_MAP: dict[str, str] = {
     "neafiliați": "IND",
     "neafiliat": "IND",
     "neafiliati": "IND",
+    "fara apartenenta": "IND",   # "Parlamentar fără apartenență la grupurile parlamentare"
+    "fără apartenență": "IND",
     "minorităților naționale": "MIN",
     "minoritati": "MIN",
     "minorităti": "MIN",

@@ -26,7 +26,7 @@ interface Props {
 export function PartyBreakdown({ rows, indSenators }: Props) {
   const byParty = new Map<string, PartyData>()
   for (const r of rows) {
-    if (r.party_abbr === 'IND') continue
+    if (r.party_abbr === 'IND' || r.party_abbr === 'P') continue
     if (!byParty.has(r.party_abbr)) {
       byParty.set(r.party_abbr, {
         abbr: r.party_abbr,
