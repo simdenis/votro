@@ -98,25 +98,23 @@ def fetch(url: str) -> str:
     return r.text
 
 
-_COUNTY_RE = re.compile(
-    r"circumscrip\w+\s+electoral\w+\s+nr\.?\s*\d+\s+([A-ZĂÎȘȚÂ][A-Za-zĂÎȘȚÂăîșțâ\- ]{2,30}?)(?:\s{2,}|\s+în\b|\s*[,<]|$)",
-    re.IGNORECASE,
-)
+# Sources disagree on everything after "nr.N" — senat.ro: "nr.13 Cluj în data
+# de...", cdep.ro: "nr.8 BRAŞOV data validării..." (cedilla diacritics). So:
+# take the words after the number and validate progressively against the
+# canonical county list (whose keys are unaccented) instead of pattern-guessing.
+_AFTER_NR = re.compile(r"circumscrip\w+\s+electoral\w+\s+nr\.?\s*\d+\s+(.{3,60})", re.IGNORECASE)
 
 
 def extract_county(html: str) -> Optional[str]:
     text = re.sub(r"<[^>]+>", " ", html)
     text = re.sub(r"\s+", " ", text)
-    m = _COUNTY_RE.search(text)
-    if not m:
-        return None
-    # trim trailing non-name words the regex may swallow ("Cluj în data de")
-    raw = m.group(1).strip()
-    for cut in (" in data", " în data", " validat"):
-        i = _unaccent(raw).lower().find(_unaccent(cut).lower())
-        if i > 0:
-            raw = raw[:i]
-    return canonical_county(raw)
+    for m in _AFTER_NR.finditer(text):
+        words = m.group(1).split()
+        for n in (3, 2, 1):  # longest match first ("Satu Mare" before "Satu")
+            county = canonical_county(" ".join(words[:n]))
+            if county:
+                return county
+    return None
 
 
 def senate_roster() -> list[Member]:
