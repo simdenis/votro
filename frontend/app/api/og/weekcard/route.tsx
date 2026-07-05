@@ -52,7 +52,7 @@ export async function GET(request: Request) {
   const closest: WeekHighlight | null = closestVote
     ? {
         lawCode: closestVote.laws?.code ?? 'VOT DE PLEN',
-        lawTitle: closestVote.laws?.title ?? 'Vot fără lege asociată',
+        lawTitle: closestVote.laws?.title ?? closestVote.description ?? 'Vot fără lege asociată',
         chamber: closestVote.chamber === 'deputies' ? 'CAMERĂ' : 'SENAT',
         outcome: closestVote.outcome === 'respins' ? 'RESPINS' : 'ADOPTAT',
         votesFor: closestVote.for_count ?? 0,

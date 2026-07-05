@@ -103,7 +103,7 @@ export default async function Dashboard() {
               <Link key={vote.id} href={`/votes/${vote.id}`} className="block py-[18px] border-b border-rim hover:opacity-80 transition-opacity">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-[11px] font-semibold tabular-nums" style={{ color: 'var(--sidebar-bg)' }}>
-                    {vote.laws?.code ?? '—'}
+                    {vote.laws?.code ?? 'Plen'}
                   </span>
                   <span className="text-[9px] uppercase font-semibold bg-raised text-faint px-[5px] py-[1px] rounded-[3px]">
                     {vote.chamber === 'deputies' ? 'Camera' : 'Senat'}
@@ -117,7 +117,7 @@ export default async function Dashboard() {
                   <OutcomeBadge outcome={vote.outcome} />
                 </div>
                 <h3 className="font-serif text-[18px] leading-[1.32] text-foreground line-clamp-2">
-                  {vote.laws?.title ?? '—'}
+                  {vote.laws?.title ?? vote.description ?? 'Vot de plen fără lege asociată'}
                 </h3>
                 <div className="flex items-center gap-3 mt-2.5">
                   <div className="flex h-[6px] flex-1 rounded-[3px] overflow-hidden bg-raised">
