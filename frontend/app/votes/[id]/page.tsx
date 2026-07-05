@@ -8,6 +8,7 @@ import { PartyBadge } from '@/components/party-badge'
 import { PartyBreakdown } from '@/components/party-breakdown'
 import { SeatArc } from '@/components/seat-arc'
 import { ShareButtons } from '@/components/share-buttons'
+import { HoverNames } from '@/components/hover-names'
 import { CardDownload } from '@/components/card-download'
 import { voteSourceUrl } from '@/lib/types'
 import type { VoteWithLaw, PoliticianVoteWithDetails, PartyVoteBreakdown } from '@/lib/types'
@@ -88,6 +89,16 @@ export default async function VoteDetail({
   const memberPath    = isDep ? '/deputies' : '/senators'
   const memberNoun    = (n: number) =>
     isDep ? countNoun(n, 'deputat', 'deputați') : countNoun(n, 'senator', 'senatori')
+
+  const fullName = (sv: PoliticianVoteWithDetails) =>
+    `${sv.politicians.first_name} ${sv.politicians.name}`.trim()
+  const deviatorNames = senatorVotes?.filter(sv => sv.party_line_deviation).map(fullName) ?? []
+  // party -> vote_choice -> names, for hoverable numbers in the breakdown
+  const voters: Record<string, Record<string, string[]>> = {}
+  for (const sv of senatorVotes ?? []) {
+    const party = sv.politicians.parties.abbreviation
+    ;((voters[party] ??= {})[sv.vote_choice] ??= []).push(fullName(sv))
+  }
 
   const indSenators =
     senatorVotes
@@ -235,9 +246,11 @@ export default async function VoteDetail({
               </h2>
               {deviatorCount > 0 && (
                 <p className="text-sm text-muted mb-3">
-                  <span className="text-deviere font-semibold">
-                    {deviatorCount} {memberNoun(deviatorCount)}
-                  </span>{' '}
+                  <HoverNames names={deviatorNames} title="Au deviat de la linia de partid">
+                    <span className="text-deviere font-semibold">
+                      {deviatorCount} {memberNoun(deviatorCount)}
+                    </span>
+                  </HoverNames>{' '}
                   {deviatorCount === 1 ? 'a votat' : 'au votat'} împotriva liniei de partid.
                 </p>
               )}
@@ -283,7 +296,7 @@ export default async function VoteDetail({
             <h2 className="text-xs font-semibold uppercase tracking-widest text-muted mb-3">
               Poziție partide
             </h2>
-            <PartyBreakdown rows={breakdown!} indSenators={indSenators} />
+            <PartyBreakdown rows={breakdown!} indSenators={indSenators} voters={voters} />
           </div>
         )}
       </div>
