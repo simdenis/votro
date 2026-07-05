@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
-const LINKS = [
+export const NAV_LINKS = [
   { href: '/saptamana',  label: 'Săptămâna' },
   { href: '/legi',       label: 'Legi' },
   { href: '/votes',      label: 'Voturi' },
@@ -22,7 +22,7 @@ export function NavLinks({ variant }: { variant?: 'sidebar' | 'top' }) {
   if (variant === 'sidebar') {
     return (
       <nav className="flex flex-col gap-0.5 flex-1">
-        {LINKS.map(({ href, label }) => {
+        {NAV_LINKS.map(({ href, label }) => {
           const active = path === href || path.startsWith(`${href}/`)
           return (
             <Link
@@ -45,7 +45,7 @@ export function NavLinks({ variant }: { variant?: 'sidebar' | 'top' }) {
   // top bar fallback (mobile) — navy bar, white text
   return (
     <div className="flex gap-5 text-[13px] overflow-x-auto">
-      {LINKS.map(({ href, label }) => {
+      {NAV_LINKS.map(({ href, label }) => {
         const active = path === href || path.startsWith(`${href}/`)
         return (
           <Link
