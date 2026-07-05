@@ -54,7 +54,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="preconnect" href="https://zmxewrkykbxawfhzxbni.supabase.co" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
-      <body className="flex min-h-screen">
+      <body className="flex flex-col lg:flex-row min-h-screen">
         <Nav />
         <div className="flex flex-col flex-1 min-w-0">
           <main className="flex-1 max-w-[1040px] w-full px-4 sm:px-8 lg:px-14 pt-5 sm:pt-7 pb-16">{children}</main>
