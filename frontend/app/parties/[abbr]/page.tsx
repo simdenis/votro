@@ -31,8 +31,8 @@ export default async function PartyPage({ params }: { params: Promise<{ abbr: st
 
   const [r0, r1, r2, r3] = await Promise.all([
     db.from('party_cohesion').select('*').eq('abbreviation', abbr.toUpperCase()).maybeSingle(),
-    db.from('senator_stats').select('*').eq('party_abbr', abbr.toUpperCase()).order('name'),
-    db.from('deputy_stats').select('*').eq('party_abbr', abbr.toUpperCase()).order('name'),
+    db.from('senator_stats').select('*').eq('party_abbr', abbr.toUpperCase()).eq('active', true).order('name'),
+    db.from('deputy_stats').select('*').eq('party_abbr', abbr.toUpperCase()).eq('active', true).order('name'),
     db.from('party_majority_votes').select('*').eq('party_abbr', abbr.toUpperCase())
       .order('vote_date', { ascending: false }).limit(20),
   ])

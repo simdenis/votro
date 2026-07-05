@@ -101,7 +101,7 @@ export function VoteCard({ data }: { data: VoteCardData }) {
   const badgeBg = data.result === 'ADOPTAT' ? C.for : C.against
 
   const presenceLine = data.seats
-    ? `${participants} din ${data.seats} prezenți`
+    ? `${participants} prezenți din ${data.seats} ${countNoun(data.seats, 'mandat', 'mandate')}`
     : `${participants} ${countNoun(participants, 'parlamentar', 'parlamentari')}`
 
   const cols: { value: number; label: string; color: string }[] = [

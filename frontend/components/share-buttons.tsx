@@ -1,13 +1,22 @@
 'use client'
 
+import { useRef, useState } from 'react'
+
 interface ShareButtonsProps {
   url: string
   tweet: string
 }
 
 export function ShareButtons({ url, tweet }: ShareButtonsProps) {
+  const [copied, setCopied] = useState(false)
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+
   function copy() {
-    navigator.clipboard.writeText(url).catch(() => {})
+    navigator.clipboard.writeText(url).then(() => {
+      setCopied(true)
+      clearTimeout(timer.current)
+      timer.current = setTimeout(() => setCopied(false), 2000)
+    }).catch(() => {})
   }
 
   const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweet)}`
@@ -19,7 +28,7 @@ export function ShareButtons({ url, tweet }: ShareButtonsProps) {
         onClick={copy}
         className="text-xs text-muted border border-rim rounded px-3 py-1.5 hover:text-foreground hover:border-foreground transition-colors"
       >
-        Copiază link
+        {copied ? 'Copiat ✓' : 'Copiază link'}
       </button>
       <a
         href={twitterUrl}

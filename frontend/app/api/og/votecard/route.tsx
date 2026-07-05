@@ -22,7 +22,7 @@ async function fetchBreakdown(id: string) {
 }
 /** Current chamber size — lets the card compute true absentees. */
 async function fetchSeats(chamber: string): Promise<number | null> {
-  const r = await fetch(`${SUPABASE_URL}/rest/v1/politicians?chamber=eq.${chamber}&select=id&limit=1`, {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/politicians?chamber=eq.${chamber}&active=eq.true&select=id&limit=1`, {
     headers: { ...SB, Prefer: 'count=exact' },
   })
   const range = r.headers.get('content-range') // "0-0/136"

@@ -57,5 +57,17 @@ log "=== Presidential / CCR status ==="
 log "=== Law summaries ==="
 "$PY" scraper/law_summarizer.py >>"$LOG" 2>&1 || { rc=1; log "Law summarizer FAILED"; }
 
+# Active mandates + electoral county from the official member lists. Never
+# mass-deactivates on a broken parse (sanity floors inside).
+log "=== Roster (active mandates + county) ==="
+"$PY" scraper/roster_scraper.py >>"$LOG" 2>&1 || { rc=1; log "Roster scrape FAILED"; }
+
+# Bills with running tacit-adoption terms (cdep "Verificare termene legale").
+log "=== Tacit deadlines ==="
+"$PY" scraper/tacit_scraper.py >>"$LOG" 2>&1 || { rc=1; log "Tacit scrape FAILED"; }
+
+# Heartbeat — lets the site footer tell "parliament idle" from "pipeline broken".
+"$PY" scraper/heartbeat.py "$rc" >>"$LOG" 2>&1 || log "WARN: heartbeat write failed"
+
 log "=== Done (rc=$rc) ==="
 exit $rc

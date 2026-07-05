@@ -75,6 +75,7 @@ export default async function VoteDetail({
     .from('politicians')
     .select('id', { count: 'exact', head: true })
     .eq('chamber', vote.chamber)
+    .eq('active', true)
   const participants = (vote.for_count ?? 0) + (vote.against_count ?? 0)
     + (vote.abstention_count ?? 0) + (vote.not_voted_count ?? 0)
   const absentCount = seats ? Math.max(0, seats - participants) : null

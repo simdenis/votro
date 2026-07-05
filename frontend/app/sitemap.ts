@@ -20,6 +20,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${base}/votes`, changeFrequency: 'daily', priority: 0.9 },
     { url: `${base}/legi`, changeFrequency: 'daily', priority: 0.9 },
     { url: `${base}/saptamana`, changeFrequency: 'daily', priority: 0.8 },
+    { url: `${base}/tacite`, changeFrequency: 'daily', priority: 0.7 },
+    { url: `${base}/parlamentarul-tau`, changeFrequency: 'weekly', priority: 0.7 },
     { url: `${base}/senators`, changeFrequency: 'weekly', priority: 0.8 },
     { url: `${base}/deputies`, changeFrequency: 'weekly', priority: 0.8 },
     { url: `${base}/parties`, changeFrequency: 'weekly', priority: 0.7 },

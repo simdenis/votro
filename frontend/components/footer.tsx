@@ -3,17 +3,22 @@ import { getDB } from '@/lib/supabase'
 import { formatRelativeTime } from '@/lib/utils'
 
 async function LastUpdated() {
-  const { data } = await getDB()
-    .from('votes')
-    .select('scraped_at')
-    .order('scraped_at', { ascending: false })
-    .limit(1)
-  const ts = data?.[0]?.scraped_at as string | undefined
-  if (!ts) return <span>Actualizat zilnic</span>
-  const stale = Date.now() - new Date(ts).getTime() > 48 * 3_600_000
+  // Two different freshness facts: when the pipeline last ran successfully
+  // (heartbeat — warn if THAT is stale) vs when parliament last produced a
+  // vote (recess is normal, never a warning).
+  const db = getDB()
+  const [meta, vote] = await Promise.all([
+    db.from('scrape_meta').select('value').eq('key', 'last_scrape_at').maybeSingle(),
+    db.from('votes').select('vote_date').order('vote_date', { ascending: false }).limit(1),
+  ])
+  const checkedAt = meta.data?.value as string | undefined
+  const lastVote  = vote.data?.[0]?.vote_date as string | undefined
+  if (!checkedAt) return <span>Actualizat zilnic</span>
+  const stale = Date.now() - new Date(checkedAt).getTime() > 36 * 3_600_000
   return (
     <span className={stale ? 'text-deviere' : ''}>
-      Actualizat {formatRelativeTime(ts)}{stale ? ' ⚠' : ''}
+      {lastVote ? `Ultimul vot: ${formatRelativeTime(lastVote)} · ` : ''}
+      Verificat {formatRelativeTime(checkedAt)}{stale ? ' ⚠' : ''}
     </span>
   )
 }

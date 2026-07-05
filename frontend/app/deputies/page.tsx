@@ -18,7 +18,7 @@ export default async function DeputiesPage({
   const sort = sp.sort ?? 'name'
   const dir  = sp.dir === 'desc'
 
-  let query = getDB().from('deputy_stats').select('*')
+  let query = getDB().from('deputy_stats').select('*').eq('active', true)
   if (sort === 'party') {
     query = query.order('party_abbr', { ascending: !dir, nullsFirst: false }).order('name', { ascending: true })
   } else {
