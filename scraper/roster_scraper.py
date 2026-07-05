@@ -130,7 +130,8 @@ def extract_county(html: str) -> Optional[str]:
 def senate_roster() -> list[Member]:
     html = fetch(SENATE_LIST)
     seen: dict[str, Member] = {}
-    for m in re.finditer(r'href="[^"]*FisaSenator\.aspx\?ParlamentarID=([0-9a-fA-F-]{36})"[^>]*>([^<]+)<', html):
+    # NB: senat.ro uses single-quoted hrefs here
+    for m in re.finditer(r'href=[\'"][^\'"]*FisaSenator\.aspx\?ParlamentarID=([0-9a-fA-F-]{36})[\'"][^>]*>([^<]+)<', html):
         pid, name = m.group(1), re.sub(r"\s+", " ", m.group(2)).strip()
         if pid not in seen and name:
             seen[pid] = Member(display=name, profile_url=SENATE_PROFILE.format(pid=pid), key=name_key(name))
