@@ -1,3 +1,4 @@
+import { hasPartyLine } from './utils'
 import type { VoteCardData, PartyVote } from '@/components/cards/vote-card'
 import type { SenatorCardData } from '@/components/cards/senator-card'
 import type { LawCardData, JourneyStep } from '@/components/cards/law-card'
@@ -51,7 +52,7 @@ export function mapVoteToCard(vote: any, rows: BreakdownRow[], seats: number | n
 
 // ── Senator/deputy ──────────────────────────────────────────────────────────
 export function mapSenatorToCard(s: PoliticianStats, chamber: 'senate' | 'deputies'): SenatorCardData {
-  const noLine = s.party_abbr === 'IND' || s.party_abbr === 'MIN'
+  const noLine = !hasPartyLine(s.party_abbr)
   return {
     fullName: `${s.first_name} ${s.name}`.trim(),
     partyAbbr: s.party_abbr,

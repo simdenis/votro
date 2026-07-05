@@ -48,7 +48,7 @@ export function choiceColor(choice: VoteChoice | string): string {
 
 /** Catch-all labels for members without a real party (unaffiliated, national
  *  minorities). No party line exists for them: no deviations, no cohesion. */
-export const NO_LINE_PARTIES: readonly string[] = ['IND', 'MIN']
+export const NO_LINE_PARTIES: readonly string[] = ['IND', 'MIN', 'P']
 
 export function hasPartyLine(abbr: string | null | undefined): boolean {
   return !!abbr && !NO_LINE_PARTIES.includes(abbr)
