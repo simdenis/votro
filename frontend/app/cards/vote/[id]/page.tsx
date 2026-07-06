@@ -21,6 +21,7 @@ export default async function VoteCardPreview({ params }: { params: Promise<{ id
     .from('politicians')
     .select('id', { count: 'exact', head: true })
     .eq('chamber', voteRes.data.chamber)
+    .eq('active', true)
 
   const data = mapVoteToCard(voteRes.data, bdRes.data ?? [], seats ?? null)
 
