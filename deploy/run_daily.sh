@@ -49,8 +49,13 @@ log "=== PLx → L resolution ==="
 
 # Presidential / CCR status is law-based, not date-based: re-check laws that
 # passed both chambers but have no promulgation status yet (senat.ro journey).
-log "=== Presidential / CCR status ==="
+log "=== Presidential / CCR status (senat.ro) ==="
 "$PY" scraper/presidential_scraper.py >>"$LOG" 2>&1 || { rc=1; log "Presidential scrape FAILED"; }
+
+# Authoritative promulgation source: presidency.ro decrees (senat.ro's fisa
+# often omits them). Clears a JS proof-of-work, resolves PL-x → L via cdep.
+log "=== Presidential decrees (presidency.ro) ==="
+"$PY" scraper/presidential_decree_scraper.py --years "$(date -u '+%Y')" >>"$LOG" 2>&1 || { rc=1; log "Decree scrape FAILED"; }
 
 # Law summaries from the expunere de motive PDF (no AI). Only processes laws not
 # yet checked (summary_checked_at IS NULL), so this is incremental and cheap.
