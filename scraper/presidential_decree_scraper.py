@@ -94,18 +94,17 @@ def _day_bundles(session: requests.Session, an: int, luna: int) -> list[str]:
     return seen
 
 
-def _parse_day(html: str, fallback_date: str) -> list[Decree]:
+def _parse_day(html: str) -> list[Decree]:
     text = re.sub(r"<[^>]+>", " ", html)
     text = re.sub(r"\s+", " ", text)
 
+    # Anchor on the signing phrase ("a semnat vineri, 3 iulie 2026") — the page
+    # holds many other dates (agenda, related news) that must not be picked.
     date = None
-    if m := re.search(r"(\d{1,2})\s+([a-zăâîșț]+)\s+(\d{4})", text, re.IGNORECASE):
+    if m := re.search(r"a\s+semnat\w*[^.]{0,40}?(\d{1,2})\s+([a-zăâîșţț]+)\s+(\d{4})", text, re.IGNORECASE):
         month = _ROMANIAN_MONTHS.get(m.group(2).lower())
         if month:
             date = datetime.date(int(m.group(3)), month, int(m.group(1)))
-    if date is None and fallback_date:
-        d, mo, y = fallback_date.split(".")
-        date = datetime.date(int(y), int(mo), int(d))
 
     out: list[Decree] = []
     for verb, title, nr, yr in _DECREE_RE.findall(text):
@@ -128,7 +127,7 @@ def collect_decrees(session: requests.Session, years: list[int]) -> list[Decree]
                 except requests.RequestException as e:
                     log.warning("day fetch failed %s: %s", url, e)
                     continue
-                decrees += _parse_day(html, "")
+                decrees += _parse_day(html)
                 time.sleep(0.3)
             if bundles:
                 log.info("%d-%02d: %d decree-days", an, luna, len(bundles))
