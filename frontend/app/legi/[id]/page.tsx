@@ -63,17 +63,15 @@ export default async function LawDetail({ params }: { params: Promise<{ id: stri
         <h1 className="font-serif text-[30px] font-normal text-foreground leading-[1.12] tracking-[-0.01em]">{law.title}</h1>
 
         {law.summary && (
-          <div className="mt-4 bg-surface border border-rim rounded-xl p-4">
+          <div className="relative mt-5 bg-surface border border-rim rounded-xl p-5 pl-6 overflow-hidden">
+            <span aria-hidden className="absolute inset-y-0 left-0 w-[3px] bg-sidebar" />
+            <p className="text-[11px] font-semibold uppercase tracking-widest text-muted mb-2">Pe scurt</p>
             <p className="text-[15px] text-foreground leading-relaxed">{law.summary}</p>
-            <div className="mt-2.5 flex items-center gap-2 flex-wrap text-[11px] text-faint">
-              {law.summary_is_ai && (
-                <span className="inline-flex items-center gap-1 bg-raised border border-rim rounded px-1.5 py-0.5">
-                  ✦ Rezumat generat automat
-                </span>
-              )}
+            <div className="mt-3.5 pt-3 border-t border-rim flex items-center justify-between gap-x-4 gap-y-1.5 flex-wrap text-[11px] text-faint">
+              {law.summary_is_ai && <span>Rezumat generat automat</span>}
               {law.em_url && (
                 <a href={law.em_url} target="_blank" rel="noopener noreferrer" className="hover:text-foreground underline underline-offset-2">
-                  Sursă: expunerea de motive (PDF)
+                  Sursa: expunerea de motive (PDF)
                 </a>
               )}
             </div>
