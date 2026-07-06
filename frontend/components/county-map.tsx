@@ -69,8 +69,8 @@ export function CountyMap({ selected }: { selected?: string }) {
 
       <div className="flex items-center justify-center gap-3 flex-wrap">
         {[
-          { judet: 'Diaspora', label: '🌍 Diaspora — românii din străinătate' },
-          { judet: 'Minorități', label: '🤝 Minorități naționale — aleși la nivel național' },
+          { judet: 'Diaspora', label: 'Diaspora — românii din străinătate' },
+          { judet: 'Minorități', label: 'Minorități naționale — aleși la nivel național' },
         ].map(({ judet, label }) => (
           <button
             key={judet}
