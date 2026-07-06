@@ -118,9 +118,16 @@ def fetch(url: str, tries: int = 3) -> str:
 _AFTER_NR = re.compile(r"circumscrip\w+\s+electoral\w+\s+nr\.?\s*(\d+)\s+(.{3,60})", re.IGNORECASE)
 
 
+# National-minorities deputies have no constituency at all — cdep says
+# "ales la nivel national" instead of a circumscripție line.
+_NATIONAL = re.compile(r"ales\w*\s+la\s+nivel\s+nation", re.IGNORECASE)
+
+
 def extract_county(html: str) -> Optional[str]:
     text = re.sub(r"<[^>]+>", " ", html)
     text = re.sub(r"\s+", " ", text)
+    if _NATIONAL.search(_unaccent(text)):
+        return "Minorități"
     for m in _AFTER_NR.finditer(text):
         # nr.43 is the diaspora constituency; both chambers label it with a
         # sentence ("...pentru românii cu domiciliul în afara țării"), not a

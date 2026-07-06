@@ -67,19 +67,25 @@ export function CountyMap({ selected }: { selected?: string }) {
         </svg>
       </div>
 
-      <div className="flex items-center justify-center">
-        <button
-          onClick={() => go('Diaspora')}
-          aria-pressed={selected === 'Diaspora'}
-          className={`text-sm font-medium rounded-full px-5 py-2 border transition-colors ${
-            selected === 'Diaspora'
-              ? 'text-white border-transparent'
-              : 'text-foreground border-rim hover:border-foreground'
-          }`}
-          style={selected === 'Diaspora' ? { backgroundColor: 'var(--sidebar-bg)' } : undefined}
-        >
-          🌍 Diaspora — românii din străinătate
-        </button>
+      <div className="flex items-center justify-center gap-3 flex-wrap">
+        {[
+          { judet: 'Diaspora', label: '🌍 Diaspora — românii din străinătate' },
+          { judet: 'Minorități', label: '🤝 Minorități naționale — aleși la nivel național' },
+        ].map(({ judet, label }) => (
+          <button
+            key={judet}
+            onClick={() => go(judet)}
+            aria-pressed={selected === judet}
+            className={`text-sm font-medium rounded-full px-5 py-2 border transition-colors ${
+              selected === judet
+                ? 'text-white border-transparent'
+                : 'text-foreground border-rim hover:border-foreground'
+            }`}
+            style={selected === judet ? { backgroundColor: 'var(--sidebar-bg)' } : undefined}
+          >
+            {label}
+          </button>
+        ))}
       </div>
     </div>
   )
