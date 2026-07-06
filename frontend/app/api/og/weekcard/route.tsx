@@ -20,7 +20,8 @@ function rangeLabel(from: Date, to: Date): string {
 
 export async function GET(request: Request) {
   const toParam = new URL(request.url).searchParams.get('to')
-  const to = toParam ? new Date(`${toParam}T00:00:00Z`) : new Date()
+  const toDate = toParam && /^\d{4}-\d{2}-\d{2}$/.test(toParam) ? new Date(`${toParam}T00:00:00Z`) : null
+  const to = toDate && !Number.isNaN(toDate.getTime()) ? toDate : new Date()
   const from = new Date(to.getTime() - 6 * 86_400_000)
   const fromISO = from.toISOString().slice(0, 10)
   const toISO = to.toISOString().slice(0, 10)
@@ -28,7 +29,7 @@ export async function GET(request: Request) {
   const [votesRes, devRes] = await Promise.all([
     fetch(
       `${U}/rest/v1/votes?vote_date=gte.${fromISO}&vote_date=lte.${toISO}` +
-        `&select=id,chamber,outcome,for_count,against_count,laws(code,title)`,
+        `&select=id,chamber,outcome,for_count,against_count,description,laws(code,title)`,
       { headers: SB },
     ),
     fetch(

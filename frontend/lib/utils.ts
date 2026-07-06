@@ -54,6 +54,11 @@ export function hasPartyLine(abbr: string | null | undefined): boolean {
   return !!abbr && !NO_LINE_PARTIES.includes(abbr)
 }
 
+/** OG routes interpolate ?id= into PostgREST URLs — accept only real UUIDs. */
+export function isUuid(v: string | null | undefined): v is string {
+  return !!v && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v)
+}
+
 export function textOnColor(bgHex: string): string {
   // PNL yellow needs black text; everything else uses white
   return bgHex === '#ffdd00' ? '#000000' : '#ffffff'

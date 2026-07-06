@@ -2,6 +2,7 @@ import { ImageResponse } from 'next/og'
 import { LawCard, type LawCardData } from '@/components/cards/law-card'
 import { mapLawToCard, lawDecisiveVoteId } from '@/lib/votecard'
 import { getCardFonts } from '@/lib/og-fonts'
+import { isUuid } from '@/lib/utils'
 import type { LawStatus } from '@/lib/types'
 
 export const runtime = 'edge'
@@ -30,7 +31,8 @@ const SAMPLE: LawCardData = {
 
 export async function GET(request: Request) {
   const url = new URL(request.url)
-  const id = url.searchParams.get('id')
+  const idParam = url.searchParams.get('id')
+  const id = isUuid(idParam) ? idParam : null
   // ?chamber=senate|camera pins the party-vote section — two IG carousel
   // slides for laws voted in both chambers. Default: decisive vote.
   const chamberParam = url.searchParams.get('chamber')
