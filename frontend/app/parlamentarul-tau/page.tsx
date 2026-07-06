@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
 import { PartyBadge } from '@/components/party-badge'
 import { hasPartyLine } from '@/lib/utils'
+import { CountyMap } from '@/components/county-map'
 import type { PoliticianStats } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
@@ -69,18 +70,15 @@ export default async function ParlamentarulTauPage({
   const { judet } = await searchParams
   const db = getDB()
 
-  const [senRes, depRes, countiesRes] = await Promise.all([
+  const [senRes, depRes] = await Promise.all([
     judet
       ? db.from('senator_stats').select('*').eq('active', true).eq('county', judet).order('name')
       : Promise.resolve({ data: [] }),
     judet
       ? db.from('deputy_stats').select('*').eq('active', true).eq('county', judet).order('name')
       : Promise.resolve({ data: [] }),
-    db.from('politicians').select('county').eq('active', true).not('county', 'is', null),
   ])
 
-  const counties = [...new Set((countiesRes.data ?? []).map(r => r.county as string))]
-    .sort((a, b) => a.localeCompare(b, 'ro'))
   const senators = (senRes.data as PoliticianStats[] | null) ?? []
   const deputies = (depRes.data as PoliticianStats[] | null) ?? []
 
@@ -91,31 +89,19 @@ export default async function ParlamentarulTauPage({
           Parlamentarul tău
         </h1>
         <p className="text-sm text-muted mt-3 max-w-2xl">
-          Alege județul în care votezi și vezi cine te reprezintă în Senat și în Camera
+          Apasă pe județul în care votezi și vezi cine te reprezintă în Senat și în Camera
           Deputaților — și, mai important, cum votează.
         </p>
       </div>
 
-      {/* Plain GET form — works without JS */}
-      <form action="/parlamentarul-tau" method="get" className="flex items-center gap-3 flex-wrap">
-        <select
-          name="judet"
-          defaultValue={judet ?? ''}
-          className="border border-rim rounded-md text-sm px-3 py-2 bg-surface text-foreground focus:outline-none focus:ring-1 focus:ring-[#5050c0]"
-        >
-          <option value="">Alege județul…</option>
-          {counties.map(c => (
-            <option key={c} value={c}>{c}</option>
-          ))}
-        </select>
-        <button
-          type="submit"
-          className="text-sm font-medium text-white rounded-md px-4 py-2"
-          style={{ backgroundColor: 'var(--sidebar-bg)' }}
-        >
-          Arată
-        </button>
-      </form>
+      <div className="max-w-3xl">
+        <CountyMap selected={judet} />
+        {judet && (
+          <p className="text-center text-sm text-muted mt-4">
+            Ai ales: <span className="font-semibold text-foreground">{judet}</span>
+          </p>
+        )}
+      </div>
 
       {judet && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-10">
