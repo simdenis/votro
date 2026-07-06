@@ -90,11 +90,16 @@ def build_vote_caption(cfg: Config, vote: dict) -> str:
     fc, ac, bc = vote.get("for_count") or 0, vote.get("against_count") or 0, vote.get("abstention_count") or 0
     link = f"{cfg.site_url}/votes/{vote['id']}"
 
+    summary = (law.get("summary") or "").strip()
+
     lines = [
         f"{code} · {chamber}",
         "",
         title,
     ]
+    # Plain-language explainer — the hook that makes a post readable for everyone.
+    if summary:
+        lines += ["", summary]
     if verdict:
         lines += ["", verdict]
     lines += [
