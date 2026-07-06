@@ -32,11 +32,12 @@ export function CountyMap({ selected }: { selected?: string }) {
                 onKeyDown={e => {
                   if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(name) }
                 }}
-                className="cursor-pointer outline-none transition-colors [transition:fill_120ms] focus-visible:stroke-[var(--flag-yellow)]"
+                className="cursor-pointer outline-none [transition:fill_120ms] focus-visible:stroke-[var(--flag-yellow)]"
                 style={{
                   fill: active ? 'var(--sidebar-bg)' : 'var(--raised)',
-                  stroke: active ? 'var(--sidebar-bg)' : 'var(--rim)',
-                  strokeWidth: active ? 1.5 : 0.8,
+                  stroke: active ? 'var(--sidebar-bg)' : 'var(--foreground)',
+                  strokeWidth: active ? 3 : 1.6,
+                  strokeLinejoin: 'round',
                 }}
                 onMouseEnter={e => { if (!active) e.currentTarget.style.fill = 'var(--flag-blue)' }}
                 onMouseLeave={e => { if (!active) e.currentTarget.style.fill = 'var(--raised)' }}
@@ -45,6 +46,24 @@ export function CountyMap({ selected }: { selected?: string }) {
               </path>
             )
           })}
+          {/* Abbreviation labels — non-interactive so clicks fall through to the county */}
+          {RO_COUNTIES.map(({ name, abbr, lx, ly }) => (
+            <text
+              key={`t-${name}`}
+              x={lx}
+              y={ly}
+              textAnchor="middle"
+              dominantBaseline="central"
+              className="pointer-events-none select-none"
+              style={{
+                fontSize: 15,
+                fontWeight: 700,
+                fill: name === selected ? '#ffffff' : 'var(--muted)',
+              }}
+            >
+              {abbr}
+            </text>
+          ))}
         </svg>
       </div>
 
