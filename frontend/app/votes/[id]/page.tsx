@@ -80,6 +80,31 @@ export default async function VoteDetail({
   const jointSession = participants > seats
   const absentCount = jointSession ? null : Math.max(0, seats - participants)
 
+  // The source only names *some* absentees individually (a roll call rarely lists
+  // every empty seat). Fill the gap: any active member of this chamber with no
+  // recorded vote is shown as "Absent", so the list matches the count above.
+  const CHOICE_ORDER: Record<string, number> = { for: 0, against: 1, abstention: 2, not_voted: 3, absent: 4 }
+  let individualVotes = senatorVotes ?? []
+  if (!jointSession && individualVotes.length > 0) {
+    const recorded = new Set(individualVotes.map(sv => sv.politician_id))
+    const { data: activeMembers } = await db
+      .from('politicians')
+      .select('id, name, first_name, parties!inner(abbreviation, color)')
+      .eq('chamber', vote.chamber)
+      .eq('active', true)
+    const synthetic = ((activeMembers ?? []) as any[])
+      .filter(p => !recorded.has(p.id))
+      .map(p => ({
+        id: `absent-${p.id}`,
+        politician_id: p.id,
+        party_line_deviation: false,
+        vote_choice: 'absent',
+        politicians: { name: p.name, first_name: p.first_name, parties: p.parties },
+      })) as PoliticianVoteWithDetails[]
+    individualVotes = [...individualVotes, ...synthetic]
+      .sort((a, b) => (CHOICE_ORDER[a.vote_choice] ?? 9) - (CHOICE_ORDER[b.vote_choice] ?? 9))
+  }
+
   const adopted       = vote.outcome === 'adoptat'
   const heroColor     = adopted ? 'var(--color-for)' : vote.outcome === 'respins' ? 'var(--color-against)' : 'var(--muted)'
   const deviatorCount = senatorVotes?.filter(sv => sv.party_line_deviation).length ?? 0
@@ -243,7 +268,7 @@ export default async function VoteDetail({
           </div>
 
           {/* Individual senator votes */}
-          {senatorVotes && senatorVotes.length > 0 && (
+          {individualVotes.length > 0 && (
             <div>
               <h2 className="text-xs font-semibold uppercase tracking-widest text-muted mb-3">
                 Voturi individuale
@@ -259,7 +284,7 @@ export default async function VoteDetail({
                 </p>
               )}
               <div className="bg-surface border border-rim rounded-xl overflow-hidden divide-y divide-rim">
-                {senatorVotes.map(sv => (
+                {individualVotes.map(sv => (
                   <Link
                     key={sv.id}
                     href={`${memberPath}/${sv.politician_id}`}
