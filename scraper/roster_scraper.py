@@ -62,6 +62,9 @@ _COUNTIES = [
 
 
 def _unaccent(s: str) -> str:
+    # Pre-1993 orthography survives on senat.ro ("Dîmboviţa"): fold î into â
+    # first so both spellings land on the same unaccented key.
+    s = s.replace("î", "â").replace("Î", "Â")
     return "".join(c for c in unicodedata.normalize("NFKD", s) if not unicodedata.combining(c))
 
 
@@ -112,14 +115,19 @@ def fetch(url: str, tries: int = 3) -> str:
 # de...", cdep.ro: "nr.8 BRAŞOV data validării..." (cedilla diacritics). So:
 # take the words after the number and validate progressively against the
 # canonical county list (whose keys are unaccented) instead of pattern-guessing.
-_AFTER_NR = re.compile(r"circumscrip\w+\s+electoral\w+\s+nr\.?\s*\d+\s+(.{3,60})", re.IGNORECASE)
+_AFTER_NR = re.compile(r"circumscrip\w+\s+electoral\w+\s+nr\.?\s*(\d+)\s+(.{3,60})", re.IGNORECASE)
 
 
 def extract_county(html: str) -> Optional[str]:
     text = re.sub(r"<[^>]+>", " ", html)
     text = re.sub(r"\s+", " ", text)
     for m in _AFTER_NR.finditer(text):
-        words = m.group(1).split()
+        # nr.43 is the diaspora constituency; both chambers label it with a
+        # sentence ("...pentru românii cu domiciliul în afara țării"), not a
+        # county name, so match it by number.
+        if m.group(1) == "43":
+            return "Diaspora"
+        words = m.group(2).split()
         for n in (3, 2, 1):  # longest match first ("Satu Mare" before "Satu")
             county = canonical_county(" ".join(words[:n]))
             if county:
