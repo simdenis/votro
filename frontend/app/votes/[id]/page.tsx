@@ -158,6 +158,8 @@ export default async function VoteDetail({
               { label: 'Pentru',    value: vote.for_count,        color: 'var(--color-for)' },
               { label: 'Împotrivă', value: vote.against_count,    color: 'var(--color-against)' },
               { label: 'Abțineri',  value: vote.abstention_count, color: 'var(--color-abstention)' },
+              // Absentees: seats − present. null on joint sessions (both chambers).
+              { label: 'Absenți',   value: absentCount,           color: 'var(--muted)' },
             ].map(({ label, value, color }) => (
               <div key={label} className="text-center">
                 <div className="text-2xl font-extrabold tabular-nums leading-none" style={{ color }}>

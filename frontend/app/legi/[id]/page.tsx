@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
-import { formatDate } from '@/lib/utils'
+import { formatDate, chamberSeats } from '@/lib/utils'
 import { OutcomeBadge } from '@/components/outcome-badge'
 import { PartyBreakdown } from '@/components/party-breakdown'
 import { SeatArc } from '@/components/seat-arc'
@@ -29,14 +29,32 @@ export default async function LawDetail({ params }: { params: Promise<{ id: stri
   const law = data as LawStatus | null
   if (!law) notFound()
 
-  // Fetch party breakdowns for both chambers in parallel
-  const [senateBreakdown, cameraBreakdown] = await Promise.all([
+  // Absentees per chamber: official seats − present. Joint sessions (present >
+  // one chamber's seats) return null — the single-chamber framing doesn't apply.
+  async function absentFor(voteId: string | null, chamber: 'senate' | 'deputies') {
+    if (!voteId) return null
+    const { data } = await db
+      .from('votes')
+      .select('present_count, for_count, against_count, abstention_count, not_voted_count')
+      .eq('id', voteId)
+      .maybeSingle()
+    if (!data) return null
+    const seats = chamberSeats(chamber)
+    const present = data.present_count
+      ?? (data.for_count ?? 0) + (data.against_count ?? 0) + (data.abstention_count ?? 0) + (data.not_voted_count ?? 0)
+    return present > seats ? null : Math.max(0, seats - present)
+  }
+
+  // Fetch party breakdowns + absentees for both chambers in parallel
+  const [senateBreakdown, cameraBreakdown, senateAbsent, cameraAbsent] = await Promise.all([
     law.senate_vote_id
       ? db.from('party_vote_breakdown').select('*').eq('vote_id', law.senate_vote_id).then(r => r.data as PartyVoteBreakdown[] | null)
       : Promise.resolve(null),
     law.camera_vote_id
       ? db.from('party_vote_breakdown').select('*').eq('vote_id', law.camera_vote_id).then(r => r.data as PartyVoteBreakdown[] | null)
       : Promise.resolve(null),
+    absentFor(law.senate_vote_id, 'senate'),
+    absentFor(law.camera_vote_id, 'deputies'),
   ])
 
   return (
@@ -123,6 +141,7 @@ export default async function LawDetail({ params }: { params: Promise<{ id: stri
         againstCount={law.senate_against}
         abstentionCount={law.senate_abstentions}
         breakdown={senateBreakdown}
+        absentCount={senateAbsent}
         passed={!!law.presidential_status}
       />
 
@@ -135,6 +154,7 @@ export default async function LawDetail({ params }: { params: Promise<{ id: stri
         againstCount={law.camera_against}
         abstentionCount={law.camera_abstentions}
         breakdown={cameraBreakdown}
+        absentCount={cameraAbsent}
         passed={!!law.presidential_status}
       />
     </div>
@@ -142,7 +162,7 @@ export default async function LawDetail({ params }: { params: Promise<{ id: stri
 }
 
 function ChamberSection({
-  chamber, voteId, date, outcome, forCount, againstCount, abstentionCount, breakdown, passed,
+  chamber, voteId, date, outcome, forCount, againstCount, abstentionCount, breakdown, passed, absentCount,
 }: {
   chamber: string
   voteId: string | null
@@ -153,6 +173,7 @@ function ChamberSection({
   abstentionCount: number | null
   breakdown: PartyVoteBreakdown[] | null
   passed: boolean
+  absentCount: number | null
 }) {
   const borderColor =
     outcome === 'adoptat' ? 'border-adoptat/30' :
@@ -187,6 +208,7 @@ function ChamberSection({
                 { label: 'Pentru',    value: forCount,         color: '#22c55e' },
                 { label: 'Împotrivă', value: againstCount,     color: '#ef4444' },
                 { label: 'Abțineri',  value: abstentionCount,  color: '#8888cc' },
+                { label: 'Absenți',   value: absentCount,      color: '#9e9d97' },
               ].map(({ label, value, color }) => (
                 <div key={label}>
                   <div className="text-2xl font-extrabold tabular-nums leading-none" style={{ color }}>
