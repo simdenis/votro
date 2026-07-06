@@ -119,8 +119,8 @@ _AFTER_NR = re.compile(r"circumscrip\w+\s+electoral\w+\s+nr\.?\s*(\d+)\s+(.{3,60
 
 
 # National-minorities deputies have no constituency at all — cdep says
-# "ales la nivel national" instead of a circumscripție line.
-_NATIONAL = re.compile(r"ales\w*\s+la\s+nivel\s+nation", re.IGNORECASE)
+# "ales la nivel national" ("aleasa" for women) instead of a circumscripție line.
+_NATIONAL = re.compile(r"alea?s\w*\s+la\s+nivel\s+nation", re.IGNORECASE)
 
 
 def extract_county(html: str) -> Optional[str]:
