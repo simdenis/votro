@@ -61,7 +61,26 @@ export default async function LawDetail({ params }: { params: Promise<{ id: stri
           <BaseLawBadges title={law.title} />
         </div>
         <h1 className="font-serif text-[30px] font-normal text-foreground leading-[1.12] tracking-[-0.01em]">{law.title}</h1>
-        {law.em_url && (
+
+        {law.summary && (
+          <div className="mt-4 bg-surface border border-rim rounded-xl p-4">
+            <p className="text-[15px] text-foreground leading-relaxed">{law.summary}</p>
+            <div className="mt-2.5 flex items-center gap-2 flex-wrap text-[11px] text-faint">
+              {law.summary_is_ai && (
+                <span className="inline-flex items-center gap-1 bg-raised border border-rim rounded px-1.5 py-0.5">
+                  ✦ Rezumat generat automat
+                </span>
+              )}
+              {law.em_url && (
+                <a href={law.em_url} target="_blank" rel="noopener noreferrer" className="hover:text-foreground underline underline-offset-2">
+                  Sursă: expunerea de motive (PDF)
+                </a>
+              )}
+            </div>
+          </div>
+        )}
+
+        {law.em_url && !law.summary && (
           <a
             href={law.em_url}
             target="_blank"

@@ -7,6 +7,7 @@ export interface LawStatus {
   title: string
   law_category: string | null
   summary: string | null
+  summary_is_ai: boolean
   em_url: string | null
   presidential_status: PresidentialStatus | null
   presidential_date: string | null
