@@ -57,10 +57,11 @@ log "=== Presidential / CCR status (senat.ro) ==="
 log "=== Presidential decrees (presidency.ro) ==="
 "$PY" scraper/presidential_decree_scraper.py --years "$(date -u '+%Y')" >>"$LOG" 2>&1 || { rc=1; log "Decree scrape FAILED"; }
 
-# Law summaries from the expunere de motive PDF (no AI). Only processes laws not
-# yet checked (summary_checked_at IS NULL), so this is incremental and cheap.
-log "=== Law summaries ==="
-"$PY" scraper/law_summarizer.py >>"$LOG" 2>&1 || { rc=1; log "Law summarizer FAILED"; }
+# Plain-language law summaries via Gemini (reads the expunere de motive PDF
+# natively). Incremental (summary_checked_at IS NULL), resumable, 429-safe.
+# Skips silently if GEMINI_API_KEY is unset — summaries stay link-only.
+log "=== Law summaries (Gemini) ==="
+"$PY" scraper/gemini_summarizer.py >>"$LOG" 2>&1 || { rc=1; log "Gemini summarizer FAILED"; }
 
 # Active mandates + electoral county from the official member lists. Never
 # mass-deactivates on a broken parse (sanity floors inside).
