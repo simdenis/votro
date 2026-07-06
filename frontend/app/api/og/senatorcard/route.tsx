@@ -2,6 +2,7 @@ import { ImageResponse } from 'next/og'
 import { SenatorCard, type SenatorCardData } from '@/components/cards/senator-card'
 import { mapSenatorToCard } from '@/lib/votecard'
 import { getCardFonts } from '@/lib/og-fonts'
+import { isUuid } from '@/lib/utils'
 
 export const runtime = 'edge'
 
@@ -24,7 +25,8 @@ const SAMPLE: SenatorCardData = {
 }
 
 export async function GET(request: Request) {
-  const id = new URL(request.url).searchParams.get('id')
+  const idParam = new URL(request.url).searchParams.get('id')
+  const id = isUuid(idParam) ? idParam : null
   const found = id ? await statsFor(id) : null
   const data = found ? mapSenatorToCard(found.stats, found.chamber) : SAMPLE
   const fonts = await getCardFonts()

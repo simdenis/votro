@@ -1,4 +1,5 @@
 import { ImageResponse } from 'next/og'
+import { isUuid } from '@/lib/utils'
 
 export const runtime = 'edge'
 
@@ -16,7 +17,8 @@ async function fetchVote(id: string) {
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
-  const id = searchParams.get('id')
+  const idParam = searchParams.get('id')
+  const id = isUuid(idParam) ? idParam : null
 
   const vote = id ? await fetchVote(id) : null
   const code   = vote?.laws?.code  ?? 'VotRO'

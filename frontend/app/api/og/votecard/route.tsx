@@ -2,6 +2,7 @@ import { ImageResponse } from 'next/og'
 import { VoteCard, type VoteCardData } from '@/components/cards/vote-card'
 import { mapVoteToCard, SAMPLE_VOTE_CARD } from '@/lib/votecard'
 import { getCardFonts } from '@/lib/og-fonts'
+import { isUuid } from '@/lib/utils'
 
 // 1080×1080 Instagram vote card — Satori export pipeline.
 // Public URL the Instagram poster fetches: /api/og/votecard?vote=<vote_id>
@@ -31,7 +32,8 @@ async function fetchSeats(chamber: string): Promise<number | null> {
 }
 
 export async function GET(request: Request) {
-  const id = new URL(request.url).searchParams.get('vote')
+  const idParam = new URL(request.url).searchParams.get('vote')
+  const id = isUuid(idParam) ? idParam : null
   const vote = id ? await fetchVote(id) : null
 
   const data: VoteCardData = vote

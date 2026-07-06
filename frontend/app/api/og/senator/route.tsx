@@ -1,5 +1,5 @@
 import { ImageResponse } from 'next/og'
-import { hasPartyLine } from '@/lib/utils'
+import { hasPartyLine, isUuid } from '@/lib/utils'
 
 export const runtime = 'edge'
 
@@ -19,7 +19,8 @@ async function fetchSenator(id: string) {
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
-  const id = searchParams.get('id')
+  const idParam = searchParams.get('id')
+  const id = isUuid(idParam) ? idParam : null
 
   const s = id ? await fetchSenator(id) : null
   const name      = s ? `${s.first_name} ${s.name}` : 'Senator'

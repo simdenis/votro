@@ -1,7 +1,7 @@
 import { ImageResponse } from 'next/og'
 import { DeviationCard, type DeviationCardData } from '@/components/cards/deviation-card'
 import { getCardFonts } from '@/lib/og-fonts'
-import { countNoun } from '@/lib/utils'
+import { countNoun, isUuid } from '@/lib/utils'
 
 // 1080×1080 deviation card — /api/og/deviationcard?vote=<vote_id>
 
@@ -22,7 +22,8 @@ const SAMPLE: DeviationCardData = {
 }
 
 export async function GET(request: Request) {
-  const id = new URL(request.url).searchParams.get('vote')
+  const idParam = new URL(request.url).searchParams.get('vote')
+  const id = isUuid(idParam) ? idParam : null
 
   let data = SAMPLE
   if (id) {
