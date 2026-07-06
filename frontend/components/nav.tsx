@@ -19,7 +19,13 @@ export function Nav() {
         <Link href="/" className="block mb-7">
           <div className="flex items-center gap-2.5">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo.png" alt="" width={40} height={40} className="shrink-0" />
+            <img
+              src="/logo.png"
+              alt=""
+              width={40}
+              height={40}
+              className="shrink-0 rounded-full ring-2 ring-white/70"
+            />
             <div className="font-serif text-[26px] text-white leading-none">VotRO</div>
           </div>
           <div className="text-[10px] uppercase tracking-[0.14em] text-white/35 mt-2">Senat · Cameră · 2026</div>
@@ -48,7 +54,7 @@ export function Nav() {
         <div className="px-4 h-12 flex items-center justify-between gap-4">
           <Link href="/" className="flex items-center gap-2 shrink-0">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo.png" alt="" width={24} height={24} />
+            <img src="/logo.png" alt="" width={24} height={24} className="rounded-full ring-1 ring-white/70" />
             <span className="font-serif text-white text-lg leading-none">VotRO</span>
           </Link>
           <MobileNav />
