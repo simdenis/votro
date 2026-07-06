@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
-import { formatDate, choiceLabel, choiceColor, countNoun } from '@/lib/utils'
+import { formatDate, choiceLabel, choiceColor, countNoun, chamberSeats } from '@/lib/utils'
 import { OutcomeBadge } from '@/components/outcome-badge'
 import { PartyBadge } from '@/components/party-badge'
 import { PartyBreakdown } from '@/components/party-breakdown'
@@ -70,16 +70,15 @@ export default async function VoteDetail({
 
   if (!vote) notFound()
 
-  // True absentees: chamber seats − everyone counted on the vote page.
-  // Distinct from not_voted_count (present, but didn't press a button).
-  const { count: seats } = await db
-    .from('politicians')
-    .select('id', { count: 'exact', head: true })
-    .eq('chamber', vote.chamber)
-    .eq('active', true)
+  // True absentees: official chamber seats − everyone counted here (distinct
+  // from not_voted_count = present but didn't press a button). Joint sessions
+  // (Chamber + Senate together) have more participants than one chamber's
+  // seats — there the single-chamber absentee framing is meaningless, so hide it.
+  const seats = chamberSeats(vote.chamber)
   const participants = (vote.for_count ?? 0) + (vote.against_count ?? 0)
     + (vote.abstention_count ?? 0) + (vote.not_voted_count ?? 0)
-  const absentCount = seats ? Math.max(0, seats - participants) : null
+  const jointSession = participants > seats
+  const absentCount = jointSession ? null : Math.max(0, seats - participants)
 
   const adopted       = vote.outcome === 'adoptat'
   const heroColor     = adopted ? 'var(--color-for)' : vote.outcome === 'respins' ? 'var(--color-against)' : 'var(--muted)'

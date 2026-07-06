@@ -48,6 +48,17 @@ export function choiceColor(choice: VoteChoice | string): string {
 
 /** Catch-all labels for members without a real party (unaffiliated, national
  *  minorities). No party line exists for them: no deviations, no cohesion. */
+/** Official seat totals for the 2024–2028 legislature (Chamber 331 = 312 elected
+ *  + 19 minorities; Senate 134 — two seats went unallocated in Ialomița/Giurgiu).
+ *  Used as the absentee denominator: absent = seats − present. Do NOT use the
+ *  count of active politicians — members who never voted aren't in our table,
+ *  which undercounts absentees by a couple each vote. */
+export const CHAMBER_SEATS = { senate: 134, deputies: 331 } as const
+
+export function chamberSeats(chamber: 'senate' | 'deputies'): number {
+  return CHAMBER_SEATS[chamber]
+}
+
 export const NO_LINE_PARTIES: readonly string[] = ['IND', 'MIN', 'P']
 
 export function hasPartyLine(abbr: string | null | undefined): boolean {

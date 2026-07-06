@@ -33,6 +33,9 @@ export function mapVoteToCard(vote: any, rows: BreakdownRow[], seats: number | n
   const abstainC = vote.abstention_count ?? 0
   const notVoted = vote.not_voted_count ?? 0
   const participants = forC + againstC + abstainC + notVoted
+  // Joint sessions (both chambers) have more voters than one chamber's seats —
+  // the "X din Y mandate" / absentee framing is meaningless there, so drop seats.
+  if (seats != null && participants > seats) seats = null
   return {
     lawCode: vote.laws?.code ?? 'VOT DE PLEN',
     lawTitle: vote.laws?.title ?? vote.description ?? 'Vot fără lege asociată',
