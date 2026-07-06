@@ -19,7 +19,7 @@ export default async function Dashboard() {
     db.from('votes').select('*', { count: 'exact', head: true }).eq('outcome', 'adoptat'),
     db.from('votes').select('*', { count: 'exact', head: true }).eq('outcome', 'respins'),
     db.from('parties').select('abbreviation, color, name'),
-    db.from('politicians').select('party_id, parties(abbreviation)', { count: 'exact', head: false }),
+    db.from('politicians').select('party_id, parties(abbreviation)', { count: 'exact', head: false }).eq('active', true),
     db.from('politician_votes').select('*', { count: 'exact', head: true }).eq('party_line_deviation', true),
   ])
 
