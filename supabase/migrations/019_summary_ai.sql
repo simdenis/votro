@@ -4,12 +4,12 @@
 -- have garbled OCR text layers). We now summarize the PDF natively with an LLM
 -- in plain Romanian. Transparency requires labeling these as machine-written,
 -- with a link to the official source PDF (laws.em_url).
-alter table laws add column if not exists summary_is_ai boolean not null default false;
+alter table public.laws add column if not exists summary_is_ai boolean not null default false;
 
 -- law_status lists columns explicitly, so expose the new flag through it.
 -- (Recreated verbatim from migration 014 with l.summary_is_ai added.)
-drop view if exists law_status;
-create view law_status with (security_invoker = true) as
+drop view if exists public.law_status;
+create view public.law_status with (security_invoker = true) as
 with ranked as (
   select *,
     row_number() over (
@@ -18,7 +18,7 @@ with ranked as (
         case when lower(vote_type) like '%final%' then 0 else 1 end,
         vote_date desc
     ) as rn
-  from votes
+  from public.votes
   where law_id is not null
 )
 select
@@ -54,9 +54,9 @@ select
     when s.id is null     and c.id is not null then 'asteapta_senat'
     else 'necunoscut'
   end as status
-from laws l
-inner join (select distinct law_id from votes where law_id is not null) lv on lv.law_id = l.id
+from public.laws l
+inner join (select distinct law_id from public.votes where law_id is not null) lv on lv.law_id = l.id
 left join ranked s on s.law_id = l.id and s.chamber = 'senate'   and s.rn = 1
 left join ranked c on c.law_id = l.id and c.chamber = 'deputies' and c.rn = 1;
 
-grant select on law_status to anon;
+grant select on public.law_status to anon;
