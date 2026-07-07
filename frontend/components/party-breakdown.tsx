@@ -67,11 +67,7 @@ export function PartyBreakdown({ rows, indSenators, voters }: Props) {
           stance === 'for' ? '#16a34a' : stance === 'against' ? '#dc2626' : '#6666aa'
 
         return (
-          <div
-            key={p.abbr}
-            className="bg-surface border border-rim rounded-lg p-3"
-            style={{ borderLeftWidth: 3, borderLeftColor: p.color }}
-          >
+          <div key={p.abbr} className="bg-surface border border-rim rounded-lg p-3">
             {/* Header row */}
             <div className="flex items-center justify-between mb-2">
               <PartyBadge abbreviation={p.abbr} color={p.color} />
