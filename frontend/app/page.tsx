@@ -12,28 +12,23 @@ export const metadata: Metadata = { title: 'Acasă' }
 export default async function Dashboard() {
   const db = getDB()
 
-  const [r0, r1, r2, r3, r4, r5, r6, r7] = await Promise.all([
-    db.from('votes').select('*', { count: 'exact', head: true }),
+  const [r0, r1, r2, r3, r4, r5, r6] = await Promise.all([
+    db.from('law_status').select('*', { count: 'exact', head: true }),
     db.from('party_cohesion').select('*').gte('votes_participated', 3).order('cohesion_pct', { ascending: false }),
     db.from('votes').select('*, laws(*)').order('vote_date', { ascending: false }).limit(8),
-    db.from('votes').select('*', { count: 'exact', head: true }).eq('outcome', 'adoptat'),
-    db.from('votes').select('*', { count: 'exact', head: true }).eq('outcome', 'respins'),
+    db.from('law_status').select('*', { count: 'exact', head: true }).eq('presidential_status', 'promulgat'),
+    db.from('law_status').select('*', { count: 'exact', head: true }).or('senate_outcome.eq.respins,camera_outcome.eq.respins'),
     db.from('parties').select('abbreviation, color, name'),
     db.from('politicians').select('party_id, parties(abbreviation)', { count: 'exact', head: false }).eq('active', true),
-    db.from('politician_votes').select('*', { count: 'exact', head: true }).eq('party_line_deviation', true),
   ])
 
-  const totalVotes    = r0.count ?? 0
+  const totalLaws     = r0.count ?? 0
   // IND/MIN are catch-all labels, not parties — "cohesion" is meaningless there
   const cohesionData  = ((r1.data as PartyCohesion[] | null) ?? []).filter(c => hasPartyLine(c.abbreviation))
   const recentVotes   = (r2.data as VoteWithLaw[] | null) ?? []
-  const adoptedCount  = r3.count ?? 0
+  const promulgatedCount = r3.count ?? 0
   const respinsCount  = r4.count ?? 0
   const allParties    = r5.data ?? []
-  const deviations    = r7.count ?? 0
-
-  const knownOutcomes = adoptedCount + respinsCount
-  const adoptedPct    = knownOutcomes > 0 ? Math.round((adoptedCount / knownOutcomes) * 100) : 0
 
   const senatorCounts: Record<string, number> = {}
   for (const p of (r6.data ?? []) as any[]) {
@@ -47,10 +42,9 @@ export default async function Dashboard() {
   const totalSenators = parliamentParties.reduce((s, p) => s + p.senator_count, 0)
 
   const stats = [
-    { value: totalVotes,             label: 'voturi înregistrate', color: 'var(--text)' },
-    { value: `${adoptedPct}%`,       label: 'adoptate',            color: 'var(--color-for)' },
-    { value: `${100 - adoptedPct}%`, label: 'respinse',            color: 'var(--color-against)' },
-    { value: deviations,             label: 'devieri',             color: 'var(--color-deviation)' },
+    { value: totalLaws,        label: 'legi urmărite', color: 'var(--text)' },
+    { value: promulgatedCount, label: 'promulgate',    color: 'var(--color-for)' },
+    { value: respinsCount,     label: 'respinse',      color: 'var(--color-against)' },
   ]
 
   return (
@@ -67,9 +61,9 @@ export default async function Dashboard() {
       </header>
 
       {/* ── Stats row ────────────────────────────────────── */}
-      <section className="grid grid-cols-2 sm:grid-cols-4 border-t-2 border-sidebar mb-12">
+      <section className="grid grid-cols-3 border-t-2 border-sidebar mb-12">
         {stats.map((s, i) => (
-          <div key={s.label} className={`py-5 pr-6 ${i > 0 ? 'sm:border-l border-rim sm:pl-6' : ''}`}>
+          <div key={s.label} className={`py-5 pr-6 ${i > 0 ? 'border-l border-rim pl-4 sm:pl-6' : ''}`}>
             <div className="text-[36px] font-bold tabular-nums tracking-[-0.02em] leading-none" style={{ color: s.color }}>
               {s.value}
             </div>
