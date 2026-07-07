@@ -135,7 +135,7 @@ export default async function Dashboard() {
               </Link>
             )
           })}
-          {totalVotes > 8 && (
+          {recentVotes.length >= 8 && (
             <Link href="/votes" className="inline-block mt-5 text-[13px] text-muted hover:text-foreground transition-colors">
               Toate voturile →
             </Link>
