@@ -2,7 +2,8 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
-import { formatDate, chamberSeats } from '@/lib/utils'
+import { formatDate } from '@/lib/utils'
+import { activeSeats } from '@/lib/seats'
 import { OutcomeBadge } from '@/components/outcome-badge'
 import { PartyBreakdown } from '@/components/party-breakdown'
 import { SeatArc } from '@/components/seat-arc'
@@ -39,7 +40,7 @@ export default async function LawDetail({ params }: { params: Promise<{ id: stri
       .eq('id', voteId)
       .maybeSingle()
     if (!data) return null
-    const seats = chamberSeats(chamber)
+    const seats = await activeSeats(chamber)
     const present = data.present_count
       ?? (data.for_count ?? 0) + (data.against_count ?? 0) + (data.abstention_count ?? 0) + (data.not_voted_count ?? 0)
     return present > seats ? null : Math.max(0, seats - present)
@@ -108,6 +109,13 @@ export default async function LawDetail({ params }: { params: Promise<{ id: stri
         )}
         <div className="mt-4 flex gap-2 flex-wrap">
           <CardDownload href={`/api/og/lawcard?id=${law.law_id}`} filename={`votro-${law.code.replace(/[^\w]+/g, '-')}.png`} />
+          {law.summary && (
+            <CardDownload
+              href={`/api/og/summarycard?id=${law.law_id}`}
+              filename={`votro-pescurt-${law.code.replace(/[^\w]+/g, '-')}.png`}
+              label="Card rezumat"
+            />
+          )}
           {/* both chambers voted → one card per chamber (IG carousel slides) */}
           {law.senate_vote_id && law.camera_vote_id && (
             <>
