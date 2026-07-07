@@ -32,6 +32,16 @@ log = logging.getLogger("haiku-summary")
 MODEL = "claude-haiku-4-5"
 
 
+def clean_summary(text: str) -> str:
+    """Strip markdown/label drift the model sometimes adds (headers, **bold**,
+    a leading "Ce schimbă:" / "Schimbarea:" label) so the site shows plain prose."""
+    import re
+    text = re.sub(r"^\s*#{1,6}[^\n]*\n+", "", text)          # leading markdown header line
+    text = text.replace("**", "").replace("__", "")           # bold markers
+    text = re.sub(r"^\s*(Ce schimbă[^:]*|Schimbarea|Pe scurt)\s*:\s*", "", text, flags=re.IGNORECASE)
+    return re.sub(r"\s+", " ", text).strip()
+
+
 def haiku_summary(client: anthropic.Anthropic, pdf_bytes: bytes) -> str | None:
     msg = client.messages.create(
         model=MODEL,
@@ -50,7 +60,10 @@ def haiku_summary(client: anthropic.Anthropic, pdf_bytes: bytes) -> str | None:
     if msg.stop_reason == "refusal":
         return None
     text = next((b.text for b in msg.content if b.type == "text"), "").strip()
-    return None if text.upper().startswith("INDISPONIBIL") else text or None
+    if text.upper().startswith("INDISPONIBIL"):
+        return None
+    text = clean_summary(text)
+    return text or None
 
 
 def main() -> None:
