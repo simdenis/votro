@@ -225,14 +225,13 @@ export default async function VoteDetail({
         </div>
       </div>
 
-      {/* ── Two-column body ─────────────────────────────── */}
+      {/* ── Two-column body ───────────────────────────────
+          DOM order = mobile order: arc → party stances → individuals.
+          On xl the party column moves right, spanning both rows. */}
       <div className="grid grid-cols-1 xl:grid-cols-[1fr_240px] gap-5 items-start">
 
-        {/* Left: seat arc + senator table */}
-        <div className="space-y-5">
-
           {/* Seat arc */}
-          <div>
+          <div className="xl:col-start-1">
             <h2 className="text-xs font-semibold uppercase tracking-widest text-muted mb-3">
               Distribuție în plen — {vote.present_count ?? '—'} {memberNoun(vote.present_count ?? 2)} prezenți
             </h2>
@@ -267,9 +266,19 @@ export default async function VoteDetail({
             </div>
           </div>
 
+        {/* Party stance cards — right column on xl, second on mobile */}
+        {(breakdown?.length ?? 0) > 0 && (
+          <div className="xl:col-start-2 xl:row-start-1 xl:row-span-2">
+            <h2 className="text-xs font-semibold uppercase tracking-widest text-muted mb-3">
+              Poziție partide
+            </h2>
+            <PartyBreakdown rows={breakdown!} indSenators={indSenators} voters={voters} />
+          </div>
+        )}
+
           {/* Individual senator votes */}
           {individualVotes.length > 0 && (
-            <div>
+            <div className="xl:col-start-1">
               <h2 className="text-xs font-semibold uppercase tracking-widest text-muted mb-3">
                 Voturi individuale
               </h2>
@@ -317,17 +326,6 @@ export default async function VoteDetail({
               </div>
             </div>
           )}
-        </div>
-
-        {/* Right: party stance cards */}
-        {(breakdown?.length ?? 0) > 0 && (
-          <div>
-            <h2 className="text-xs font-semibold uppercase tracking-widest text-muted mb-3">
-              Poziție partide
-            </h2>
-            <PartyBreakdown rows={breakdown!} indSenators={indSenators} voters={voters} />
-          </div>
-        )}
       </div>
     </div>
   )
