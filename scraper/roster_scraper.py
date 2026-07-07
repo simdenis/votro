@@ -186,6 +186,26 @@ def mandate_ended(profile_html: str) -> bool:
     return bool(_ENDED.search(profile_html))
 
 
+# Mandate start, for the presence denominator (migration 021).
+# senat.ro: "validat în data de 21.12.2024"; cdep: "data validării: 21 decembrie 2024"
+_RO_MONTHS = {"ianuarie": 1, "februarie": 2, "martie": 3, "aprilie": 4, "mai": 5, "iunie": 6,
+              "iulie": 7, "august": 8, "septembrie": 9, "octombrie": 10, "noiembrie": 11, "decembrie": 12}
+_VALIDATED_NUM = re.compile(r"validat[ăa]?\s+în\s+data\s+de\s+(\d{1,2})\.(\d{1,2})\.(\d{4})", re.IGNORECASE)
+_VALIDATED_TXT = re.compile(r"data\s+validării:\s*(\d{1,2})\s+(\w+)\s+(\d{4})", re.IGNORECASE)
+
+
+def extract_mandate_start(html: str) -> Optional[str]:
+    text = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", html))
+    m = _VALIDATED_NUM.search(text)
+    if m:
+        return f"{m.group(3)}-{int(m.group(2)):02d}-{int(m.group(1)):02d}"
+    m = _VALIDATED_TXT.search(text)
+    if m and _unaccent(m.group(2)).lower() in {_unaccent(k) for k in _RO_MONTHS}:
+        month = _RO_MONTHS[next(k for k in _RO_MONTHS if _unaccent(k) == _unaccent(m.group(2)).lower())]
+        return f"{m.group(3)}-{month:02d}-{int(m.group(1)):02d}"
+    return None
+
+
 # Group label (cdep list / senat profile) → our party abbreviation. Mirrors the
 # vote-page mapping in camera_scraper/senat_scraper.
 _GROUP_TO_ABBR = [
@@ -222,7 +242,7 @@ class Roster:
         while True:
             page = (
                 self.db.table("politicians")
-                .select("id, name, first_name, active, county")
+                .select("id, name, first_name, active, county, mandate_start")
                 .eq("chamber", chamber)
                 .range(start, start + 999)
                 .execute()
@@ -341,22 +361,33 @@ class Roster:
                     pols.append(row)
                     matched[row["id"]] = mem
 
-        # County: fetch profiles only where we don't have one yet (incremental).
-        need_county = [pid for pid, mem in matched.items()
-                       if not next(p for p in pols if p["id"] == pid)["county"]]
-        log.info("%s: fetching %d profiles for county", chamber, len(need_county))
+        # Profile pass: county + mandate_start, only where missing (incremental).
+        by_id = {p["id"]: p for p in pols}
+        need_profile = [pid for pid in matched
+                        if not by_id[pid]["county"] or not by_id[pid].get("mandate_start")]
+        log.info("%s: fetching %d profiles (county/mandate_start)", chamber, len(need_profile))
         counties: dict[str, str] = {}
-        for pid in need_county:
+        starts: dict[str, str] = {}
+        for pid in need_profile:
             mem = matched[pid]
             try:
-                county = extract_county(fetch(mem.profile_url))
+                html = fetch(mem.profile_url)
             except requests.RequestException as e:
                 log.warning("profile fetch failed for %s: %s", mem.display, e)
-                county = None
-            if county:
-                counties[pid] = county
-            else:
-                log.warning("no county parsed for %s", mem.display)
+                time.sleep(_DELAY)
+                continue
+            if not by_id[pid]["county"]:
+                county = extract_county(html)
+                if county:
+                    counties[pid] = county
+                else:
+                    log.warning("no county parsed for %s", mem.display)
+            if not by_id[pid].get("mandate_start"):
+                start = extract_mandate_start(html)
+                if start:
+                    starts[pid] = start
+                else:
+                    log.warning("no mandate_start parsed for %s", mem.display)
             time.sleep(_DELAY)
 
         if self.dry_run:
@@ -367,12 +398,15 @@ class Roster:
         for p in pols:
             should_be_active = p["id"] in active_ids
             new_county = counties.get(p["id"])
-            if p["active"] != should_be_active or new_county:
+            new_start = starts.get(p["id"])
+            if p["active"] != should_be_active or new_county or new_start:
                 update: dict = {"active": should_be_active}
                 if new_county:
                     update["county"] = new_county
+                if new_start:
+                    update["mandate_start"] = new_start
                 self.db.table("politicians").update(update).eq("id", p["id"]).execute()
-        log.info("%s: updates applied (%d counties added)", chamber, len(counties))
+        log.info("%s: updates applied (%d counties, %d mandate starts)", chamber, len(counties), len(starts))
         return True
 
 
