@@ -440,6 +440,19 @@ class CameraScraper:
 
         log.debug("idv=%d label_map keys: %s", idv, list(label_map.keys()))
 
+        # Joint CD+SE sittings mix senators into the nominal list; the list-page
+        # CD+SE guard missed two on 2026-04-29 (migration 020). The detail page
+        # itself says "Sedinta: comuna a Camerei Deputatilor si Senatului" —
+        # skip the whole vote before anything is upserted.
+        sedinta = next(
+            (v for k, v in label_map.items()
+             if k.replace("ş", "s").replace("ș", "s").startswith("sedin")),
+            "",
+        )
+        if "comun" in sedinta.lower():
+            log.info("idv=%d: sedinta comuna (CD+SE) — skipping vote entirely", idv)
+            return None
+
         # ── 2. Vote date ───────────────────────────────────────
         for key in ("data", "data votului", "dată"):
             raw_date = label_map.get(key, "")
