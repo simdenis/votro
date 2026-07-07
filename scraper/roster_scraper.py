@@ -309,6 +309,14 @@ class Roster:
         unmatched_roster: list[Member] = []
         for mem in roster:
             hits = by_key.get(mem.key, [])
+            if len(hits) > 1:
+                # Token sets collide for permuted names (Stoica Alin-Bogdan vs
+                # Stoica Bogdan-Alin — two real deputies). Both sources put the
+                # surname first, so exact order disambiguates.
+                want = _unaccent(mem.display).lower().replace("-", " ")
+                exact = [p for p in hits
+                         if _unaccent(f"{p['name']} {p['first_name']}").lower().replace("-", " ") == want]
+                hits = exact if len(exact) == 1 else hits
             if len(hits) == 1:
                 matched[hits[0]["id"]] = mem
             elif len(hits) > 1:
