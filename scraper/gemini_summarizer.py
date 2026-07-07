@@ -135,17 +135,20 @@ def main() -> None:
     ap.add_argument("--dry-run", action="store_true", help="print, don't write")
     args = ap.parse_args()
 
-    api_key = os.environ.get("GEMINI_API_KEY", "")
+    # GEMINI_API_KEY may hold several comma-separated keys; when one exhausts its
+    # daily quota we rotate to the next (each free key has its own allowance).
+    keys = [k.strip() for k in os.environ.get("GEMINI_API_KEY", "").split(",") if k.strip()]
     url, key = os.environ.get("SUPABASE_URL", ""), os.environ.get("SUPABASE_KEY", "")
-    if not api_key:
+    if not keys:
         log.info("GEMINI_API_KEY not set — skipping (summaries stay link-only)")
         return
     if not (url and key):
         sys.exit("ERROR: SUPABASE_URL and SUPABASE_KEY must be set")
 
+    ki = 0
     store = Store(url, key)
     laws = store.laws_to_process(args.limit, args.redo)
-    log.info("%d law(s) to process", len(laws))
+    log.info("%d law(s) to process (%d key%s)", len(laws), len(keys), "s" if len(keys) > 1 else "")
     done = ok = 0
     for law in laws:
         em = em_url_for(law["code"])
@@ -161,10 +164,23 @@ def main() -> None:
             if not args.dry_run:
                 store.save(law["id"], None, None)
             continue
-        try:
-            summary = gemini_summary(api_key, pdf.content)
-        except RateLimited as e:
-            log.warning("rate limited — stopping cleanly, next run resumes (%s)", e)
+        # Try current key; on persistent 429 rotate to the next key. If every key
+        # is exhausted, stop the run cleanly (the next run resumes where we left off).
+        summary = None
+        exhausted = False
+        while True:
+            try:
+                summary = gemini_summary(keys[ki], pdf.content)
+                break
+            except RateLimited as e:
+                if ki + 1 < len(keys):
+                    ki += 1
+                    log.info("key %d exhausted — switching to key %d", ki, ki + 1)
+                    continue
+                log.warning("all keys rate limited — stopping cleanly, next run resumes (%s)", e)
+                exhausted = True
+                break
+        if exhausted:
             break
         done += 1
         if summary:
