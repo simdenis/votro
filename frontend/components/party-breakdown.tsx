@@ -84,21 +84,8 @@ export function PartyBreakdown({ rows, indSenators, voters }: Props) {
               )}
             </div>
 
-            {/* Stacked bar */}
-            <div className="h-1.5 flex rounded overflow-hidden gap-px">
-              {p.for > 0 && (
-                <div className="bg-adoptat" style={{ flex: p.for }} title={`${p.for} pentru`} />
-              )}
-              {p.against > 0 && (
-                <div className="bg-respins" style={{ flex: p.against }} title={`${p.against} împotrivă`} />
-              )}
-              {p.abstention > 0 && (
-                <div className="bg-[#8888cc]" style={{ flex: p.abstention }} title={`${p.abstention} abțineri`} />
-              )}
-            </div>
-
             {/* Counts — hover a number to see who */}
-            <div className="flex gap-3 mt-1.5 text-xs text-muted tabular-nums">
+            <div className="flex gap-3 text-xs text-muted tabular-nums">
               {p.for > 0 && (
                 <HoverNames people={voters?.[p.abbr]?.for ?? []} title={`${p.abbr} — pentru`}>
                   <span><span className="text-adoptat font-semibold">{p.for}</span> pentru</span>
