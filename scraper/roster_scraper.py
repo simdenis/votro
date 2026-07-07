@@ -92,6 +92,8 @@ class Member:
     profile_url: str
     county: Optional[str] = None
     key: frozenset = field(default_factory=frozenset)
+    dated: bool = False           # camera list: date in the from/until column
+    group: Optional[str] = None   # camera list: parliamentary-group label
 
 
 # ── Source parsing ────────────────────────────────────────────────────────────
@@ -153,14 +155,58 @@ def senate_roster() -> list[Member]:
     return list(seen.values())
 
 
+# Full table row: name link, circumscripție cell, group cell, from/until date
+# cell. The date column is ambiguous (entered-late replacements AND early-ended
+# mandates both show a date) — run_chamber resolves dated rows via the profile.
+_CAMERA_ROW = re.compile(
+    r'structura2015\.mp\?idm=(\d+)[^"]*"[^>]*>([^<]+)</a></b></td>\s*'
+    r"<td[^>]*>.*?</td>\s*"
+    r"<td>\s*<a[^>]*structura2015\.gp\?idg=\d+[^>]*>(.*?)</a>\s*</td>\s*"
+    r"<td nowrap>([^<]*)</td>",
+    re.DOTALL,
+)
+
+
 def camera_roster() -> list[Member]:
     html = fetch(CAMERA_LIST)
     seen: dict[str, Member] = {}
-    for m in re.finditer(r'href="[^"]*structura2015\.mp\?idm=(\d+)[^"]*"[^>]*>([^<]+)<', html):
+    for m in _CAMERA_ROW.finditer(html):
         idm, name = m.group(1), re.sub(r"\s+", " ", m.group(2)).strip()
+        group = re.sub(r"<br\s*/?>|\s+", " ", m.group(3)).strip() or None
         if idm not in seen and name and not name.isdigit():
-            seen[idm] = Member(display=name, profile_url=CAMERA_PROFILE.format(idm=idm), key=name_key(name))
+            seen[idm] = Member(display=name, profile_url=CAMERA_PROFILE.format(idm=idm),
+                               key=name_key(name), dated=bool(m.group(4).strip()), group=group)
     return list(seen.values())
+
+
+_ENDED = re.compile(r"data încetării mandatului", re.IGNORECASE)
+
+
+def mandate_ended(profile_html: str) -> bool:
+    return bool(_ENDED.search(profile_html))
+
+
+# Group label (cdep list / senat profile) → our party abbreviation. Mirrors the
+# vote-page mapping in camera_scraper/senat_scraper.
+_GROUP_TO_ABBR = [
+    ("social democrat", "PSD"), ("psd", "PSD"),
+    ("national liberal", "PNL"), ("pnl", "PNL"),
+    ("salvati romania", "USR"), ("usr", "USR"),
+    ("aur", "AUR"),
+    ("maghiare", "UDMR"), ("udmr", "UDMR"),
+    ("minoritat", "MIN"),
+    ("pace", "PACE"),
+    ("sos", "SOSRO"),
+    ("uniti pentru romania", "POT"), ("upr", "POT"), ("pot", "POT"),
+    ("neafiliat", "IND"),
+]
+
+
+def group_to_abbr(label: Optional[str]) -> Optional[str]:
+    if not label:
+        return None
+    key = _unaccent(label).lower()
+    return next((abbr for frag, abbr in _GROUP_TO_ABBR if frag in key), None)
 
 
 # ── DB ───────────────────────────────────────────────────────────────────────
@@ -187,11 +233,71 @@ class Roster:
                 return rows
             start += 1000
 
+    def _party_id(self, abbr: Optional[str]) -> Optional[str]:
+        if not abbr:
+            return None
+        if not hasattr(self, "_parties"):
+            rows = self.db.table("parties").select("id, abbreviation").execute().data
+            self._parties = {r["abbreviation"]: r["id"] for r in rows}
+        return self._parties.get(abbr)
+
+    def _insert_member(self, chamber: str, mem: Member) -> Optional[dict]:
+        """Insert a roster member who never voted (ministers, mostly)."""
+        parts = mem.display.split()
+        if len(parts) < 2:
+            log.warning("cannot split name %r — not inserting", mem.display)
+            return None
+        label = mem.group
+        if chamber == "senate":
+            # senat.ro displays "SURNAME First-Names"; group only on the profile
+            caps = [t for t in parts if t == t.upper()]
+            name = " ".join(caps) or parts[-1]
+            first = " ".join(t for t in parts if t not in caps) or parts[0]
+            if not label:
+                try:
+                    text = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", fetch(mem.profile_url)))
+                    m = re.search(r"Grupul parlamentar:\s*(.{3,100})", text)
+                    label = m.group(1) if m else None
+                except requests.RequestException:
+                    label = None
+                time.sleep(_DELAY)
+        else:
+            name, first = parts[0], " ".join(parts[1:])
+        abbr = group_to_abbr(label)
+        payload = {"name": name, "first_name": first, "chamber": chamber,
+                   "active": True, "party_id": self._party_id(abbr)}
+        try:
+            row = self.db.table("politicians").insert(payload).execute().data[0]
+        except Exception as e:  # UNIQUE(name, first_name) collisions etc.
+            log.warning("insert failed for %s: %s", mem.display, e)
+            return None
+        log.info("%s: inserted %s (%s) — holds a mandate, never voted", chamber, mem.display, abbr or "no party")
+        row.setdefault("county", None)
+        row["active"] = True
+        return row
+
     def run_chamber(self, chamber: str) -> bool:
         roster = senate_roster() if chamber == "senate" else camera_roster()
         if len(roster) < MIN_ROSTER[chamber]:
             log.error("%s roster parse looks broken (%d members) — no changes made", chamber, len(roster))
             return False
+
+        # The cdep list keeps ended mandates (with a date in the from/until
+        # column) next to their replacements. Dated rows are ambiguous — only
+        # the profile says "data încetării mandatului" — so resolve those few.
+        current: list[Member] = []
+        for mem in roster:
+            if mem.dated:
+                try:
+                    if mandate_ended(fetch(mem.profile_url)):
+                        log.info("%s: mandate ended — %s", chamber, mem.display)
+                        time.sleep(_DELAY)
+                        continue
+                except requests.RequestException as e:
+                    log.warning("profile fetch failed for %s (%s) — treating as current", mem.display, e)
+                time.sleep(_DELAY)
+            current.append(mem)
+        roster = current
         log.info("%s roster: %d current members", chamber, len(roster))
 
         pols = self.politicians(chamber)
@@ -200,7 +306,7 @@ class Roster:
             by_key.setdefault(name_key(p["name"], p["first_name"]), []).append(p)
 
         matched: dict[str, Member] = {}  # politician id -> roster member
-        unmatched_roster: list[str] = []
+        unmatched_roster: list[Member] = []
         for mem in roster:
             hits = by_key.get(mem.key, [])
             if len(hits) == 1:
@@ -208,14 +314,24 @@ class Roster:
             elif len(hits) > 1:
                 log.warning("ambiguous name %r matches %d rows — skipped", mem.display, len(hits))
             else:
-                unmatched_roster.append(mem.display)
+                unmatched_roster.append(mem)
 
         log.info(
             "%s: %d matched, %d roster names with no DB row (never voted yet), %d DB rows to deactivate",
             chamber, len(matched), len(unmatched_roster), len(pols) - len(matched),
         )
-        if unmatched_roster:
-            log.info("no DB row: %s", "; ".join(sorted(unmatched_roster)[:10]))
+
+        # Members who hold a mandate but never voted (ministers, mostly) have no
+        # DB row — insert them so seat counts and county pages are complete.
+        # Cap guards against a parse anomaly mass-inserting garbage.
+        if len(unmatched_roster) > 10:
+            log.error("%s: %d unmatched roster names — parse anomaly? skipping inserts", chamber, len(unmatched_roster))
+        elif unmatched_roster and not self.dry_run:
+            for mem in unmatched_roster:
+                row = self._insert_member(chamber, mem)
+                if row:
+                    pols.append(row)
+                    matched[row["id"]] = mem
 
         # County: fetch profiles only where we don't have one yet (incremental).
         need_county = [pid for pid, mem in matched.items()
