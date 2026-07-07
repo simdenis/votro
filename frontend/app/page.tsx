@@ -149,19 +149,16 @@ export default async function Dashboard() {
             <h2 className="font-serif text-[16px] font-normal text-foreground border-b-2 border-sidebar pb-[5px] mb-4">
               Coeziune partide
             </h2>
-            <div className="space-y-3">
+            <div className="space-y-2">
               {cohesionData.map(c => (
-                <Link key={c.party_id} href={`/parties/${c.abbreviation}`} className="block hover:opacity-80 transition-opacity">
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="flex items-center gap-1.5 text-[13px] font-medium text-foreground">
-                      <span className="w-[9px] h-[9px] rounded-[2px]" style={{ backgroundColor: c.color }} />
-                      {c.abbreviation}
-                    </span>
-                    <span className="text-[13px] font-semibold tabular-nums text-foreground">{c.cohesion_pct?.toFixed(0)}%</span>
-                  </div>
-                  <div className="h-[5px] rounded-[3px] bg-raised overflow-hidden">
-                    <div className="h-full rounded-[3px]" style={{ width: `${c.cohesion_pct ?? 0}%`, backgroundColor: c.color }} />
-                  </div>
+                <Link
+                  key={c.party_id}
+                  href={`/parties/${c.abbreviation}`}
+                  className="flex items-center justify-between bg-surface border border-rim rounded-lg px-3 py-2 hover:bg-raised transition-colors"
+                  style={{ borderLeftWidth: 3, borderLeftColor: c.color }}
+                >
+                  <span className="text-[13px] font-medium text-foreground">{c.abbreviation}</span>
+                  <span className="text-[13px] font-semibold tabular-nums text-foreground">{c.cohesion_pct?.toFixed(0)}%</span>
                 </Link>
               ))}
             </div>
