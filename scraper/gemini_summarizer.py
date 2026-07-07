@@ -36,7 +36,7 @@ CODE_RE = re.compile(r"^L(\d+)/(\d{4})$")
 MODEL = "gemini-2.5-flash"
 GEMINI_URL = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL}:generateContent"
 UA = {"User-Agent": "Mozilla/5.0"}
-_DELAY = 1.5  # politeness + free-tier RPM headroom
+_DELAY = 6.5  # stay under the ~10 requests/min free-tier limit
 
 PROMPT = (
     "Documentul atașat este expunerea de motive a unui proiect de lege românesc. "
@@ -76,9 +76,16 @@ def gemini_summary(api_key: str, pdf_bytes: bytes) -> str | None:
         "generationConfig": {"temperature": 0, "maxOutputTokens": 500,
                              "thinkingConfig": {"thinkingBudget": 0}},
     }
-    r = requests.post(GEMINI_URL, params={"key": api_key}, json=body, timeout=120)
-    if r.status_code == 429:
-        raise RateLimited(r.text[:200])
+    # On a 429 (per-minute quota), wait for the window to reset and retry a few
+    # times; only give up if it's persistent (daily quota exhausted).
+    for wait_try in range(4):
+        r = requests.post(GEMINI_URL, params={"key": api_key}, json=body, timeout=120)
+        if r.status_code != 429:
+            break
+        if wait_try == 3:
+            raise RateLimited(r.text[:200])
+        log.info("429 — waiting 60s for the rate-limit window (try %d)", wait_try + 1)
+        time.sleep(60)
     if not r.ok:
         log.warning("gemini error %s: %s", r.status_code, r.text[:150])
         return None
