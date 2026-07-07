@@ -24,7 +24,7 @@ export function Nav() {
               alt=""
               width={40}
               height={40}
-              className="shrink-0 rounded-full ring-2 ring-white/70"
+              className="shrink-0 rounded-full ring-1 ring-white/50"
             />
             <div className="font-serif text-[26px] text-white leading-none">VotRO</div>
           </div>
