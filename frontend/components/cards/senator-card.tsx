@@ -2,6 +2,12 @@
 
 import { countNoun } from '@/lib/utils'
 
+export interface RecentVoteRow {
+  lawCode: string
+  title: string
+  choice: 'for' | 'against' | 'abstention' | 'not_voted' | 'absent'
+}
+
 export interface SenatorCardData {
   fullName: string
   partyAbbr: string
@@ -17,6 +23,9 @@ export interface SenatorCardData {
   deviations: number
   deviationPct: number | null
   noLine: boolean // IND / MIN — no party line
+  /** bottom section: recent deviations when there are any, else recent votes */
+  recentLabel?: string
+  recent?: RecentVoteRow[]
 }
 
 const C = {
@@ -99,6 +108,29 @@ export function SenatorCard({ data }: { data: SenatorCardData }) {
             </div>
           ))}
         </div>
+
+        {/* Recent deviations / votes */}
+        {(data.recent?.length ?? 0) > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', marginTop: 42 }}>
+            <div style={{ display: 'flex', fontSize: 13, opacity: 0.32, textTransform: 'uppercase', letterSpacing: 2.5, marginBottom: 14 }}>
+              {data.recentLabel ?? 'Ultimele voturi'}
+            </div>
+            {data.recent!.slice(0, 3).map((r, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '9px 0', borderTopWidth: i > 0 ? 1 : 0, borderTopStyle: 'solid', borderTopColor: C.hair }}>
+                <div style={{ display: 'flex', fontSize: 15, fontWeight: 700, color: C.navy, minWidth: 118 }}>{r.lawCode}</div>
+                <div style={{ display: 'flex', flex: 1, fontSize: 15, opacity: 0.62 }}>
+                  {r.title.length > 64 ? r.title.slice(0, 64) + '…' : r.title}
+                </div>
+                <div style={{
+                  display: 'flex', fontSize: 13, fontWeight: 700,
+                  color: r.choice === 'for' ? C.for : r.choice === 'against' ? C.against : r.choice === 'abstention' ? C.abstain : C.absentNum,
+                }}>
+                  {r.choice === 'for' ? 'PENTRU' : r.choice === 'against' ? 'ÎMPOTRIVĂ' : r.choice === 'abstention' ? 'ABȚINERE' : 'ABSENT'}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
         <div style={{ display: 'flex', flex: 1 }} />
       </div>
