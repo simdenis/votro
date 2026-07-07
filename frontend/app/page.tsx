@@ -20,9 +20,10 @@ export default async function Dashboard() {
     db.from('law_status').select('*', { count: 'exact', head: true }).or('senate_outcome.eq.respins,camera_outcome.eq.respins'),
     db.from('parties').select('abbreviation, color, name'),
     db.from('politicians').select('party_id, parties(abbreviation)', { count: 'exact', head: false }).eq('active', true),
-    // Colțul rușinii — Senate only: Camera vote pages don't record absentees
+    // Colțul rușinii — lowest presence since mandate start. gt 0 skips the
+    // senators in government (Bolojan/Predoiu never vote — structural, not shame)
     db.from('senator_stats').select('politician_id, name, first_name, party_abbr, party_color, presence_pct')
-      .eq('active', true).not('presence_pct', 'is', null)
+      .eq('active', true).gt('presence_pct', 0)
       .order('presence_pct', { ascending: true }).limit(5),
   ])
 
@@ -47,9 +48,9 @@ export default async function Dashboard() {
   const totalSenators = parliamentParties.reduce((s, p) => s + p.senator_count, 0)
 
   const stats = [
-    { value: totalLaws,        label: 'legi urmărite', color: 'var(--text)' },
-    { value: promulgatedCount, label: 'promulgate',    color: 'var(--color-for)' },
-    { value: respinsCount,     label: 'respinse',      color: 'var(--color-against)' },
+    { value: totalLaws,        label: 'legi urmărite', color: 'var(--text)',          href: '/legi' },
+    { value: promulgatedCount, label: 'promulgate',    color: 'var(--color-for)',     href: '/legi?tab=promulgate' },
+    { value: respinsCount,     label: 'respinse',      color: 'var(--color-against)', href: '/legi?tab=respinse' },
   ]
 
   return (
@@ -68,12 +69,16 @@ export default async function Dashboard() {
       {/* ── Stats row ────────────────────────────────────── */}
       <section className="grid grid-cols-3 border-t-2 border-sidebar mb-12">
         {stats.map((s, i) => (
-          <div key={s.label} className={`py-5 pr-6 ${i > 0 ? 'border-l border-rim pl-4 sm:pl-6' : ''}`}>
+          <Link
+            key={s.label}
+            href={s.href}
+            className={`py-5 pr-6 hover:bg-raised/60 transition-colors ${i > 0 ? 'border-l border-rim pl-4 sm:pl-6' : ''}`}
+          >
             <div className="text-[36px] font-bold tabular-nums tracking-[-0.02em] leading-none" style={{ color: s.color }}>
               {s.value}
             </div>
             <div className="text-[12px] text-muted mt-2 font-medium">{s.label}</div>
-          </div>
+          </Link>
         ))}
       </section>
 
