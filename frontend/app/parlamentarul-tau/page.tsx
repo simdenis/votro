@@ -4,6 +4,7 @@ import { getDB } from '@/lib/supabase'
 import { PartyBadge } from '@/components/party-badge'
 import { hasPartyLine } from '@/lib/utils'
 import { CountyMap } from '@/components/county-map'
+import { ScrollIntoView } from '@/components/scroll-into-view'
 import type { PoliticianStats } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
@@ -102,6 +103,9 @@ export default async function ParlamentarulTauPage({
           </p>
         )}
       </div>
+
+      {/* remounts on every county change → scrolls the results into view */}
+      {judet && <ScrollIntoView key={judet} />}
 
       {judet && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-10">

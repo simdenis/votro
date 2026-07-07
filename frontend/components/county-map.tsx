@@ -7,7 +7,8 @@ import { RO_MAP_VIEWBOX, RO_COUNTIES } from '@/lib/ro-counties'
  *  /parlamentarul-tau?judet=<name>; Diaspora is a separate button (no geography). */
 export function CountyMap({ selected }: { selected?: string }) {
   const router = useRouter()
-  const go = (judet: string) => router.push(`/parlamentarul-tau?judet=${encodeURIComponent(judet)}`)
+  // scroll:false — the results section scrolls itself into view instead
+  const go = (judet: string) => router.push(`/parlamentarul-tau?judet=${encodeURIComponent(judet)}`, { scroll: false })
 
   return (
     <div className="space-y-4">
