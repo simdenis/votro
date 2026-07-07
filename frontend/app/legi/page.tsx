@@ -14,13 +14,15 @@ export const metadata: Metadata = {
 
 const PAGE_SIZE = 25
 
-type Tab = 'toate' | 'senat' | 'camera' | 'purgatoriu'
+type Tab = 'toate' | 'senat' | 'camera' | 'purgatoriu' | 'promulgate' | 'respinse'
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'toate',      label: 'Toate' },
   { id: 'senat',      label: 'Senat' },
   { id: 'camera',     label: 'Camera' },
   { id: 'purgatoriu', label: 'Purgatoriu' },
+  { id: 'promulgate', label: 'Promulgate' },
+  { id: 'respinse',   label: 'Respinse' },
 ]
 
 type Sort = 'presedinte' | 'senat' | 'camera'
@@ -118,6 +120,8 @@ export default async function LegiPage({
   if (tab === 'senat')      q = q.not('senate_vote_id', 'is', null)
   if (tab === 'camera')     q = q.not('camera_vote_id', 'is', null)
   if (tab === 'purgatoriu') q = q.in('status', ['asteapta_camera', 'asteapta_senat'])
+  if (tab === 'promulgate') q = q.eq('presidential_status', 'promulgat')
+  if (tab === 'respinse')   q = q.or('senate_outcome.eq.respins,camera_outcome.eq.respins')
   if (category)             q = q.eq('law_category', category)
 
   const { data, count } = await q
