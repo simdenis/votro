@@ -2,7 +2,8 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
-import { formatDate, choiceLabel, choiceColor, countNoun, chamberSeats } from '@/lib/utils'
+import { formatDate, choiceLabel, choiceColor, countNoun } from '@/lib/utils'
+import { activeSeats } from '@/lib/seats'
 import { OutcomeBadge } from '@/components/outcome-badge'
 import { PartyBadge } from '@/components/party-badge'
 import { PartyBreakdown } from '@/components/party-breakdown'
@@ -74,7 +75,7 @@ export default async function VoteDetail({
   // from not_voted_count = present but didn't press a button). Joint sessions
   // (Chamber + Senate together) have more participants than one chamber's
   // seats — there the single-chamber absentee framing is meaningless, so hide it.
-  const seats = chamberSeats(vote.chamber)
+  const seats = await activeSeats(vote.chamber)
   const participants = (vote.for_count ?? 0) + (vote.against_count ?? 0)
     + (vote.abstention_count ?? 0) + (vote.not_voted_count ?? 0)
   const jointSession = participants > seats
