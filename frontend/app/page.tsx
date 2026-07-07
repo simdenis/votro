@@ -169,7 +169,7 @@ export default async function Dashboard() {
                 <h2 className="font-serif text-[16px] font-normal text-foreground border-b-2 border-respins/60 pb-[5px] mb-1 mt-10">
                   Colțul rușinii
                 </h2>
-                <p className="text-[11px] text-faint mb-3">prezență la voturile din plen · Senat</p>
+                <p className="text-[11px] text-faint mb-3">absențe la voturile din plen · Senat</p>
                 <div className="space-y-2">
                   {lowPresence.map(s => (
                     <Link
@@ -181,7 +181,7 @@ export default async function Dashboard() {
                         <span className="w-[9px] h-[9px] rounded-[2px] flex-shrink-0" style={{ backgroundColor: s.party_color || '#9e9e9e' }} />
                         <span className="truncate">{s.first_name} {s.name}</span>
                       </span>
-                      <span className="text-[13px] font-bold tabular-nums text-respins flex-shrink-0">{Math.round(s.presence_pct)}%</span>
+                      <span className="text-[13px] font-bold tabular-nums text-respins flex-shrink-0">{Math.round(100 - s.presence_pct)}%</span>
                     </Link>
                   ))}
                 </div>
