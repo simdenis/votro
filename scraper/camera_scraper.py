@@ -817,7 +817,9 @@ class CameraScraper:
 
     def _upsert_vote(self, law_id: Optional[str], detail: VoteDetail) -> Optional[str]:
         outcome = detail.outcome
-        if not outcome and detail.totals.for_ > 0 and detail.totals.against >= 0:
+        # Derive when the page had no explicit result. Any votes cast is enough —
+        # a unanimous rejection (0 for / N against) must still resolve to respins.
+        if not outcome and (detail.totals.for_ or detail.totals.against or detail.totals.abstentions):
             outcome = "adoptat" if detail.totals.for_ > detail.totals.against else "respins"
 
         description = detail.law_title[:500] or None

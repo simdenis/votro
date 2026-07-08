@@ -85,6 +85,13 @@ log "=== Government roles (gov.ro) ==="
 log "=== Tacit deadlines ==="
 "$PY" scraper/tacit_scraper.py >>"$LOG" 2>&1 || { rc=1; log "Tacit scrape FAILED"; }
 
+# Data-integrity gate: deterministic invariants over everything produced above
+# (no law promulgated-yet-respins, presence in range, participations ≤ chamber
+# votes, no inverted party-history intervals, no orphan parties, …). A FAIL
+# means we wrote bad data — fold it into rc so the heartbeat flags it.
+log "=== Validation ==="
+"$PY" scraper/validate.py >>"$LOG" 2>&1 || { rc=1; log "Validation found bad data"; }
+
 # Heartbeat — lets the site footer tell "parliament idle" from "pipeline broken".
 "$PY" scraper/heartbeat.py "$rc" >>"$LOG" 2>&1 || log "WARN: heartbeat write failed"
 
