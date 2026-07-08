@@ -23,15 +23,24 @@ const SANS = 'DM Sans'
 
 /** Summaries are ≤ ~50 words, but shrink gracefully anyway. */
 function summaryFont(len: number): number {
-  if (len <= 140) return 52
-  if (len <= 220) return 46
-  if (len <= 300) return 41
-  if (len <= 400) return 36
-  return 31
+  if (len <= 140) return 50
+  if (len <= 220) return 44
+  if (len <= 300) return 39
+  if (len <= 400) return 34
+  return 30
+}
+
+/** Full title, sized down as it grows so it always fits — never truncated. */
+function titleFont(len: number): number {
+  if (len <= 90) return 25
+  if (len <= 150) return 22
+  if (len <= 230) return 19
+  if (len <= 340) return 17
+  return 15
 }
 
 export function SummaryCard({ data }: { data: SummaryCardData }) {
-  const title = data.lawTitle.length > 110 ? data.lawTitle.slice(0, 110) + '…' : data.lawTitle
+  const title = data.lawTitle
 
   return (
     <div style={{ width: 1080, height: 1080, display: 'flex', flexDirection: 'column', background: C.bg, color: C.text, fontFamily: SANS }}>
@@ -51,12 +60,12 @@ export function SummaryCard({ data }: { data: SummaryCardData }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 12 }}>
           <div style={{ display: 'flex', fontSize: 15, fontWeight: 500, color: C.navy, letterSpacing: 4, textTransform: 'uppercase' }}>{data.lawCode}</div>
           {data.category && (
-            <div style={{ display: 'flex', fontSize: 13, opacity: 0.4, textTransform: 'uppercase', letterSpacing: 1.5 }}>{data.category}</div>
+            <div style={{ display: 'flex', fontSize: 13, color: C.text, opacity: 0.6, textTransform: 'uppercase', letterSpacing: 1.5 }}>{data.category}</div>
           )}
         </div>
 
-        {/* Official title, quiet — the summary is the hero */}
-        <div style={{ display: 'flex', fontSize: 17, lineHeight: 1.4, opacity: 0.7 }}>{title}</div>
+        {/* Full official title, quiet — the summary is the hero */}
+        <div style={{ display: 'flex', fontSize: titleFont(title.length), lineHeight: 1.35, color: C.text, opacity: 0.72 }}>{title}</div>
 
         {/* The plain-language summary, slightly above vertical center */}
         <div style={{ display: 'flex', flexGrow: 1, minHeight: 24 }} />
@@ -72,7 +81,7 @@ export function SummaryCard({ data }: { data: SummaryCardData }) {
           <div style={{ display: 'flex', background: data.statusColor, color: '#fff', fontSize: 18, fontWeight: 600, letterSpacing: 4, textTransform: 'uppercase', padding: '11px 30px', borderRadius: 3 }}>
             {data.statusLabel}
           </div>
-          {data.dateLine && <div style={{ display: 'flex', fontSize: 17, opacity: 0.4 }}>{data.dateLine}</div>}
+          {data.dateLine && <div style={{ display: 'flex', fontSize: 17, color: C.text, opacity: 0.8 }}>{data.dateLine}</div>}
         </div>
       </div>
 

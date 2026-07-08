@@ -116,20 +116,21 @@ export default async function LawDetail({ params }: { params: Promise<{ id: stri
               label="Card rezumat"
             />
           )}
-          {/* both chambers voted → one card per chamber (IG carousel slides) */}
-          {law.senate_vote_id && law.camera_vote_id && (
-            <>
-              <CardDownload
-                href={`/api/og/lawcard?id=${law.law_id}&chamber=senate`}
-                filename={`votro-${law.code.replace(/[^\w]+/g, '-')}-senat.png`}
-                label="Card Senat"
-              />
-              <CardDownload
-                href={`/api/og/lawcard?id=${law.law_id}&chamber=camera`}
-                filename={`votro-${law.code.replace(/[^\w]+/g, '-')}-camera.png`}
-                label="Card Cameră"
-              />
-            </>
+          {/* One card per chamber that actually voted (IG carousel slides). A
+              chamber with no plenary vote (tacit adoption) has no card. */}
+          {law.senate_vote_id && (
+            <CardDownload
+              href={`/api/og/lawcard?id=${law.law_id}&chamber=senate`}
+              filename={`votro-${law.code.replace(/[^\w]+/g, '-')}-senat.png`}
+              label="Card Senat"
+            />
+          )}
+          {law.camera_vote_id && (
+            <CardDownload
+              href={`/api/og/lawcard?id=${law.law_id}&chamber=camera`}
+              filename={`votro-${law.code.replace(/[^\w]+/g, '-')}-camera.png`}
+              label="Card Cameră"
+            />
           )}
         </div>
       </div>
