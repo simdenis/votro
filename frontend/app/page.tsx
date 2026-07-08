@@ -12,7 +12,7 @@ export const metadata: Metadata = { title: 'Acasă' }
 export default async function Dashboard() {
   const db = getDB()
 
-  const [r0, r1, r2, r3, r4, r5, r6, r7] = await Promise.all([
+  const [r0, r1, r2, r3, r4, r5, r6, r7, r8] = await Promise.all([
     db.from('law_status').select('*', { count: 'exact', head: true }),
     db.from('party_cohesion').select('*').gte('votes_participated', 3).order('cohesion_pct', { ascending: false }),
     db.from('votes').select('*, laws(*)').order('vote_date', { ascending: false }).limit(8),
@@ -20,9 +20,13 @@ export default async function Dashboard() {
     db.from('law_status').select('*', { count: 'exact', head: true }).or('senate_outcome.eq.respins,camera_outcome.eq.respins'),
     db.from('parties').select('abbreviation, color, name'),
     db.from('politicians').select('party_id, parties(abbreviation)', { count: 'exact', head: false }).eq('active', true),
-    // Colțul rușinii — lowest presence since mandate start. Government members
-    // (gov_role) never vote in plen — structural absence, not shame.
+    // Colțul rușinii — lowest presence since mandate start, both chambers.
+    // Government members (gov_role) never vote in plen — structural absence,
+    // not shame.
     db.from('senator_stats').select('politician_id, name, first_name, party_abbr, party_color, presence_pct')
+      .eq('active', true).is('gov_role', null)
+      .order('presence_pct', { ascending: true }).limit(5),
+    db.from('deputy_stats').select('politician_id, name, first_name, party_abbr, party_color, presence_pct')
       .eq('active', true).is('gov_role', null)
       .order('presence_pct', { ascending: true }).limit(5),
   ])
@@ -34,7 +38,11 @@ export default async function Dashboard() {
   const promulgatedCount = r3.count ?? 0
   const respinsCount  = r4.count ?? 0
   const allParties    = r5.data ?? []
-  const lowPresence   = (r7.data ?? []) as { politician_id: string; name: string; first_name: string; party_abbr: string; party_color: string; presence_pct: number }[]
+  type LowPresence = { politician_id: string; name: string; first_name: string; party_abbr: string; party_color: string; presence_pct: number; href: string }
+  const lowPresence: LowPresence[] = [
+    ...((r7.data ?? []) as Omit<LowPresence, 'href'>[]).map(s => ({ ...s, href: `/senators/${s.politician_id}` })),
+    ...((r8.data ?? []) as Omit<LowPresence, 'href'>[]).map(s => ({ ...s, href: `/deputies/${s.politician_id}` })),
+  ].sort((a, b) => a.presence_pct - b.presence_pct).slice(0, 5)
 
   const senatorCounts: Record<string, number> = {}
   for (const p of (r6.data ?? []) as any[]) {
@@ -167,19 +175,18 @@ export default async function Dashboard() {
               ))}
             </div>
 
-            {/* Colțul rușinii — lowest plenary presence (Senate: the only
-                chamber whose nominal lists record absentees) */}
+            {/* Colțul rușinii — lowest plenary presence, both chambers */}
             {lowPresence.length > 0 && (
               <>
                 <h2 className="font-serif text-[16px] font-normal text-foreground border-b-2 border-respins/60 pb-[5px] mb-1 mt-10">
                   Colțul rușinii
                 </h2>
-                <p className="text-[11px] text-faint mb-3">absențe la voturile din plen · Senat</p>
+                <p className="text-[11px] text-faint mb-3">absențe la voturile din plen · Senat + Cameră</p>
                 <div className="space-y-2">
                   {lowPresence.map(s => (
                     <Link
                       key={s.politician_id}
-                      href={`/senators/${s.politician_id}`}
+                      href={s.href}
                       className="flex items-center justify-between gap-2 bg-surface border border-rim rounded-lg px-3 py-2 hover:bg-raised transition-colors"
                     >
                       <span className="flex items-center gap-1.5 text-[12.5px] font-medium text-foreground min-w-0">
