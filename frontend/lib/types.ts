@@ -120,6 +120,20 @@ export interface PoliticianStats {
   county: string | null
   /** 'premier' | 'vicepremier' | 'ministru' — MPs in the Government don't vote. */
   gov_role: string | null
+  /** Present-but-didn't-press rows (subset of votes_absent). */
+  votes_not_voted: number
+  /** Plenary votes held in the member's chamber since mandate start —
+      the real absence denominator (sources don't list every absentee). */
+  chamber_votes: number
+}
+
+/** True absences: chamber votes held minus every recorded participation. */
+export function trueAbsent(s: PoliticianStats): number | null {
+  if (!s.chamber_votes) return null
+  return Math.max(
+    0,
+    s.chamber_votes - s.votes_for - s.votes_against - s.votes_abstention - (s.votes_not_voted ?? 0),
+  )
 }
 
 export interface PendingBill {

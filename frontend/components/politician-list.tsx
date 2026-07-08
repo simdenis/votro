@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { pct, textOnColor, needsDe } from '@/lib/utils'
 import { PartyBadge } from '@/components/party-badge'
-import type { PoliticianStats } from '@/lib/types'
+import { trueAbsent, type PoliticianStats } from '@/lib/types'
 
 interface Props {
   title: string
@@ -81,13 +81,16 @@ export function PoliticianList({ title, basePath, people, sort, dir }: Props) {
                 const noLine = s.party_abbr === 'IND' || s.party_abbr === 'MIN'
                 const initials = `${s.first_name?.[0] ?? ''}${s.name?.[0] ?? ''}`
                 const absence = s.presence_pct == null ? null : Math.round(100 - s.presence_pct)
+                // Grey segment = true absences (chamber votes − participations),
+                // not the undercounted recorded 'absent' rows.
+                const absent = trueAbsent(s) ?? s.votes_absent ?? 0
                 const beh = [
                   { v: s.votes_for ?? 0,        c: 'var(--color-for)' },
                   { v: s.votes_against ?? 0,    c: 'var(--color-against)' },
                   { v: s.votes_abstention ?? 0, c: 'var(--color-abstention)' },
-                  { v: s.votes_absent ?? 0,     c: 'var(--rim)' },
+                  { v: absent,                  c: 'var(--rim)' },
                 ]
-                const behTitle = `${s.votes_for ?? 0} pentru · ${s.votes_against ?? 0} împotrivă · ${s.votes_abstention ?? 0} abțineri · ${s.votes_absent ?? 0} absent`
+                const behTitle = `${s.votes_for ?? 0} pentru · ${s.votes_against ?? 0} împotrivă · ${s.votes_abstention ?? 0} abțineri · ${absent} absent`
                 return (
                   <tr key={s.politician_id} className="border-b border-rim hover:bg-raised transition-colors">
                     <td className="py-3 pr-4">

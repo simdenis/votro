@@ -5,7 +5,7 @@ import { OutcomeBadge } from '@/components/outcome-badge'
 import { LoyaltyMeter } from '@/components/loyalty-meter'
 import { ShareButtons } from '@/components/share-buttons'
 import { CardDownload } from '@/components/card-download'
-import type { PoliticianStats, VoteHistoryRow } from '@/lib/types'
+import { trueAbsent, type PoliticianStats, type VoteHistoryRow } from '@/lib/types'
 
 interface Props {
   stats: PoliticianStats
@@ -24,11 +24,21 @@ export function PoliticianProfile({ stats, history, deviationRows, basePath, cha
   const loyaltyPct = !noLine && stats.deviation_pct != null ? Math.floor(100 - stats.deviation_pct) : null
   const isHighDev  = stats.deviation_pct != null && stats.deviation_pct > 10
 
+  // Denominator = ALL plenary votes since mandate start, not just recorded
+  // rows — the sources rarely list absentees, so recorded 'absent' rows
+  // undercount massively (Anisie: 9 recorded vs ~200 real). Falls back to
+  // recorded rows if the view predates migration 023.
+  const denom      = stats.chamber_votes || total
+  const absentReal = trueAbsent(stats) ?? stats.votes_absent
+  const notVoted   = stats.votes_not_voted ?? 0
   const behaviorRows = [
     { label: 'Pentru',    value: stats.votes_for,        color: '#16a34a', icon: '▲' },
     { label: 'Împotrivă', value: stats.votes_against,    color: '#dc2626', icon: '▼' },
     { label: 'Abțineri',  value: stats.votes_abstention, color: '#8888cc', icon: '—' },
-    { label: 'Absent',    value: stats.votes_absent,     color: 'var(--faint)', icon: '·' },
+    ...(notVoted > 0
+      ? [{ label: 'Prezent, fără vot', value: notVoted, color: '#d1d5db', icon: '○' }]
+      : []),
+    { label: 'Absent',    value: absentReal,             color: 'var(--faint)', icon: '·' },
   ]
 
   const deviations = deviationRows ?? history.filter(r => r.party_line_deviation)
@@ -96,6 +106,7 @@ export function PoliticianProfile({ stats, history, deviationRows, basePath, cha
         <div className="bg-surface border border-rim rounded-xl p-5">
           <h2 className="text-xs font-semibold uppercase tracking-widest text-muted mb-4">
             Comportament vot
+            <span className="normal-case tracking-normal font-normal text-faint"> · din {denom} {countNoun(denom, 'vot de plen', 'voturi de plen')}</span>
           </h2>
           <div className="space-y-3">
             {behaviorRows.map(row => (
@@ -105,14 +116,14 @@ export function PoliticianProfile({ stats, history, deviationRows, basePath, cha
                   <span className="text-sm font-bold tabular-nums" style={{ color: row.color }}>
                     {row.value}
                     <span className="text-xs font-normal text-faint ml-1.5">
-                      ({total > 0 ? Math.round((row.value / total) * 100) : 0}%)
+                      ({denom > 0 ? Math.round((row.value / denom) * 100) : 0}%)
                     </span>
                   </span>
                 </div>
                 <div className="h-1.5 bg-raised rounded-full overflow-hidden">
                   <div
                     className="h-full rounded-full transition-all duration-500"
-                    style={{ width: `${total > 0 ? (row.value / total) * 100 : 0}%`, backgroundColor: row.color }}
+                    style={{ width: `${denom > 0 ? (row.value / denom) * 100 : 0}%`, backgroundColor: row.color }}
                   />
                 </div>
               </div>
