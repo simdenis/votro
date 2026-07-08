@@ -42,7 +42,7 @@ export default async function SenatorProfile({
   const { id } = await params
   const db = getDB()
 
-  const [r0, r1, r2, r3] = await Promise.all([
+  const [r0, r1, r3] = await Promise.all([
     db.from('senator_stats').select('*').eq('politician_id', id).maybeSingle(),
     db
       .from('politician_votes')
@@ -50,7 +50,6 @@ export default async function SenatorProfile({
       .eq('politician_id', id)
       .order('created_at', { ascending: false })
       .limit(100),
-    db.from('politician_participation').select('participation_pct').eq('politician_id', id).maybeSingle(),
     // deviations fetched directly — they may be older than the 100-vote history window
     db
       .from('politician_votes')
@@ -69,7 +68,6 @@ export default async function SenatorProfile({
       stats={stats}
       history={(r1.data as VoteHistoryRow[] | null) ?? []}
       deviationRows={(r3.data as VoteHistoryRow[] | null) ?? []}
-      participationPct={(r2.data as { participation_pct: number | null } | null)?.participation_pct ?? null}
       basePath="/senators"
       chamberLabel="Senat"
       siteUrl={SITE_URL}

@@ -11,9 +11,16 @@ interface Props {
   dir: boolean
 }
 
+// Numeric columns start descending — "most absent / most deviant first" is
+// what a first click means; ascending would show a wall of zeros.
+const DESC_FIRST = new Set(['votes', 'absence', 'deviation'])
+
 export function PoliticianList({ title, basePath, people, sort, dir }: Props) {
   function sortUrl(col: string) {
-    const newDir = sort === col && !dir ? 'desc' : ''
+    const newDir =
+      sort === col ? (dir ? '' : 'desc')
+      : DESC_FIRST.has(col) ? 'desc'
+      : ''
     const params = new URLSearchParams()
     params.set('sort', col)
     if (newDir) params.set('dir', newDir)

@@ -12,14 +12,12 @@ interface Props {
   history: VoteHistoryRow[]
   /** Fetched directly — deviations can be older than the history window. */
   deviationRows?: VoteHistoryRow[]
-  /** politician_participation estimate (own-chamber votes during active period). */
-  participationPct?: number | null
   basePath: string
   chamberLabel: string
   siteUrl: string
 }
 
-export function PoliticianProfile({ stats, history, deviationRows, participationPct, basePath, chamberLabel, siteUrl }: Props) {
+export function PoliticianProfile({ stats, history, deviationRows, basePath, chamberLabel, siteUrl }: Props) {
   const total      = stats.total_votes
   // IND/MIN have no party line — loyalty/deviation framing would be meaningless
   const noLine     = !hasPartyLine(stats.party_abbr)
@@ -63,9 +61,12 @@ export function PoliticianProfile({ stats, history, deviationRows, participation
             )}
             <span className="text-[10px] text-faint" title="Partidul din care face parte acum. Voturile sunt atribuite afilierii curente.">afiliere curentă</span>
             <span className="text-xs text-muted">{chamberLabel} · {total} {countNoun(total, 'vot înregistrat', 'voturi înregistrate')}</span>
-            {participationPct != null && (
-              <span className="text-xs text-muted" title="Voturi active împărțite la voturile camerei din perioada activă. Estimativ — istoricul nostru e parțial.">
-                · participare ~{participationPct}% <span className="text-faint">(est.)</span>
+            {!stats.gov_role && stats.presence_pct != null && (
+              <span
+                className={`text-xs ${100 - stats.presence_pct > 30 ? 'text-respins font-semibold' : 'text-muted'}`}
+                title="Voturi la care a participat, împărțite la toate voturile ținute în camera sa de la validarea mandatului — aceeași metrică din listă."
+              >
+                · absență {Math.round(100 - stats.presence_pct)}%
               </span>
             )}
           </div>

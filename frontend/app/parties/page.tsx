@@ -68,12 +68,6 @@ export default async function PartiesPage() {
                   <div className="text-xs text-muted">Coeziune</div>
                 </div>
                 <div>
-                  <div className="text-2xl font-semibold tabular-nums text-foreground">
-                    {p.votes_participated}
-                  </div>
-                  <div className="text-xs text-muted">Voturi</div>
-                </div>
-                <div>
                   <div className="text-2xl font-semibold tabular-nums text-deviere">
                     {p.deviation_count}
                   </div>
