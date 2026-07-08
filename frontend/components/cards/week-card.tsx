@@ -52,20 +52,20 @@ export function WeekCard({ data }: { data: WeekCardData }) {
 
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', padding: '36px 64px 22px' }}>
         <div style={{ fontFamily: SERIF, fontSize: 52, color: C.navy, letterSpacing: '-1.5px', lineHeight: 1 }}>VotRO</div>
-        <div style={{ display: 'flex', fontSize: 16, letterSpacing: 3, textTransform: 'uppercase', opacity: 0.38 }}>RECAP SĂPTĂMÂNAL</div>
+        <div style={{ display: 'flex', fontSize: 16, letterSpacing: 3, textTransform: 'uppercase', opacity: 0.55 }}>RECAP SĂPTĂMÂNAL</div>
       </div>
       <div style={{ display: 'flex', height: 1, margin: '0 64px', background: C.hair }} />
 
       <div style={{ display: 'flex', flexDirection: 'column', flex: 1, padding: '46px 64px 0' }}>
         <div style={{ fontFamily: SERIF, fontSize: 58, lineHeight: 1.05, marginBottom: 10 }}>Săptămâna în Parlament</div>
-        <div style={{ display: 'flex', fontSize: 21, opacity: 0.45, marginBottom: 44 }}>{data.rangeLabel}</div>
+        <div style={{ display: 'flex', fontSize: 21, opacity: 0.7, marginBottom: 44 }}>{data.rangeLabel}</div>
 
         {/* Stat row */}
         <div style={{ display: 'flex', marginBottom: 40 }}>
           {stats.map((s, i) => (
             <div key={s.label} style={{ display: 'flex', flexDirection: 'column', flex: 1, padding: '0 22px', borderLeftWidth: i > 0 ? 1 : 0, borderLeftStyle: 'solid', borderLeftColor: C.hair }}>
               <div style={{ display: 'flex', fontFamily: SERIF, fontSize: 72, lineHeight: 1, color: s.color }}>{s.value}</div>
-              <div style={{ display: 'flex', fontSize: 14, opacity: 0.35, textTransform: 'uppercase', letterSpacing: 3, marginTop: 10 }}>{s.label}</div>
+              <div style={{ display: 'flex', fontSize: 14, opacity: 0.7, textTransform: 'uppercase', letterSpacing: 3, marginTop: 10 }}>{s.label}</div>
             </div>
           ))}
         </div>
@@ -108,7 +108,7 @@ export function WeekCard({ data }: { data: WeekCardData }) {
 
       <div style={{ display: 'flex', justifyContent: 'space-between', padding: '18px 64px', borderTopWidth: 1, borderTopStyle: 'solid', borderTopColor: C.hair }}>
         <div style={{ display: 'flex', fontSize: 14, fontWeight: 600, color: C.navy, opacity: 0.62 }}>votro.ro</div>
-        <div style={{ display: 'flex', fontSize: 12, opacity: 0.22 }}>sursă: senat.ro / cdep.ro</div>
+        <div style={{ display: 'flex', fontSize: 12, opacity: 0.55 }}>sursă: senat.ro / cdep.ro</div>
       </div>
     </div>
   )

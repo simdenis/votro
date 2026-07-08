@@ -36,7 +36,7 @@ export function ShameCard({ data }: { data: ShameCardData }) {
 
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', padding: '36px 64px 22px' }}>
         <div style={{ fontFamily: SERIF, fontSize: 52, color: C.navy, letterSpacing: '-1.5px', lineHeight: 1 }}>VotRO</div>
-        <div style={{ display: 'flex', fontSize: 16, letterSpacing: 3, textTransform: 'uppercase', opacity: 0.38 }}>{data.dateLabel}</div>
+        <div style={{ display: 'flex', fontSize: 16, letterSpacing: 3, textTransform: 'uppercase', opacity: 0.55 }}>{data.dateLabel}</div>
       </div>
       <div style={{ display: 'flex', height: 1, margin: '0 64px', background: C.hair }} />
 
@@ -74,13 +74,13 @@ export function ShameCard({ data }: { data: ShameCardData }) {
           ))}
         </div>
 
-        <div style={{ display: 'flex', fontSize: 17, opacity: 0.45, marginTop: 34 }}>
+        <div style={{ display: 'flex', fontSize: 17, opacity: 0.7, marginTop: 34 }}>
           Membrii Guvernului nu sunt incluși — absența lor e structurală, nu o alegere.
         </div>
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 64px 40px' }}>
-        <div style={{ display: 'flex', fontSize: 15, opacity: 0.42 }}>sursa: senat.ro · cdep.ro</div>
+        <div style={{ display: 'flex', fontSize: 15, opacity: 0.58 }}>sursa: senat.ro · cdep.ro</div>
         <div style={{ display: 'flex', fontSize: 14, fontWeight: 600, color: C.navy, opacity: 0.62 }}>votro.ro</div>
       </div>
     </div>

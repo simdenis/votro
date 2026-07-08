@@ -43,7 +43,7 @@ export function SummaryCard({ data }: { data: SummaryCardData }) {
 
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', padding: '36px 64px 22px' }}>
         <div style={{ fontFamily: SERIF, fontSize: 52, color: C.navy, letterSpacing: '-1.5px', lineHeight: 1 }}>VotRO</div>
-        <div style={{ display: 'flex', fontSize: 16, letterSpacing: 3, textTransform: 'uppercase', opacity: 0.38 }}>{`PE SCURT · ${data.year}`}</div>
+        <div style={{ display: 'flex', fontSize: 16, letterSpacing: 3, textTransform: 'uppercase', opacity: 0.55 }}>{`PE SCURT · ${data.year}`}</div>
       </div>
       <div style={{ display: 'flex', height: 1, margin: '0 64px', background: C.hair }} />
 
@@ -56,7 +56,7 @@ export function SummaryCard({ data }: { data: SummaryCardData }) {
         </div>
 
         {/* Official title, quiet — the summary is the hero */}
-        <div style={{ display: 'flex', fontSize: 17, lineHeight: 1.4, opacity: 0.45 }}>{title}</div>
+        <div style={{ display: 'flex', fontSize: 17, lineHeight: 1.4, opacity: 0.7 }}>{title}</div>
 
         {/* The plain-language summary, slightly above vertical center */}
         <div style={{ display: 'flex', flexGrow: 1, minHeight: 24 }} />
@@ -78,7 +78,7 @@ export function SummaryCard({ data }: { data: SummaryCardData }) {
 
       <div style={{ display: 'flex', justifyContent: 'space-between', padding: '18px 64px', borderTopWidth: 1, borderTopStyle: 'solid', borderTopColor: C.hair }}>
         <div style={{ display: 'flex', fontSize: 14, fontWeight: 600, color: C.navy, opacity: 0.62 }}>votro.ro</div>
-        <div style={{ display: 'flex', fontSize: 12, opacity: 0.22 }}>rezumat generat automat · sursă: expunerea de motive</div>
+        <div style={{ display: 'flex', fontSize: 12, opacity: 0.55 }}>rezumat generat automat · sursă: expunerea de motive</div>
       </div>
     </div>
   )

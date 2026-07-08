@@ -68,7 +68,7 @@ export function SenatorCard({ data }: { data: SenatorCardData }) {
 
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', padding: '36px 64px 22px' }}>
         <div style={{ fontFamily: SERIF, fontSize: 52, color: C.navy, letterSpacing: '-1.5px', lineHeight: 1 }}>VotRO</div>
-        <div style={{ display: 'flex', fontSize: 16, letterSpacing: 3, textTransform: 'uppercase', opacity: 0.38 }}>{`${data.chamberLabel} · ${data.year}`}</div>
+        <div style={{ display: 'flex', fontSize: 16, letterSpacing: 3, textTransform: 'uppercase', opacity: 0.55 }}>{`${data.chamberLabel} · ${data.year}`}</div>
       </div>
       <div style={{ display: 'flex', height: 1, margin: '0 64px', background: C.hair }} />
 
@@ -86,7 +86,7 @@ export function SenatorCard({ data }: { data: SenatorCardData }) {
             <div style={{ display: 'flex', fontFamily: SERIF, fontSize: 120, lineHeight: 0.9, color: C.navy }}>{`${data.loyaltyPct}%`}</div>
             <div style={{ display: 'flex', flexDirection: 'column', paddingBottom: 14 }}>
               <div style={{ display: 'flex', fontSize: 19, fontWeight: 500 }}>loialitate față de partid</div>
-              <div style={{ display: 'flex', fontSize: 16, opacity: 0.45, marginTop: 4 }}>{`${data.deviations} ${countNoun(data.deviations, 'deviere', 'devieri')} · ${data.deviationPct === 0 && data.deviations > 0 ? '<1' : data.deviationPct ?? 0}% din voturi`}</div>
+              <div style={{ display: 'flex', fontSize: 16, opacity: 0.7, marginTop: 4 }}>{`${data.deviations} ${countNoun(data.deviations, 'deviere', 'devieri')} · ${data.deviationPct === 0 && data.deviations > 0 ? '<1' : data.deviationPct ?? 0}% din voturi`}</div>
             </div>
           </div>
         )}
@@ -112,7 +112,7 @@ export function SenatorCard({ data }: { data: SenatorCardData }) {
         {/* Recent deviations / votes */}
         {(data.recent?.length ?? 0) > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', marginTop: 42 }}>
-            <div style={{ display: 'flex', fontSize: 13, opacity: 0.32, textTransform: 'uppercase', letterSpacing: 2.5, marginBottom: 14 }}>
+            <div style={{ display: 'flex', fontSize: 13, opacity: 0.72, textTransform: 'uppercase', letterSpacing: 2.5, marginBottom: 14 }}>
               {data.recentLabel ?? 'Ultimele voturi'}
             </div>
             {data.recent!.slice(0, 3).map((r, i) => (
@@ -137,7 +137,7 @@ export function SenatorCard({ data }: { data: SenatorCardData }) {
 
       <div style={{ display: 'flex', justifyContent: 'space-between', padding: '18px 64px', borderTopWidth: 1, borderTopStyle: 'solid', borderTopColor: C.hair, marginTop: 12 }}>
         <div style={{ display: 'flex', fontSize: 14, fontWeight: 600, color: C.navy, opacity: 0.62 }}>votro.ro</div>
-        <div style={{ display: 'flex', fontSize: 12, opacity: 0.22 }}>voturile sunt atribuite afilierii curente</div>
+        <div style={{ display: 'flex', fontSize: 12, opacity: 0.55 }}>voturile sunt atribuite afilierii curente</div>
       </div>
     </div>
   )
