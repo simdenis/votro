@@ -42,6 +42,7 @@ export function mapVoteToCard(vote: any, rows: BreakdownRow[], seats: number | n
     chamber: isDep ? 'CAMERĂ' : 'SENAT',
     result: vote.outcome === 'respins' ? 'RESPINS' : 'ADOPTAT',
     year: vote.vote_date ? new Date(vote.vote_date).getFullYear() : 2026,
+    dateLabel: vote.vote_date ? formatDate(vote.vote_date) : null,
     votesFor: forC,
     votesAgainst: againstC,
     votesAbstain: abstainC,
@@ -143,6 +144,7 @@ export function mapLawToCard(
 
 export const SAMPLE_VOTE_CARD: VoteCardData = {
   lawCode: 'L 412/2026', lawTitle: 'Transparență parlamentară', chamber: 'SENAT', result: 'ADOPTAT', year: 2026,
+  dateLabel: '12 iunie 2026',
   votesFor: 187, votesAgainst: 45, votesAbstain: 12, votesNotVoted: 0, votesAbsent: 23, seats: 267, source: 'senat.ro',
   parties: [
     { name: 'PSD', for: 60, against: 2, abstain: 1, absent: 5 },

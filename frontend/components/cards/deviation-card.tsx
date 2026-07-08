@@ -74,7 +74,7 @@ export function DeviationCard({ data }: { data: DeviationCardData }) {
 
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', padding: '36px 64px 22px' }}>
         <div style={{ fontFamily: SERIF, fontSize: 52, color: C.navy, letterSpacing: '-1.5px', lineHeight: 1 }}>VotRO</div>
-        <div style={{ display: 'flex', fontSize: 16, letterSpacing: 3, textTransform: 'uppercase', opacity: 0.38 }}>{`${data.chamber} · ${data.year}`}</div>
+        <div style={{ display: 'flex', fontSize: 16, letterSpacing: 3, textTransform: 'uppercase', opacity: 0.55 }}>{`${data.chamber} · ${data.year}`}</div>
       </div>
       <div style={{ display: 'flex', height: 1, margin: '0 64px', background: C.hair }} />
 
@@ -105,7 +105,7 @@ export function DeviationCard({ data }: { data: DeviationCardData }) {
             </div>
           ))}
           {extra > 0 && (
-            <div style={{ display: 'flex', alignItems: 'center', height: 46, fontSize: 17, opacity: 0.45 }}>{`+ încă ${extra} — lista completă pe votro.ro`}</div>
+            <div style={{ display: 'flex', alignItems: 'center', height: 46, fontSize: 17, opacity: 0.7 }}>{`+ încă ${extra} — lista completă pe votro.ro`}</div>
           )}
         </div>
 
@@ -114,7 +114,7 @@ export function DeviationCard({ data }: { data: DeviationCardData }) {
 
       <div style={{ display: 'flex', justifyContent: 'space-between', padding: '18px 64px', borderTopWidth: 1, borderTopStyle: 'solid', borderTopColor: C.hair }}>
         <div style={{ display: 'flex', fontSize: 14, fontWeight: 600, color: C.navy, opacity: 0.62 }}>votro.ro</div>
-        <div style={{ display: 'flex', fontSize: 12, opacity: 0.22 }}>deviere = vot diferit de majoritatea propriului partid</div>
+        <div style={{ display: 'flex', fontSize: 12, opacity: 0.55 }}>deviere = vot diferit de majoritatea propriului partid</div>
       </div>
     </div>
   )

@@ -15,6 +15,8 @@ export interface VoteCardData {
   chamber: 'SENAT' | 'CAMERĂ'
   result: 'ADOPTAT' | 'RESPINS'
   year: number
+  /** full vote date, e.g. "10 iunie 2026" */
+  dateLabel: string | null
   votesFor: number
   votesAgainst: number
   votesAbstain: number
@@ -128,7 +130,7 @@ export function VoteCard({ data }: { data: VoteCardData }) {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', padding: '36px 64px 22px' }}>
         <div style={{ fontFamily: SERIF, fontSize: 52, color: C.navy, letterSpacing: '-1.5px', lineHeight: 1 }}>VotRO</div>
-        <div style={{ display: 'flex', fontSize: 16, letterSpacing: 3, textTransform: 'uppercase', opacity: 0.38 }}>{`${data.chamber} · ${data.year}`}</div>
+        <div style={{ display: 'flex', fontSize: 16, letterSpacing: 3, textTransform: 'uppercase', color: C.text, opacity: 0.55 }}>{`${data.chamber} · ${data.year}`}</div>
       </div>
       <div style={{ display: 'flex', height: 1, margin: '0 64px', background: C.hair }} />
 
@@ -158,7 +160,9 @@ export function VoteCard({ data }: { data: VoteCardData }) {
           <div style={{ display: 'flex', background: badgeBg, color: '#fff', fontSize: 18, fontWeight: 600, letterSpacing: 4, textTransform: 'uppercase', padding: '11px 30px', borderRadius: 3 }}>
             {data.result}
           </div>
-          <div style={{ display: 'flex', fontSize: 15, opacity: 0.3 }}>{presenceLine}</div>
+          <div style={{ display: 'flex', fontSize: 15, color: C.text, opacity: 0.8 }}>
+            {[data.dateLabel, presenceLine].filter(Boolean).join('  ·  ')}
+          </div>
         </div>
 
         {/* 4-column breakdown */}
@@ -172,7 +176,7 @@ export function VoteCard({ data }: { data: VoteCardData }) {
               }}
             >
               <div style={{ display: 'flex', fontFamily: SERIF, fontSize: 38, lineHeight: 1, color: c.color }}>{c.value}</div>
-              <div style={{ display: 'flex', fontSize: 11, opacity: 0.3, textTransform: 'uppercase', letterSpacing: 2.5, marginTop: 5 }}>{c.label}</div>
+              <div style={{ display: 'flex', fontSize: 11, color: C.text, opacity: 0.75, textTransform: 'uppercase', letterSpacing: 2.5, marginTop: 5 }}>{c.label}</div>
             </div>
           ))}
         </div>
@@ -185,7 +189,7 @@ export function VoteCard({ data }: { data: VoteCardData }) {
           <div style={{ display: 'flex', height: 1, background: C.hair, marginBottom: 14 }} />
         )}
         {data.parties.length > 0 && (
-          <div style={{ display: 'flex', fontSize: 11, fontWeight: 600, color: C.navy, letterSpacing: 4, textTransform: 'uppercase', opacity: 0.65, marginBottom: 10 }}>Vot pe partide</div>
+          <div style={{ display: 'flex', fontSize: 11, fontWeight: 600, color: C.navy, letterSpacing: 4, textTransform: 'uppercase', opacity: 0.85, marginBottom: 10 }}>Vot pe partide</div>
         )}
         {(() => {
           // Row height shrinks as the party count grows so the full list always
@@ -197,14 +201,14 @@ export function VoteCard({ data }: { data: VoteCardData }) {
             const t = p.for + p.against + p.abstain + p.absent
             return (
               <div key={p.name} style={{ display: 'flex', alignItems: 'center', height: rowH }}>
-                <div style={{ display: 'flex', width: 54, justifyContent: 'flex-end', fontSize: 13, fontWeight: 600, opacity: 0.5, paddingRight: 10 }}>{p.name}</div>
+                <div style={{ display: 'flex', width: 54, justifyContent: 'flex-end', fontSize: 13, fontWeight: 600, color: C.text, opacity: 0.75, paddingRight: 10 }}>{p.name}</div>
                 <div style={{ display: 'flex', flexGrow: 1, flexShrink: 1, flexBasis: 0, height: barH, borderRadius: 2, overflow: 'hidden', background: C.hair }}>
                   {seg(p.for, C.for)}
                   {seg(p.against, C.against)}
                   {seg(p.abstain, C.abstain)}
                   {seg(p.absent, C.absentDot)}
                 </div>
-                <div style={{ display: 'flex', width: 34, fontSize: 11, opacity: 0.26, paddingLeft: 8 }}>{t}</div>
+                <div style={{ display: 'flex', width: 34, fontSize: 11, color: C.text, opacity: 0.8, paddingLeft: 8 }}>{t}</div>
               </div>
             )
           })
@@ -213,8 +217,8 @@ export function VoteCard({ data }: { data: VoteCardData }) {
 
       {/* Footer */}
       <div style={{ display: 'flex', justifyContent: 'space-between', padding: '18px 64px', borderTopWidth: 1, borderTopStyle: 'solid', borderTopColor: C.hair, marginTop: 12 }}>
-        <div style={{ display: 'flex', fontSize: 14, fontWeight: 600, color: C.navy, opacity: 0.62 }}>votro.ro</div>
-        <div style={{ display: 'flex', fontSize: 12, opacity: 0.22 }}>{`sursă: ${data.source}`}</div>
+        <div style={{ display: 'flex', fontSize: 14, fontWeight: 600, color: C.navy, opacity: 0.85 }}>votro.ro</div>
+        <div style={{ display: 'flex', fontSize: 12, color: C.text, opacity: 0.55 }}>{`sursă: ${data.source}`}</div>
       </div>
     </div>
   )
