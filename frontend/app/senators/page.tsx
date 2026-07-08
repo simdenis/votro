@@ -22,8 +22,12 @@ export default async function SenatorsPage({
   if (sort === 'party') {
     query = query.order('party_abbr', { ascending: !dir, nullsFirst: false }).order('name', { ascending: true })
   } else if (sort === 'absence') {
-    // absence = 100 − presence, so ascending absence is descending presence
-    query = query.order('presence_pct', { ascending: dir, nullsFirst: false })
+    // Government members (gov_role) never vote — their "absence" is
+    // structural, so they sort last. Then: absence = 100 − presence,
+    // ascending absence is descending presence.
+    query = query
+      .order('gov_role', { ascending: true, nullsFirst: true })
+      .order('presence_pct', { ascending: dir, nullsFirst: false })
   } else {
     query = query.order(
       sort === 'deviation' ? 'deviation_pct'

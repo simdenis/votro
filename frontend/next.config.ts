@@ -18,11 +18,25 @@ const baseConfig: NextConfig = {
   },
 }
 
+// The service worker must never cache-intercept navigations: the default
+// runtime caching (NetworkFirst on documents + RSC, CacheFirst on JS) let a
+// stale worker pin an old build and kill sort/filter navigation with 503s —
+// clicks silently did nothing until the worker updated. PWA keeps only
+// installability, the precached shell and the offline fallback; everything
+// else is plain network + browser HTTP cache (static assets are content-
+// hashed anyway).
 export default withPWA({
   dest: 'public',
-  cacheOnFrontEndNav: true,
-  aggressiveFrontEndNavCaching: true,
   reloadOnOnline: true,
   fallbacks: { document: '/offline' },
-  workboxOptions: { disableDevLogs: true },
+  workboxOptions: {
+    disableDevLogs: true,
+    runtimeCaching: [
+      {
+        urlPattern: ({ request, sameOrigin }: { request: Request; sameOrigin: boolean }) =>
+          sameOrigin && request.mode === 'navigate',
+        handler: 'NetworkOnly',
+      },
+    ],
+  },
 })(baseConfig)
