@@ -1047,6 +1047,14 @@ def _abbreviate(raw: str) -> str:
     cleaned = re.sub(r"\(afiliat[^\)]*\)", "", raw, flags=re.IGNORECASE).strip()
     norm = _norm(cleaned)
     lower = cleaned.lower()
+    # Exact short codes that substring-matching can't safely handle. senat.ro's
+    # vote pages sometimes list unaffiliated senators with the bare code "P"
+    # ("Parlamentar fără apartenență…") — the same thing as IND. A one-letter
+    # key in the substring loop below would mis-match countless names, so
+    # resolve exact codes first.
+    exact = re.sub(r"\s+", "", cleaned).upper()
+    if exact == "P":
+        return "IND"
     for key, abbr in _PARTY_ABBREV_MAP.items():
         if _norm(key) in norm:
             return abbr
