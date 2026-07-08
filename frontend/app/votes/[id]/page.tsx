@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
-import { formatDate, choiceLabel, choiceColor, countNoun } from '@/lib/utils'
+import { formatDate, choiceLabel, choiceColor, countNoun, capFirst } from '@/lib/utils'
 import { activeSeats } from '@/lib/seats'
 import { OutcomeBadge } from '@/components/outcome-badge'
 import { PartyBadge } from '@/components/party-badge'
@@ -175,11 +175,12 @@ export default async function VoteDetail({
               )}
               <span className="text-xs text-muted">{formatDate(vote.vote_date)}</span>
             </div>
-            <h1 className="font-serif text-[26px] font-normal text-foreground leading-[1.1]">{vote.laws?.title ?? vote.description ?? 'Vot fără lege asociată'}</h1>
+            <h1 className="font-serif text-[26px] font-normal text-foreground leading-[1.1]">{capFirst(vote.laws?.title ?? vote.description ?? '') || 'Vot fără lege asociată'}</h1>
           </div>
 
-          {/* Vote counts */}
-          <div className="flex gap-5 flex-shrink-0">
+          {/* Vote counts — boxed full-width row on small screens so long
+              titles and the numbers never crowd or clip each other */}
+          <div className="flex gap-4 sm:gap-6 justify-between sm:justify-start w-full xl:w-auto xl:flex-shrink-0 border border-rim bg-raised/40 rounded-lg px-4 py-3 xl:border-0 xl:bg-transparent xl:p-0">
             {[
               { label: 'Pentru',    value: vote.for_count,        color: 'var(--color-for)' },
               { label: 'Împotrivă', value: vote.against_count,    color: 'var(--color-against)' },

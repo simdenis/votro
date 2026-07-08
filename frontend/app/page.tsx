@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
-import { formatDate, countNoun, hasPartyLine } from '@/lib/utils'
+import { formatDate, countNoun, hasPartyLine, capFirst } from '@/lib/utils'
 import { OutcomeBadge } from '@/components/outcome-badge'
 import { ParliamentBar } from '@/components/parliament-bar'
 import type { VoteWithLaw, PartyCohesion } from '@/lib/types'
@@ -129,7 +129,7 @@ export default async function Dashboard() {
                   <OutcomeBadge outcome={vote.outcome} />
                 </div>
                 <h3 className="font-serif text-[18px] leading-[1.32] text-foreground line-clamp-2">
-                  {vote.laws?.title ?? vote.description ?? 'Vot de plen fără lege asociată'}
+                  {capFirst(vote.laws?.title ?? vote.description ?? '') || 'Vot de plen fără lege asociată'}
                 </h3>
                 <div className="flex items-center gap-3 mt-2.5">
                   <div className="flex h-[6px] flex-1 rounded-[3px] overflow-hidden bg-raised">

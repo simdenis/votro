@@ -1,23 +1,26 @@
 import Link from 'next/link'
-import { formatDate, choiceLabel, choiceColor, pct, countNoun, hasPartyLine } from '@/lib/utils'
+import { formatDate, choiceLabel, choiceColor, pct, countNoun, hasPartyLine, capFirst } from '@/lib/utils'
 import { PartyBadge } from '@/components/party-badge'
 import { OutcomeBadge } from '@/components/outcome-badge'
 import { LoyaltyMeter } from '@/components/loyalty-meter'
 import { ShareButtons } from '@/components/share-buttons'
 import { CardDownload } from '@/components/card-download'
-import { trueAbsent, type PoliticianStats, type VoteHistoryRow } from '@/lib/types'
+import { PartyHistory } from '@/components/party-history'
+import { trueAbsent, type PoliticianStats, type VoteHistoryRow, type PartyHistoryEntry } from '@/lib/types'
 
 interface Props {
   stats: PoliticianStats
   history: VoteHistoryRow[]
   /** Fetched directly — deviations can be older than the history window. */
   deviationRows?: VoteHistoryRow[]
+  /** Party membership periods — the card renders only for actual switchers. */
+  partyHistory?: PartyHistoryEntry[]
   basePath: string
   chamberLabel: string
   siteUrl: string
 }
 
-export function PoliticianProfile({ stats, history, deviationRows, basePath, chamberLabel, siteUrl }: Props) {
+export function PoliticianProfile({ stats, history, deviationRows, partyHistory, basePath, chamberLabel, siteUrl }: Props) {
   const total      = stats.total_votes
   // IND/MIN have no party line — loyalty/deviation framing would be meaningless
   const noLine     = !hasPartyLine(stats.party_abbr)
@@ -70,7 +73,11 @@ export function PoliticianProfile({ stats, history, deviationRows, basePath, cha
               </span>
             )}
             <span className="text-[10px] text-faint" title="Partidul din care face parte acum. Voturile sunt atribuite afilierii curente.">afiliere curentă</span>
-            <span className="text-xs text-muted">{chamberLabel} · {total} {countNoun(total, 'vot înregistrat', 'voturi înregistrate')}</span>
+            <span className="text-xs text-muted">
+              {chamberLabel}
+              {stats.county && (stats.county === 'Diaspora' ? ' · Diaspora' : ` · ${stats.county}`)}
+              {' · '}{total} {countNoun(total, 'vot înregistrat', 'voturi înregistrate')}
+            </span>
             {!stats.gov_role && stats.presence_pct != null && (
               <span
                 className={`text-xs ${100 - stats.presence_pct > 30 ? 'text-respins font-semibold' : 'text-muted'}`}
@@ -163,7 +170,7 @@ export function PoliticianProfile({ stats, history, deviationRows, basePath, cha
                   >
                     {row.votes.laws?.code ?? '—'}
                   </Link>
-                  <span className="text-xs text-muted truncate flex-1">{row.votes.laws?.title ?? 'Vot fără lege asociată'}</span>
+                  <span className="text-xs text-muted truncate flex-1">{capFirst(row.votes.laws?.title ?? '') || 'Vot fără lege asociată'}</span>
                   <span className="text-xs font-bold flex-shrink-0" style={{ color: choiceColor(row.vote_choice) }}>
                     {choiceLabel(row.vote_choice)}
                   </span>
@@ -174,6 +181,9 @@ export function PoliticianProfile({ stats, history, deviationRows, basePath, cha
           </>)}
         </div>
       </div>
+
+      {/* ── Party switches (renders only for actual switchers) ── */}
+      {partyHistory && <PartyHistory history={partyHistory} />}
 
       {/* ── Vote history timeline ────────────────────────── */}
       <div>
@@ -205,7 +215,7 @@ export function PoliticianProfile({ stats, history, deviationRows, basePath, cha
                       </span>
                     )}
                   </div>
-                  <p className="text-sm text-foreground truncate">{row.votes.laws?.title ?? 'Vot fără lege asociată'}</p>
+                  <p className="text-sm text-foreground truncate">{capFirst(row.votes.laws?.title ?? '') || 'Vot fără lege asociată'}</p>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
                   <span className="text-sm font-bold" style={{ color: choiceColor(row.vote_choice) }}>
