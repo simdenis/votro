@@ -68,6 +68,12 @@ log "=== Law summaries (Gemini) ==="
 log "=== Roster (active mandates + county) ==="
 "$PY" scraper/roster_scraper.py >>"$LOG" 2>&1 || { rc=1; log "Roster scrape FAILED"; }
 
+# Government roles (gov.ro cabinet page) — labels MPs serving as ministers.
+# Runs after the roster so newly inserted members can be labeled. Never wipes
+# labels on a broken parse (sanity floor inside).
+log "=== Government roles (gov.ro) ==="
+"$PY" scraper/gov_scraper.py >>"$LOG" 2>&1 || { rc=1; log "Gov roles scrape FAILED"; }
+
 # Bills with running tacit-adoption terms (cdep "Verificare termene legale").
 log "=== Tacit deadlines ==="
 "$PY" scraper/tacit_scraper.py >>"$LOG" 2>&1 || { rc=1; log "Tacit scrape FAILED"; }
