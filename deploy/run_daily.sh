@@ -47,6 +47,13 @@ done
 log "=== PLx → L resolution ==="
 "$PY" scraper/resolve_plx.py >>"$LOG" 2>&1 || { rc=1; log "PLx resolver FAILED"; }
 
+# Collapse politician_party_history into clean chronological segments. The
+# per-vote state machine assumes date-ordered processing (it isn't), so it
+# leaves same-party duplicates + inverted intervals; this rebuild is idempotent
+# and absorbs them. Must run after both chamber scrapes.
+log "=== Party-history rebuild ==="
+"$PY" scraper/rebuild_party_history.py >>"$LOG" 2>&1 || { rc=1; log "Party-history rebuild FAILED"; }
+
 # Presidential / CCR status is law-based, not date-based: re-check laws that
 # passed both chambers but have no promulgation status yet (senat.ro journey).
 log "=== Presidential / CCR status (senat.ro) ==="
