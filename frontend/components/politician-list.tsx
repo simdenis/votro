@@ -54,6 +54,11 @@ export function PoliticianList({ title, basePath, people, sort, dir }: Props) {
                     Comportament vot {sortIcon('votes')}
                   </Link>
                 </th>
+                <th className="text-right py-3 pr-4 font-medium w-[90px]">
+                  <Link href={sortUrl('absence')} className="hover:text-foreground">
+                    Absență {sortIcon('absence')}
+                  </Link>
+                </th>
                 <th className="text-right py-3 font-medium w-[160px]">
                   <Link href={sortUrl('deviation')} className="hover:text-foreground">
                     Devieri de la partid {sortIcon('deviation')}
@@ -68,6 +73,7 @@ export function PoliticianList({ title, basePath, people, sort, dir }: Props) {
                 // Independents / national-minority deputies have no party line to deviate from.
                 const noLine = s.party_abbr === 'IND' || s.party_abbr === 'MIN'
                 const initials = `${s.first_name?.[0] ?? ''}${s.name?.[0] ?? ''}`
+                const absence = s.presence_pct == null ? null : Math.round(100 - s.presence_pct)
                 const beh = [
                   { v: s.votes_for ?? 0,        c: 'var(--color-for)' },
                   { v: s.votes_against ?? 0,    c: 'var(--color-against)' },
@@ -88,6 +94,11 @@ export function PoliticianList({ title, basePath, people, sort, dir }: Props) {
                         <span className="font-medium text-foreground group-hover:underline">
                           {s.first_name} {s.name}
                         </span>
+                        {s.gov_role && (
+                          <span className="text-[10px] uppercase font-semibold tracking-wide bg-sidebar text-white rounded-[3px] px-1.5 py-px flex-shrink-0">
+                            {s.gov_role}
+                          </span>
+                        )}
                       </Link>
                     </td>
                     <td className="py-3 pr-4">
@@ -97,6 +108,15 @@ export function PoliticianList({ title, basePath, people, sort, dir }: Props) {
                       <div className="flex h-[7px] w-[170px] rounded-full overflow-hidden bg-raised" title={behTitle}>
                         {beh.map((b, i) => b.v > 0 && <div key={i} style={{ flex: b.v, backgroundColor: b.c }} />)}
                       </div>
+                    </td>
+                    <td className="py-3 pr-4 text-right">
+                      {s.gov_role ? (
+                        <span className="text-[13px] text-faint" title="Membru al Guvernului — nu votează în plen">—</span>
+                      ) : (
+                        <span className={`tabular-nums text-[13px] ${absence !== null && absence > 30 ? 'text-respins font-semibold' : 'text-muted'}`}>
+                          {absence === null ? '—' : `${absence}%`}
+                        </span>
+                      )}
                     </td>
                     <td className="py-3">
                       {noLine ? (

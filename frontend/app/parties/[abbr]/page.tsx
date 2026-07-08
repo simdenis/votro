@@ -29,18 +29,20 @@ export default async function PartyPage({ params }: { params: Promise<{ abbr: st
   const { abbr } = await params
   const db = getDB()
 
-  const [r0, r1, r2, r3] = await Promise.all([
+  const [r0, r1, r2, r3, r4] = await Promise.all([
     db.from('party_cohesion').select('*').eq('abbreviation', abbr.toUpperCase()).maybeSingle(),
     db.from('senator_stats').select('*').eq('party_abbr', abbr.toUpperCase()).eq('active', true).order('name'),
     db.from('deputy_stats').select('*').eq('party_abbr', abbr.toUpperCase()).eq('active', true).order('name'),
     db.from('party_majority_votes').select('*').eq('party_abbr', abbr.toUpperCase())
       .order('vote_date', { ascending: false }).limit(20),
+    db.from('party_absence').select('absence_pct').eq('abbreviation', abbr.toUpperCase()).maybeSingle(),
   ])
 
   const cohesion    = r0.data as PartyCohesion | null
   const senators    = r1.data as PoliticianStats[] | null
   const deputies    = r2.data as PoliticianStats[] | null
   const recentVotes = r3.data as PartyMajorityVote[] | null
+  const absencePct  = (r4.data as { absence_pct: number | null } | null)?.absence_pct ?? null
 
   if (!cohesion) notFound()
 
@@ -87,6 +89,9 @@ export default async function PartyPage({ params }: { params: Promise<{ abbr: st
         {!noLine && <StatsCard value={pct(cohesion.cohesion_pct)} label="Coeziune" accent={cohesion.color} />}
         <StatsCard value={cohesion.votes_participated} label="Voturi" />
         {!noLine && <StatsCard value={cohesion.deviation_count} label="Devieri totale" accent="#f59e0b" />}
+        {absencePct != null && (
+          <StatsCard value={pct(absencePct)} label="Absență medie" accent="var(--color-against)" />
+        )}
       </div>
 
       {/* Members — two columns: senators | deputies */}

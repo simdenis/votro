@@ -21,6 +21,9 @@ export default async function DeputiesPage({
   let query = getDB().from('deputy_stats').select('*').eq('active', true)
   if (sort === 'party') {
     query = query.order('party_abbr', { ascending: !dir, nullsFirst: false }).order('name', { ascending: true })
+  } else if (sort === 'absence') {
+    // absence = 100 − presence, so ascending absence is descending presence
+    query = query.order('presence_pct', { ascending: dir, nullsFirst: false })
   } else {
     query = query.order(
       sort === 'deviation' ? 'deviation_pct'

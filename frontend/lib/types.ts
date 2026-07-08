@@ -51,6 +51,9 @@ export interface Law {
   code: string
   title: string
   law_category: string | null
+  summary: string | null
+  summary_is_ai: boolean
+  em_url: string | null
   scraped_at: string
 }
 
@@ -115,6 +118,8 @@ export interface PoliticianStats {
   presence_pct: number | null
   active: boolean
   county: string | null
+  /** 'premier' | 'vicepremier' | 'ministru' — MPs in the Government don't vote. */
+  gov_role: string | null
 }
 
 export interface PendingBill {
@@ -141,6 +146,15 @@ export interface PartyCohesion {
   with_party_votes: number
   deviation_count: number
   cohesion_pct: number | null
+}
+
+export interface PartyAbsence {
+  party_id: string
+  name: string
+  abbreviation: string
+  color: string
+  member_count: number
+  absence_pct: number | null
 }
 
 export interface PartyVoteBreakdown {

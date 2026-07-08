@@ -20,10 +20,10 @@ export default async function Dashboard() {
     db.from('law_status').select('*', { count: 'exact', head: true }).or('senate_outcome.eq.respins,camera_outcome.eq.respins'),
     db.from('parties').select('abbreviation, color, name'),
     db.from('politicians').select('party_id, parties(abbreviation)', { count: 'exact', head: false }).eq('active', true),
-    // Colțul rușinii — lowest presence since mandate start. gt 0 skips the
-    // senators in government (Bolojan/Predoiu never vote — structural, not shame)
+    // Colțul rușinii — lowest presence since mandate start. Government members
+    // (gov_role) never vote in plen — structural absence, not shame.
     db.from('senator_stats').select('politician_id, name, first_name, party_abbr, party_color, presence_pct')
-      .eq('active', true).gt('presence_pct', 0)
+      .eq('active', true).is('gov_role', null)
       .order('presence_pct', { ascending: true }).limit(5),
   ])
 

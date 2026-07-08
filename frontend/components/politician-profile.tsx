@@ -53,6 +53,14 @@ export function PoliticianProfile({ stats, history, deviationRows, participation
           </h1>
           <div className="flex items-center gap-2 mt-1 flex-wrap">
             <PartyBadge abbreviation={stats.party_abbr} color={stats.party_color} size="md" />
+            {stats.gov_role && (
+              <span
+                className="text-[10px] uppercase font-semibold tracking-wide bg-sidebar text-white rounded-[3px] px-1.5 py-px"
+                title="Membru al Guvernului — nu votează în plen, deci absența nu e relevantă."
+              >
+                {stats.gov_role}
+              </span>
+            )}
             <span className="text-[10px] text-faint" title="Partidul din care face parte acum. Voturile sunt atribuite afilierii curente.">afiliere curentă</span>
             <span className="text-xs text-muted">{chamberLabel} · {total} {countNoun(total, 'vot înregistrat', 'voturi înregistrate')}</span>
             {participationPct != null && (

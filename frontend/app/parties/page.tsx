@@ -3,20 +3,25 @@ import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
 import { pct, textOnColor, hasPartyLine } from '@/lib/utils'
 import { DonutChart } from '@/components/donut-chart'
-import type { PartyCohesion } from '@/lib/types'
+import type { PartyCohesion, PartyAbsence } from '@/lib/types'
 
 export const revalidate = 3600
-export const metadata: Metadata = { title: 'Partide', description: 'Coeziunea internă a partidelor din Parlamentul României.' }
+export const metadata: Metadata = { title: 'Partide', description: 'Coeziunea internă și absența medie a partidelor din Parlamentul României.' }
 
 export default async function PartiesPage() {
   const db = getDB()
-  const { data } = await db
-    .from('party_cohesion')
-    .select('*')
-    .gt('votes_participated', 0)
-    .order('votes_participated', { ascending: false }) as { data: PartyCohesion[] | null }
+  const [r0, r1] = await Promise.all([
+    db.from('party_cohesion')
+      .select('*')
+      .gt('votes_participated', 0)
+      .order('votes_participated', { ascending: false }),
+    db.from('party_absence').select('*'),
+  ])
+  const data = r0.data as PartyCohesion[] | null
   // IND/MIN are catch-all labels, not parties — "cohesion" is meaningless there
   const parties = data?.filter(p => hasPartyLine(p.abbreviation))
+  const absenceByParty: Record<string, number | null> = {}
+  for (const a of (r1.data ?? []) as PartyAbsence[]) absenceByParty[a.party_id] = a.absence_pct
 
   return (
     <div className="space-y-6">
@@ -74,6 +79,14 @@ export default async function PartiesPage() {
                   </div>
                   <div className="text-xs text-muted">Devieri</div>
                 </div>
+                {absenceByParty[p.party_id] != null && (
+                  <div>
+                    <div className="text-2xl font-semibold tabular-nums text-foreground">
+                      {pct(absenceByParty[p.party_id])}
+                    </div>
+                    <div className="text-xs text-muted">Absență medie</div>
+                  </div>
+                )}
               </div>
             </Link>
           ))}
