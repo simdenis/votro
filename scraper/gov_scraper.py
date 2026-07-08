@@ -17,6 +17,11 @@ name AND at least one first-name token must too.
 Labels are cleared for MPs no longer in the cabinet, but only when the page
 parsed sanely (≥ 10 members) — a broken parse never wipes the labels.
 
+gov.ro silently drops non-RO IPs (the EU VPS times out at TCP level — the
+inverse of cdep.ro's non-EU block). On unreachable it exits 0 with labels
+untouched, so the daily VPS run stays green; run it from a Romanian IP when
+the government changes.
+
 Env: SUPABASE_URL, SUPABASE_KEY.
 Usage:
     python gov_scraper.py [--dry-run]
@@ -75,8 +80,12 @@ def main() -> None:
     if not url or not key:
         sys.exit("ERROR: SUPABASE_URL and SUPABASE_KEY must be set")
 
-    r = requests.get(CABINET_URL, headers=UA, timeout=30)
-    r.raise_for_status()
+    try:
+        r = requests.get(CABINET_URL, headers=UA, timeout=30)
+        r.raise_for_status()
+    except requests.RequestException as e:
+        log.warning("gov.ro unreachable (drops non-RO IPs) — labels unchanged: %s", e)
+        return
     cabinet = parse_cabinet(r.text)
     log.info("parsed %d cabinet members", len(cabinet))
     if len(cabinet) < 10:
