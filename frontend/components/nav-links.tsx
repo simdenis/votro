@@ -10,6 +10,7 @@ export const NAV_LINKS = [
   { href: '/senators',   label: 'Senatori' },
   { href: '/deputies',   label: 'Deputați' },
   { href: '/parties',    label: 'Partide' },
+  { href: '/traseisti',  label: 'Traseiști' },
   { href: '/parlamentarul-tau', label: 'Parlamentarul tău' },
   { href: '/tacite',     label: 'Termene tacite' },
   { href: '/contribuie', label: 'Contribuie' },

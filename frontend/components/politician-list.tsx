@@ -9,13 +9,15 @@ interface Props {
   people: PoliticianStats[]
   sort: string
   dir: boolean
+  /** ids of members who changed party — shown with a ⇄ badge. */
+  switcherIds?: Set<string>
 }
 
 // Numeric columns start descending — "most absent / most deviant first" is
 // what a first click means; ascending would show a wall of zeros.
 const DESC_FIRST = new Set(['votes', 'absence', 'deviation'])
 
-export function PoliticianList({ title, basePath, people, sort, dir }: Props) {
+export function PoliticianList({ title, basePath, people, sort, dir, switcherIds }: Props) {
   function sortUrl(col: string) {
     const newDir =
       sort === col ? (dir ? '' : 'desc')
@@ -107,6 +109,14 @@ export function PoliticianList({ title, basePath, people, sort, dir }: Props) {
                         {s.gov_role && (
                           <span className="text-[10px] uppercase font-semibold tracking-wide bg-sidebar text-white rounded-[3px] px-1.5 py-px flex-shrink-0">
                             {s.gov_role}
+                          </span>
+                        )}
+                        {switcherIds?.has(s.politician_id) && (
+                          <span
+                            className="text-[10px] font-semibold text-deviere bg-deviere/10 rounded-[3px] px-1.5 py-px flex-shrink-0"
+                            title="A schimbat partidul în acest mandat"
+                          >
+                            ⇄ traseist
                           </span>
                         )}
                       </Link>

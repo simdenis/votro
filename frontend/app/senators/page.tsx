@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
 import { PoliticianList } from '@/components/politician-list'
+import { getSwitcherIds } from '@/lib/switchers'
 import type { PoliticianStats } from '@/lib/types'
 
 export const revalidate = 3600
@@ -36,7 +37,10 @@ export default async function SenatorsPage({
       { ascending: !dir, nullsFirst: false }
     )
   }
-  const { data } = await query as { data: PoliticianStats[] | null }
+  const [{ data }, switcherIds] = await Promise.all([
+    query as unknown as Promise<{ data: PoliticianStats[] | null }>,
+    getSwitcherIds(),
+  ])
 
   return (
     <PoliticianList
@@ -45,6 +49,7 @@ export default async function SenatorsPage({
       people={data ?? []}
       sort={sort}
       dir={dir}
+      switcherIds={switcherIds}
     />
   )
 }
