@@ -226,6 +226,23 @@ export default async function VoteDetail({
         </div>
       </div>
 
+      {/* ── AI law summary (same box as the law page) ────── */}
+      {vote.laws?.summary && (
+        <div className="relative bg-surface border border-rim rounded-xl p-5 pl-6 overflow-hidden">
+          <span aria-hidden className="absolute inset-y-0 left-0 w-[3px] bg-sidebar" />
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-muted mb-2">Pe scurt</p>
+          <p className="text-[15px] text-foreground leading-relaxed">{vote.laws.summary}</p>
+          <div className="mt-3.5 pt-3 border-t border-rim flex items-center justify-between gap-x-4 gap-y-1.5 flex-wrap text-[11px] text-faint">
+            {vote.laws.summary_is_ai && <span>Rezumat generat automat</span>}
+            {vote.laws.em_url && (
+              <a href={vote.laws.em_url} target="_blank" rel="noopener noreferrer" className="hover:text-foreground underline underline-offset-2">
+                Sursa: expunerea de motive (PDF)
+              </a>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* ── Two-column body ───────────────────────────────
           DOM order = mobile order: arc → party stances → individuals.
           On xl the party column moves right, spanning both rows. */}

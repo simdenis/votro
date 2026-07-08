@@ -48,6 +48,48 @@ export default function DesprePage() {
       </section>
 
       <section className="space-y-3">
+        <h2 className="text-sm font-semibold uppercase tracking-widest text-muted">Cum calculăm prezența și absența</h2>
+        <p className="text-foreground leading-relaxed">
+          Prezența unui parlamentar = voturile la care apare în listele oficiale, împărțite la
+          toate voturile ținute în camera sa de la validarea mandatului. Absența este restul
+          (100% − prezența). Absența medie a unui partid este media absențelor membrilor săi activi.
+        </p>
+        <p className="text-sm text-muted leading-relaxed">
+          Parlamentarii care fac parte din Guvern (premier, vicepremieri, miniștri) nu votează în
+          plen — sunt marcați cu o etichetă distinctă, nu apar în „Colțul rușinii" și nu intră în
+          media de absență a partidului, pentru că absența lor e structurală, nu o alegere.
+        </p>
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="text-sm font-semibold uppercase tracking-widest text-muted">Drumul unei legi și adoptarea tacită</h2>
+        <p className="text-foreground leading-relaxed">
+          O lege trece prin ambele camere: prima cameră sesizată, apoi camera decizională, apoi
+          merge la Președinte pentru promulgare (care o poate retrimite Parlamentului sau sesiza
+          Curtea Constituțională). Constituția (art. 75) dă primei camere 45 de zile să se
+          pronunțe — 60 pentru coduri și legi complexe. Dacă termenul expiră fără vot, proiectul
+          e <strong>considerat adoptat fără ca cineva să fi votat</strong> („adoptare tacită") și
+          merge mai departe. Pagina „Termene tacite" arată proiectele cu termenul în curs, cu
+          datele oficiale publicate de Camera Deputaților.
+        </p>
+        <p className="text-sm text-muted leading-relaxed">
+          De aceea unele legi promulgate apar la noi fără votul uneia dintre camere: au fost
+          adoptate tacit (nu există un vot de consemnat) sau votul a avut loc înainte de perioada
+          acoperită de baza noastră de date. Le marcăm cu „Adoptată*".
+        </p>
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="text-sm font-semibold uppercase tracking-widest text-muted">Rezumatele „Pe scurt"</h2>
+        <p className="text-foreground leading-relaxed">
+          Pentru multe legi afișăm un rezumat în limbaj simplu, generat automat (AI) din expunerea
+          de motive oficială — documentul în care inițiatorii explică ce vrea legea. Rezumatele
+          marcate „generat automat" pot conține imprecizii; linkul către PDF-ul oficial e mereu
+          alături. Tot automat atribuim și categoria legii (Sănătate, Justiție, Economie…).
+        </p>
+      </section>
+
+      <section className="space-y-3">
         <h2 className="text-sm font-semibold uppercase tracking-widest text-muted">Limitări ale datelor</h2>
         <ul className="text-foreground leading-relaxed space-y-1.5 list-disc list-inside text-sm">
           <li>Acoperă voturile nominale din plenul Senatului și Camerei Deputaților.</li>

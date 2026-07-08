@@ -269,13 +269,42 @@ _AGENDA_BOILERPLATE = re.compile(
     re.IGNORECASE,
 )
 
+# Amendment / procedural subjects: "PL-x 180/2025 - Amendament respins 1 PL 180/2025 <title>"
+_AMENDMENT_BOILERPLATE = re.compile(
+    r"^\s*(?:PL-?x?|PH\s*CD|PHCD)\s*[\d/]+\s*-\s*"
+    r"(?:Amendament(?:e)?\s+(?:admis|respins)e?\s*\d*|Retrimitere[^-]*|Prelungire[^-]*)\s*"
+    r"(?:(?:Adoptare|Respingere)a?\s+)?"
+    r"(?:(?:PL-?x?|PHCD|PH\s*CD|PL)\s*[\d/]+\s+)?",
+    re.IGNORECASE | re.DOTALL,
+)
+
 
 def _clean_law_title(raw: str) -> str:
-    """Remove the cdep 'Vot final …' / 'Introducerea pe ordinea de zi …' vote
-    boilerplate that prefixes vote-derived titles. Leaves clean titles untouched."""
+    """Remove the cdep 'Vot final …' / amendment / 'Introducerea pe ordinea de
+    zi …' vote boilerplate that prefixes vote-derived titles. Leaves clean
+    titles untouched."""
     t = _VOTE_TITLE_BOILERPLATE.sub("", raw)
+    t = _AMENDMENT_BOILERPLATE.sub("", t)
     t = _AGENDA_BOILERPLATE.sub("", t)
     return t.strip()
+
+
+def classify_vote_subject(subject: str) -> str:
+    """Vote type from the cdep subject line: keeps law_status able to rank the
+    final vote above amendment/procedural votes on the same bill. Amendment
+    types keep their number ("amendament admis 3") — votes have a UNIQUE
+    (law_id, vote_date, vote_type, chamber) constraint and one sitting can
+    vote several amendments on the same bill."""
+    s = subject.lower()
+    if "vot final" in s:
+        return "vot final"
+    if m := re.search(r"amendamente?\s*(?:admis|respins)?e?\s*\d*", s):
+        return re.sub(r"\s+", " ", m.group(0)).strip()
+    if "retrimitere" in s:
+        return "retrimitere la comisie"
+    if "prelungire" in s or "ordinea de zi" in s:
+        return "procedură"
+    return ""
 
 
 # cdep.ro's backend sometimes emits literal "?" where ș/ț (comma-below) should
@@ -492,6 +521,7 @@ class CameraScraper:
             raw_subject = _txt(h) if h else ""
 
         if raw_subject:
+            detail.vote_type = classify_vote_subject(raw_subject)
             detail.law_title = _clean_law_title(raw_subject)[:500]
             # Extract law code from subject text.
             # IMPORTANT: cdep cites the CAMERA registry number (PL-x nr/an),
