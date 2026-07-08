@@ -7,7 +7,8 @@ import { formatDate, capFirst } from '@/lib/utils'
 
 interface BreakdownRow { party_abbr: string; vote_choice: string; count: number }
 
-/** Group party_vote_breakdown rows into top-5 PartyVote entries. */
+/** Group party_vote_breakdown rows into PartyVote entries, largest group first.
+ *  Returns every party — the cards size their rows to fit them all. */
 export function toParties(rows: BreakdownRow[]): PartyVote[] {
   const by: Record<string, PartyVote> = {}
   for (const row of rows) {
@@ -20,7 +21,6 @@ export function toParties(rows: BreakdownRow[]): PartyVote[] {
   }
   return Object.values(by)
     .sort((a, b) => (b.for + b.against + b.abstain + b.absent) - (a.for + a.against + a.abstain + a.absent))
-    .slice(0, 5)
 }
 
 /** Map a votes row (with joined laws) + breakdown rows to the VoteCard model.

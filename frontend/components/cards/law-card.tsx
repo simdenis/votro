@@ -1,6 +1,7 @@
 // 1080×1080 law-journey card — same brand language as VoteCard.
 
 import type { PartyVote } from './vote-card'
+import { computeArcDots } from './vote-card'
 
 export interface JourneyStep { label: string; done: boolean; final?: boolean }
 
@@ -87,6 +88,24 @@ export function LawCard({ data }: { data: LawCardData }) {
 
         <div style={{ display: 'flex', flex: 1, minHeight: 10 }} />
 
+        {/* Parliament arc — the decisive plenary vote, as a semicircle */}
+        {data.voteChamber && (data.votesFor != null || data.votesAgainst != null) && (() => {
+          const f = data.votesFor ?? 0, a = data.votesAgainst ?? 0, ab = data.votesAbstain ?? 0
+          const absent = data.parties.reduce((s, p) => s + p.absent, 0)
+          const dots = computeArcDots(f, a, ab, 0, absent)
+          const arcH = data.lawTitle.length > 220 || data.parties.length > 6 ? 210 : 268
+          const arcW = Math.round(952 * (arcH / 308))
+          return (
+            <div style={{ display: 'flex', width: '100%', height: arcH, justifyContent: 'center', marginBottom: 12 }}>
+              <svg width={arcW} height={arcH} viewBox="0 0 952 308">
+                {dots.map((d, i) => (
+                  <circle key={i} cx={d.x} cy={d.y} r={4.5} fill={d.color} />
+                ))}
+              </svg>
+            </div>
+          )
+        })()}
+
         {/* Party vote — decisive plenary vote */}
         {data.parties.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', marginBottom: 24 }}>
@@ -97,21 +116,26 @@ export function LawCard({ data }: { data: LawCardData }) {
               </div>
               {voteCounts && <div style={{ display: 'flex', fontSize: 13, opacity: 0.35 }}>{voteCounts}</div>}
             </div>
-            {data.parties.slice(0, 5).map(p => {
-              const t = p.for + p.against + p.abstain + p.absent
-              return (
-                <div key={p.name} style={{ display: 'flex', alignItems: 'center', height: 36 }}>
-                  <div style={{ display: 'flex', width: 62, justifyContent: 'flex-end', fontSize: 13, fontWeight: 600, opacity: 0.5, paddingRight: 10 }}>{p.name}</div>
-                  <div style={{ display: 'flex', flexGrow: 1, flexShrink: 1, flexBasis: 0, height: 14, borderRadius: 2, overflow: 'hidden', background: C.hair }}>
-                    {seg(p.for, C.for)}
-                    {seg(p.against, C.against)}
-                    {seg(p.abstain, C.abstain)}
-                    {seg(p.absent, C.absentDot)}
+            {(() => {
+              const n = data.parties.length
+              const rowH = n > 8 ? 26 : n > 6 ? 30 : n > 5 ? 33 : 36
+              const barH = rowH < 32 ? 11 : 14
+              return data.parties.map(p => {
+                const t = p.for + p.against + p.abstain + p.absent
+                return (
+                  <div key={p.name} style={{ display: 'flex', alignItems: 'center', height: rowH }}>
+                    <div style={{ display: 'flex', width: 62, justifyContent: 'flex-end', fontSize: 13, fontWeight: 600, opacity: 0.5, paddingRight: 10 }}>{p.name}</div>
+                    <div style={{ display: 'flex', flexGrow: 1, flexShrink: 1, flexBasis: 0, height: barH, borderRadius: 2, overflow: 'hidden', background: C.hair }}>
+                      {seg(p.for, C.for)}
+                      {seg(p.against, C.against)}
+                      {seg(p.abstain, C.abstain)}
+                      {seg(p.absent, C.absentDot)}
+                    </div>
+                    <div style={{ display: 'flex', width: 34, fontSize: 11, opacity: 0.26, paddingLeft: 8 }}>{t}</div>
                   </div>
-                  <div style={{ display: 'flex', width: 34, fontSize: 11, opacity: 0.26, paddingLeft: 8 }}>{t}</div>
-                </div>
-              )
-            })}
+                )
+              })
+            })()}
           </div>
         )}
 

@@ -128,15 +128,6 @@ export default async function VoteDetail({
     ;((voters[party] ??= {})[sv.vote_choice] ??= []).push(person(sv))
   }
 
-  const indSenators =
-    senatorVotes
-      ?.filter(sv => sv.politicians.parties.abbreviation === 'IND')
-      .map(sv => ({
-        politician_id: sv.politician_id,
-        name: sv.politicians.name,
-        first_name: sv.politicians.first_name,
-        vote_choice: sv.vote_choice,
-      })) ?? []
 
   return (
     <div className="space-y-6">
@@ -291,7 +282,7 @@ export default async function VoteDetail({
             <h2 className="text-xs font-semibold uppercase tracking-widest text-muted mb-3">
               Poziție partide
             </h2>
-            <PartyBreakdown rows={breakdown!} indSenators={indSenators} voters={voters} />
+            <PartyBreakdown rows={breakdown!} voters={voters} />
           </div>
         )}
 
