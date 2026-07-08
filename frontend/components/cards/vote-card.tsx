@@ -137,9 +137,10 @@ export function VoteCard({ data }: { data: VoteCardData }) {
         <div style={{ display: 'flex', fontSize: 14, fontWeight: 500, color: C.navy, letterSpacing: 5, textTransform: 'uppercase', marginBottom: 12 }}>{data.lawCode}</div>
         <div style={{ fontFamily: SERIF, fontSize: titleFont(data.lawTitle.length), lineHeight: 1.14, color: C.text, marginBottom: 18 }}>{data.lawTitle}</div>
 
-        {/* Parliament arc — scales down when a long title needs the room */}
+        {/* Parliament arc — scales down when a long title or a full party list
+            needs the vertical room (all parties are shown below). */}
         {(() => {
-          const arcH = data.lawTitle.length > 200 ? 240 : 308
+          const arcH = (data.lawTitle.length > 200 || data.parties.length > 6) ? 236 : 308
           const arcW = Math.round(952 * (arcH / 308))
           return (
             <div style={{ display: 'flex', width: '100%', height: arcH, justifyContent: 'center', marginBottom: 14 }}>
@@ -186,21 +187,28 @@ export function VoteCard({ data }: { data: VoteCardData }) {
         {data.parties.length > 0 && (
           <div style={{ display: 'flex', fontSize: 11, fontWeight: 600, color: C.navy, letterSpacing: 4, textTransform: 'uppercase', opacity: 0.65, marginBottom: 10 }}>Vot pe partide</div>
         )}
-        {data.parties.slice(0, 5).map(p => {
-          const t = p.for + p.against + p.abstain + p.absent
-          return (
-            <div key={p.name} style={{ display: 'flex', alignItems: 'center', height: 38 }}>
-              <div style={{ display: 'flex', width: 54, justifyContent: 'flex-end', fontSize: 13, fontWeight: 600, opacity: 0.5, paddingRight: 10 }}>{p.name}</div>
-              <div style={{ display: 'flex', flexGrow: 1, flexShrink: 1, flexBasis: 0, height: 14, borderRadius: 2, overflow: 'hidden', background: C.hair }}>
-                {seg(p.for, C.for)}
-                {seg(p.against, C.against)}
-                {seg(p.abstain, C.abstain)}
-                {seg(p.absent, C.absentDot)}
+        {(() => {
+          // Row height shrinks as the party count grows so the full list always
+          // fits the 1080px card (satori doesn't scroll — it would just clip).
+          const n = data.parties.length
+          const rowH = n > 8 ? 26 : n > 6 ? 30 : n > 5 ? 34 : 38
+          const barH = rowH < 32 ? 11 : 14
+          return data.parties.map(p => {
+            const t = p.for + p.against + p.abstain + p.absent
+            return (
+              <div key={p.name} style={{ display: 'flex', alignItems: 'center', height: rowH }}>
+                <div style={{ display: 'flex', width: 54, justifyContent: 'flex-end', fontSize: 13, fontWeight: 600, opacity: 0.5, paddingRight: 10 }}>{p.name}</div>
+                <div style={{ display: 'flex', flexGrow: 1, flexShrink: 1, flexBasis: 0, height: barH, borderRadius: 2, overflow: 'hidden', background: C.hair }}>
+                  {seg(p.for, C.for)}
+                  {seg(p.against, C.against)}
+                  {seg(p.abstain, C.abstain)}
+                  {seg(p.absent, C.absentDot)}
+                </div>
+                <div style={{ display: 'flex', width: 34, fontSize: 11, opacity: 0.26, paddingLeft: 8 }}>{t}</div>
               </div>
-              <div style={{ display: 'flex', width: 34, fontSize: 11, opacity: 0.26, paddingLeft: 8 }}>{t}</div>
-            </div>
-          )
-        })}
+            )
+          })
+        })()}
       </div>
 
       {/* Footer */}

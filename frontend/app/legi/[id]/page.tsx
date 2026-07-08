@@ -255,7 +255,7 @@ function ChamberSection({
               </div>
               <div>
                 <p className="text-xs font-semibold uppercase tracking-widest text-muted mb-3">Poziție partide</p>
-                <PartyBreakdown rows={breakdown!} indSenators={[]} />
+                <PartyBreakdown rows={breakdown!} />
               </div>
             </div>
           )}

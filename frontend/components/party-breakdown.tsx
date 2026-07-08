@@ -1,14 +1,6 @@
-import type { PartyVoteBreakdown, VoteChoice } from '@/lib/types'
+import type { PartyVoteBreakdown } from '@/lib/types'
 import { PartyBadge } from './party-badge'
 import { HoverNames, type HoverPerson } from './hover-names'
-import { choiceLabel, choiceColor } from '@/lib/utils'
-
-interface IndSenator {
-  politician_id: string
-  name: string
-  first_name: string
-  vote_choice: VoteChoice
-}
 
 interface PartyData {
   abbr: string
@@ -21,44 +13,46 @@ interface PartyData {
 
 interface Props {
   rows: PartyVoteBreakdown[]
-  indSenators?: IndSenator[]
   /** party -> vote_choice -> full names; enables hover lists on the counts */
   voters?: Record<string, Record<string, HoverPerson[]>>
 }
 
-export function PartyBreakdown({ rows, indSenators, voters }: Props) {
+// senat.ro labels unaffiliated senators "P" — the same as IND.
+const foldAbbr = (a: string) => (a === 'P' ? 'IND' : a)
+// Groups with no common party line — shown as a tally, not a collective stance.
+const NO_STANCE = new Set(['IND', 'MIN'])
+
+export function PartyBreakdown({ rows, voters }: Props) {
   const byParty = new Map<string, PartyData>()
   for (const r of rows) {
-    if (r.party_abbr === 'IND' || r.party_abbr === 'P') continue
-    if (!byParty.has(r.party_abbr)) {
-      byParty.set(r.party_abbr, {
-        abbr: r.party_abbr,
-        color: r.party_color,
-        for: 0,
-        against: 0,
-        abstention: 0,
-        total: 0,
-      })
+    const abbr = foldAbbr(r.party_abbr)
+    if (!byParty.has(abbr)) {
+      byParty.set(abbr, { abbr, color: r.party_color, for: 0, against: 0, abstention: 0, total: 0 })
     }
-    const p = byParty.get(r.party_abbr)!
+    const p = byParty.get(abbr)!
     if (r.vote_choice === 'for')        p.for        += r.count
     if (r.vote_choice === 'against')    p.against    += r.count
     if (r.vote_choice === 'abstention') p.abstention += r.count
     p.total += r.count
   }
 
-  const parties = [...byParty.values()].sort((a, b) => b.total - a.total)
+  // Real parties first (by size), then the no-line groups (IND/MIN) last.
+  const parties = [...byParty.values()].sort((a, b) => {
+    const na = NO_STANCE.has(a.abbr) ? 1 : 0
+    const nb = NO_STANCE.has(b.abbr) ? 1 : 0
+    return na - nb || b.total - a.total
+  })
 
-  if (parties.length === 0 && !indSenators?.length) {
+  if (parties.length === 0) {
     return <p className="text-sm text-muted">Nu există date pe partide.</p>
   }
 
   return (
     <div className="space-y-2">
       {parties.map(p => {
-        // MIN is one label over unrelated minority organizations — showing a
-        // collective "stance" would imply a group line that doesn't exist.
-        const noStance = p.abbr === 'MIN'
+        // IND (unaffiliated) and MIN (unrelated minority orgs) have no common
+        // line — show a tally, not a collective "stance".
+        const noStance = NO_STANCE.has(p.abbr)
         const stance: 'for' | 'against' | 'abstention' =
           p.for > p.against ? 'for' : p.against > p.for ? 'against' : 'abstention'
         const stanceLabel =
@@ -101,25 +95,6 @@ export function PartyBreakdown({ rows, indSenators, voters }: Props) {
           </div>
         )
       })}
-
-      {/* Independents */}
-      {indSenators && indSenators.length > 0 && (
-        <div className="pt-1">
-          <div className="text-xs font-semibold uppercase tracking-widest text-muted mb-2">
-            Independenți ({indSenators.length})
-          </div>
-          <div className="bg-surface border border-rim rounded-lg divide-y divide-rim">
-            {indSenators.map(s => (
-              <div key={s.politician_id} className="flex items-center justify-between px-3 py-2 text-sm">
-                <span className="text-foreground">{s.first_name} {s.name}</span>
-                <span className="font-semibold tabular-nums" style={{ color: choiceColor(s.vote_choice) }}>
-                  {choiceLabel(s.vote_choice)}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   )
 }
