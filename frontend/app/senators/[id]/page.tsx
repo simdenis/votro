@@ -3,7 +3,7 @@ import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
 import { PoliticianProfile } from '@/components/politician-profile'
 import { countNoun, hasPartyLine } from '@/lib/utils'
-import type { SenatorStats, VoteHistoryRow } from '@/lib/types'
+import type { SenatorStats, VoteHistoryRow, PartyHistoryEntry } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
 
@@ -42,7 +42,7 @@ export default async function SenatorProfile({
   const { id } = await params
   const db = getDB()
 
-  const [r0, r1, r3] = await Promise.all([
+  const [r0, r1, r3, r4] = await Promise.all([
     db.from('senator_stats').select('*').eq('politician_id', id).maybeSingle(),
     db
       .from('politician_votes')
@@ -58,6 +58,10 @@ export default async function SenatorProfile({
       .eq('party_line_deviation', true)
       .order('created_at', { ascending: false })
       .limit(8),
+    db.from('politician_party_history')
+      .select('*, parties(name, abbreviation, color)')
+      .eq('politician_id', id)
+      .order('from_date', { ascending: true }),
   ])
 
   const stats = r0.data as SenatorStats | null
@@ -68,6 +72,7 @@ export default async function SenatorProfile({
       stats={stats}
       history={(r1.data as VoteHistoryRow[] | null) ?? []}
       deviationRows={(r3.data as VoteHistoryRow[] | null) ?? []}
+      partyHistory={(r4.data as PartyHistoryEntry[] | null) ?? []}
       basePath="/senators"
       chamberLabel="Senat"
       siteUrl={SITE_URL}

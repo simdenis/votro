@@ -3,7 +3,7 @@ import type { VoteCardData, PartyVote } from '@/components/cards/vote-card'
 import type { SenatorCardData } from '@/components/cards/senator-card'
 import type { LawCardData, JourneyStep } from '@/components/cards/law-card'
 import type { PoliticianStats, LawStatus } from '@/lib/types'
-import { formatDate } from '@/lib/utils'
+import { formatDate, capFirst } from '@/lib/utils'
 
 interface BreakdownRow { party_abbr: string; vote_choice: string; count: number }
 
@@ -38,7 +38,7 @@ export function mapVoteToCard(vote: any, rows: BreakdownRow[], seats: number | n
   if (seats != null && participants > seats) seats = null
   return {
     lawCode: vote.laws?.code ?? 'VOT DE PLEN',
-    lawTitle: vote.laws?.title ?? vote.description ?? 'Vot fără lege asociată',
+    lawTitle: capFirst(vote.laws?.title ?? vote.description ?? '') || 'Vot fără lege asociată',
     chamber: isDep ? 'CAMERĂ' : 'SENAT',
     result: vote.outcome === 'respins' ? 'RESPINS' : 'ADOPTAT',
     year: vote.vote_date ? new Date(vote.vote_date).getFullYear() : 2026,
@@ -122,7 +122,7 @@ export function mapLawToCard(
   const isCam = decisive?.chamber === 'camera'
   return {
     lawCode: law.code,
-    lawTitle: law.title ?? '—',
+    lawTitle: capFirst(law.title) || '—',
     category: law.law_category ?? null,
     year: dateForYear ? new Date(dateForYear).getFullYear() : new Date().getFullYear(),
     statusLabel,

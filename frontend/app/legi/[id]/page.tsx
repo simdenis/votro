@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
-import { formatDate } from '@/lib/utils'
+import { formatDate, capFirst } from '@/lib/utils'
 import { activeSeats } from '@/lib/seats'
 import { OutcomeBadge } from '@/components/outcome-badge'
 import { PartyBreakdown } from '@/components/party-breakdown'
@@ -79,7 +79,7 @@ export default async function LawDetail({ params }: { params: Promise<{ id: stri
           )}
           <BaseLawBadges title={law.title} />
         </div>
-        <h1 className="font-serif text-[30px] font-normal text-foreground leading-[1.12] tracking-[-0.01em]">{law.title}</h1>
+        <h1 className="font-serif text-[30px] font-normal text-foreground leading-[1.12] tracking-[-0.01em]">{capFirst(law.title)}</h1>
 
         {law.summary && (
           <div className="relative mt-5 bg-surface border border-rim rounded-xl p-5 pl-6 overflow-hidden">

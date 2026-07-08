@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
-import { formatDate, formatDateShort, countNoun } from '@/lib/utils'
+import { formatDate, formatDateShort, countNoun , capFirst } from '@/lib/utils'
 import { OutcomeBadge } from '@/components/outcome-badge'
 import { MiniVoteBar } from '@/components/mini-vote-bar'
 import { CardDownload } from '@/components/card-download'
@@ -86,7 +86,7 @@ export default async function SaptamanaPage() {
                     )}
                   </div>
                   <p className="text-sm text-foreground font-medium truncate">
-                    {vote.laws?.title ?? vote.description ?? 'Vot de plen fără lege asociată'}
+                    {capFirst(vote.laws?.title ?? vote.description ?? '') || 'Vot de plen fără lege asociată'}
                   </p>
                 </div>
                 <div className="flex-shrink-0 flex flex-col items-end gap-1.5">

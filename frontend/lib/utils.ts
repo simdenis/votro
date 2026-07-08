@@ -82,6 +82,13 @@ export function countNoun(n: number, one: string, many: string): string {
   return n === 1 ? one : needsDe(n) ? `de ${many}` : many
 }
 
+/** Official bill titles are grammatical continuations ("pentru modificarea…") —
+    displayed standalone they read as broken. Capitalize the first letter. */
+export function capFirst(s: string | null | undefined): string {
+  if (!s) return ''
+  return s.charAt(0).toUpperCase() + s.slice(1)
+}
+
 export function pct(n: number | null | undefined): string {
   if (n == null) return '—'
   return `${n.toFixed(1)}%`

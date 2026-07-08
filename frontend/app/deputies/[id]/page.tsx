@@ -3,7 +3,7 @@ import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
 import { PoliticianProfile } from '@/components/politician-profile'
 import { countNoun, hasPartyLine } from '@/lib/utils'
-import type { PoliticianStats, VoteHistoryRow } from '@/lib/types'
+import type { PoliticianStats, VoteHistoryRow, PartyHistoryEntry } from '@/lib/types'
 
 export const revalidate = 3600
 
@@ -42,7 +42,7 @@ export default async function DeputyPage({
   const { id } = await params
   const db = getDB()
 
-  const [r0, r1, r3] = await Promise.all([
+  const [r0, r1, r3, r4] = await Promise.all([
     db.from('deputy_stats').select('*').eq('politician_id', id).maybeSingle(),
     db
       .from('politician_votes')
@@ -58,6 +58,10 @@ export default async function DeputyPage({
       .eq('party_line_deviation', true)
       .order('created_at', { ascending: false })
       .limit(8),
+    db.from('politician_party_history')
+      .select('*, parties(name, abbreviation, color)')
+      .eq('politician_id', id)
+      .order('from_date', { ascending: true }),
   ])
 
   const stats   = r0.data as PoliticianStats | null
@@ -70,6 +74,7 @@ export default async function DeputyPage({
       stats={stats}
       history={history ?? []}
       deviationRows={(r3.data as VoteHistoryRow[] | null) ?? []}
+      partyHistory={(r4.data as PartyHistoryEntry[] | null) ?? []}
       basePath="/deputies"
       chamberLabel="Camera Deputaților"
       siteUrl={SITE_URL}

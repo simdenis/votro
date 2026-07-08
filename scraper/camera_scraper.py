@@ -378,6 +378,8 @@ class CameraScraper:
         # every vote (a day can have 40+ votes sharing the same ~280 deputies).
         self._pol_id_cache: dict[str, str] = {}
         self._party_id_cache: dict[str, str] = {}
+        # politician_id → party_id of the open history entry; lazy-loaded
+        self._open_history: dict[str, str] | None = None
         # PLx → (L code, senate title) resolution cache; None = unresolvable
         self._plx_cache: dict[str, Optional[tuple[str, str]]] = {}
         self._senat_search = None  # lazy resolve_plx.PlxResolver
@@ -844,28 +846,32 @@ class CameraScraper:
         res2 = self.db.table("votes").select("id").eq("cdep_vote_id", detail.cdep_vote_id).execute()
         return res2.data[0]["id"] if res2.data else None
 
-    def _update_party_history(
+    def _sync_party_history(
         self, politician_id: str, party_id: str, vote_date: datetime.date
     ) -> None:
-        """Open a new party history entry if the politician's party has changed."""
-        res = (
-            self.db.table("politician_party_history")
-            .select("id, party_id")
-            .eq("politician_id", politician_id)
-            .is_("to_date", "null")
-            .execute()
-        )
-        if res.data:
-            current = res.data[0]
-            if current["party_id"] == party_id:
-                return
+        """Keep politician_party_history current. One prefetch of the open
+        entries per run; writes only on first sight or party change — the
+        naive per-member query (senat_scraper's approach) would add two
+        round-trips per deputy per vote."""
+        if self._open_history is None:
+            res = (
+                self.db.table("politician_party_history")
+                .select("politician_id, party_id")
+                .is_("to_date", "null")
+                .execute()
+            )
+            self._open_history = {r["politician_id"]: r["party_id"] for r in (res.data or [])}
+        current = self._open_history.get(politician_id)
+        if current == party_id:
+            return
+        if current is not None:
             self.db.table("politician_party_history").update(
                 {"to_date": (vote_date - datetime.timedelta(days=1)).isoformat()}
-            ).eq("id", current["id"]).execute()
-
+            ).eq("politician_id", politician_id).is_("to_date", "null").execute()
         self.db.table("politician_party_history").insert(
             {"politician_id": politician_id, "party_id": party_id, "from_date": vote_date.isoformat()}
         ).execute()
+        self._open_history[politician_id] = party_id
 
     def _compute_deviations(self, vote_id: str) -> None:
         """Mark politician_votes where deputy voted against party majority.
@@ -950,6 +956,8 @@ class CameraScraper:
                 pol_id = self._upsert_politician(dv.last_name, dv.first_name, party_id)
                 if not pol_id:
                     continue
+                if party_id and detail.vote_date:
+                    self._sync_party_history(pol_id, party_id, detail.vote_date)
 
                 rows.append({
                     "politician_id": pol_id,

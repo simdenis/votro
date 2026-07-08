@@ -54,19 +54,20 @@ export function ShameCard({ data }: { data: ShameCardData }) {
                 display: 'flex',
                 alignItems: 'center',
                 padding: '22px 0',
-                borderBottom: i < data.entries.length - 1 ? `1px solid ${C.hair}` : undefined,
+                // satori chokes on undefined style values — only set the key when needed
+                ...(i < data.entries.length - 1 ? { borderBottom: `1px solid ${C.hair}` } : {}),
               }}
             >
-              <div style={{ display: 'flex', width: 52, fontFamily: SERIF, fontSize: 38, color: C.faint }}>{i + 1}</div>
+              <div style={{ display: 'flex', width: 52, fontFamily: SERIF, fontSize: 38, color: C.faint }}>{`${i + 1}`}</div>
               <div style={{ display: 'flex', width: 18, height: 18, borderRadius: 4, background: e.partyColor, marginRight: 16 }} />
               <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
                 <div style={{ display: 'flex', fontSize: 32, fontWeight: 700 }}>{e.name}</div>
                 <div style={{ display: 'flex', fontSize: 18, opacity: 0.5, marginTop: 3 }}>
-                  {e.partyAbbr} · {e.chamber}
+                  {`${e.partyAbbr} · ${e.chamber}`}
                 </div>
               </div>
               <div style={{ display: 'flex', alignItems: 'baseline' }}>
-                <div style={{ fontFamily: SERIF, fontSize: 58, color: C.against }}>{e.absencePct}</div>
+                <div style={{ fontFamily: SERIF, fontSize: 58, color: C.against }}>{`${e.absencePct}`}</div>
                 <div style={{ fontSize: 28, color: C.against, marginLeft: 4 }}>%</div>
               </div>
             </div>

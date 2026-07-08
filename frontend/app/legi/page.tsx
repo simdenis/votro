@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
-import { formatDate } from '@/lib/utils'
+import { formatDate, capFirst } from '@/lib/utils'
 import { OutcomeBadge } from '@/components/outcome-badge'
 import { BaseLawBadges } from '@/components/base-law-badge'
 import type { LawStatus, PresidentialStatus } from '@/lib/types'
@@ -151,12 +151,12 @@ export default async function LegiPage({
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 border-b border-rim">
+      <div className="flex gap-1 border-b border-rim overflow-x-auto">
         {TABS.map(t => (
           <Link
             key={t.id}
             href={buildUrl({ tab: t.id })}
-            className={`px-4 py-2.5 text-[15px] font-semibold transition-colors border-b-2 -mb-px ${
+            className={`px-4 py-2.5 text-[15px] font-semibold transition-colors border-b-2 -mb-px whitespace-nowrap flex-shrink-0 ${
               tab === t.id
                 ? 'border-sidebar text-foreground'
                 : 'border-transparent text-foreground/55 hover:text-foreground'
@@ -232,7 +232,7 @@ export default async function LegiPage({
                   </td>
                   <td className="py-3 pr-4 max-w-xs">
                     <Link href={`/legi/${law.law_id}`} className="line-clamp-2 text-foreground hover:underline">
-                      {law.title}
+                      {capFirst(law.title)}
                     </Link>
                     <div className="flex gap-1 mt-1 flex-wrap">
                       <BaseLawBadges title={law.title} />

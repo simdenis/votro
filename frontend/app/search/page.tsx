@@ -1,3 +1,4 @@
+import { capFirst } from '@/lib/utils'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
@@ -133,7 +134,7 @@ export default async function SearchPage({
                   {l.code}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-foreground line-clamp-2">{l.title}</p>
+                  <p className="text-sm text-foreground line-clamp-2">{capFirst(l.title)}</p>
                   {l.law_category && (
                     <span className="text-[10px] text-faint bg-raised border border-rim rounded px-1.5 py-px mt-1 inline-block">
                       {l.law_category}
