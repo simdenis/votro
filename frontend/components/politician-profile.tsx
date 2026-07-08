@@ -182,8 +182,8 @@ export function PoliticianProfile({ stats, history, deviationRows, partyHistory,
         </div>
       </div>
 
-      {/* ── Party switches (renders only for actual switchers) ── */}
-      {partyHistory && <PartyHistory history={partyHistory} />}
+      {/* ── Party switches (renders only for genuine switchers) ── */}
+      {partyHistory && <PartyHistory history={partyHistory} currentParty={stats.party_abbr} />}
 
       {/* ── Vote history timeline ────────────────────────── */}
       <div>
