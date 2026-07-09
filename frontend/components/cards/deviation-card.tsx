@@ -105,7 +105,7 @@ export function DeviationCard({ data }: { data: DeviationCardData }) {
             </div>
           ))}
           {extra > 0 && (
-            <div style={{ display: 'flex', alignItems: 'center', height: 46, fontSize: 17, opacity: 0.7 }}>{`+ încă ${extra} — lista completă pe site — link în bio`}</div>
+            <div style={{ display: 'flex', alignItems: 'center', height: 46, fontSize: 17, opacity: 0.7 }}>{`+ încă ${extra} — lista completă pe site (link în bio)`}</div>
           )}
         </div>
 
