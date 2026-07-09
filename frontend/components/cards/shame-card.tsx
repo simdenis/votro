@@ -81,7 +81,7 @@ export function ShameCard({ data }: { data: ShameCardData }) {
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 64px 40px' }}>
         <div style={{ display: 'flex', fontSize: 15, opacity: 0.58 }}>sursa: senat.ro · cdep.ro</div>
-        <div style={{ display: 'flex', fontSize: 14, fontWeight: 600, color: C.navy, opacity: 0.62 }}>votro.ro</div>
+        <div style={{ display: 'flex', fontSize: 14, fontWeight: 600, color: C.navy, opacity: 0.62 }}>@vot.romania</div>
       </div>
     </div>
   )
