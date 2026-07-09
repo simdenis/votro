@@ -57,7 +57,7 @@ export function IntroCard({ data }: { data: IntroCardData }) {
             Cum votează Parlamentul
           </div>
           <div style={{ display: 'flex', fontSize: 34, color: C.text, opacity: 0.7, marginTop: 30 }}>
-            Fiecare vot. Pe numele fiecăruia.
+            Fiecare vot, fiecare senator, fiecare deputat.
           </div>
         </div>
         <div style={{ display: 'flex', padding: '0 64px 56px' }}>
@@ -79,7 +79,7 @@ export function IntroCard({ data }: { data: IntroCardData }) {
             Dar îngropate.
           </div>
           <div style={{ display: 'flex', fontSize: 32, lineHeight: 1.4, color: C.text, opacity: 0.72, marginTop: 40, maxWidth: 820 }}>
-            Voturile Senatului și ale Camerei stau în PDF-uri și pagini web greu de citit. VotRO le adună, le curăță și le explică — pe înțelesul tuturor.
+            Voturile Senatului și ale Camerei stau în PDF-uri și pagini web greu de citit. VotRO le adună, le curăță și le explică pe înțelesul tuturor.
           </div>
         </div>
         <div style={{ display: 'flex', padding: '0 64px 56px', fontSize: 18, color: C.text, opacity: 0.5 }}>sursă oficială: senat.ro · cdep.ro</div>
@@ -93,12 +93,12 @@ export function IntroCard({ data }: { data: IntroCardData }) {
       <Frame kicker="Ce găsești">
         <div style={{ display: 'flex', flexDirection: 'column', flex: 1, padding: '48px 64px 0' }}>
           <div style={{ fontFamily: SERIF, fontSize: 54, lineHeight: 1.05, color: C.text, marginBottom: 44 }}>Ce găsești pe VotRO</div>
-          <Bullet>Cum a votat fiecare senator și deputat</Bullet>
-          <Bullet>Absențele reale, de la validarea mandatului</Bullet>
-          <Bullet>Cine deviază de la linia de partid</Bullet>
-          <Bullet>Legile adoptate tacit — fără ca cineva să voteze</Bullet>
-          <Bullet>Traseiștii care au schimbat partidul</Bullet>
-          <Bullet>Rezumate pe scurt pentru fiecare lege</Bullet>
+          <Bullet>Cum a votat fiecare senator și deputat.</Bullet>
+          <Bullet>Absențele reale, de la validarea mandatului.</Bullet>
+          <Bullet>Cine deviază de la linia de partid.</Bullet>
+          <Bullet>Legile adoptate tacit, fără ca cineva să voteze.</Bullet>
+          <Bullet>Traseiștii care au schimbat partidul.</Bullet>
+          <Bullet>Rezumate pe scurt pentru fiecare lege.</Bullet>
         </div>
         <div style={{ display: 'flex', padding: '0 64px 48px', fontSize: 20, fontWeight: 600, color: C.navy }}>@vot.romania</div>
       </Frame>
@@ -113,12 +113,12 @@ export function IntroCard({ data }: { data: IntroCardData }) {
           Independent · Neafiliat · Gratuit
         </div>
         <div style={{ fontFamily: SERIF, fontSize: 86, lineHeight: 1.04, color: C.text, letterSpacing: '-1px' }}>
-          Vezi cum votează cei pe care i-ai ales
+          Vezi cum votează cei pe care i-ai ales.
         </div>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', padding: '0 64px 56px' }}>
         <div style={{ display: 'flex', fontSize: 30, fontWeight: 700, color: C.navy }}>@vot.romania</div>
-        <div style={{ display: 'flex', fontSize: 22, color: C.text, opacity: 0.6, marginTop: 8 }}>site-ul — link în bio</div>
+        <div style={{ display: 'flex', fontSize: 22, color: C.text, opacity: 0.6, marginTop: 8 }}>Site-ul: link în bio.</div>
       </div>
     </Frame>
   )
