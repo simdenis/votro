@@ -28,7 +28,7 @@ export function Footer() {
     <footer className="border-t border-rim mt-16">
       <div className="max-w-5xl mx-auto px-4 py-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-muted">
         <span>
-          VotRO · Date din surse publice:{' '}
+          laButoane · Date din surse publice:{' '}
           <a href="https://senat.ro" target="_blank" rel="noopener noreferrer" className="hover:text-foreground">senat.ro</a>
           {' · '}
           <a href="https://cdep.ro" target="_blank" rel="noopener noreferrer" className="hover:text-foreground">cdep.ro</a>

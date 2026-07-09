@@ -22,7 +22,7 @@ export function Nav() {
             <span className="flex shrink-0 bg-white rounded-md p-[3px]">
               <img src="/logo.png" alt="" width={36} height={36} className="rounded-full" />
             </span>
-            <div className="font-serif text-[26px] text-white leading-none">VotRO</div>
+            <div className="font-serif text-[26px] text-white leading-none">laButoane</div>
           </div>
           <div className="text-[10px] uppercase tracking-[0.14em] text-white/35 mt-2">Senat · Cameră · 2026</div>
           {/* Romanian flag stripe — right under the wordmark, always visible */}
@@ -53,7 +53,7 @@ export function Nav() {
             <span className="flex shrink-0 bg-white rounded p-[2px]">
               <img src="/logo.png" alt="" width={22} height={22} className="rounded-full" />
             </span>
-            <span className="font-serif text-white text-lg leading-none">VotRO</span>
+            <span className="font-serif text-white text-lg leading-none">laButoane</span>
           </Link>
           <MobileNav />
         </div>

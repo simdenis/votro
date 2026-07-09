@@ -15,7 +15,7 @@ export async function GET() {
         }}
       >
         <div style={{ fontSize: 96, fontWeight: 900, color: '#ffffff', letterSpacing: '-4px' }}>
-          VotRO
+          laButoane
         </div>
         <div style={{ fontSize: 28, color: '#888888', marginTop: 16 }}>
           Cum votează parlamentarii români

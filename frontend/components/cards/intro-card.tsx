@@ -1,4 +1,4 @@
-// 1080×1080 launch carousel — the intro post that explains what VotRO is.
+// 1080×1080 launch carousel — the intro post that explains what laButoane is.
 // Slides 1..4; same brand language as the data cards.
 
 export interface IntroCardData {
@@ -26,7 +26,7 @@ function Frame({ children, kicker }: { children: React.ReactNode; kicker: string
         <div style={{ flex: 1, background: '#CE1126' }} />
       </div>
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', padding: '36px 64px 22px' }}>
-        <div style={{ fontFamily: SERIF, fontSize: 52, color: C.navy, letterSpacing: '-1.5px', lineHeight: 1 }}>VotRO</div>
+        <div style={{ fontFamily: SERIF, fontSize: 52, color: C.navy, letterSpacing: '-1.5px', lineHeight: 1 }}>laButoane</div>
         <div style={{ display: 'flex', fontSize: 16, letterSpacing: 3, textTransform: 'uppercase', color: C.text, opacity: 0.55 }}>{kicker}</div>
       </div>
       <div style={{ display: 'flex', height: 1, margin: '0 64px', background: C.hair }} />
@@ -64,7 +64,7 @@ export function IntroCard({ data }: { data: IntroCardData }) {
           </div>
         </div>
         <div style={{ display: 'flex', padding: '0 64px 56px' }}>
-          <div style={{ display: 'flex', fontSize: 22, fontWeight: 600, color: C.navy }}>@vot.romania</div>
+          <div style={{ display: 'flex', fontSize: 22, fontWeight: 600, color: C.navy }}>@la.butoane</div>
         </div>
       </Frame>
     )
@@ -82,7 +82,7 @@ export function IntroCard({ data }: { data: IntroCardData }) {
             Dar îngropate.
           </div>
           <div style={{ display: 'flex', fontSize: 32, lineHeight: 1.4, color: C.text, opacity: 0.72, marginTop: 40, maxWidth: 820 }}>
-            Voturile Senatului și ale Camerei stau în PDF-uri și pagini web greu de citit. VotRO le adună, le curăță și le explică pe înțelesul tuturor.
+            Voturile Senatului și ale Camerei stau în PDF-uri și pagini web greu de citit. laButoane le adună, le curăță și le explică pe înțelesul tuturor.
           </div>
         </div>
         <div style={{ display: 'flex', padding: '0 64px 56px', fontSize: 18, color: C.text, opacity: 0.5 }}>sursă oficială: senat.ro · cdep.ro</div>
@@ -95,7 +95,7 @@ export function IntroCard({ data }: { data: IntroCardData }) {
     return (
       <Frame kicker="Ce găsești">
         <div style={{ display: 'flex', flexDirection: 'column', flex: 1, padding: '48px 64px 0' }}>
-          <div style={{ fontFamily: SERIF, fontSize: 54, lineHeight: 1.05, color: C.text, marginBottom: 44 }}>Ce găsești pe VotRO?</div>
+          <div style={{ fontFamily: SERIF, fontSize: 54, lineHeight: 1.05, color: C.text, marginBottom: 44 }}>Ce găsești pe laButoane?</div>
           <Bullet>Cum a votat fiecare senator și deputat.</Bullet>
           <Bullet>Absențele reale de la voturile din plen.</Bullet>
           <Bullet>Cine deviază de la linia de partid.</Bullet>
@@ -103,7 +103,7 @@ export function IntroCard({ data }: { data: IntroCardData }) {
           <Bullet>Traseiștii (cine și-a schimbat partidul).</Bullet>
           <Bullet>Fiecare lege, explicată simplu.</Bullet>
         </div>
-        <div style={{ display: 'flex', padding: '0 64px 48px', fontSize: 20, fontWeight: 600, color: C.navy }}>@vot.romania</div>
+        <div style={{ display: 'flex', padding: '0 64px 48px', fontSize: 20, fontWeight: 600, color: C.navy }}>@la.butoane</div>
       </Frame>
     )
   }
@@ -120,7 +120,7 @@ export function IntroCard({ data }: { data: IntroCardData }) {
         </div>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', padding: '0 64px 56px' }}>
-        <div style={{ display: 'flex', fontSize: 30, fontWeight: 700, color: C.navy }}>@vot.romania</div>
+        <div style={{ display: 'flex', fontSize: 30, fontWeight: 700, color: C.navy }}>@la.butoane</div>
         <div style={{ display: 'flex', fontSize: 22, color: C.text, opacity: 0.6, marginTop: 8 }}>Site-ul: link în bio.</div>
       </div>
     </Frame>

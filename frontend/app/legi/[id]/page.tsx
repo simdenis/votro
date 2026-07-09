@@ -108,11 +108,11 @@ export default async function LawDetail({ params }: { params: Promise<{ id: stri
           </a>
         )}
         <div className="mt-4 flex gap-2 flex-wrap">
-          <CardDownload href={`/api/og/lawcard?id=${law.law_id}`} filename={`votro-${law.code.replace(/[^\w]+/g, '-')}.png`} />
+          <CardDownload href={`/api/og/lawcard?id=${law.law_id}`} filename={`labutoane-${law.code.replace(/[^\w]+/g, '-')}.png`} />
           {law.summary && (
             <CardDownload
               href={`/api/og/summarycard?id=${law.law_id}`}
-              filename={`votro-pescurt-${law.code.replace(/[^\w]+/g, '-')}.png`}
+              filename={`labutoane-pescurt-${law.code.replace(/[^\w]+/g, '-')}.png`}
               label="Card rezumat"
             />
           )}
@@ -121,14 +121,14 @@ export default async function LawDetail({ params }: { params: Promise<{ id: stri
           {law.senate_vote_id && (
             <CardDownload
               href={`/api/og/lawcard?id=${law.law_id}&chamber=senate`}
-              filename={`votro-${law.code.replace(/[^\w]+/g, '-')}-senat.png`}
+              filename={`labutoane-${law.code.replace(/[^\w]+/g, '-')}-senat.png`}
               label="Card Senat"
             />
           )}
           {law.camera_vote_id && (
             <CardDownload
               href={`/api/og/lawcard?id=${law.law_id}&chamber=camera`}
-              filename={`votro-${law.code.replace(/[^\w]+/g, '-')}-camera.png`}
+              filename={`labutoane-${law.code.replace(/[^\w]+/g, '-')}-camera.png`}
               label="Card Cameră"
             />
           )}

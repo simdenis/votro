@@ -7,7 +7,7 @@ import { PartyBadge } from '@/components/party-badge'
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = {
   title: 'Căutare',
-  description: 'Caută parlamentari și legi în VotRO.',
+  description: 'Caută parlamentari și legi în laButoane.',
 }
 
 export default async function SearchPage({

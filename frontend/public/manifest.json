@@ -1,6 +1,6 @@
 {
-  "name": "VotRO",
-  "short_name": "VotRO",
+  "name": "laButoane",
+  "short_name": "laButoane",
   "description": "Urmărește voturile senatorilor și deputaților români.",
   "start_url": "/",
   "display": "standalone",

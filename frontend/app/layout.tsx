@@ -25,16 +25,16 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://votro.ro'
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: 'VotRO — Cum votează parlamentarii români',
-    template: '%s | VotRO',
+    default: 'laButoane — Cum votează parlamentarii români',
+    template: '%s | laButoane',
   },
   description:
     'Urmărește voturile senatorilor și deputaților români. Transparență parlamentară în timp real.',
   openGraph: {
-    siteName: 'VotRO',
+    siteName: 'laButoane',
     locale: 'ro_RO',
     type: 'website',
-    images: [{ url: '/api/og', width: 1200, height: 630, alt: 'VotRO' }],
+    images: [{ url: '/api/og', width: 1200, height: 630, alt: 'laButoane' }],
   },
   twitter: {
     card: 'summary_large_image',

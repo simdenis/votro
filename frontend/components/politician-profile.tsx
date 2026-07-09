@@ -104,7 +104,7 @@ export function PoliticianProfile({ stats, history, deviationRows, partyHistory,
             ? `Cum votează ${stats.first_name} ${stats.name} în Parlament: ${siteUrl}${basePath}/${stats.politician_id}`
             : `${stats.first_name} ${stats.name} (${stats.party_abbr}) a deviat de la linia de partid în ${pct(stats.deviation_pct)} din voturi. ${siteUrl}${basePath}/${stats.politician_id}`}
         />
-        <CardDownload href={`/api/og/senatorcard?id=${stats.politician_id}`} filename={`votro-${stats.first_name}-${stats.name}.png`.replace(/\s+/g, '-')} />
+        <CardDownload href={`/api/og/senatorcard?id=${stats.politician_id}`} filename={`labutoane-${stats.first_name}-${stats.name}.png`.replace(/\s+/g, '-')} />
       </div>
 
       {/* ── Two-column analytics ────────────────────────── */}

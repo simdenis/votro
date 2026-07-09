@@ -1,19 +1,19 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Despre VotRO',
-  description: 'Cum funcționează VotRO, cum sunt colectate datele și ce înseamnă devierea de la linia de partid.',
+  title: 'Despre laButoane',
+  description: 'Cum funcționează laButoane, cum sunt colectate datele și ce înseamnă devierea de la linia de partid.',
 }
 
 export default function DesprePage() {
   return (
     <div className="max-w-2xl space-y-10">
-      <h1 className="font-serif text-[30px] sm:text-[40px] font-normal tracking-[-0.01em] leading-[1.05] text-foreground">Despre VotRO</h1>
+      <h1 className="font-serif text-[30px] sm:text-[40px] font-normal tracking-[-0.01em] leading-[1.05] text-foreground">Despre laButoane</h1>
 
       <section className="space-y-3">
-        <h2 className="text-sm font-semibold uppercase tracking-widest text-muted">Ce este VotRO</h2>
+        <h2 className="text-sm font-semibold uppercase tracking-widest text-muted">Ce este laButoane</h2>
         <p className="text-foreground leading-relaxed">
-          VotRO urmărește voturile plenare ale Senatului și Camerei Deputaților din România și le face
+          laButoane urmărește voturile plenare ale Senatului și Camerei Deputaților din România și le face
           accesibile publicului larg într-un format clar și comparabil.
         </p>
       </section>
@@ -108,7 +108,7 @@ export default function DesprePage() {
           </a>
         </p>
         <p className="text-sm text-muted">
-          VotRO nu este afiliat niciunui partid politic, organizație sau publicație.
+          laButoane nu este afiliat niciunui partid politic, organizație sau publicație.
         </p>
       </section>
 
