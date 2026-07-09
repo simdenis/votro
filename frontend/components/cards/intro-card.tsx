@@ -53,11 +53,14 @@ export function IntroCard({ data }: { data: IntroCardData }) {
     return (
       <Frame kicker="Parlamentul României">
         <div style={{ display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'center', padding: '0 64px' }}>
-          <div style={{ fontFamily: SERIF, fontSize: 92, lineHeight: 1.02, color: C.text, letterSpacing: '-1px' }}>
-            Cum votează Parlamentul
+          <div style={{ fontFamily: SERIF, fontSize: 84, lineHeight: 1.06, color: C.text, letterSpacing: '-1px' }}>
+            Ai votat pentru ei.
           </div>
-          <div style={{ display: 'flex', fontSize: 34, color: C.text, opacity: 0.7, marginTop: 30 }}>
-            Fiecare vot, fiecare senator, fiecare deputat.
+          <div style={{ fontFamily: SERIF, fontSize: 84, lineHeight: 1.06, color: C.navy, marginTop: 4 }}>
+            Ei cum votează?
+          </div>
+          <div style={{ display: 'flex', fontSize: 34, color: C.text, opacity: 0.7, marginTop: 34 }}>
+            Fiecare vot din Parlament, într-un singur loc.
           </div>
         </div>
         <div style={{ display: 'flex', padding: '0 64px 56px' }}>
@@ -92,13 +95,13 @@ export function IntroCard({ data }: { data: IntroCardData }) {
     return (
       <Frame kicker="Ce găsești">
         <div style={{ display: 'flex', flexDirection: 'column', flex: 1, padding: '48px 64px 0' }}>
-          <div style={{ fontFamily: SERIF, fontSize: 54, lineHeight: 1.05, color: C.text, marginBottom: 44 }}>Ce găsești pe VotRO</div>
+          <div style={{ fontFamily: SERIF, fontSize: 54, lineHeight: 1.05, color: C.text, marginBottom: 44 }}>Ce găsești pe VotRO?</div>
           <Bullet>Cum a votat fiecare senator și deputat.</Bullet>
-          <Bullet>Absențele reale, de la validarea mandatului.</Bullet>
+          <Bullet>Absențele reale de la voturile din plen.</Bullet>
           <Bullet>Cine deviază de la linia de partid.</Bullet>
-          <Bullet>Legile adoptate tacit, fără ca cineva să voteze.</Bullet>
-          <Bullet>Traseiștii care au schimbat partidul.</Bullet>
-          <Bullet>Rezumate pe scurt pentru fiecare lege.</Bullet>
+          <Bullet>Legile adoptate tacit (fără niciun vot).</Bullet>
+          <Bullet>Traseiștii (cine și-a schimbat partidul).</Bullet>
+          <Bullet>Fiecare lege, explicată simplu.</Bullet>
         </div>
         <div style={{ display: 'flex', padding: '0 64px 48px', fontSize: 20, fontWeight: 600, color: C.navy }}>@vot.romania</div>
       </Frame>
