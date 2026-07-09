@@ -105,7 +105,7 @@ export function DeviationCard({ data }: { data: DeviationCardData }) {
             </div>
           ))}
           {extra > 0 && (
-            <div style={{ display: 'flex', alignItems: 'center', height: 46, fontSize: 17, opacity: 0.7 }}>{`+ încă ${extra} — lista completă pe votro.ro`}</div>
+            <div style={{ display: 'flex', alignItems: 'center', height: 46, fontSize: 17, opacity: 0.7 }}>{`+ încă ${extra} — lista completă pe site — link în bio`}</div>
           )}
         </div>
 
@@ -113,7 +113,7 @@ export function DeviationCard({ data }: { data: DeviationCardData }) {
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', padding: '18px 64px', borderTopWidth: 1, borderTopStyle: 'solid', borderTopColor: C.hair }}>
-        <div style={{ display: 'flex', fontSize: 14, fontWeight: 600, color: C.navy, opacity: 0.62 }}>votro.ro</div>
+        <div style={{ display: 'flex', fontSize: 14, fontWeight: 600, color: C.navy, opacity: 0.62 }}>@vot.romania</div>
         <div style={{ display: 'flex', fontSize: 12, opacity: 0.55 }}>deviere = vot diferit de majoritatea propriului partid</div>
       </div>
     </div>

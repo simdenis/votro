@@ -136,7 +136,7 @@ export function SenatorCard({ data }: { data: SenatorCardData }) {
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', padding: '18px 64px', borderTopWidth: 1, borderTopStyle: 'solid', borderTopColor: C.hair, marginTop: 12 }}>
-        <div style={{ display: 'flex', fontSize: 14, fontWeight: 600, color: C.navy, opacity: 0.62 }}>votro.ro</div>
+        <div style={{ display: 'flex', fontSize: 14, fontWeight: 600, color: C.navy, opacity: 0.62 }}>@vot.romania</div>
         <div style={{ display: 'flex', fontSize: 12, opacity: 0.55 }}>voturile sunt atribuite afilierii curente</div>
       </div>
     </div>
