@@ -1,8 +1,8 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Contribuie — VotRO',
-  description: 'Susține VotRO și ajută-ne să menținem transparența parlamentară din România.',
+  title: 'Contribuie — laButoane',
+  description: 'Susține laButoane și ajută-ne să menținem transparența parlamentară din România.',
 }
 
 export default function ContribuiePage() {
@@ -12,7 +12,7 @@ export default function ContribuiePage() {
 
       <section className="space-y-3">
         <p className="text-foreground leading-relaxed">
-          VotRO este un proiect independent, fără publicitate și fără finanțare instituțională.
+          laButoane este un proiect independent, fără publicitate și fără finanțare instituțională.
           Dacă îți este util, poți susține dezvoltarea lui continuă.
         </p>
       </section>
@@ -23,7 +23,7 @@ export default function ContribuiePage() {
           Ai o idee? Trimite-o prin email — cele mai cerute ajung în roadmap.
         </p>
         <a
-          href="mailto:siminiucdenis@gmail.com?subject=Sugestie%20VotRO"
+          href="mailto:siminiucdenis@gmail.com?subject=Sugestie%20laButoane"
           className="inline-flex items-center gap-2 px-4 py-2 rounded-md border border-rim text-foreground text-sm font-medium hover:bg-surface transition-colors"
         >
           Trimite sugestie

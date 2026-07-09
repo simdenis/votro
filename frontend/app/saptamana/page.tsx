@@ -40,7 +40,7 @@ export default async function SaptamanaPage() {
       </div>
 
       <div className="flex">
-        <CardDownload href="/api/og/weekcard" filename="votro-saptamana.png" label="Card recap săptămânal" />
+        <CardDownload href="/api/og/weekcard" filename="labutoane-saptamana.png" label="Card recap săptămânal" />
       </div>
 
       {votes.length === 0 && (

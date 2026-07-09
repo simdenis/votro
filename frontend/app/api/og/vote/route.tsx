@@ -21,7 +21,7 @@ export async function GET(request: Request) {
   const id = isUuid(idParam) ? idParam : null
 
   const vote = id ? await fetchVote(id) : null
-  const code   = vote?.laws?.code  ?? 'VotRO'
+  const code   = vote?.laws?.code  ?? 'laButoane'
   const title  = vote?.laws?.title ?? vote?.description ?? 'Transparență parlamentară'
   const short  = title.length > 72 ? title.slice(0, 72) + '…' : title
   const outcome = vote?.outcome
@@ -40,7 +40,7 @@ export async function GET(request: Request) {
           fontFamily: 'sans-serif',
         }}
       >
-        {/* VotRO wordmark */}
+        {/* laButoane wordmark */}
         <div style={{ fontSize: 22, color: '#888888', fontWeight: 700, letterSpacing: 2, marginBottom: 'auto' }}>
           VOTRO
         </div>

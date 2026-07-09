@@ -114,7 +114,7 @@ def build_vote_caption(cfg: Config, vote: dict) -> str:
         "",
         f"Detalii și voturi individuale: {link}",
         "",
-        "#parlament #politicaRomânească #votRO #transparență #românia",
+        "#parlament #politicaRomânească #laButoane #transparență #românia",
     ]
     return "\n".join(lines)
 
@@ -298,7 +298,7 @@ def post_law(cfg: Config, law_id: str, dry_run: bool = False) -> str | None:
     if dev_count:
         lines += ["", f"⚡ {dev_count} parlamentari au votat împotriva propriului partid — ultimul slide."]
     lines += ["", f"Voturi individuale: {cfg.site_url}/legi/{law_id}", "",
-              "#parlament #politicaRomânească #votRO #transparență #românia"]
+              "#parlament #politicaRomânească #laButoane #transparență #românia"]
     caption = "\n".join(lines)
 
     if dry_run:
@@ -333,7 +333,7 @@ def post_shame(cfg: Config, dry_run: bool = False) -> str | None:
               for i, (pct, name, party, chamber) in enumerate(top)]
     lines += ["", "Membrii Guvernului nu sunt incluși — ei nu votează în plen.",
               "", f"Toată lista: {cfg.site_url}", "",
-              "#parlament #absenteism #votRO #transparență #românia"]
+              "#parlament #absenteism #laButoane #transparență #românia"]
     caption = "\n".join(lines)
     image_url = f"{cfg.site_url}/api/og/shamecard"
 

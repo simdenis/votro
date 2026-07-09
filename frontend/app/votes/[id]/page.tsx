@@ -196,11 +196,11 @@ export default async function VoteDetail({
               url={`${SITE_URL}/votes/${vote.id}`}
               tweet={`${vote.laws?.code ?? 'Vot de plen'} — ${(vote.laws?.title ?? vote.description ?? 'vot fără lege asociată').slice(0, 80)}. ${vote.outcome === 'adoptat' ? 'Adoptat' : vote.outcome === 'respins' ? 'Respins' : ''} cu ${vote.for_count ?? 0} pentru și ${vote.against_count ?? 0} împotrivă. ${SITE_URL}/votes/${vote.id}`}
             />
-            <CardDownload href={`/api/og/votecard?vote=${vote.id}`} filename={`votro-${(vote.laws?.code ?? 'vot').replace(/[^\w]+/g, '-')}.png`} />
+            <CardDownload href={`/api/og/votecard?vote=${vote.id}`} filename={`labutoane-${(vote.laws?.code ?? 'vot').replace(/[^\w]+/g, '-')}.png`} />
             {deviatorCount > 0 && (
               <CardDownload
                 href={`/api/og/deviationcard?vote=${vote.id}`}
-                filename={`votro-devieri-${(vote.laws?.code ?? 'vot').replace(/[^\w]+/g, '-')}.png`}
+                filename={`labutoane-devieri-${(vote.laws?.code ?? 'vot').replace(/[^\w]+/g, '-')}.png`}
                 label="Card devieri"
               />
             )}
