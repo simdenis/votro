@@ -81,7 +81,7 @@ export function ShameCard({ data }: { data: ShameCardData }) {
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 64px 40px' }}>
-        <div style={{ display: 'flex', fontFamily: MONO, fontSize: 15, color: '#6E7480' }}>sursa: senat.ro · cdep.ro</div>
+        <div style={{ display: 'flex', fontFamily: MONO, fontSize: 15, color: '#6E7480' }}>surse: senat.ro · cdep.ro</div>
         <div style={{ display: 'flex', fontFamily: MONO, fontSize: 14, fontWeight: 500, color: '#171A1F' }}>@la.butoane</div>
       </div>
     </div>

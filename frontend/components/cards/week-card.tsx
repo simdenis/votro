@@ -109,7 +109,7 @@ export function WeekCard({ data }: { data: WeekCardData }) {
 
       <div style={{ display: 'flex', justifyContent: 'space-between', padding: '18px 64px', borderTopWidth: 1, borderTopStyle: 'solid', borderTopColor: C.hair }}>
         <div style={{ display: 'flex', fontFamily: MONO, fontSize: 14, fontWeight: 500, color: '#171A1F' }}>@la.butoane</div>
-        <div style={{ display: 'flex', fontFamily: MONO, fontSize: 12, color: '#6E7480' }}>sursă: senat.ro / cdep.ro</div>
+        <div style={{ display: 'flex', fontFamily: MONO, fontSize: 12, color: '#6E7480' }}>surse: senat.ro / cdep.ro</div>
       </div>
     </div>
   )
