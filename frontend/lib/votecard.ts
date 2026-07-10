@@ -98,13 +98,16 @@ export function mapLawToCard(
 
   let finalStep: JourneyStep
   if (promulgat) finalStep = { label: 'Lege', done: true, final: true }
-  else if (law.presidential_status === 'retrimis') finalStep = { label: 'Retrimisă', done: false, final: true }
+  else if (law.presidential_status === 'retrimis') finalStep = { label: 'Retrimisă la Parlament', done: false, final: true }
   else if (law.presidential_status === 'sesizat_ccr') finalStep = { label: 'CCR', done: false, final: true }
   else finalStep = { label: 'Președinte', done: false, final: true }
 
   let statusLabel = 'ÎN DEZBATERE'
   let statusColor = '#171A1F'
   if (promulgat) { statusLabel = 'PROMULGATĂ'; statusColor = '#171A1F' }
+  // a returned law passed both chambers, but green 'ADOPTATĂ' misleads —
+  // the president bounced it back, and that is the story
+  else if (law.presidential_status === 'retrimis') { statusLabel = 'RETRIMISĂ LA PARLAMENT'; statusColor = '#C25539' }
   else if (rejected) { statusLabel = 'RESPINSĂ'; statusColor = '#C25539' }
   else if (senateDone && cameraDone) { statusLabel = 'ADOPTATĂ'; statusColor = '#1F7A51' }
 

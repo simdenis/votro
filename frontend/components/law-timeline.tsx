@@ -10,7 +10,7 @@ type Step = {
 
 function presidentialLabel(s: PresidentialStatus): string {
   if (s === 'promulgat')   return 'Promulgată'
-  if (s === 'retrimis')    return 'Retrimisă la parlament'
+  if (s === 'retrimis')    return 'Retrimisă la Parlament'
   return 'Sesizată la CCR'
 }
 
