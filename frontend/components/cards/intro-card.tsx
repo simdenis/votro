@@ -77,10 +77,10 @@ export function IntroCard({ data }: { data: IntroCardData }) {
       <Frame kicker="De ce">
         <div style={{ display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'center', padding: '0 64px' }}>
           <div style={{ fontFamily: SERIF, fontSize: 76, lineHeight: 1.06, color: C.text }}>
-            Datele sunt publice.
+            Datele sunt publice,
           </div>
           <div style={{ fontFamily: SERIF, fontSize: 76, lineHeight: 1.06, color: C.against, marginTop: 6 }}>
-            Dar îngropate.
+            dar îngropate.
           </div>
           <div style={{ display: 'flex', fontSize: 32, lineHeight: 1.4, color: C.text, opacity: 0.72, marginTop: 40, maxWidth: 820 }}>
             Voturile Senatului și ale Camerei stau în PDF-uri și pagini web greu de citit. LaButoane le adună, le curăță și le explică pe înțelesul tuturor.
