@@ -70,7 +70,7 @@ export default async function Dashboard() {
           Parlamentul României · Legislatura 2026
         </p>
         <h1 className="font-serif text-[42px] font-normal tracking-[-0.01em] leading-[1.04] text-foreground">
-          Cum votează Parlamentul
+          Cum votează Parlamentul?
         </h1>
       </header>
 

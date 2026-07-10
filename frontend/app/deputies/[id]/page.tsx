@@ -7,7 +7,7 @@ import type { PoliticianStats, VoteHistoryRow, PartyHistoryEntry } from '@/lib/t
 
 export const revalidate = 3600
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://votro.ro'
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://labutoane.vercel.app'
 
 export async function generateMetadata({
   params,
