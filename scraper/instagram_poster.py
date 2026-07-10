@@ -260,6 +260,12 @@ def post_law(cfg: Config, law_id: str, dry_run: bool = False) -> str | None:
     law = rows[0]
 
     slides = [f"{cfg.site_url}/api/og/summarycard?id={law_id}"]
+    passed = bool(law.get("presidential_status"))
+    # Tacit slide right after the summary: a chamber the law passed without a
+    # plenary vote gets the "nimeni nu a votat" card.
+    for key, vote_field in (("senate", "senate_vote_id"), ("camera", "camera_vote_id")):
+        if passed and not law.get(vote_field):
+            slides.append(f"{cfg.site_url}/api/og/tacitcard?id={law_id}&chamber={key}")
     chambers = []  # (date, chamber_key, vote_id)
     if law.get("senate_vote_id"):
         chambers.append((law.get("senate_vote_date") or "", "senate", law["senate_vote_id"]))

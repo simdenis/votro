@@ -117,21 +117,34 @@ export default async function LawDetail({ params }: { params: Promise<{ id: stri
             />
           )}
           {/* One card per chamber that actually voted (IG carousel slides). A
-              chamber with no plenary vote (tacit adoption) has no card. */}
-          {law.senate_vote_id && (
+              chamber the law passed WITHOUT a plenary vote gets the tacit
+              card instead — "nimeni nu a votat". */}
+          {law.senate_vote_id ? (
             <CardDownload
               href={`/api/og/lawcard?id=${law.law_id}&chamber=senate`}
               filename={`labutoane-${law.code.replace(/[^\w]+/g, '-')}-senat.png`}
               label="Card Senat"
             />
-          )}
-          {law.camera_vote_id && (
+          ) : law.presidential_status ? (
+            <CardDownload
+              href={`/api/og/tacitcard?id=${law.law_id}&chamber=senate`}
+              filename={`labutoane-${law.code.replace(/[^\w]+/g, '-')}-tacit-senat.png`}
+              label="Card tacit — Senat"
+            />
+          ) : null}
+          {law.camera_vote_id ? (
             <CardDownload
               href={`/api/og/lawcard?id=${law.law_id}&chamber=camera`}
               filename={`labutoane-${law.code.replace(/[^\w]+/g, '-')}-camera.png`}
               label="Card Cameră"
             />
-          )}
+          ) : law.presidential_status ? (
+            <CardDownload
+              href={`/api/og/tacitcard?id=${law.law_id}&chamber=camera`}
+              filename={`labutoane-${law.code.replace(/[^\w]+/g, '-')}-tacit-camera.png`}
+              label="Card tacit — Cameră"
+            />
+          ) : null}
         </div>
       </div>
 
