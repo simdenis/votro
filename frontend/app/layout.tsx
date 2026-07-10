@@ -21,7 +21,7 @@ const plexMono = IBM_Plex_Mono({
   display: 'swap',
 })
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://votro.ro'
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://labutoane.vercel.app'
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

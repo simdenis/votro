@@ -4,7 +4,7 @@ import { getDB } from '@/lib/supabase'
 export const revalidate = 3600
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const base = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://votro.ro'
+  const base = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://labutoane.vercel.app'
   const db = getDB()
 
   const [votes, senators, deputies, laws, parties] = await Promise.all([

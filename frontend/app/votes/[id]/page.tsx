@@ -16,7 +16,7 @@ import type { VoteWithLaw, PoliticianVoteWithDetails, PartyVoteBreakdown } from 
 
 export const dynamic = 'force-dynamic'
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://votro.ro'
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://labutoane.vercel.app'
 
 export async function generateMetadata({
   params,
