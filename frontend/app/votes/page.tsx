@@ -6,6 +6,7 @@ import { OutcomeBadge } from '@/components/outcome-badge'
 import { MiniVoteBar } from '@/components/mini-vote-bar'
 import { VoteFilter } from '@/components/vote-filter'
 import type { VoteWithLaw } from '@/lib/types'
+import { SectionNav, LEGI_SECTIONS } from '@/components/section-nav'
 
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = { title: 'Voturi', description: 'Toate voturile plenului Senatului și Camerei Deputaților României.' }
@@ -60,6 +61,7 @@ export default async function VotesPage({
 
   return (
     <div className="space-y-6">
+      <SectionNav items={LEGI_SECTIONS} />
       <div className="flex items-baseline justify-between">
         <h1 className="font-serif text-[30px] sm:text-[40px] font-normal tracking-[-0.01em] leading-[1.05] text-foreground">Voturi</h1>
         <span className="text-[12.5px] text-muted">{count ?? 0} total</span>

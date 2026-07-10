@@ -5,6 +5,7 @@ import { formatDate, capFirst } from '@/lib/utils'
 import { OutcomeBadge } from '@/components/outcome-badge'
 import { BaseLawBadges } from '@/components/base-law-badge'
 import type { LawStatus, PresidentialStatus } from '@/lib/types'
+import { SectionNav, LEGI_SECTIONS } from '@/components/section-nav'
 
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = {
@@ -59,6 +60,7 @@ function outcomeCell(outcome: 'adoptat' | 'respins' | null, voteId: string | nul
   }
   return (
     <div className="flex flex-col gap-0.5">
+      <SectionNav items={LEGI_SECTIONS} />
       <OutcomeBadge outcome={outcome} />
       {date && <span className="text-[10px] text-faint">{formatDate(date)}</span>}
     </div>

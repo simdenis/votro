@@ -6,6 +6,7 @@ import { hasPartyLine } from '@/lib/utils'
 import { CountyMap } from '@/components/county-map'
 import { ScrollIntoView } from '@/components/scroll-into-view'
 import type { PoliticianStats } from '@/lib/types'
+import { SectionNav, PARLAMENTARI_SECTIONS } from '@/components/section-nav'
 
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = {
@@ -20,6 +21,7 @@ function MemberTable({ title, members, basePath }: {
 }) {
   return (
     <div>
+      <SectionNav items={PARLAMENTARI_SECTIONS} />
       <h2 className="text-xs font-semibold uppercase tracking-widest text-muted mb-4">
         {title} ({members.length})
       </h2>

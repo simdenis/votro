@@ -2,6 +2,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getSwitchers } from '@/lib/switchers'
 import { textOnColor, countNoun } from '@/lib/utils'
+import { SectionNav, PARLAMENTARI_SECTIONS } from '@/components/section-nav'
 
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = {
@@ -20,6 +21,7 @@ export default async function TraseistiPage() {
 
   return (
     <div className="space-y-6">
+      <SectionNav items={PARLAMENTARI_SECTIONS} />
       <div>
         <h1 className="font-serif text-[30px] sm:text-[40px] font-normal tracking-[-0.01em] leading-[1.05] text-foreground">
           Traseiști

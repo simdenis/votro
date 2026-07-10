@@ -33,8 +33,8 @@ export function MobileNav() {
         style={{ maxHeight: open ? 720 : 0 }}
       >
         <nav className="flex flex-col px-4 pb-3">
-          {NAV_LINKS.map(({ href, label }) => {
-            const active = path === href || path.startsWith(`${href}/`)
+          {NAV_LINKS.map(({ href, label, match }) => {
+            const active = match.some(m => path === m || path.startsWith(`${m}/`))
             return (
               <Link
                 key={href}
