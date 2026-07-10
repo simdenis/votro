@@ -1,6 +1,8 @@
-// Shared font loader for the 1080×1080 card routes (Satori / next-og).
-// Brand type: IBM Plex Sans + IBM Plex Mono (latin-ext via full TTFs).
-// Forces TTF (Satori can't read woff2) via an old User-Agent to Google Fonts.
+// Shared font loader for the card routes (Satori / next-og).
+// Fonts are VENDORED in assets/fonts and bundled with each edge function via
+// import.meta.url — no Google Fonts fetch at runtime. (The old runtime fetch
+// intermittently died with 'Network connection lost' on cold edge isolates
+// and 500'd whole card routes.)
 //
 // 'Plex Display' is IBM Plex Sans 700 registered under its own family name:
 // card titles set only fontFamily (no fontWeight), and Satori then picks the
@@ -10,32 +12,20 @@
 type FontWeight = 400 | 500 | 600 | 700
 interface OgFont { name: string; data: ArrayBuffer; weight: FontWeight; style: 'normal' }
 
-async function loadFont(family: string, weight: number): Promise<ArrayBuffer> {
-  const css = await (
-    await fetch(`https://fonts.googleapis.com/css2?family=${encodeURIComponent(family)}:wght@${weight}`, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; rv:1.9) Gecko/20100101 Firefox/3.5' },
-    })
-  ).text()
-  const m = css.match(/src:\s*url\(([^)]+)\)\s*format\('(?:truetype|opentype)'\)/)
-  if (!m) throw new Error(`font not found: ${family} ${weight}`)
-  return (await fetch(m[1])).arrayBuffer()
-}
+const sans400 = fetch(new URL('../assets/fonts/plex-sans-400.ttf', import.meta.url)).then(r => r.arrayBuffer())
+const sans500 = fetch(new URL('../assets/fonts/plex-sans-500.ttf', import.meta.url)).then(r => r.arrayBuffer())
+const sans600 = fetch(new URL('../assets/fonts/plex-sans-600.ttf', import.meta.url)).then(r => r.arrayBuffer())
+const sans700 = fetch(new URL('../assets/fonts/plex-sans-700.ttf', import.meta.url)).then(r => r.arrayBuffer())
+const mono400 = fetch(new URL('../assets/fonts/plex-mono-400.ttf', import.meta.url)).then(r => r.arrayBuffer())
+const mono500 = fetch(new URL('../assets/fonts/plex-mono-500.ttf', import.meta.url)).then(r => r.arrayBuffer())
 
 let cache: Promise<OgFont[]> | null = null
 
 export function getCardFonts(): Promise<OgFont[]> {
   return (cache ??= (async () => {
-    const [display, s4, s5, s6, s7, m4, m5] = await Promise.all([
-      loadFont('IBM Plex Sans', 700),
-      loadFont('IBM Plex Sans', 400),
-      loadFont('IBM Plex Sans', 500),
-      loadFont('IBM Plex Sans', 600),
-      loadFont('IBM Plex Sans', 700),
-      loadFont('IBM Plex Mono', 400),
-      loadFont('IBM Plex Mono', 500),
-    ])
+    const [s4, s5, s6, s7, m4, m5] = await Promise.all([sans400, sans500, sans600, sans700, mono400, mono500])
     return [
-      { name: 'Plex Display', data: display, weight: 400, style: 'normal' },
+      { name: 'Plex Display', data: s7, weight: 400, style: 'normal' },
       { name: 'IBM Plex Sans', data: s4, weight: 400, style: 'normal' },
       { name: 'IBM Plex Sans', data: s5, weight: 500, style: 'normal' },
       { name: 'IBM Plex Sans', data: s6, weight: 600, style: 'normal' },
