@@ -51,12 +51,6 @@ export function LawCard({ data }: { data: LawCardData }) {
   const seg = (count: number, color: string) =>
     count > 0 ? <div style={{ flexGrow: count, flexShrink: 1, flexBasis: 0, background: color }} /> : null
 
-  const voteCounts = [
-    data.votesFor != null ? `${data.votesFor} pentru` : null,
-    data.votesAgainst != null ? `${data.votesAgainst} împotrivă` : null,
-    data.votesAbstain != null ? `${data.votesAbstain} ${data.votesAbstain === 1 ? 'abținere' : 'abțineri'}` : null,
-  ].filter(Boolean).join(' · ')
-
   return (
     <div style={{ width: 1080, height: 1080, display: 'flex', flexDirection: 'column', background: C.bg, color: C.text, fontFamily: SANS }}>
 
@@ -115,7 +109,26 @@ export function LawCard({ data }: { data: LawCardData }) {
               <div style={{ display: 'flex', fontSize: 11, fontWeight: 600, color: C.navy, letterSpacing: 4, textTransform: 'uppercase', opacity: 0.85 }}>
                 {`Vot pe partide${data.voteChamber ? ` · ${data.voteChamber}` : ''}`}
               </div>
-              {voteCounts && <div style={{ display: 'flex', fontSize: 13, color: C.text, opacity: 0.7 }}>{voteCounts}</div>}
+              {/* colored-dot legend with counts — the color key for arc + bars */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                {([
+                  [data.votesFor, 'pentru', C.for],
+                  [data.votesAgainst, 'împotrivă', C.against],
+                  [data.votesAbstain, data.votesAbstain === 1 ? 'abținere' : 'abțineri', C.abstain],
+                  [
+                    data.parties.reduce((s, p) => s + p.absent, 0) || null,
+                    data.parties.reduce((s, p) => s + p.absent, 0) === 1 ? 'absent' : 'absenți',
+                    C.absentDot,
+                  ],
+                ] as const).map(([count, label, color]) =>
+                  count != null ? (
+                    <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <div style={{ display: 'flex', width: 9, height: 9, borderRadius: 5, background: color }} />
+                      <div style={{ display: 'flex', fontSize: 12.5, color: '#6E7480' }}>{`${count} ${label}`}</div>
+                    </div>
+                  ) : null,
+                )}
+              </div>
             </div>
             {(() => {
               const n = data.parties.length

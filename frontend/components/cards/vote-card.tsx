@@ -188,7 +188,18 @@ export function VoteCard({ data }: { data: VoteCardData }) {
           <div style={{ display: 'flex', height: 1, background: C.hair, marginBottom: 14 }} />
         )}
         {data.parties.length > 0 && (
-          <div style={{ display: 'flex', fontSize: 11, fontWeight: 600, color: C.navy, letterSpacing: 4, textTransform: 'uppercase', opacity: 0.85, marginBottom: 10 }}>Vot pe partide</div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+            <div style={{ display: 'flex', fontSize: 11, fontWeight: 600, color: C.navy, letterSpacing: 4, textTransform: 'uppercase' }}>Vot pe partide</div>
+            {/* color legend — every hue carries one meaning */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+              {([['Pentru', C.for], ['Împotrivă', C.against], ['Abțineri', C.abstain], ['Absenți', C.absentDot]] as const).map(([label, color]) => (
+                <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <div style={{ display: 'flex', width: 9, height: 9, borderRadius: 5, background: color }} />
+                  <div style={{ display: 'flex', fontSize: 12, color: '#6E7480' }}>{label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
         )}
         {(() => {
           // Row height shrinks as the party count grows so the full list always
