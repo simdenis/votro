@@ -170,27 +170,10 @@ export default async function Dashboard() {
               <CountyMap />
             </div>
 
-            <h2 className="font-serif text-[16px] font-normal text-foreground border-b-2 border-sidebar pb-[5px] mb-4">
-              Coeziune partide
-            </h2>
-            <div className="space-y-2">
-              {cohesionData.map(c => (
-                <Link
-                  key={c.party_id}
-                  href={`/parties/${c.abbreviation}`}
-                  className="flex items-center justify-between bg-surface border border-rim rounded-lg px-3 py-2 hover:bg-raised transition-colors"
-                  style={{ borderLeftWidth: 3, borderLeftColor: c.color }}
-                >
-                  <span className="text-[13px] font-medium text-foreground">{c.abbreviation}</span>
-                  <span className="text-[13px] font-semibold tabular-nums text-foreground">{c.cohesion_pct?.toFixed(0)}%</span>
-                </Link>
-              ))}
-            </div>
-
             {/* Colțul rușinii — lowest plenary presence, both chambers */}
             {lowPresence.length > 0 && (
               <>
-                <h2 className="font-serif text-[16px] font-normal text-foreground border-b-2 border-respins/60 pb-[5px] mb-1 mt-10">
+                <h2 className="font-serif text-[16px] font-normal text-foreground border-b-2 border-respins/60 pb-[5px] mb-1">
                   Colțul rușinii
                 </h2>
                 <p className="text-[11px] text-faint mb-3">absențe la voturile din plen · Senat + Cameră</p>
@@ -211,6 +194,23 @@ export default async function Dashboard() {
                 </div>
               </>
             )}
+
+            <h2 className="font-serif text-[16px] font-normal text-foreground border-b-2 border-sidebar pb-[5px] mb-4 mt-10">
+              Coeziune partide
+            </h2>
+            <div className="space-y-2">
+              {cohesionData.map(c => (
+                <Link
+                  key={c.party_id}
+                  href={`/parties/${c.abbreviation}`}
+                  className="flex items-center justify-between bg-surface border border-rim rounded-lg px-3 py-2 hover:bg-raised transition-colors"
+                  style={{ borderLeftWidth: 3, borderLeftColor: c.color }}
+                >
+                  <span className="text-[13px] font-medium text-foreground">{c.abbreviation}</span>
+                  <span className="text-[13px] font-semibold tabular-nums text-foreground">{c.cohesion_pct?.toFixed(0)}%</span>
+                </Link>
+              ))}
+            </div>
           </aside>
         )}
       </div>
