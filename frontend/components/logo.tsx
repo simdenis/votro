@@ -30,7 +30,8 @@ export function Wordmark({
   fontSize = 21,
   color = 'var(--ink)',
   suffixColor = 'var(--faint)',
-  suffix = true,
+  // labutoane.ro isn't ours (yet) — no suffix until the domain is real
+  suffix = false,
 }: {
   fontSize?: number
   color?: string
