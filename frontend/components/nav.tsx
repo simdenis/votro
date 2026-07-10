@@ -19,7 +19,7 @@ export function Nav() {
         {/* ── Desktop ────────────────────────────────────── */}
         <div className="hidden lg:flex items-center gap-6 h-[58px]">
           <Link href="/" className="shrink-0 flex items-center">
-            <Logo size={26} />
+            <Logo size={30} />
           </Link>
 
           <NavLinks variant="top" />
@@ -41,7 +41,7 @@ export function Nav() {
         {/* ── Mobile ─────────────────────────────────────── */}
         <div className="lg:hidden flex items-center justify-between h-12 relative">
           <Link href="/" className="flex items-center shrink-0">
-            <Logo size={22} />
+            <Logo size={25} />
           </Link>
           <MobileNav />
         </div>
