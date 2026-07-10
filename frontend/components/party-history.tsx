@@ -71,7 +71,7 @@ export function PartyHistory({ history, currentParty }: Props) {
                   {isCurrent && (
                     <span
                       className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full border-2 border-white"
-                      style={{ backgroundColor: '#22c55e' }}
+                      style={{ backgroundColor: 'var(--color-for)' }}
                       title="Partid actual"
                     />
                   )}

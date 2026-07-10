@@ -33,7 +33,7 @@ export function CountyMap({ selected }: { selected?: string }) {
                 onKeyDown={e => {
                   if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(name) }
                 }}
-                className="cursor-pointer outline-none [transition:fill_120ms] focus-visible:stroke-[var(--flag-yellow)]"
+                className="cursor-pointer outline-none [transition:fill_120ms] focus-visible:stroke-[var(--color-abstention)]"
                 style={{
                   fill: active ? 'var(--sidebar-bg)' : '#dfe7f5',
                   stroke: 'var(--sidebar-bg)',

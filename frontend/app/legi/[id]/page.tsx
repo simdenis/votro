@@ -214,10 +214,10 @@ function ChamberSection({
             {date && <p className="text-xs text-muted">{formatDate(date)}</p>}
             <div className="flex gap-6">
               {[
-                { label: 'Pentru',    value: forCount,         color: '#22c55e' },
-                { label: 'Împotrivă', value: againstCount,     color: '#ef4444' },
-                { label: 'Abțineri',  value: abstentionCount,  color: '#8888cc' },
-                { label: 'Absenți',   value: absentCount,      color: '#9e9d97' },
+                { label: 'Pentru',    value: forCount,         color: 'var(--color-for)' },
+                { label: 'Împotrivă', value: againstCount,     color: 'var(--color-against)' },
+                { label: 'Abțineri',  value: abstentionCount,  color: 'var(--color-abstention)' },
+                { label: 'Absenți',   value: absentCount,      color: 'var(--faint)' },
               ].map(({ label, value, color }) => (
                 <div key={label}>
                   <div className="text-2xl font-extrabold tabular-nums leading-none" style={{ color }}>
@@ -242,9 +242,9 @@ function ChamberSection({
                 />
                 <div className="flex gap-5 mt-2">
                   {[
-                    { color: '#22c55e', label: 'Pentru',    value: forCount },
-                    { color: '#ef4444', label: 'Împotrivă', value: againstCount },
-                    { color: '#8888cc', label: 'Abțineri',  value: abstentionCount },
+                    { color: 'var(--color-for)', label: 'Pentru',    value: forCount },
+                    { color: 'var(--color-against)', label: 'Împotrivă', value: againstCount },
+                    { color: 'var(--color-abstention)', label: 'Abțineri',  value: abstentionCount },
                   ].map(({ color, label, value }) => (
                     <span key={label} className="flex items-center gap-1.5 text-xs text-muted">
                       <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />

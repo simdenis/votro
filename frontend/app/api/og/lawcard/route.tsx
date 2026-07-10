@@ -13,7 +13,7 @@ const SB = { apikey: K, Authorization: `Bearer ${K}` }
 
 const SAMPLE: LawCardData = {
   lawCode: 'L 412/2026', lawTitle: 'Lege privind transparența deciziilor parlamentare', category: 'Administrație', year: 2026,
-  statusLabel: 'PROMULGATĂ', statusColor: '#0f2464', dateLine: 'Promulgată · 24 mai 2026',
+  statusLabel: 'PROMULGATĂ', statusColor: '#171A1F', dateLine: 'Promulgată · 24 mai 2026',
   journey: [
     { label: 'Senat', done: true },
     { label: 'Cameră', done: true },

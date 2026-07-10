@@ -28,7 +28,7 @@ function DeadlineBadge({ deadline }: { deadline: string }) {
   return (
     <span
       className="inline-flex text-[11px] font-bold uppercase tracking-wide rounded px-2 py-0.5 text-white"
-      style={{ backgroundColor: urgent ? '#c4362e' : 'var(--sidebar-bg)' }}
+      style={{ backgroundColor: urgent ? 'var(--color-against)' : 'var(--sidebar-bg)' }}
     >
       {d === 0 ? 'azi' : `${d} ${countNoun(d, 'zi', 'zile')}`}
     </span>

@@ -37,13 +37,13 @@ export function choiceLabel(choice: VoteChoice | string): string {
 
 export function choiceColor(choice: VoteChoice | string): string {
   const map: Record<string, string> = {
-    for: '#16a34a',
-    against: '#dc2626',
-    abstention: '#9ca3af',
-    not_voted: '#9ca3af',
-    absent: '#d1d5db',
+    for: 'var(--color-for)',
+    against: 'var(--color-against)',
+    abstention: 'var(--color-abstention)',
+    not_voted: 'var(--faint)',
+    absent: 'var(--faint)',
   }
-  return map[choice] ?? '#9ca3af'
+  return map[choice] ?? 'var(--faint)'
 }
 
 /** Catch-all labels for members without a real party (unaffiliated, national

@@ -18,7 +18,7 @@ export function MobileNav() {
         onClick={() => setOpen(v => !v)}
         aria-label={open ? 'Închide meniul' : 'Deschide meniul'}
         aria-expanded={open}
-        className="text-white/85 hover:text-white p-1 -mr-1"
+        className="text-muted hover:text-foreground p-1 -mr-1 transition-colors"
       >
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
           {open
@@ -27,10 +27,10 @@ export function MobileNav() {
         </svg>
       </button>
 
-      {/* The navy bar simply grows downward to reveal the menu — no overlay */}
+      {/* The white header grows downward to reveal the menu — no overlay */}
       <div
-        className="absolute left-0 right-0 top-full overflow-hidden transition-[max-height] duration-300 ease-out"
-        style={{ maxHeight: open ? 640 : 0, backgroundColor: 'var(--sidebar-bg)' }}
+        className="absolute left-0 right-0 top-full overflow-hidden transition-[max-height] duration-300 ease-out bg-white border-b border-rim"
+        style={{ maxHeight: open ? 720 : 0 }}
       >
         <nav className="flex flex-col px-4 pb-3">
           {NAV_LINKS.map(({ href, label }) => {
@@ -39,15 +39,17 @@ export function MobileNav() {
               <Link
                 key={href}
                 href={href}
-                className={`px-3 py-3 rounded-md text-[16px] border-b border-white/[0.06] last:border-0 ${
-                  active ? 'font-semibold text-white bg-white/[0.10]' : 'font-medium text-white/85'
+                className={`px-3 py-3 text-[16px] border-b border-rim/60 last:border-0 ${
+                  active
+                    ? 'font-semibold text-foreground border-l-2 border-l-adoptat pl-[10px]'
+                    : 'font-medium text-muted'
                 }`}
               >
                 {label}
               </Link>
             )
           })}
-          <Link href="/search" className="px-3 py-3 text-[16px] font-medium text-white/60">
+          <Link href="/search" className="px-3 py-3 text-[16px] font-medium text-faint">
             Căutare
           </Link>
         </nav>

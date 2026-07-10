@@ -1,7 +1,13 @@
 // Shared font loader for the 1080×1080 card routes (Satori / next-og).
+// Brand type: IBM Plex Sans + IBM Plex Mono (latin-ext via full TTFs).
 // Forces TTF (Satori can't read woff2) via an old User-Agent to Google Fonts.
+//
+// 'Plex Display' is IBM Plex Sans 700 registered under its own family name:
+// card titles set only fontFamily (no fontWeight), and Satori then picks the
+// single face registered for that family — bold headlines with zero per-style
+// weight plumbing.
 
-type FontWeight = 400 | 500 | 600
+type FontWeight = 400 | 500 | 600 | 700
 interface OgFont { name: string; data: ArrayBuffer; weight: FontWeight; style: 'normal' }
 
 async function loadFont(family: string, weight: number): Promise<ArrayBuffer> {
@@ -19,17 +25,23 @@ let cache: Promise<OgFont[]> | null = null
 
 export function getCardFonts(): Promise<OgFont[]> {
   return (cache ??= (async () => {
-    const [serif, s4, s5, s6] = await Promise.all([
-      loadFont('DM Serif Display', 400),
-      loadFont('DM Sans', 400),
-      loadFont('DM Sans', 500),
-      loadFont('DM Sans', 600),
+    const [display, s4, s5, s6, s7, m4, m5] = await Promise.all([
+      loadFont('IBM Plex Sans', 700),
+      loadFont('IBM Plex Sans', 400),
+      loadFont('IBM Plex Sans', 500),
+      loadFont('IBM Plex Sans', 600),
+      loadFont('IBM Plex Sans', 700),
+      loadFont('IBM Plex Mono', 400),
+      loadFont('IBM Plex Mono', 500),
     ])
     return [
-      { name: 'DM Serif Display', data: serif, weight: 400, style: 'normal' },
-      { name: 'DM Sans', data: s4, weight: 400, style: 'normal' },
-      { name: 'DM Sans', data: s5, weight: 500, style: 'normal' },
-      { name: 'DM Sans', data: s6, weight: 600, style: 'normal' },
-    ]
+      { name: 'Plex Display', data: display, weight: 400, style: 'normal' },
+      { name: 'IBM Plex Sans', data: s4, weight: 400, style: 'normal' },
+      { name: 'IBM Plex Sans', data: s5, weight: 500, style: 'normal' },
+      { name: 'IBM Plex Sans', data: s6, weight: 600, style: 'normal' },
+      { name: 'IBM Plex Sans', data: s7, weight: 700, style: 'normal' },
+      { name: 'IBM Plex Mono', data: m4, weight: 400, style: 'normal' },
+      { name: 'IBM Plex Mono', data: m5, weight: 500, style: 'normal' },
+    ] as OgFont[]
   })())
 }

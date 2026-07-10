@@ -1,4 +1,4 @@
-// 1080×1080 launch carousel — the intro post that explains what laButoane is.
+// 1080×1080 launch carousel — the intro post that explains what LaButoane is.
 // Slides 1..4; same brand language as the data cards.
 
 export interface IntroCardData {
@@ -7,27 +7,28 @@ export interface IntroCardData {
 }
 
 const C = {
-  bg: '#fafaf8',
-  text: '#0a0a14',
-  navy: '#0f2464',
-  for: '#1a7a42',
-  against: '#c4362e',
-  hair: '#e6e5e1',
+  bg: '#FFFFFF',
+  text: '#171A1F',
+  navy: '#171A1F',
+  for: '#2EA871',
+  against: '#EE7B5E',
+  hair: '#E7E9EC',
 }
-const SERIF = 'DM Serif Display'
-const SANS = 'DM Sans'
+const SERIF = 'Plex Display'   // IBM Plex Sans 700 (see og-fonts)
+const SANS = 'IBM Plex Sans'
+const MONO = 'IBM Plex Mono'
 
 function Frame({ children, kicker }: { children: React.ReactNode; kicker: string }) {
   return (
     <div style={{ width: 1080, height: 1080, display: 'flex', flexDirection: 'column', background: C.bg, color: C.text, fontFamily: SANS }}>
-      <div style={{ display: 'flex', height: 12 }}>
-        <div style={{ flex: 1, background: '#002B7F' }} />
-        <div style={{ flex: 1, background: '#FCD116' }} />
-        <div style={{ flex: 1, background: '#CE1126' }} />
-      </div>
-      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', padding: '36px 64px 22px' }}>
-        <div style={{ fontFamily: SERIF, fontSize: 52, color: C.navy, letterSpacing: '-1.5px', lineHeight: 1 }}>laButoane</div>
-        <div style={{ display: 'flex', fontSize: 16, letterSpacing: 3, textTransform: 'uppercase', color: C.text, opacity: 0.55 }}>{kicker}</div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '32px 64px 24px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 13 }}>
+          <svg width="34" height="34" viewBox="0 0 64 64"><rect width="64" height="64" rx="15" fill="#171A1F" /><rect x="11" y="11" width="18" height="18" rx="6" fill="#2EA871" /><rect x="35" y="11" width="18" height="18" rx="6" fill="#E3A23C" /><rect x="11" y="35" width="18" height="18" rx="6" fill="#EE7B5E" /><rect x="35" y="35" width="18" height="18" rx="6" fill="#4E86D8" /></svg>
+          <div style={{ display: 'flex', alignItems: 'baseline', fontSize: 27, letterSpacing: '-0.015em', color: '#171A1F' }}>
+            <span style={{ fontWeight: 400 }}>La</span><span style={{ fontWeight: 700 }}>Butoane</span>
+          </div>
+        </div>
+        <div style={{ display: 'flex', fontFamily: MONO, fontSize: 14, letterSpacing: 2, textTransform: 'uppercase', color: '#6E7480' }}>{kicker}</div>
       </div>
       <div style={{ display: 'flex', height: 1, margin: '0 64px', background: C.hair }} />
       {children}
@@ -82,7 +83,7 @@ export function IntroCard({ data }: { data: IntroCardData }) {
             Dar îngropate.
           </div>
           <div style={{ display: 'flex', fontSize: 32, lineHeight: 1.4, color: C.text, opacity: 0.72, marginTop: 40, maxWidth: 820 }}>
-            Voturile Senatului și ale Camerei stau în PDF-uri și pagini web greu de citit. laButoane le adună, le curăță și le explică pe înțelesul tuturor.
+            Voturile Senatului și ale Camerei stau în PDF-uri și pagini web greu de citit. LaButoane le adună, le curăță și le explică pe înțelesul tuturor.
           </div>
         </div>
         <div style={{ display: 'flex', padding: '0 64px 56px', fontSize: 18, color: C.text, opacity: 0.5 }}>sursă oficială: senat.ro · cdep.ro</div>
@@ -95,7 +96,7 @@ export function IntroCard({ data }: { data: IntroCardData }) {
     return (
       <Frame kicker="Ce găsești">
         <div style={{ display: 'flex', flexDirection: 'column', flex: 1, padding: '48px 64px 0' }}>
-          <div style={{ fontFamily: SERIF, fontSize: 54, lineHeight: 1.05, color: C.text, marginBottom: 44 }}>Ce găsești pe laButoane?</div>
+          <div style={{ fontFamily: SERIF, fontSize: 54, lineHeight: 1.05, color: C.text, marginBottom: 44 }}>Ce găsești pe LaButoane?</div>
           <Bullet>Cum a votat fiecare senator și deputat.</Bullet>
           <Bullet>Absențele reale de la voturile din plen.</Bullet>
           <Bullet>Cine deviază de la linia de partid.</Bullet>

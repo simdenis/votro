@@ -32,10 +32,10 @@ export function SeatArc({
   const rowGap = Math.round(width * 0.048)
 
   const order: string[] = [
-    ...Array(forCount).fill('#22c55e'),
-    ...Array(againstCount).fill('#ef4444'),
-    ...Array(abstentionCount).fill('#8888cc'),
-    ...Array(notVotedCount).fill('#d1d5db'),
+    ...Array(forCount).fill('var(--color-for)'),
+    ...Array(againstCount).fill('var(--color-against)'),
+    ...Array(abstentionCount).fill('var(--color-abstention)'),
+    ...Array(notVotedCount).fill('var(--faint)'),
   ]
 
   // Rows scale with the vote size: 4 rows fit the Senate (~136), Camera
@@ -66,7 +66,7 @@ export function SeatArc({
     }
   })
 
-  const heroColor = outcome === 'adoptat' ? '#16a34a' : outcome === 'respins' ? '#dc2626' : 'var(--muted)'
+  const heroColor = outcome === 'adoptat' ? 'var(--color-for)' : outcome === 'respins' ? 'var(--color-against)' : 'var(--muted)'
   const heroSymbol = outcome === 'adoptat' ? '✓' : outcome === 'respins' ? '✗' : '—'
 
   return (

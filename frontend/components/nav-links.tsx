@@ -12,54 +12,35 @@ export const NAV_LINKS = [
   { href: '/parties',    label: 'Partide' },
   { href: '/traseisti',  label: 'Traseiști' },
   { href: '/parlamentarul-tau', label: 'Parlamentarul tău' },
-  { href: '/tacite',     label: 'Termene tacite' },
+  { href: '/tacite',     label: 'Legi tacite' },
   { href: '/contribuie', label: 'Contribuie' },
   { href: '/despre',     label: 'Despre' },
 ]
 
-export function NavLinks({ variant }: { variant?: 'sidebar' | 'top' }) {
+/** Top-header nav per the brand mock: 12.5px items, active = ink text with a
+    2px --vote-for underline sitting on the header's bottom border. */
+export function NavLinks({ variant }: { variant?: 'top' }) {
   const path = usePathname()
+  void variant
 
-  if (variant === 'sidebar') {
-    return (
-      <nav className="flex flex-col gap-0.5 flex-1">
-        {NAV_LINKS.map(({ href, label }) => {
-          const active = path === href || path.startsWith(`${href}/`)
-          return (
-            <Link
-              key={href}
-              href={href}
-              className={`px-[12px] py-[10px] rounded-md text-[17px] transition-colors ${
-                active
-                  ? 'font-semibold text-white bg-white/[0.14]'
-                  : 'font-medium text-white/85 hover:text-white hover:bg-white/[0.08]'
-              }`}
-            >
-              {label}
-            </Link>
-          )
-        })}
-      </nav>
-    )
-  }
-
-  // top bar fallback (mobile) — navy bar, white text
   return (
-    <div className="flex gap-5 text-[13px] overflow-x-auto">
+    <nav className="flex items-center gap-4 min-w-0 overflow-x-auto h-full">
       {NAV_LINKS.map(({ href, label }) => {
         const active = path === href || path.startsWith(`${href}/`)
         return (
           <Link
             key={href}
             href={href}
-            className={`whitespace-nowrap transition-colors ${
-              active ? 'text-white font-semibold' : 'text-white/55 hover:text-white'
+            className={`whitespace-nowrap text-[12.5px] h-full inline-flex items-center border-b-2 -mb-px transition-colors ${
+              active
+                ? 'font-semibold text-foreground border-adoptat'
+                : 'font-medium text-muted border-transparent hover:text-foreground'
             }`}
           >
             {label}
           </Link>
         )
       })}
-    </div>
+    </nav>
   )
 }

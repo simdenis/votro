@@ -35,11 +35,11 @@ export function PoliticianProfile({ stats, history, deviationRows, partyHistory,
   const absentReal = trueAbsent(stats) ?? stats.votes_absent
   const notVoted   = stats.votes_not_voted ?? 0
   const behaviorRows = [
-    { label: 'Pentru',    value: stats.votes_for,        color: '#16a34a', icon: '▲' },
-    { label: 'Împotrivă', value: stats.votes_against,    color: '#dc2626', icon: '▼' },
-    { label: 'Abțineri',  value: stats.votes_abstention, color: '#8888cc', icon: '—' },
+    { label: 'Pentru',    value: stats.votes_for,        color: 'var(--color-for)', icon: '▲' },
+    { label: 'Împotrivă', value: stats.votes_against,    color: 'var(--color-against)', icon: '▼' },
+    { label: 'Abțineri',  value: stats.votes_abstention, color: 'var(--color-abstention)', icon: '—' },
     ...(notVoted > 0
-      ? [{ label: 'Prezent, fără vot', value: notVoted, color: '#d1d5db', icon: '○' }]
+      ? [{ label: 'Prezent, fără vot', value: notVoted, color: 'var(--faint)', icon: '○' }]
       : []),
     { label: 'Absent',    value: absentReal,             color: 'var(--faint)', icon: '·' },
   ]

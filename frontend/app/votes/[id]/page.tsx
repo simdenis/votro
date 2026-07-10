@@ -260,10 +260,10 @@ export default async function VoteDetail({
                   { color: 'var(--color-abstention)', label: 'Abțineri',  value: vote.abstention_count },
                   // grey dots in the arc — present but didn't press a button
                   ...((vote.not_voted_count ?? 0) > 0
-                    ? [{ color: '#d1d5db', label: 'Prezenți, nu au votat', value: vote.not_voted_count }]
+                    ? [{ color: 'var(--faint)', label: 'Prezenți, nu au votat', value: vote.not_voted_count }]
                     : []),
                   ...(absentCount
-                    ? [{ color: '#efeee9', label: 'Absenți', value: absentCount }]
+                    ? [{ color: 'var(--color-absent)', label: 'Absenți', value: absentCount }]
                     : []),
                 ].map(({ color, label, value }) => (
                   <span key={label} className="flex items-center gap-1.5 text-sm text-muted">
