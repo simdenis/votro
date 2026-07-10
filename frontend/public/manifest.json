@@ -1,6 +1,6 @@
 {
-  "name": "laButoane",
-  "short_name": "laButoane",
+  "name": "LaButoane",
+  "short_name": "LaButoane",
   "description": "Urmărește voturile senatorilor și deputaților români.",
   "start_url": "/",
   "display": "standalone",

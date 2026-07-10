@@ -63,8 +63,8 @@ export default async function SaptamanaPage() {
                 style={{
                   borderLeftWidth: 4,
                   borderLeftColor:
-                    vote.outcome === 'adoptat' ? '#22c55e' :
-                    vote.outcome === 'respins' ? '#ef4444' :
+                    vote.outcome === 'adoptat' ? 'var(--color-for)' :
+                    vote.outcome === 'respins' ? 'var(--color-against)' :
                     'var(--rim)',
                 }}
               >
@@ -101,7 +101,7 @@ export default async function SaptamanaPage() {
                     {' · '}
                     <span className="text-respins font-semibold">{vote.against_count ?? 0}</span>
                     {' · '}
-                    <span className="text-[#8888cc] font-semibold">{vote.abstention_count ?? 0}</span>
+                    <span className="text-[var(--color-abstention)] font-semibold">{vote.abstention_count ?? 0}</span>
                   </span>
                 </div>
               </Link>

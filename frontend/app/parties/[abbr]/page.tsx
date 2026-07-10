@@ -87,7 +87,7 @@ export default async function PartyPage({ params }: { params: Promise<{ abbr: st
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         {!noLine && <StatsCard value={pct(cohesion.cohesion_pct)} label="Coeziune" accent={cohesion.color} />}
-        {!noLine && <StatsCard value={cohesion.deviation_count} label="Devieri totale" accent="#f59e0b" />}
+        {!noLine && <StatsCard value={cohesion.deviation_count} label="Devieri totale" accent="var(--color-deviation)" />}
         {absencePct != null && (
           <StatsCard value={pct(absencePct)} label="Absență medie" accent="var(--color-against)" />
         )}
@@ -182,7 +182,7 @@ export default async function PartyPage({ params }: { params: Promise<{ abbr: st
                     </td>
                     <td className="py-2.5 px-3 font-semibold" style={{ color: choiceColor(v.majority_choice) }}>
                       {choiceLabel(v.majority_choice)}
-                      <span className="text-[#5050a0] font-normal ml-2 tabular-nums">({v.majority_count})</span>
+                      <span className="text-abstention font-normal ml-2 tabular-nums">({v.majority_count})</span>
                     </td>
                     <td className="py-2.5 px-3 hidden md:table-cell">
                       <OutcomeBadge outcome={v.outcome} />

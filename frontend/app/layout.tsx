@@ -1,22 +1,23 @@
 import type { Metadata } from 'next'
-import { DM_Serif_Display, DM_Sans } from 'next/font/google'
+import { IBM_Plex_Sans, IBM_Plex_Mono } from 'next/font/google'
 import './globals.css'
 import { Nav } from '@/components/nav'
 import { Footer } from '@/components/footer'
 
-// Display serif for headlines. Used via `font-serif`.
-const dmSerif = DM_Serif_Display({
+// Brand type: IBM Plex Sans for display + UI (latin-ext for ă â î ș ț).
+// `font-serif` classes stay in markup but render Plex Sans 600 (globals.css).
+const plexSans = IBM_Plex_Sans({
   subsets: ['latin', 'latin-ext'],
-  weight: ['400'],
-  style: ['normal', 'italic'],
-  variable: '--font-serif',
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-sans',
   display: 'swap',
 })
 
-// Body sans. Used via `font-sans` / default body font.
-const dmSans = DM_Sans({
+// Data, labels, codes — IBM Plex Mono.
+const plexMono = IBM_Plex_Mono({
   subsets: ['latin', 'latin-ext'],
-  variable: '--font-sans',
+  weight: ['400', '500'],
+  variable: '--font-mono',
   display: 'swap',
 })
 
@@ -25,16 +26,16 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://votro.ro'
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: 'laButoane — Cum votează parlamentarii români',
-    template: '%s | laButoane',
+    default: 'LaButoane — Cum votează parlamentarii români',
+    template: '%s | LaButoane',
   },
   description:
     'Urmărește voturile senatorilor și deputaților români. Transparență parlamentară în timp real.',
   openGraph: {
-    siteName: 'laButoane',
+    siteName: 'LaButoane',
     locale: 'ro_RO',
     type: 'website',
-    images: [{ url: '/api/og', width: 1200, height: 630, alt: 'laButoane' }],
+    images: [{ url: '/api/og', width: 1200, height: 630, alt: 'LaButoane' }],
   },
   twitter: {
     card: 'summary_large_image',
@@ -42,24 +43,25 @@ export const metadata: Metadata = {
   },
   manifest: '/manifest.json',
   icons: {
-    icon: '/icons/icon-192.png',
+    icon: [
+      { url: '/glyph.svg', type: 'image/svg+xml' },
+      { url: '/icons/icon-192.png', type: 'image/png' },
+    ],
     apple: '/icons/icon-192.png',
   },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ro" className={`${dmSerif.variable} ${dmSans.variable}`} suppressHydrationWarning>
+    <html lang="ro" className={`${plexSans.variable} ${plexMono.variable}`} suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://zmxewrkykbxawfhzxbni.supabase.co" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
-      <body className="flex flex-col lg:flex-row min-h-screen">
+      <body className="flex flex-col min-h-screen">
         <Nav />
-        <div className="flex flex-col flex-1 min-w-0">
-          <main className="flex-1 max-w-[1280px] w-full px-4 sm:px-8 lg:px-14 pt-5 sm:pt-7 pb-16">{children}</main>
-          <Footer />
-        </div>
+        <main className="flex-1 max-w-[1280px] w-full mx-auto px-4 sm:px-8 lg:px-14 pt-6 sm:pt-8 pb-16">{children}</main>
+        <Footer />
       </body>
     </html>
   )

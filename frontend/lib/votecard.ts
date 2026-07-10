@@ -103,10 +103,10 @@ export function mapLawToCard(
   else finalStep = { label: 'Președinte', done: false, final: true }
 
   let statusLabel = 'ÎN DEZBATERE'
-  let statusColor = '#0f2464'
-  if (promulgat) { statusLabel = 'PROMULGATĂ'; statusColor = '#0f2464' }
-  else if (rejected) { statusLabel = 'RESPINSĂ'; statusColor = '#c4362e' }
-  else if (senateDone && cameraDone) { statusLabel = 'ADOPTATĂ'; statusColor = '#1a7a42' }
+  let statusColor = '#171A1F'
+  if (promulgat) { statusLabel = 'PROMULGATĂ'; statusColor = '#171A1F' }
+  else if (rejected) { statusLabel = 'RESPINSĂ'; statusColor = '#C25539' }
+  else if (senateDone && cameraDone) { statusLabel = 'ADOPTATĂ'; statusColor = '#1F7A51' }
 
   const dateLine = promulgat && law.presidential_date
     ? `Promulgată · ${formatDate(law.presidential_date)}`

@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap&subset=latin-ext" rel="stylesheet">
+<style>
+body{margin:0;background:#ECEDF0;font-family:"IBM Plex Sans",system-ui,sans-serif}
+a{color:#3D4759;text-decoration:none}a:hover{color:#171A1F}
+.dv-turn{padding:40px 44px 32px;border-bottom:1px solid rgba(0,0,0,.08);scroll-margin-top:16px}
+.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 20px}
+.dv-tid{font:600 10px "IBM Plex Mono",monospace;padding:3px 7px;background:#171A1F;color:#fff;border-radius:4px;text-decoration:none}
+.dv-tname{font:600 13px/1.2 "IBM Plex Sans",sans-serif;color:#171A1F}
+.dv-opts{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}
+.dv-opt{flex:none;display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px}
+.dv-oid{font:600 10.5px "IBM Plex Mono",monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#171A1F;border-radius:5px;text-decoration:none}
+.dv-olabel{display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 "IBM Plex Sans",sans-serif;color:rgba(0,0,0,.55)}
+.dv-card{max-width:100%;background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.06);overflow:hidden}
+.dv-opt:target .dv-oid{background:#3D4759;color:#fff}
+.dv-next{margin:22px 0 0;font:12px/1.5 "IBM Plex Sans",sans-serif;color:rgba(0,0,0,.5)}
+</style>
+</helmet>
+
+<section class="dv-turn" id="t3">
+<div class="dv-thd"><a class="dv-tid" href="#t3">3</a><span class="dv-tname">Final: <a class="dv-oid" href="#2c">2c</a> console glyph × <a class="dv-oid" href="#2a">2a</a> full palette — with color roles</span></div>
+<div class="dv-opts">
+
+<div class="dv-opt" id="3a">
+<div class="dv-olabel"><a class="dv-oid" href="#3a">3a</a>LaButoane identity — ink wordmark, console glyph, 5-hue functional palette</div>
+<div class="dv-card" style="width:740px">
+
+  <div style="background:#FFFFFF;padding:56px 48px 44px;display:flex;flex-direction:column;gap:24px">
+    <div style="display:flex;align-items:center;gap:16px">
+      <span style="display:inline-grid;grid-template-columns:1fr 1fr;gap:5px;background:#171A1F;border-radius:13px;padding:9px;box-shadow:0 5px 0 #000">
+        <span style="width:15px;height:15px;border-radius:5px;background:#2EA871"></span>
+        <span style="width:15px;height:15px;border-radius:5px;background:#E3A23C"></span>
+        <span style="width:15px;height:15px;border-radius:5px;background:#EE7B5E"></span>
+        <span style="width:15px;height:15px;border-radius:5px;background:#4E86D8"></span>
+      </span>
+      <div style="font-size:42px;letter-spacing:-0.015em;color:#171A1F;line-height:1"><span style="font-weight:400">La</span><span style="font-weight:700">Butoane</span><span style="font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:26px;color:#9AA0AA">.ro</span></div>
+    </div>
+    <div style="font-size:15px;color:#3D4759;max-width:520px;line-height:1.5">Cine ține mâna pe butoane în Parlamentul României? Urmărește voturile, absențele și legile adoptate tacit.</div>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#9AA0AA;letter-spacing:.08em">DIACRITICE · ĂÂÎȘȚ ăâîșț · IBM PLEX SANS 400/700 + PLEX MONO</div>
+  </div>
+
+  <!-- color roles -->
+  <div style="border-top:1px solid #E7E9EC;padding:22px 32px;display:flex;gap:10px;flex-wrap:wrap">
+    <div style="flex:1;min-width:110px;display:flex;flex-direction:column;gap:6px"><div style="height:40px;border-radius:7px;background:#2EA871"></div><span style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#6E7480;letter-spacing:.05em">2EA871 · PENTRU / ACTIV</span></div>
+    <div style="flex:1;min-width:110px;display:flex;flex-direction:column;gap:6px"><div style="height:40px;border-radius:7px;background:#EE7B5E"></div><span style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#6E7480;letter-spacing:.05em">EE7B5E · ÎMPOTRIVĂ</span></div>
+    <div style="flex:1;min-width:110px;display:flex;flex-direction:column;gap:6px"><div style="height:40px;border-radius:7px;background:#E3A23C"></div><span style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#6E7480;letter-spacing:.05em">E3A23C · ABȚINERE / TACIT</span></div>
+    <div style="flex:1;min-width:110px;display:flex;flex-direction:column;gap:6px"><div style="height:40px;border-radius:7px;background:#4E86D8"></div><span style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#6E7480;letter-spacing:.05em">4E86D8 · LINK / INFO</span></div>
+    <div style="flex:1;min-width:110px;display:flex;flex-direction:column;gap:6px"><div style="height:40px;border-radius:7px;background:#171A1F"></div><span style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#6E7480;letter-spacing:.05em">171A1F · INK / TEXT</span></div>
+    <div style="flex:1;min-width:110px;display:flex;flex-direction:column;gap:6px"><div style="height:40px;border-radius:7px;background:#D8DBE0"></div><span style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#6E7480;letter-spacing:.05em">D8DBE0 · ABSENT / MUTED</span></div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr">
+    <div style="background:#fff;border-top:1px solid #E7E9EC;padding:30px 32px;display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;align-items:center;gap:9px">
+        <span style="display:inline-grid;grid-template-columns:1fr 1fr;gap:3px;border:2px solid #000;border-radius:8px;padding:4px;box-shadow:0 3px 0 #000">
+          <span style="width:8px;height:8px;border-radius:3px;background:#000"></span>
+          <span style="width:8px;height:8px;border-radius:3px;border:1.5px solid #000;box-sizing:border-box"></span>
+          <span style="width:8px;height:8px;border-radius:3px;border:1.5px solid #000;box-sizing:border-box"></span>
+          <span style="width:8px;height:8px;border-radius:3px;background:#000"></span>
+        </span>
+        <span style="font-size:21px;color:#000;letter-spacing:-0.015em"><span style="font-weight:400">La</span><span style="font-weight:700">Butoane</span><span style="font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:14px">.ro</span></span>
+      </div>
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#9AA0AA;letter-spacing:.08em">ONE-COLOR / BLACK</span>
+    </div>
+    <div style="background:#171A1F;padding:30px 32px;display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;align-items:center;gap:9px">
+        <span style="display:inline-grid;grid-template-columns:1fr 1fr;gap:3px;border:2px solid #F5F6F8;border-radius:8px;padding:4px;box-shadow:0 3px 0 #F5F6F8">
+          <span style="width:8px;height:8px;border-radius:3px;background:#F5F6F8"></span>
+          <span style="width:8px;height:8px;border-radius:3px;border:1.5px solid #F5F6F8;box-sizing:border-box"></span>
+          <span style="width:8px;height:8px;border-radius:3px;border:1.5px solid #F5F6F8;box-sizing:border-box"></span>
+          <span style="width:8px;height:8px;border-radius:3px;background:#F5F6F8"></span>
+        </span>
+        <span style="font-size:21px;color:#F5F6F8;letter-spacing:-0.015em"><span style="font-weight:400">La</span><span style="font-weight:700">Butoane</span><span style="font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:14px;color:#9AA0AA">.ro</span></span>
+      </div>
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#6E7480;letter-spacing:.08em">REVERSED / WHITE</span>
+    </div>
+  </div>
+
+  <div style="border-top:1px solid #E7E9EC;padding:26px 32px;display:flex;align-items:center;gap:28px;flex-wrap:wrap">
+    <div style="display:flex;align-items:flex-end;gap:16px">
+      <span style="display:inline-grid;grid-template-columns:1fr 1fr;gap:6px;background:#171A1F;border-radius:15px;padding:11px;width:36px;height:36px;box-sizing:content-box">
+        <span style="border-radius:6px;background:#2EA871"></span><span style="border-radius:6px;background:#E3A23C"></span><span style="border-radius:6px;background:#EE7B5E"></span><span style="border-radius:6px;background:#4E86D8"></span>
+      </span>
+      <span style="display:inline-grid;grid-template-columns:1fr 1fr;gap:3px;background:#171A1F;border-radius:8px;padding:6px;width:17px;height:17px;box-sizing:content-box">
+        <span style="border-radius:3px;background:#2EA871"></span><span style="border-radius:3px;background:#E3A23C"></span><span style="border-radius:3px;background:#EE7B5E"></span><span style="border-radius:3px;background:#4E86D8"></span>
+      </span>
+      <span style="display:inline-grid;grid-template-columns:1fr 1fr;gap:2px;background:#171A1F;border-radius:4.5px;padding:3px;width:8px;height:8px;box-sizing:content-box">
+        <span style="border-radius:1.5px;background:#2EA871"></span><span style="border-radius:1.5px;background:#E3A23C"></span><span style="border-radius:1.5px;background:#EE7B5E"></span><span style="border-radius:1.5px;background:#4E86D8"></span>
+      </span>
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#9AA0AA">64 / 32 / 16</span>
+    </div>
+    <div style="flex:1;min-width:280px;background:#DEE1E6;border-radius:10px 10px 0 0;padding:8px 8px 0;display:flex">
+      <div style="background:#fff;border-radius:9px 9px 0 0;padding:8px 12px;display:flex;align-items:center;gap:8px;min-width:230px">
+        <span style="display:inline-grid;grid-template-columns:1fr 1fr;gap:2px;background:#171A1F;border-radius:4.5px;padding:3px;width:8px;height:8px;box-sizing:content-box;flex:none">
+          <span style="border-radius:1.5px;background:#2EA871"></span><span style="border-radius:1.5px;background:#E3A23C"></span><span style="border-radius:1.5px;background:#EE7B5E"></span><span style="border-radius:1.5px;background:#4E86D8"></span>
+        </span>
+        <span style="font-size:12px;color:#3D4759;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">LaButoane — Voturi în Parlament</span>
+        <span style="margin-left:auto;color:#9AA0AA;font-size:12px">×</span>
+      </div>
+      <div style="padding:8px 12px;font-size:12px;color:#6E7480">+</div>
+    </div>
+  </div>
+
+  <div style="border-top:1px solid #E7E9EC">
+    <div style="background:#fff;border-bottom:1px solid #E7E9EC;padding:12px 32px;display:flex;align-items:center;gap:22px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="display:inline-grid;grid-template-columns:1fr 1fr;gap:2.5px;background:#171A1F;border-radius:6px;padding:4.5px;width:13px;height:13px;box-sizing:content-box;flex:none">
+          <span style="border-radius:2px;background:#2EA871"></span><span style="border-radius:2px;background:#E3A23C"></span><span style="border-radius:2px;background:#EE7B5E"></span><span style="border-radius:2px;background:#4E86D8"></span>
+        </span>
+        <span style="font-size:16px;color:#171A1F;letter-spacing:-0.015em"><span style="font-weight:400">La</span><span style="font-weight:700">Butoane</span><span style="font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:11px;color:#6E7480">.ro</span></span>
+      </div>
+      <nav style="display:flex;gap:18px;font-size:12.5px;color:#3D4759"><span style="color:#171A1F;font-weight:500;border-bottom:2px solid #2EA871;padding-bottom:2px">Voturi</span><span>Deputați</span><span>Legi tacite</span><span>Absențe</span></nav>
+      <span style="margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.1em;color:#6E7480;border:1px solid #D8DBE0;border-radius:3px;padding:3px 6px">NEAFILIAT POLITIC</span>
+    </div>
+    <div style="padding:0 32px 6px;background:#FBFBFC">
+      <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:8px;padding:9px 0 7px;font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.08em;color:#9AA0AA;border-bottom:1px solid #E7E9EC"><span>DEPUTAT</span><span>GRUP</span><span>VOT</span><span>PREZENȚĂ</span></div>
+      <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:8px;padding:8px 0;font-size:12.5px;color:#171A1F;border-bottom:1px solid #F0F1F3"><span>Ștefania Mărgărit</span><span style="color:#6E7480">Grup A</span><span style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:#2EA871"></span>Pentru</span><span style="color:#6E7480">98%</span></div>
+      <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:8px;padding:8px 0;font-size:12.5px;color:#171A1F;border-bottom:1px solid #F0F1F3"><span>Ion Târnăveanu</span><span style="color:#6E7480">Grup B</span><span style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:#EE7B5E"></span>Împotrivă</span><span style="color:#6E7480">91%</span></div>
+      <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:8px;padding:8px 0;font-size:12.5px;color:#171A1F;border-bottom:1px solid #F0F1F3"><span>Radu Abțineanu</span><span style="color:#6E7480">Grup B</span><span style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:#E3A23C"></span>Abținere</span><span style="color:#6E7480">88%</span></div>
+      <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:8px;padding:8px 0;font-size:12.5px;color:#171A1F"><span>Anca Peștișanu</span><span style="color:#6E7480">Grup C</span><span style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:#D8DBE0"></span><span style="color:#6E7480">Absent</span></span><span style="color:#6E7480">64%</span></div>
+    </div>
+  </div>
+
+  <div style="border-top:1px solid #E7E9EC;padding:24px 32px;background:#F5F6F8;display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap">
+    <div style="width:340px;border:1px solid #D8DBE0;border-radius:12px;overflow:hidden;background:#fff">
+      <div style="background:#FFFFFF;border-bottom:1px solid #EEF0F2;height:150px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:13px">
+        <span style="display:inline-grid;grid-template-columns:1fr 1fr;gap:4px;background:#171A1F;border-radius:11px;padding:8px;width:26px;height:26px;box-sizing:content-box">
+          <span style="border-radius:4px;background:#2EA871"></span><span style="border-radius:4px;background:#E3A23C"></span><span style="border-radius:4px;background:#EE7B5E"></span><span style="border-radius:4px;background:#4E86D8"></span>
+        </span>
+        <span style="font-size:15px;color:#171A1F"><span style="font-weight:400">La</span><span style="font-weight:700">Butoane</span><span style="font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:11px;color:#9AA0AA">.ro</span></span>
+      </div>
+      <div style="padding:12px 14px;display:flex;flex-direction:column;gap:4px">
+        <span style="font-size:13.5px;font-weight:600;color:#171A1F;line-height:1.35">Cum a votat Camera Deputaților pe 9 iulie 2026</span>
+        <span style="font-size:12px;color:#6E7480;line-height:1.4">312 voturi înregistrate · 41 absențe · 2 legi adoptate tacit</span>
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#9AA0AA;margin-top:2px">labutoane.ro</span>
+      </div>
+    </div>
+    <div style="flex:1;min-width:220px;font-size:11.5px;color:#3D4759;line-height:1.55">Wordmark stays pure ink — journalist-safe. All five hues from <a class="dv-oid" href="#2a">2a</a> now carry <b>meaning</b>: green Pentru, coral Împotrivă, amber Abținere/tacit, blue links, gray absent. The console glyph shows the full spectrum, so the brand takes no side. Handoff package with tokens, logo code and SVG assets is ready below.</div>
+  </div>
+
+</div>
+</div>
+
+</div>
+<p class="dv-next">Try next: “swap the glyph corner radius / dot shapes” · “darker ink” · “show it on a full homepage”</p>
+</section>
+
+<section class="dv-turn" id="t2">
+<div class="dv-thd"><a class="dv-tid" href="#t2">2</a><span class="dv-tname">Colorful keycaps on white — riffs on <a class="dv-oid" href="#1a">1a</a></span></div>
+<div class="dv-opts">
+
+<!-- ============ 2a CANDY KEYBOARD ============ -->
+<div class="dv-opt" id="2a">
+<div class="dv-olabel"><a class="dv-oid" href="#2a">2a</a>Candy keyboard — every letter is its own colored key</div>
+<div class="dv-card" style="width:740px">
+
+  <div style="background:#FFFFFF;padding:56px 48px 44px;display:flex;flex-direction:column;gap:24px">
+    <div style="display:flex;align-items:center;gap:7px;padding-bottom:6px">
+      <span style="display:inline-flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:11px;background:#2EA871;box-shadow:0 5px 0 #1F7A51;color:#fff;font-weight:600;font-size:25px">L</span>
+      <span style="display:inline-flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:11px;background:#E3A23C;box-shadow:0 5px 0 #B27A24;color:#fff;font-weight:600;font-size:25px">a</span>
+      <span style="display:inline-flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:11px;background:#8571E6;box-shadow:0 5px 0 #5F4EC2;color:#fff;font-weight:600;font-size:25px;margin-left:8px">B</span>
+      <span style="display:inline-flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:11px;background:#EE7B5E;box-shadow:0 5px 0 #C25539;color:#fff;font-weight:600;font-size:25px">u</span>
+      <span style="display:inline-flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:11px;background:#4E86D8;box-shadow:0 5px 0 #33639F;color:#fff;font-weight:600;font-size:25px">t</span>
+      <span style="display:inline-flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:11px;background:#2EA871;box-shadow:0 2px 0 #1F7A51;color:#fff;font-weight:600;font-size:25px;transform:translateY(3px)">o</span>
+      <span style="display:inline-flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:11px;background:#E3A23C;box-shadow:0 5px 0 #B27A24;color:#fff;font-weight:600;font-size:25px">a</span>
+      <span style="display:inline-flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:11px;background:#8571E6;box-shadow:0 5px 0 #5F4EC2;color:#fff;font-weight:600;font-size:25px">n</span>
+      <span style="display:inline-flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:11px;background:#EE7B5E;box-shadow:0 5px 0 #C25539;color:#fff;font-weight:600;font-size:25px">e</span>
+      <span style="font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:24px;color:#9AA0AA;margin-left:10px;align-self:flex-end">.ro</span>
+    </div>
+    <div style="font-size:15px;color:#3D4759;max-width:520px;line-height:1.5">Cine ține mâna pe butoane în Parlamentul României? Urmărește voturile, absențele și legile adoptate tacit.</div>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#9AA0AA;letter-spacing:.08em">DIACRITICE · ĂÂÎȘȚ ăâîșț · THE “o” IS MID-PRESS</div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr">
+    <div style="background:#fff;border-top:1px solid #E7E9EC;padding:30px 32px;display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;align-items:center;gap:4px">
+        <span style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:7px;border:2px solid #000;box-shadow:0 3px 0 #000;color:#000;font-weight:600;font-size:14px;box-sizing:border-box">L</span>
+        <span style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:7px;border:2px solid #000;box-shadow:0 3px 0 #000;color:#000;font-weight:600;font-size:14px;box-sizing:border-box">a</span>
+        <span style="font-weight:600;font-size:21px;letter-spacing:-0.015em;color:#000;margin-left:7px">Butoane<span style="font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:14px">.ro</span></span>
+      </div>
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#9AA0AA;letter-spacing:.08em">ONE-COLOR / BLACK — KEYS COLLAPSE TO “La”</span>
+    </div>
+    <div style="background:#171A1F;padding:30px 32px;display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;align-items:center;gap:4px">
+        <span style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:7px;border:2px solid #F5F6F8;box-shadow:0 3px 0 #F5F6F8;color:#F5F6F8;font-weight:600;font-size:14px;box-sizing:border-box">L</span>
+        <span style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:7px;border:2px solid #F5F6F8;box-shadow:0 3px 0 #F5F6F8;color:#F5F6F8;font-weight:600;font-size:14px;box-sizing:border-box">a</span>
+        <span style="font-weight:600;font-size:21px;letter-spacing:-0.015em;color:#F5F6F8;margin-left:7px">Butoane<span style="font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:14px;color:#9AA0AA">.ro</span></span>
+      </div>
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#6E7480;letter-spacing:.08em">REVERSED / WHITE</span>
+    </div>
+  </div>
+
+  <div style="border-top:1px solid #E7E9EC;padding:26px 32px;display:flex;align-items:center;gap:28px;flex-wrap:wrap">
+    <div style="display:flex;align-items:flex-end;gap:16px">
+      <span style="display:inline-flex;align-items:center;justify-content:center;width:58px;height:58px;border-radius:14px;background:#2EA871;box-shadow:0 6px 0 #1F7A51;color:#fff;font-weight:600;font-size:26px;margin-bottom:6px">La</span>
+      <span style="display:inline-flex;align-items:center;justify-content:center;width:29px;height:29px;border-radius:8px;background:#2EA871;box-shadow:0 3px 0 #1F7A51;color:#fff;font-weight:600;font-size:13px;margin-bottom:3px">La</span>
+      <span style="display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:4.5px;background:#2EA871;box-shadow:0 1.5px 0 #1F7A51;color:#fff;font-weight:700;font-size:7px;margin-bottom:1.5px">La</span>
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#9AA0AA">64 / 32 / 16</span>
+    </div>
+    <div style="flex:1;min-width:280px;background:#DEE1E6;border-radius:10px 10px 0 0;padding:8px 8px 0;display:flex">
+      <div style="background:#fff;border-radius:9px 9px 0 0;padding:8px 12px;display:flex;align-items:center;gap:8px;min-width:230px">
+        <span style="display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:4.5px;background:#2EA871;box-shadow:0 1.5px 0 #1F7A51;color:#fff;font-weight:700;font-size:7px;flex:none">La</span>
+        <span style="font-size:12px;color:#3D4759;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">LaButoane — Voturi în Parlament</span>
+        <span style="margin-left:auto;color:#9AA0AA;font-size:12px">×</span>
+      </div>
+      <div style="padding:8px 12px;font-size:12px;color:#6E7480">+</div>
+    </div>
+  </div>
+
+  <div style="border-top:1px solid #E7E9EC">
+    <div style="background:#fff;border-bottom:1px solid #E7E9EC;padding:12px 32px;display:flex;align-items:center;gap:22px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:7px;background:#2EA871;box-shadow:0 2.5px 0 #1F7A51;color:#fff;font-weight:600;font-size:11px;flex:none">La</span>
+        <span style="font-weight:600;font-size:16px;color:#171A1F">Butoane<span style="font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:11px;color:#6E7480">.ro</span></span>
+      </div>
+      <nav style="display:flex;gap:18px;font-size:12.5px;color:#3D4759"><span style="color:#171A1F;font-weight:500;border-bottom:2px solid #2EA871;padding-bottom:2px">Voturi</span><span>Deputați</span><span>Legi tacite</span><span>Absențe</span></nav>
+      <span style="margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.1em;color:#6E7480;border:1px solid #D8DBE0;border-radius:3px;padding:3px 6px">NEAFILIAT POLITIC</span>
+    </div>
+    <div style="padding:0 32px 6px;background:#FBFBFC">
+      <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:8px;padding:9px 0 7px;font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.08em;color:#9AA0AA;border-bottom:1px solid #E7E9EC"><span>DEPUTAT</span><span>GRUP</span><span>VOT</span><span>PREZENȚĂ</span></div>
+      <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:8px;padding:8px 0;font-size:12.5px;color:#171A1F;border-bottom:1px solid #F0F1F3"><span>Ștefania Mărgărit</span><span style="color:#6E7480">Grup A</span><span style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:#2EA871"></span>Pentru</span><span style="color:#6E7480">98%</span></div>
+      <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:8px;padding:8px 0;font-size:12.5px;color:#171A1F;border-bottom:1px solid #F0F1F3"><span>Ion Târnăveanu</span><span style="color:#6E7480">Grup B</span><span style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:#EE7B5E"></span>Împotrivă</span><span style="color:#6E7480">91%</span></div>
+      <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:8px;padding:8px 0;font-size:12.5px;color:#171A1F"><span>Anca Peștișanu</span><span style="color:#6E7480">Grup C</span><span style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:#D8DBE0"></span><span style="color:#6E7480">Absent</span></span><span style="color:#6E7480">64%</span></div>
+    </div>
+  </div>
+
+  <div style="border-top:1px solid #E7E9EC;padding:24px 32px;background:#F5F6F8;display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap">
+    <div style="width:340px;border:1px solid #D8DBE0;border-radius:12px;overflow:hidden;background:#fff">
+      <div style="background:#FFFFFF;border-bottom:1px solid #EEF0F2;height:150px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px">
+        <div style="display:flex;gap:4px">
+          <span style="display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:8px;background:#2EA871;box-shadow:0 3px 0 #1F7A51;color:#fff;font-weight:600;font-size:15px">B</span>
+          <span style="display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:8px;background:#E3A23C;box-shadow:0 3px 0 #B27A24;color:#fff;font-weight:600;font-size:15px">u</span>
+          <span style="display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:8px;background:#8571E6;box-shadow:0 3px 0 #5F4EC2;color:#fff;font-weight:600;font-size:15px">t</span>
+          <span style="display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:8px;background:#EE7B5E;box-shadow:0 1px 0 #C25539;color:#fff;font-weight:600;font-size:15px;transform:translateY(2px)">o</span>
+          <span style="display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:8px;background:#4E86D8;box-shadow:0 3px 0 #33639F;color:#fff;font-weight:600;font-size:15px">n</span>
+        </div>
+        <span style="font-weight:600;font-size:15px;color:#171A1F">LaButoane<span style="font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:11px;color:#9AA0AA">.ro</span></span>
+      </div>
+      <div style="padding:12px 14px;display:flex;flex-direction:column;gap:4px">
+        <span style="font-size:13.5px;font-weight:600;color:#171A1F;line-height:1.35">Cum a votat Camera Deputaților pe 9 iulie 2026</span>
+        <span style="font-size:12px;color:#6E7480;line-height:1.4">312 voturi înregistrate · 41 absențe · 2 legi adoptate tacit</span>
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#9AA0AA;margin-top:2px">labutoane.ro</span>
+      </div>
+    </div>
+    <div style="flex:1;min-width:220px;display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <div style="width:56px;height:44px;border-radius:6px;background:#2EA871;display:flex;flex-direction:column;justify-content:flex-end;padding:6px"><span style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:#fff">2EA871</span></div>
+        <div style="width:56px;height:44px;border-radius:6px;background:#E3A23C;display:flex;flex-direction:column;justify-content:flex-end;padding:6px"><span style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:#fff">E3A23C</span></div>
+        <div style="width:56px;height:44px;border-radius:6px;background:#8571E6;display:flex;flex-direction:column;justify-content:flex-end;padding:6px"><span style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:#fff">8571E6</span></div>
+        <div style="width:56px;height:44px;border-radius:6px;background:#EE7B5E;display:flex;flex-direction:column;justify-content:flex-end;padding:6px"><span style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:#fff">EE7B5E</span></div>
+        <div style="width:56px;height:44px;border-radius:6px;background:#4E86D8;display:flex;flex-direction:column;justify-content:flex-end;padding:6px"><span style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:#fff">4E86D8</span></div>
+        <div style="width:56px;height:44px;border-radius:6px;background:#171A1F;display:flex;flex-direction:column;justify-content:flex-end;padding:6px"><span style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:#9AA0AA">171A1F</span></div>
+      </div>
+      <div style="font-size:11.5px;color:#3D4759;line-height:1.55">Five hues at equal lightness & chroma — no single party color can dominate, which is itself the neutrality argument. The green “o” sits mid-press. Loudest option: great for social, riskier for citing-journalist credibility. Green leads UI accents (active tab, “Pentru”).</div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- ============ 2b ONE LIT KEY ============ -->
+<div class="dv-opt" id="2b">
+<div class="dv-olabel"><a class="dv-oid" href="#2b">2b</a>One lit key — white keyboard, a single green key pressed</div>
+<div class="dv-card" style="width:740px">
+
+  <div style="background:#FFFFFF;padding:56px 48px 44px;display:flex;flex-direction:column;gap:24px">
+    <div style="display:flex;align-items:center;gap:7px;padding-bottom:6px">
+      <span style="display:inline-flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:11px;background:#fff;border:1px solid #E4E6EB;box-shadow:0 5px 0 #D3D6DC;color:#171A1F;font-weight:600;font-size:25px;box-sizing:border-box">L</span>
+      <span style="display:inline-flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:11px;background:#fff;border:1px solid #E4E6EB;box-shadow:0 5px 0 #D3D6DC;color:#171A1F;font-weight:600;font-size:25px;box-sizing:border-box">a</span>
+      <span style="display:inline-flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:11px;background:#fff;border:1px solid #E4E6EB;box-shadow:0 5px 0 #D3D6DC;color:#171A1F;font-weight:600;font-size:25px;box-sizing:border-box;margin-left:8px">B</span>
+      <span style="display:inline-flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:11px;background:#fff;border:1px solid #E4E6EB;box-shadow:0 5px 0 #D3D6DC;color:#171A1F;font-weight:600;font-size:25px;box-sizing:border-box">u</span>
+      <span style="display:inline-flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:11px;background:#fff;border:1px solid #E4E6EB;box-shadow:0 5px 0 #D3D6DC;color:#171A1F;font-weight:600;font-size:25px;box-sizing:border-box">t</span>
+      <span style="display:inline-flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:11px;background:#2EA871;box-shadow:0 2px 0 #1F7A51;color:#fff;font-weight:600;font-size:25px;transform:translateY(3px)">o</span>
+      <span style="display:inline-flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:11px;background:#fff;border:1px solid #E4E6EB;box-shadow:0 5px 0 #D3D6DC;color:#171A1F;font-weight:600;font-size:25px;box-sizing:border-box">a</span>
+      <span style="display:inline-flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:11px;background:#fff;border:1px solid #E4E6EB;box-shadow:0 5px 0 #D3D6DC;color:#171A1F;font-weight:600;font-size:25px;box-sizing:border-box">n</span>
+      <span style="display:inline-flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:11px;background:#fff;border:1px solid #E4E6EB;box-shadow:0 5px 0 #D3D6DC;color:#171A1F;font-weight:600;font-size:25px;box-sizing:border-box">e</span>
+      <span style="font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:24px;color:#9AA0AA;margin-left:10px;align-self:flex-end">.ro</span>
+    </div>
+    <div style="font-size:15px;color:#3D4759;max-width:520px;line-height:1.5">Cine ține mâna pe butoane în Parlamentul României? Urmărește voturile, absențele și legile adoptate tacit.</div>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#9AA0AA;letter-spacing:.08em">DIACRITICE · ĂÂÎȘȚ ăâîșț · ONE VOTE, RECORDED</div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr">
+    <div style="background:#fff;border-top:1px solid #E7E9EC;padding:30px 32px;display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;align-items:center;gap:4px">
+        <span style="font-weight:600;font-size:21px;letter-spacing:-0.015em;color:#000">LaBut</span>
+        <span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:7px;border:2px solid #000;box-shadow:0 2px 0 #000;color:#000;font-weight:600;font-size:13px;box-sizing:border-box;transform:translateY(1px)">o</span>
+        <span style="font-weight:600;font-size:21px;letter-spacing:-0.015em;color:#000">ane<span style="font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:14px">.ro</span></span>
+      </div>
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#9AA0AA;letter-spacing:.08em">ONE-COLOR / BLACK — ONLY THE “o” STAYS A KEY</span>
+    </div>
+    <div style="background:#171A1F;padding:30px 32px;display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;align-items:center;gap:4px">
+        <span style="font-weight:600;font-size:21px;letter-spacing:-0.015em;color:#F5F6F8">LaBut</span>
+        <span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:7px;border:2px solid #F5F6F8;box-shadow:0 2px 0 #F5F6F8;color:#F5F6F8;font-weight:600;font-size:13px;box-sizing:border-box;transform:translateY(1px)">o</span>
+        <span style="font-weight:600;font-size:21px;letter-spacing:-0.015em;color:#F5F6F8">ane<span style="font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:14px;color:#9AA0AA">.ro</span></span>
+      </div>
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#6E7480;letter-spacing:.08em">REVERSED / WHITE</span>
+    </div>
+  </div>
+
+  <div style="border-top:1px solid #E7E9EC;padding:26px 32px;display:flex;align-items:center;gap:28px;flex-wrap:wrap">
+    <div style="display:flex;align-items:flex-end;gap:16px">
+      <span style="display:inline-flex;align-items:center;justify-content:center;width:58px;height:58px;border-radius:14px;background:#171A1F;box-shadow:0 6px 0 #2EA871;color:#fff;font-weight:600;font-size:26px;margin-bottom:6px">La</span>
+      <span style="display:inline-flex;align-items:center;justify-content:center;width:29px;height:29px;border-radius:8px;background:#171A1F;box-shadow:0 3px 0 #2EA871;color:#fff;font-weight:600;font-size:13px;margin-bottom:3px">La</span>
+      <span style="display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:4.5px;background:#171A1F;box-shadow:0 1.5px 0 #2EA871;color:#fff;font-weight:700;font-size:7px;margin-bottom:1.5px">La</span>
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#9AA0AA">64 / 32 / 16 — INK KEY, GREEN UNDERGLOW</span>
+    </div>
+    <div style="flex:1;min-width:280px;background:#DEE1E6;border-radius:10px 10px 0 0;padding:8px 8px 0;display:flex">
+      <div style="background:#fff;border-radius:9px 9px 0 0;padding:8px 12px;display:flex;align-items:center;gap:8px;min-width:230px">
+        <span style="display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:4.5px;background:#171A1F;box-shadow:0 1.5px 0 #2EA871;color:#fff;font-weight:700;font-size:7px;flex:none">La</span>
+        <span style="font-size:12px;color:#3D4759;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">LaButoane — Voturi în Parlament</span>
+        <span style="margin-left:auto;color:#9AA0AA;font-size:12px">×</span>
+      </div>
+      <div style="padding:8px 12px;font-size:12px;color:#6E7480">+</div>
+    </div>
+  </div>
+
+  <div style="border-top:1px solid #E7E9EC">
+    <div style="background:#fff;border-bottom:1px solid #E7E9EC;padding:12px 32px;display:flex;align-items:center;gap:22px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:7px;background:#171A1F;box-shadow:0 2.5px 0 #2EA871;color:#fff;font-weight:600;font-size:11px;flex:none">La</span>
+        <span style="font-weight:600;font-size:16px;color:#171A1F">Butoane<span style="font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:11px;color:#6E7480">.ro</span></span>
+      </div>
+      <nav style="display:flex;gap:18px;font-size:12.5px;color:#3D4759"><span style="color:#171A1F;font-weight:500;border-bottom:2px solid #2EA871;padding-bottom:2px">Voturi</span><span>Deputați</span><span>Legi tacite</span><span>Absențe</span></nav>
+      <span style="margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.1em;color:#6E7480;border:1px solid #D8DBE0;border-radius:3px;padding:3px 6px">NEAFILIAT POLITIC</span>
+    </div>
+    <div style="padding:0 32px 6px;background:#FBFBFC">
+      <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:8px;padding:9px 0 7px;font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.08em;color:#9AA0AA;border-bottom:1px solid #E7E9EC"><span>DEPUTAT</span><span>GRUP</span><span>VOT</span><span>PREZENȚĂ</span></div>
+      <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:8px;padding:8px 0;font-size:12.5px;color:#171A1F;border-bottom:1px solid #F0F1F3"><span>Ștefania Mărgărit</span><span style="color:#6E7480">Grup A</span><span style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:#2EA871"></span>Pentru</span><span style="color:#6E7480">98%</span></div>
+      <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:8px;padding:8px 0;font-size:12.5px;color:#171A1F;border-bottom:1px solid #F0F1F3"><span>Ion Târnăveanu</span><span style="color:#6E7480">Grup B</span><span style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:#EE7B5E"></span>Împotrivă</span><span style="color:#6E7480">91%</span></div>
+      <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:8px;padding:8px 0;font-size:12.5px;color:#171A1F"><span>Anca Peștișanu</span><span style="color:#6E7480">Grup C</span><span style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:#D8DBE0"></span><span style="color:#6E7480">Absent</span></span><span style="color:#6E7480">64%</span></div>
+    </div>
+  </div>
+
+  <div style="border-top:1px solid #E7E9EC;padding:24px 32px;background:#F5F6F8;display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap">
+    <div style="width:340px;border:1px solid #D8DBE0;border-radius:12px;overflow:hidden;background:#fff">
+      <div style="background:#FFFFFF;border-bottom:1px solid #EEF0F2;height:150px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px">
+        <div style="display:flex;gap:5px">
+          <span style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:9px;background:#fff;border:1px solid #E4E6EB;box-shadow:0 4px 0 #D3D6DC;color:#171A1F;font-weight:600;font-size:17px;box-sizing:border-box">D</span>
+          <span style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:9px;background:#2EA871;box-shadow:0 1px 0 #1F7A51;color:#fff;font-weight:600;font-size:17px;transform:translateY(3px)">A</span>
+          <span style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:9px;background:#fff;border:1px solid #E4E6EB;box-shadow:0 4px 0 #D3D6DC;color:#171A1F;font-weight:600;font-size:17px;box-sizing:border-box">NU</span>
+        </div>
+        <span style="font-weight:600;font-size:15px;color:#171A1F">LaButoane<span style="font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:11px;color:#9AA0AA">.ro</span></span>
+      </div>
+      <div style="padding:12px 14px;display:flex;flex-direction:column;gap:4px">
+        <span style="font-size:13.5px;font-weight:600;color:#171A1F;line-height:1.35">Cum a votat Camera Deputaților pe 9 iulie 2026</span>
+        <span style="font-size:12px;color:#6E7480;line-height:1.4">312 voturi înregistrate · 41 absențe · 2 legi adoptate tacit</span>
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#9AA0AA;margin-top:2px">labutoane.ro</span>
+      </div>
+    </div>
+    <div style="flex:1;min-width:220px;display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <div style="width:64px;height:44px;border-radius:6px;background:#171A1F;display:flex;flex-direction:column;justify-content:flex-end;padding:6px"><span style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:#9AA0AA">INK 171A1F</span></div>
+        <div style="width:64px;height:44px;border-radius:6px;background:#fff;border:1px solid #D8DBE0;display:flex;flex-direction:column;justify-content:flex-end;padding:6px"><span style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:#9AA0AA">FFFFFF</span></div>
+        <div style="width:64px;height:44px;border-radius:6px;background:#2EA871;display:flex;flex-direction:column;justify-content:flex-end;padding:6px"><span style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:#fff">2EA871</span></div>
+        <div style="width:64px;height:44px;border-radius:6px;background:#EE7B5E;display:flex;flex-direction:column;justify-content:flex-end;padding:6px"><span style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:#fff">EE7B5E</span></div>
+      </div>
+      <div style="font-size:11.5px;color:#3D4759;line-height:1.55">The credible middle: white keys, ink letters, and exactly one colored key — the green “o”, pressed. Color means something (a vote cast), not decoration. Console green + coral appear only as vote states. Favicon: ink key on a green underglow. Best balance of playful × citable.</div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- ============ 2c CONSOLE PANEL ============ -->
+<div class="dv-opt" id="2c">
+<div class="dv-olabel"><a class="dv-oid" href="#2c">2c</a>Console panel — sober wordmark, color lives in a 2×2 button cluster</div>
+<div class="dv-card" style="width:740px">
+
+  <div style="background:#FFFFFF;padding:56px 48px 44px;display:flex;flex-direction:column;gap:24px">
+    <div style="display:flex;align-items:center;gap:16px">
+      <span style="display:inline-grid;grid-template-columns:1fr 1fr;gap:5px;background:#171A1F;border-radius:13px;padding:9px;box-shadow:0 5px 0 #000">
+        <span style="width:15px;height:15px;border-radius:5px;background:#2EA871"></span>
+        <span style="width:15px;height:15px;border-radius:5px;background:#E3A23C"></span>
+        <span style="width:15px;height:15px;border-radius:5px;background:#EE7B5E"></span>
+        <span style="width:15px;height:15px;border-radius:5px;background:#4E86D8"></span>
+      </span>
+      <div style="font-size:42px;letter-spacing:-0.015em;color:#171A1F;line-height:1"><span style="font-weight:400">La</span><span style="font-weight:700">Butoane</span><span style="font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:26px;color:#9AA0AA">.ro</span></div>
+    </div>
+    <div style="font-size:15px;color:#3D4759;max-width:520px;line-height:1.5">Cine ține mâna pe butoane în Parlamentul României? Urmărește voturile, absențele și legile adoptate tacit.</div>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#9AA0AA;letter-spacing:.08em">DIACRITICE · ĂÂÎȘȚ ăâîșț · TYPE STAYS INK; COLOR IS THE CONSOLE</div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr">
+    <div style="background:#fff;border-top:1px solid #E7E9EC;padding:30px 32px;display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;align-items:center;gap:9px">
+        <span style="display:inline-grid;grid-template-columns:1fr 1fr;gap:3px;border:2px solid #000;border-radius:8px;padding:4px;box-shadow:0 3px 0 #000">
+          <span style="width:8px;height:8px;border-radius:3px;background:#000"></span>
+          <span style="width:8px;height:8px;border-radius:3px;border:1.5px solid #000;box-sizing:border-box"></span>
+          <span style="width:8px;height:8px;border-radius:3px;border:1.5px solid #000;box-sizing:border-box"></span>
+          <span style="width:8px;height:8px;border-radius:3px;background:#000"></span>
+        </span>
+        <span style="font-size:21px;color:#000;letter-spacing:-0.015em"><span style="font-weight:400">La</span><span style="font-weight:700">Butoane</span><span style="font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:14px">.ro</span></span>
+      </div>
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#9AA0AA;letter-spacing:.08em">ONE-COLOR / BLACK — DOTS GO SOLID/HOLLOW</span>
+    </div>
+    <div style="background:#171A1F;padding:30px 32px;display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;align-items:center;gap:9px">
+        <span style="display:inline-grid;grid-template-columns:1fr 1fr;gap:3px;border:2px solid #F5F6F8;border-radius:8px;padding:4px;box-shadow:0 3px 0 #F5F6F8">
+          <span style="width:8px;height:8px;border-radius:3px;background:#F5F6F8"></span>
+          <span style="width:8px;height:8px;border-radius:3px;border:1.5px solid #F5F6F8;box-sizing:border-box"></span>
+          <span style="width:8px;height:8px;border-radius:3px;border:1.5px solid #F5F6F8;box-sizing:border-box"></span>
+          <span style="width:8px;height:8px;border-radius:3px;background:#F5F6F8"></span>
+        </span>
+        <span style="font-size:21px;color:#F5F6F8;letter-spacing:-0.015em"><span style="font-weight:400">La</span><span style="font-weight:700">Butoane</span><span style="font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:14px;color:#9AA0AA">.ro</span></span>
+      </div>
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#6E7480;letter-spacing:.08em">REVERSED / WHITE</span>
+    </div>
+  </div>
+
+  <div style="border-top:1px solid #E7E9EC;padding:26px 32px;display:flex;align-items:center;gap:28px;flex-wrap:wrap">
+    <div style="display:flex;align-items:flex-end;gap:16px">
+      <span style="display:inline-grid;grid-template-columns:1fr 1fr;gap:6px;background:#171A1F;border-radius:15px;padding:11px;width:36px;height:36px;box-sizing:content-box">
+        <span style="border-radius:6px;background:#2EA871"></span><span style="border-radius:6px;background:#E3A23C"></span><span style="border-radius:6px;background:#EE7B5E"></span><span style="border-radius:6px;background:#4E86D8"></span>
+      </span>
+      <span style="display:inline-grid;grid-template-columns:1fr 1fr;gap:3px;background:#171A1F;border-radius:8px;padding:6px;width:17px;height:17px;box-sizing:content-box">
+        <span style="border-radius:3px;background:#2EA871"></span><span style="border-radius:3px;background:#E3A23C"></span><span style="border-radius:3px;background:#EE7B5E"></span><span style="border-radius:3px;background:#4E86D8"></span>
+      </span>
+      <span style="display:inline-grid;grid-template-columns:1fr 1fr;gap:2px;background:#171A1F;border-radius:4.5px;padding:3px;width:8px;height:8px;box-sizing:content-box">
+        <span style="border-radius:1.5px;background:#2EA871"></span><span style="border-radius:1.5px;background:#E3A23C"></span><span style="border-radius:1.5px;background:#EE7B5E"></span><span style="border-radius:1.5px;background:#4E86D8"></span>
+      </span>
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#9AA0AA">64 / 32 / 16</span>
+    </div>
+    <div style="flex:1;min-width:280px;background:#DEE1E6;border-radius:10px 10px 0 0;padding:8px 8px 0;display:flex">
+      <div style="background:#fff;border-radius:9px 9px 0 0;padding:8px 12px;display:flex;align-items:center;gap:8px;min-width:230px">
+        <span style="display:inline-grid;grid-template-columns:1fr 1fr;gap:2px;background:#171A1F;border-radius:4.5px;padding:3px;width:8px;height:8px;box-sizing:content-box;flex:none">
+          <span style="border-radius:1.5px;background:#2EA871"></span><span style="border-radius:1.5px;background:#E3A23C"></span><span style="border-radius:1.5px;background:#EE7B5E"></span><span style="border-radius:1.5px;background:#4E86D8"></span>
+        </span>
+        <span style="font-size:12px;color:#3D4759;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">LaButoane — Voturi în Parlament</span>
+        <span style="margin-left:auto;color:#9AA0AA;font-size:12px">×</span>
+      </div>
+      <div style="padding:8px 12px;font-size:12px;color:#6E7480">+</div>
+    </div>
+  </div>
+
+  <div style="border-top:1px solid #E7E9EC">
+    <div style="background:#fff;border-bottom:1px solid #E7E9EC;padding:12px 32px;display:flex;align-items:center;gap:22px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="display:inline-grid;grid-template-columns:1fr 1fr;gap:2.5px;background:#171A1F;border-radius:6px;padding:4.5px;width:13px;height:13px;box-sizing:content-box;flex:none">
+          <span style="border-radius:2px;background:#2EA871"></span><span style="border-radius:2px;background:#E3A23C"></span><span style="border-radius:2px;background:#EE7B5E"></span><span style="border-radius:2px;background:#4E86D8"></span>
+        </span>
+        <span style="font-size:16px;color:#171A1F;letter-spacing:-0.015em"><span style="font-weight:400">La</span><span style="font-weight:700">Butoane</span><span style="font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:11px;color:#6E7480">.ro</span></span>
+      </div>
+      <nav style="display:flex;gap:18px;font-size:12.5px;color:#3D4759"><span style="color:#171A1F;font-weight:500;border-bottom:2px solid #171A1F;padding-bottom:2px">Voturi</span><span>Deputați</span><span>Legi tacite</span><span>Absențe</span></nav>
+      <span style="margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.1em;color:#6E7480;border:1px solid #D8DBE0;border-radius:3px;padding:3px 6px">NEAFILIAT POLITIC</span>
+    </div>
+    <div style="padding:0 32px 6px;background:#FBFBFC">
+      <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:8px;padding:9px 0 7px;font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.08em;color:#9AA0AA;border-bottom:1px solid #E7E9EC"><span>DEPUTAT</span><span>GRUP</span><span>VOT</span><span>PREZENȚĂ</span></div>
+      <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:8px;padding:8px 0;font-size:12.5px;color:#171A1F;border-bottom:1px solid #F0F1F3"><span>Ștefania Mărgărit</span><span style="color:#6E7480">Grup A</span><span style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:#2EA871"></span>Pentru</span><span style="color:#6E7480">98%</span></div>
+      <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:8px;padding:8px 0;font-size:12.5px;color:#171A1F;border-bottom:1px solid #F0F1F3"><span>Ion Târnăveanu</span><span style="color:#6E7480">Grup B</span><span style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:#EE7B5E"></span>Împotrivă</span><span style="color:#6E7480">91%</span></div>
+      <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:8px;padding:8px 0;font-size:12.5px;color:#171A1F"><span>Anca Peștișanu</span><span style="color:#6E7480">Grup C</span><span style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:#D8DBE0"></span><span style="color:#6E7480">Absent</span></span><span style="color:#6E7480">64%</span></div>
+    </div>
+  </div>
+
+  <div style="border-top:1px solid #E7E9EC;padding:24px 32px;background:#F5F6F8;display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap">
+    <div style="width:340px;border:1px solid #D8DBE0;border-radius:12px;overflow:hidden;background:#fff">
+      <div style="background:#FFFFFF;border-bottom:1px solid #EEF0F2;height:150px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:13px">
+        <span style="display:inline-grid;grid-template-columns:1fr 1fr;gap:4px;background:#171A1F;border-radius:11px;padding:8px;width:26px;height:26px;box-sizing:content-box">
+          <span style="border-radius:4px;background:#2EA871"></span><span style="border-radius:4px;background:#E3A23C"></span><span style="border-radius:4px;background:#EE7B5E"></span><span style="border-radius:4px;background:#4E86D8"></span>
+        </span>
+        <span style="font-size:15px;color:#171A1F"><span style="font-weight:400">La</span><span style="font-weight:700">Butoane</span><span style="font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:11px;color:#9AA0AA">.ro</span></span>
+      </div>
+      <div style="padding:12px 14px;display:flex;flex-direction:column;gap:4px">
+        <span style="font-size:13.5px;font-weight:600;color:#171A1F;line-height:1.35">Cum a votat Camera Deputaților pe 9 iulie 2026</span>
+        <span style="font-size:12px;color:#6E7480;line-height:1.4">312 voturi înregistrate · 41 absențe · 2 legi adoptate tacit</span>
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#9AA0AA;margin-top:2px">labutoane.ro</span>
+      </div>
+    </div>
+    <div style="flex:1;min-width:220px;display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <div style="width:56px;height:44px;border-radius:6px;background:#171A1F;display:flex;flex-direction:column;justify-content:flex-end;padding:6px"><span style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:#9AA0AA">171A1F</span></div>
+        <div style="width:56px;height:44px;border-radius:6px;background:#2EA871;display:flex;flex-direction:column;justify-content:flex-end;padding:6px"><span style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:#fff">2EA871</span></div>
+        <div style="width:56px;height:44px;border-radius:6px;background:#E3A23C;display:flex;flex-direction:column;justify-content:flex-end;padding:6px"><span style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:#fff">E3A23C</span></div>
+        <div style="width:56px;height:44px;border-radius:6px;background:#EE7B5E;display:flex;flex-direction:column;justify-content:flex-end;padding:6px"><span style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:#fff">EE7B5E</span></div>
+        <div style="width:56px;height:44px;border-radius:6px;background:#4E86D8;display:flex;flex-direction:column;justify-content:flex-end;padding:6px"><span style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:#fff">4E86D8</span></div>
+      </div>
+      <div style="font-size:11.5px;color:#3D4759;line-height:1.55">Wordmark stays pure ink type — journalist-safe — and all the color concentrates in the glyph: a dark console tile with four button lights. Strongest favicon of the three (four dots read even at 8px). Four hues = the whole spectrum of the chamber, no side taken.</div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+</div>
+<p class="dv-next">Try next: “<a class="dv-oid" href="#2b">2b</a> but with the candy palette from <a class="dv-oid" href="#2a">2a</a> on all keys’ shadows” · “combine <a class="dv-oid" href="#2c">2c</a>’s glyph with <a class="dv-oid" href="#2a">2a</a>’s wordmark” · “tone it down 20%”</p>
+</section>
+
+<section class="dv-turn" id="t1">
+<div class="dv-thd"><a class="dv-tid" href="#t1">1</a><span class="dv-tname">LaButoane.ro — three logo directions, near-mono cool neutral, IBM Plex</span></div>
+<div class="dv-opts">
+
+<!-- ============ 1a KEYCAP ============ -->
+<div class="dv-opt" id="1a">
+<div class="dv-olabel"><a class="dv-oid" href="#1a">1a</a>Keycap — “La” as a pressed key tile; monogram doubles as favicon</div>
+<div class="dv-card" style="width:740px">
+
+  <!-- primary wordmark -->
+  <div style="background:#F5F6F8;padding:56px 48px 44px;display:flex;flex-direction:column;gap:22px">
+    <div style="display:flex;align-items:center;gap:14px">
+      <svg width="52" height="52" viewBox="0 0 64 64" aria-label="La keycap"><rect x="2" y="2" width="60" height="60" rx="14" fill="#171A1F"></rect><rect x="9" y="7" width="46" height="44" rx="9" fill="none" stroke="rgba(245,246,248,0.28)" stroke-width="2.5"></rect><text x="32" y="38" font-family="IBM Plex Sans" font-weight="600" font-size="27" fill="#F5F6F8" text-anchor="middle">La</text></svg>
+      <div style="font-weight:600;font-size:42px;letter-spacing:-0.015em;color:#171A1F;line-height:1">Butoane<span style="font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:26px;color:#6E7480;letter-spacing:0">.ro</span></div>
+    </div>
+    <div style="font-size:15px;color:#3D4759;max-width:520px;line-height:1.5">Cine ține mâna pe butoane în Parlamentul României? Urmărește voturile, absențele și legile adoptate tacit.</div>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#9AA0AA;letter-spacing:.08em">DIACRITICE · ĂÂÎȘȚ ăâîșț · IBM PLEX SANS 600</div>
+  </div>
+
+  <!-- one-color -->
+  <div style="display:grid;grid-template-columns:1fr 1fr">
+    <div style="background:#fff;border-top:1px solid #E7E9EC;padding:30px 32px;display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:9px">
+        <svg width="30" height="30" viewBox="0 0 64 64"><rect x="2" y="2" width="60" height="60" rx="14" fill="#000"></rect><rect x="9" y="7" width="46" height="44" rx="9" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="2.5"></rect><text x="32" y="38" font-family="IBM Plex Sans" font-weight="600" font-size="27" fill="#fff" text-anchor="middle">La</text></svg>
+        <span style="font-weight:600;font-size:23px;letter-spacing:-0.015em;color:#000">Butoane<span style="font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:15px">.ro</span></span>
+      </div>
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#9AA0AA;letter-spacing:.08em">ONE-COLOR / BLACK</span>
+    </div>
+    <div style="background:#171A1F;padding:30px 32px;display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:9px">
+        <svg width="30" height="30" viewBox="0 0 64 64"><rect x="2" y="2" width="60" height="60" rx="14" fill="none" stroke="#F5F6F8" stroke-width="4"></rect><text x="32" y="41" font-family="IBM Plex Sans" font-weight="600" font-size="27" fill="#F5F6F8" text-anchor="middle">La</text></svg>
+        <span style="font-weight:600;font-size:23px;letter-spacing:-0.015em;color:#F5F6F8">Butoane<span style="font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:15px;color:#9AA0AA">.ro</span></span>
+      </div>
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#6E7480;letter-spacing:.08em">REVERSED / WHITE</span>
+    </div>
+  </div>
+
+  <!-- glyph scale + favicon -->
+  <div style="border-top:1px solid #E7E9EC;padding:26px 32px;display:flex;align-items:center;gap:28px;flex-wrap:wrap">
+    <div style="display:flex;align-items:flex-end;gap:16px">
+      <svg width="64" height="64" viewBox="0 0 64 64"><rect x="2" y="2" width="60" height="60" rx="14" fill="#171A1F"></rect><rect x="9" y="7" width="46" height="44" rx="9" fill="none" stroke="rgba(245,246,248,0.28)" stroke-width="2.5"></rect><text x="32" y="38" font-family="IBM Plex Sans" font-weight="600" font-size="27" fill="#F5F6F8" text-anchor="middle">La</text></svg>
+      <svg width="32" height="32" viewBox="0 0 64 64"><rect x="2" y="2" width="60" height="60" rx="14" fill="#171A1F"></rect><rect x="9" y="7" width="46" height="44" rx="9" fill="none" stroke="rgba(245,246,248,0.28)" stroke-width="2.5"></rect><text x="32" y="38" font-family="IBM Plex Sans" font-weight="600" font-size="27" fill="#F5F6F8" text-anchor="middle">La</text></svg>
+      <svg width="16" height="16" viewBox="0 0 64 64"><rect x="2" y="2" width="60" height="60" rx="14" fill="#171A1F"></rect><text x="32" y="41" font-family="IBM Plex Sans" font-weight="600" font-size="30" fill="#F5F6F8" text-anchor="middle">La</text></svg>
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#9AA0AA">64 / 32 / 16</span>
+    </div>
+    <!-- browser tab -->
+    <div style="flex:1;min-width:280px;background:#DEE1E6;border-radius:10px 10px 0 0;padding:8px 8px 0;display:flex">
+      <div style="background:#fff;border-radius:9px 9px 0 0;padding:8px 12px;display:flex;align-items:center;gap:8px;min-width:230px">
+        <svg width="16" height="16" viewBox="0 0 64 64"><rect x="2" y="2" width="60" height="60" rx="14" fill="#171A1F"></rect><text x="32" y="41" font-family="IBM Plex Sans" font-weight="600" font-size="30" fill="#F5F6F8" text-anchor="middle">La</text></svg>
+        <span style="font-size:12px;color:#3D4759;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">LaButoane — Voturi în Parlament</span>
+        <span style="margin-left:auto;color:#9AA0AA;font-size:12px">×</span>
+      </div>
+      <div style="padding:8px 12px;font-size:12px;color:#6E7480">+</div>
+    </div>
+  </div>
+
+  <!-- table header test -->
+  <div style="border-top:1px solid #E7E9EC">
+    <div style="background:#fff;border-bottom:1px solid #E7E9EC;padding:12px 32px;display:flex;align-items:center;gap:22px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <svg width="24" height="24" viewBox="0 0 64 64"><rect x="2" y="2" width="60" height="60" rx="14" fill="#171A1F"></rect><text x="32" y="41" font-family="IBM Plex Sans" font-weight="600" font-size="30" fill="#F5F6F8" text-anchor="middle">La</text></svg>
+        <span style="font-weight:600;font-size:16px;color:#171A1F">Butoane<span style="font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:11px;color:#6E7480">.ro</span></span>
+      </div>
+      <nav style="display:flex;gap:18px;font-size:12.5px;color:#3D4759"><span style="color:#171A1F;font-weight:500;border-bottom:2px solid #171A1F;padding-bottom:2px">Voturi</span><span>Deputați</span><span>Legi tacite</span><span>Absențe</span></nav>
+      <span style="margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.1em;color:#6E7480;border:1px solid #D8DBE0;border-radius:3px;padding:3px 6px">NEAFILIAT POLITIC</span>
+    </div>
+    <div style="padding:0 32px 6px;background:#FBFBFC">
+      <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:8px;padding:9px 0 7px;font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.08em;color:#9AA0AA;border-bottom:1px solid #E7E9EC"><span>DEPUTAT</span><span>GRUP</span><span>VOT</span><span>PREZENȚĂ</span></div>
+      <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:8px;padding:8px 0;font-size:12.5px;color:#171A1F;border-bottom:1px solid #F0F1F3"><span>Ștefania Mărgărit</span><span style="color:#6E7480">Grup A</span><span style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:#171A1F"></span>Pentru</span><span style="color:#6E7480">98%</span></div>
+      <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:8px;padding:8px 0;font-size:12.5px;color:#171A1F;border-bottom:1px solid #F0F1F3"><span>Ion Târnăveanu</span><span style="color:#6E7480">Grup B</span><span style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;border:1.5px solid #171A1F;box-sizing:border-box"></span>Împotrivă</span><span style="color:#6E7480">91%</span></div>
+      <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:8px;padding:8px 0;font-size:12.5px;color:#171A1F"><span>Anca Peștișanu</span><span style="color:#6E7480">Grup C</span><span style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:2px;background:#9AA0AA"></span><span style="color:#6E7480">Absent</span></span><span style="color:#6E7480">64%</span></div>
+    </div>
+  </div>
+
+  <!-- social card test -->
+  <div style="border-top:1px solid #E7E9EC;padding:24px 32px;background:#ECEDF0;display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap">
+    <div style="width:340px;border:1px solid #D8DBE0;border-radius:12px;overflow:hidden;background:#fff">
+      <div style="background:#171A1F;height:150px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px">
+        <svg width="44" height="44" viewBox="0 0 64 64"><rect x="2" y="2" width="60" height="60" rx="14" fill="none" stroke="#F5F6F8" stroke-width="4"></rect><text x="32" y="41" font-family="IBM Plex Sans" font-weight="600" font-size="27" fill="#F5F6F8" text-anchor="middle">La</text></svg>
+        <span style="font-weight:600;font-size:17px;color:#F5F6F8">Butoane<span style="font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:12px;color:#9AA0AA">.ro</span></span>
+      </div>
+      <div style="padding:12px 14px;display:flex;flex-direction:column;gap:4px">
+        <span style="font-size:13.5px;font-weight:600;color:#171A1F;line-height:1.35">Cum a votat Camera Deputaților pe 9 iulie 2026</span>
+        <span style="font-size:12px;color:#6E7480;line-height:1.4">312 voturi înregistrate · 41 absențe · 2 legi adoptate tacit</span>
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#9AA0AA;margin-top:2px">labutoane.ro</span>
+      </div>
+    </div>
+    <div style="flex:1;min-width:220px;display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;gap:8px">
+        <div style="width:64px;height:44px;border-radius:6px;background:#171A1F;display:flex;flex-direction:column;justify-content:flex-end;padding:6px"><span style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:#9AA0AA">INK 171A1F</span></div>
+        <div style="width:64px;height:44px;border-radius:6px;background:#F5F6F8;border:1px solid #D8DBE0;display:flex;flex-direction:column;justify-content:flex-end;padding:6px"><span style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:#9AA0AA">F5F6F8</span></div>
+        <div style="width:64px;height:44px;border-radius:6px;background:#3D4759;display:flex;flex-direction:column;justify-content:flex-end;padding:6px"><span style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:#C6CAD1">3D4759</span></div>
+        <div style="width:64px;height:44px;border-radius:6px;background:#9AA0AA;display:flex;flex-direction:column;justify-content:flex-end;padding:6px"><span style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:#F5F6F8">9AA0AA</span></div>
+      </div>
+      <div style="font-size:11.5px;color:#3D4759;line-height:1.55">Dominant: ink <span style="font-family:'IBM Plex Mono',monospace">#171A1F</span> on cool paper. Accent: slate <span style="font-family:'IBM Plex Mono',monospace">#3D4759</span> for links & active states — deliberately un-partisan. Type: <b>IBM Plex Sans</b> 600 wordmark / 400 UI + <b>IBM Plex Mono</b> for data & labels. Full ăâîșț support.</div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- ============ 1b VOTING BUTTON ============ -->
+<div class="dv-opt" id="1b">
+<div class="dv-olabel"><a class="dv-oid" href="#1b">1b</a>Voting button — the “o” of Butoane is the button itself; glyph = ring + dot</div>
+<div class="dv-card" style="width:740px">
+
+  <div style="background:#F5F6F8;padding:56px 48px 44px;display:flex;flex-direction:column;gap:22px">
+    <div style="display:flex;align-items:baseline;color:#171A1F;font-weight:600;font-size:44px;letter-spacing:-0.015em;line-height:1">
+      <span style="font-weight:400">La</span><span>But</span><svg width="33" height="33" viewBox="0 0 64 64" style="margin:0 1px;align-self:center;transform:translateY(4px)"><circle cx="32" cy="32" r="25" fill="none" stroke="#171A1F" stroke-width="10"></circle><circle cx="32" cy="32" r="10" fill="#171A1F"></circle></svg><span>ane</span><span style="font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:26px;color:#6E7480;margin-left:6px">.ro</span>
+    </div>
+    <div style="font-size:15px;color:#3D4759;max-width:520px;line-height:1.5">Cine ține mâna pe butoane în Parlamentul României? Urmărește voturile, absențele și legile adoptate tacit.</div>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#9AA0AA;letter-spacing:.08em">DIACRITICE · ĂÂÎȘȚ ăâîșț · IBM PLEX SANS 400+600</div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr">
+    <div style="background:#fff;border-top:1px solid #E7E9EC;padding:30px 32px;display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:baseline;color:#000;font-weight:600;font-size:24px;letter-spacing:-0.015em">
+        <span style="font-weight:400">La</span><span>But</span><svg width="18" height="18" viewBox="0 0 64 64" style="margin:0 1px;align-self:center;transform:translateY(2px)"><circle cx="32" cy="32" r="25" fill="none" stroke="#000" stroke-width="10"></circle><circle cx="32" cy="32" r="10" fill="#000"></circle></svg><span>ane</span><span style="font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:15px;margin-left:4px">.ro</span>
+      </div>
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#9AA0AA;letter-spacing:.08em">ONE-COLOR / BLACK</span>
+    </div>
+    <div style="background:#171A1F;padding:30px 32px;display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:baseline;color:#F5F6F8;font-weight:600;font-size:24px;letter-spacing:-0.015em">
+        <span style="font-weight:400">La</span><span>But</span><svg width="18" height="18" viewBox="0 0 64 64" style="margin:0 1px;align-self:center;transform:translateY(2px)"><circle cx="32" cy="32" r="25" fill="none" stroke="#F5F6F8" stroke-width="10"></circle><circle cx="32" cy="32" r="10" fill="#F5F6F8"></circle></svg><span>ane</span><span style="font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:15px;color:#9AA0AA;margin-left:4px">.ro</span>
+      </div>
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#6E7480;letter-spacing:.08em">REVERSED / WHITE</span>
+    </div>
+  </div>
+
+  <div style="border-top:1px solid #E7E9EC;padding:26px 32px;display:flex;align-items:center;gap:28px;flex-wrap:wrap">
+    <div style="display:flex;align-items:flex-end;gap:16px">
+      <svg width="64" height="64" viewBox="0 0 64 64"><circle cx="32" cy="32" r="25" fill="none" stroke="#171A1F" stroke-width="9"></circle><circle cx="32" cy="32" r="10" fill="#171A1F"></circle></svg>
+      <svg width="32" height="32" viewBox="0 0 64 64"><circle cx="32" cy="32" r="25" fill="none" stroke="#171A1F" stroke-width="9"></circle><circle cx="32" cy="32" r="10" fill="#171A1F"></circle></svg>
+      <svg width="16" height="16" viewBox="0 0 64 64"><circle cx="32" cy="32" r="24" fill="none" stroke="#171A1F" stroke-width="11"></circle><circle cx="32" cy="32" r="10" fill="#171A1F"></circle></svg>
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#9AA0AA">64 / 32 / 16</span>
+    </div>
+    <div style="flex:1;min-width:280px;background:#DEE1E6;border-radius:10px 10px 0 0;padding:8px 8px 0;display:flex">
+      <div style="background:#fff;border-radius:9px 9px 0 0;padding:8px 12px;display:flex;align-items:center;gap:8px;min-width:230px">
+        <svg width="16" height="16" viewBox="0 0 64 64"><circle cx="32" cy="32" r="24" fill="none" stroke="#171A1F" stroke-width="11"></circle><circle cx="32" cy="32" r="10" fill="#171A1F"></circle></svg>
+        <span style="font-size:12px;color:#3D4759;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">LaButoane — Voturi în Parlament</span>
+        <span style="margin-left:auto;color:#9AA0AA;font-size:12px">×</span>
+      </div>
+      <div style="padding:8px 12px;font-size:12px;color:#6E7480">+</div>
+    </div>
+  </div>
+
+  <div style="border-top:1px solid #E7E9EC">
+    <div style="background:#fff;border-bottom:1px solid #E7E9EC;padding:12px 32px;display:flex;align-items:center;gap:22px">
+      <div style="display:flex;align-items:baseline;color:#171A1F;font-weight:600;font-size:17px;letter-spacing:-0.015em">
+        <span style="font-weight:400">La</span><span>But</span><svg width="13" height="13" viewBox="0 0 64 64" style="margin:0 1px;align-self:center;transform:translateY(1px)"><circle cx="32" cy="32" r="25" fill="none" stroke="#171A1F" stroke-width="10"></circle><circle cx="32" cy="32" r="10" fill="#171A1F"></circle></svg><span>ane</span>
+      </div>
+      <nav style="display:flex;gap:18px;font-size:12.5px;color:#3D4759"><span style="color:#171A1F;font-weight:500;border-bottom:2px solid #171A1F;padding-bottom:2px">Voturi</span><span>Deputați</span><span>Legi tacite</span><span>Absențe</span></nav>
+      <span style="margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.1em;color:#6E7480;border:1px solid #D8DBE0;border-radius:3px;padding:3px 6px">NEAFILIAT POLITIC</span>
+    </div>
+    <div style="padding:0 32px 6px;background:#FBFBFC">
+      <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:8px;padding:9px 0 7px;font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.08em;color:#9AA0AA;border-bottom:1px solid #E7E9EC"><span>DEPUTAT</span><span>GRUP</span><span>VOT</span><span>PREZENȚĂ</span></div>
+      <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:8px;padding:8px 0;font-size:12.5px;color:#171A1F;border-bottom:1px solid #F0F1F3"><span>Ștefania Mărgărit</span><span style="color:#6E7480">Grup A</span><span style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:#171A1F"></span>Pentru</span><span style="color:#6E7480">98%</span></div>
+      <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:8px;padding:8px 0;font-size:12.5px;color:#171A1F;border-bottom:1px solid #F0F1F3"><span>Ion Târnăveanu</span><span style="color:#6E7480">Grup B</span><span style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;border:1.5px solid #171A1F;box-sizing:border-box"></span>Împotrivă</span><span style="color:#6E7480">91%</span></div>
+      <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:8px;padding:8px 0;font-size:12.5px;color:#171A1F"><span>Anca Peștișanu</span><span style="color:#6E7480">Grup C</span><span style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:2px;background:#9AA0AA"></span><span style="color:#6E7480">Absent</span></span><span style="color:#6E7480">64%</span></div>
+    </div>
+  </div>
+
+  <div style="border-top:1px solid #E7E9EC;padding:24px 32px;background:#ECEDF0;display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap">
+    <div style="width:340px;border:1px solid #D8DBE0;border-radius:12px;overflow:hidden;background:#fff">
+      <div style="background:#171A1F;height:150px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px">
+        <svg width="46" height="46" viewBox="0 0 64 64"><circle cx="32" cy="32" r="25" fill="none" stroke="#F5F6F8" stroke-width="9"></circle><circle cx="32" cy="32" r="10" fill="#F5F6F8"></circle></svg>
+        <div style="display:flex;align-items:baseline;color:#F5F6F8;font-weight:600;font-size:17px"><span style="font-weight:400">La</span><span>Butoane</span><span style="font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:12px;color:#9AA0AA;margin-left:3px">.ro</span></div>
+      </div>
+      <div style="padding:12px 14px;display:flex;flex-direction:column;gap:4px">
+        <span style="font-size:13.5px;font-weight:600;color:#171A1F;line-height:1.35">Cum a votat Camera Deputaților pe 9 iulie 2026</span>
+        <span style="font-size:12px;color:#6E7480;line-height:1.4">312 voturi înregistrate · 41 absențe · 2 legi adoptate tacit</span>
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#9AA0AA;margin-top:2px">labutoane.ro</span>
+      </div>
+    </div>
+    <div style="flex:1;min-width:220px;display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;gap:8px">
+        <div style="width:64px;height:44px;border-radius:6px;background:#171A1F;display:flex;flex-direction:column;justify-content:flex-end;padding:6px"><span style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:#9AA0AA">INK 171A1F</span></div>
+        <div style="width:64px;height:44px;border-radius:6px;background:#F5F6F8;border:1px solid #D8DBE0;display:flex;flex-direction:column;justify-content:flex-end;padding:6px"><span style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:#9AA0AA">F5F6F8</span></div>
+        <div style="width:64px;height:44px;border-radius:6px;background:#3D4759;display:flex;flex-direction:column;justify-content:flex-end;padding:6px"><span style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:#C6CAD1">3D4759</span></div>
+        <div style="width:64px;height:44px;border-radius:6px;background:#9AA0AA;display:flex;flex-direction:column;justify-content:flex-end;padding:6px"><span style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:#F5F6F8">9AA0AA</span></div>
+      </div>
+      <div style="font-size:11.5px;color:#3D4759;line-height:1.55">The weight shift — <b>La</b> regular, <b>Butoane</b> semibold — puts emphasis on the idiom. The ring-and-dot “o” is the literal chamber button and survives alone at 16px. Same near-mono palette; slate <span style="font-family:'IBM Plex Mono',monospace">#3D4759</span> only for interaction.</div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- ============ 1c CONSOLE DOT ============ -->
+<div class="dv-opt" id="1c">
+<div class="dv-olabel"><a class="dv-oid" href="#1c">1c</a>Console dot — abstract: pure type + a raised “.ro” indicator; glyph = panel with light</div>
+<div class="dv-card" style="width:740px">
+
+  <div style="background:#F5F6F8;padding:56px 48px 44px;display:flex;flex-direction:column;gap:22px">
+    <div style="display:flex;align-items:baseline;gap:2px;line-height:1">
+      <span style="font-weight:300;font-size:44px;letter-spacing:-0.01em;color:#171A1F">La</span><span style="font-weight:700;font-size:44px;letter-spacing:-0.02em;color:#171A1F">Butoane</span><span style="width:10px;height:10px;border-radius:50%;background:#171A1F;align-self:center;transform:translateY(10px);margin:0 4px 0 8px"></span><span style="font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:26px;color:#6E7480">ro</span>
+    </div>
+    <div style="font-size:15px;color:#3D4759;max-width:520px;line-height:1.5">Cine ține mâna pe butoane în Parlamentul României? Urmărește voturile, absențele și legile adoptate tacit.</div>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#9AA0AA;letter-spacing:.08em">DIACRITICE · ĂÂÎȘȚ ăâîșț · IBM PLEX SANS 300+700</div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr">
+    <div style="background:#fff;border-top:1px solid #E7E9EC;padding:30px 32px;display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:baseline;gap:2px"><span style="font-weight:300;font-size:24px;color:#000">La</span><span style="font-weight:700;font-size:24px;letter-spacing:-0.02em;color:#000">Butoane</span><span style="width:6px;height:6px;border-radius:50%;background:#000;align-self:center;transform:translateY(5px);margin:0 3px 0 5px"></span><span style="font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:15px;color:#000">ro</span></div>
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#9AA0AA;letter-spacing:.08em">ONE-COLOR / BLACK</span>
+    </div>
+    <div style="background:#171A1F;padding:30px 32px;display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:baseline;gap:2px"><span style="font-weight:300;font-size:24px;color:#F5F6F8">La</span><span style="font-weight:700;font-size:24px;letter-spacing:-0.02em;color:#F5F6F8">Butoane</span><span style="width:6px;height:6px;border-radius:50%;background:#F5F6F8;align-self:center;transform:translateY(5px);margin:0 3px 0 5px"></span><span style="font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:15px;color:#9AA0AA">ro</span></div>
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#6E7480;letter-spacing:.08em">REVERSED / WHITE</span>
+    </div>
+  </div>
+
+  <div style="border-top:1px solid #E7E9EC;padding:26px 32px;display:flex;align-items:center;gap:28px;flex-wrap:wrap">
+    <div style="display:flex;align-items:flex-end;gap:16px">
+      <svg width="64" height="64" viewBox="0 0 64 64"><rect x="4" y="4" width="56" height="56" rx="15" fill="#171A1F"></rect><circle cx="32" cy="32" r="16" fill="none" stroke="rgba(245,246,248,0.3)" stroke-width="3"></circle><circle cx="32" cy="32" r="8" fill="#F5F6F8"></circle></svg>
+      <svg width="32" height="32" viewBox="0 0 64 64"><rect x="4" y="4" width="56" height="56" rx="15" fill="#171A1F"></rect><circle cx="32" cy="32" r="16" fill="none" stroke="rgba(245,246,248,0.3)" stroke-width="3"></circle><circle cx="32" cy="32" r="8" fill="#F5F6F8"></circle></svg>
+      <svg width="16" height="16" viewBox="0 0 64 64"><rect x="4" y="4" width="56" height="56" rx="15" fill="#171A1F"></rect><circle cx="32" cy="32" r="10" fill="#F5F6F8"></circle></svg>
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#9AA0AA">64 / 32 / 16</span>
+    </div>
+    <div style="flex:1;min-width:280px;background:#DEE1E6;border-radius:10px 10px 0 0;padding:8px 8px 0;display:flex">
+      <div style="background:#fff;border-radius:9px 9px 0 0;padding:8px 12px;display:flex;align-items:center;gap:8px;min-width:230px">
+        <svg width="16" height="16" viewBox="0 0 64 64"><rect x="4" y="4" width="56" height="56" rx="15" fill="#171A1F"></rect><circle cx="32" cy="32" r="10" fill="#F5F6F8"></circle></svg>
+        <span style="font-size:12px;color:#3D4759;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">LaButoane — Voturi în Parlament</span>
+        <span style="margin-left:auto;color:#9AA0AA;font-size:12px">×</span>
+      </div>
+      <div style="padding:8px 12px;font-size:12px;color:#6E7480">+</div>
+    </div>
+  </div>
+
+  <div style="border-top:1px solid #E7E9EC">
+    <div style="background:#fff;border-bottom:1px solid #E7E9EC;padding:12px 32px;display:flex;align-items:center;gap:22px">
+      <div style="display:flex;align-items:baseline;gap:1px"><span style="font-weight:300;font-size:17px;color:#171A1F">La</span><span style="font-weight:700;font-size:17px;letter-spacing:-0.02em;color:#171A1F">Butoane</span><span style="width:5px;height:5px;border-radius:50%;background:#171A1F;align-self:center;transform:translateY(4px);margin:0 2px 0 4px"></span><span style="font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:11px;color:#6E7480">ro</span></div>
+      <nav style="display:flex;gap:18px;font-size:12.5px;color:#3D4759"><span style="color:#171A1F;font-weight:500;border-bottom:2px solid #171A1F;padding-bottom:2px">Voturi</span><span>Deputați</span><span>Legi tacite</span><span>Absențe</span></nav>
+      <span style="margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.1em;color:#6E7480;border:1px solid #D8DBE0;border-radius:3px;padding:3px 6px">NEAFILIAT POLITIC</span>
+    </div>
+    <div style="padding:0 32px 6px;background:#FBFBFC">
+      <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:8px;padding:9px 0 7px;font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.08em;color:#9AA0AA;border-bottom:1px solid #E7E9EC"><span>DEPUTAT</span><span>GRUP</span><span>VOT</span><span>PREZENȚĂ</span></div>
+      <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:8px;padding:8px 0;font-size:12.5px;color:#171A1F;border-bottom:1px solid #F0F1F3"><span>Ștefania Mărgărit</span><span style="color:#6E7480">Grup A</span><span style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:#171A1F"></span>Pentru</span><span style="color:#6E7480">98%</span></div>
+      <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:8px;padding:8px 0;font-size:12.5px;color:#171A1F;border-bottom:1px solid #F0F1F3"><span>Ion Târnăveanu</span><span style="color:#6E7480">Grup B</span><span style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;border:1.5px solid #171A1F;box-sizing:border-box"></span>Împotrivă</span><span style="color:#6E7480">91%</span></div>
+      <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:8px;padding:8px 0;font-size:12.5px;color:#171A1F"><span>Anca Peștișanu</span><span style="color:#6E7480">Grup C</span><span style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:2px;background:#9AA0AA"></span><span style="color:#6E7480">Absent</span></span><span style="color:#6E7480">64%</span></div>
+    </div>
+  </div>
+
+  <div style="border-top:1px solid #E7E9EC;padding:24px 32px;background:#ECEDF0;display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap">
+    <div style="width:340px;border:1px solid #D8DBE0;border-radius:12px;overflow:hidden;background:#fff">
+      <div style="background:#171A1F;height:150px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px">
+        <svg width="46" height="46" viewBox="0 0 64 64"><rect x="4" y="4" width="56" height="56" rx="15" fill="none" stroke="#F5F6F8" stroke-width="4"></rect><circle cx="32" cy="32" r="9" fill="#F5F6F8"></circle></svg>
+        <div style="display:flex;align-items:baseline;gap:1px"><span style="font-weight:300;font-size:17px;color:#F5F6F8">La</span><span style="font-weight:700;font-size:17px;letter-spacing:-0.02em;color:#F5F6F8">Butoane</span><span style="width:5px;height:5px;border-radius:50%;background:#F5F6F8;align-self:center;transform:translateY(4px);margin:0 2px 0 4px"></span><span style="font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:11px;color:#9AA0AA">ro</span></div>
+      </div>
+      <div style="padding:12px 14px;display:flex;flex-direction:column;gap:4px">
+        <span style="font-size:13.5px;font-weight:600;color:#171A1F;line-height:1.35">Cum a votat Camera Deputaților pe 9 iulie 2026</span>
+        <span style="font-size:12px;color:#6E7480;line-height:1.4">312 voturi înregistrate · 41 absențe · 2 legi adoptate tacit</span>
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#9AA0AA;margin-top:2px">labutoane.ro</span>
+      </div>
+    </div>
+    <div style="flex:1;min-width:220px;display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;gap:8px">
+        <div style="width:64px;height:44px;border-radius:6px;background:#171A1F;display:flex;flex-direction:column;justify-content:flex-end;padding:6px"><span style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:#9AA0AA">INK 171A1F</span></div>
+        <div style="width:64px;height:44px;border-radius:6px;background:#F5F6F8;border:1px solid #D8DBE0;display:flex;flex-direction:column;justify-content:flex-end;padding:6px"><span style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:#9AA0AA">F5F6F8</span></div>
+        <div style="width:64px;height:44px;border-radius:6px;background:#3D4759;display:flex;flex-direction:column;justify-content:flex-end;padding:6px"><span style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:#C6CAD1">3D4759</span></div>
+        <div style="width:64px;height:44px;border-radius:6px;background:#9AA0AA;display:flex;flex-direction:column;justify-content:flex-end;padding:6px"><span style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:#F5F6F8">9AA0AA</span></div>
+      </div>
+      <div style="font-size:11.5px;color:#3D4759;line-height:1.55">The most restrained: 300/700 weight contrast, and the domain dot lifted to x-height — a lit indicator, not punctuation. Glyph is a console panel with its light on: bold, geometric, unmistakable at 16px. Reads editorial, not fintech, not ministerial.</div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+</div>
+<p class="dv-next">Try next: “refine <a class="dv-oid" href="#1b">1b</a> with the keycap favicon from <a class="dv-oid" href="#1a">1a</a>” · “make the button ‘o’ in <a class="dv-oid" href="#1b">1b</a> a pressed/lit state” · “new directions with Space Grotesk”</p>
+</section>
+
+</x-dc>
+</body>
+</html>

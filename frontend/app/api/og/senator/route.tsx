@@ -75,7 +75,7 @@ export async function GET(request: Request) {
           </div>
           {devPct != null && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <span style={{ fontSize: 48, fontWeight: 900, color: isHighDev ? '#f59e0b' : '#ffffff' }}>
+              <span style={{ fontSize: 48, fontWeight: 900, color: isHighDev ? '#E3A23C' : '#ffffff' }}>
                 {devPct.toFixed(1)}%
               </span>
               <span style={{ fontSize: 14, color: '#666', textTransform: 'uppercase', letterSpacing: 2 }}>DEVIERE</span>

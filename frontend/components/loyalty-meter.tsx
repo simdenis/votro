@@ -36,7 +36,7 @@ export function LoyaltyMeter({ loyaltyPct, size = 128 }: Props) {
   const largeArcFilled = (loyaltyPct / 100) * 270 > 180 ? 1 : 0
 
   const color =
-    loyaltyPct >= 90 ? '#16a34a' : loyaltyPct >= 70 ? '#d97706' : '#dc2626'
+    loyaltyPct >= 90 ? 'var(--color-for)' : loyaltyPct >= 70 ? 'var(--color-deviation)' : 'var(--color-against)'
 
   const fmt = (n: number) => n.toFixed(2)
 

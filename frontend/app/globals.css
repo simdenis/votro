@@ -2,32 +2,39 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ── Theme variables — light is the only theme ──────────────── */
+/* ── LaButoane design tokens (design_handoff_labutoane_brand) ─
+   Functional palette: every hue carries voting meaning — never
+   decorative. Wordmark/headers are ink; no tricolor, no navy. */
 :root {
-  --bg:        #fafaf8;
-  --surface:   #ffffff;
-  --raised:    #f3f2ef;
-  --rim:       #e6e5e1;
-  --text:      #0a0a14;
-  --muted:     #888888;
-  --faint:     #9a9aa3;
+  --ink:       #171A1F;
+  --paper:     #F5F6F8;
+
+  --bg:        #FFFFFF;
+  --surface:   #FFFFFF;
+  --raised:    #F5F6F8;   /* paper */
+  --rim:       #E7E9EC;   /* gray-150 hairlines */
+  --text:      #171A1F;   /* ink */
+  --muted:     #6E7480;   /* gray-500 */
+  --faint:     #9AA0AA;   /* gray-400 */
+  --slate:     #3D4759;   /* slate-700 — secondary text, link default */
 
   /* Semantic vote colors — ONE token per meaning */
-  --color-for:        #1a7a42;   /* adopted / for */
-  --color-against:    #c4362e;   /* rejected / against */
-  --color-abstention: #8a7fb0;   /* abstention */
-  --color-deviation:  #d97706;   /* party-line deviation */
+  --color-for:             #2EA871;
+  --color-for-dark:        #1F7A51;
+  --color-against:         #EE7B5E;
+  --color-against-dark:    #C25539;
+  --color-abstention:      #E3A23C;
+  --color-abstention-dark: #B27A24;
+  --color-absent:          #D8DBE0;   /* gray-300 */
+  --color-deviation:       #B27A24;   /* amber-dark: alert family (abstain/tacit) */
+  --info:                  #4E86D8;
+  --info-dark:             #33639F;
 
-  /* Sidebar */
-  --sidebar-bg:       #0f2464;
+  /* Legacy alias — old navy accent now maps to ink (headers, codes, chips) */
+  --sidebar-bg:            #171A1F;
 
-  /* Romanian flag (sidebar accent stripe) */
-  --flag-blue:   #002B7F;
-  --flag-yellow: #FCD116;
-  --flag-red:    #CE1126;
-
-  --shimmer-base: #f3f2ef;
-  --shimmer-peak: #e9e8e4;
+  --shimmer-base: #F5F6F8;
+  --shimmer-peak: #E7E9EC;
 }
 
 @layer base {
@@ -40,6 +47,9 @@
     -webkit-font-smoothing: antialiased;
   }
   td, th { font-variant-numeric: tabular-nums; }
+  /* The brand has no display serif: `font-serif` headline classes render as
+     IBM Plex Sans semibold with the wordmark's tightening. */
+  .font-serif { font-weight: 600; letter-spacing: -0.015em; }
 }
 
 @keyframes shimmer {

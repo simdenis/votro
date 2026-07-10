@@ -58,7 +58,7 @@ export function PartyBreakdown({ rows, voters }: Props) {
         const stanceLabel =
           stance === 'for' ? '▲ Pro' : stance === 'against' ? '▼ Contra' : '— Neutru'
         const stanceColor =
-          stance === 'for' ? '#16a34a' : stance === 'against' ? '#dc2626' : '#6666aa'
+          stance === 'for' ? 'var(--color-for)' : stance === 'against' ? 'var(--color-against)' : '#6666aa'
 
         return (
           <div key={p.abbr} className="bg-surface border border-rim rounded-lg p-3">
@@ -88,7 +88,7 @@ export function PartyBreakdown({ rows, voters }: Props) {
               )}
               {p.abstention > 0 && (
                 <HoverNames people={voters?.[p.abbr]?.abstention ?? []} title={`${p.abbr} — abțineri`}>
-                  <span><span className="text-[#8888cc] font-semibold">{p.abstention}</span> abțineri</span>
+                  <span><span className="text-[var(--color-abstention)] font-semibold">{p.abstention}</span> abțineri</span>
                 </HoverNames>
               )}
             </div>

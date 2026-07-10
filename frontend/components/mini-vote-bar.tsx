@@ -17,7 +17,7 @@ export function MiniVoteBar({ forCount, againstCount, abstentionCount }: Props) 
     <div className="flex h-2 w-24 rounded-full overflow-hidden">
       {f > 0 && <div className="bg-adoptat" style={{ width: pct(f) }} />}
       {a > 0 && <div className="bg-respins" style={{ width: pct(a) }} />}
-      {b > 0 && <div className="bg-[#5050a0]" style={{ width: pct(b) }} />}
+      {b > 0 && <div className="bg-abstention" style={{ width: pct(b) }} />}
     </div>
   )
 }

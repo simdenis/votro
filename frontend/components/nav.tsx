@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { Logo } from './logo'
 import { NavLinks } from './nav-links'
 import { MobileNav } from './mobile-nav'
 
@@ -8,56 +9,43 @@ const SearchIcon = ({ size = 14 }: { size?: number }) => (
   </svg>
 )
 
+/** White top header per the brand mock: glyph + wordmark, 12.5px nav with a
+    2px green underline on the active item, NEAFILIAT POLITIC mono badge. */
 export function Nav() {
   return (
-    <>
-      {/* ── Sidebar (desktop) ───────────────────────────── */}
-      <aside
-        className="hidden lg:flex flex-col w-[228px] shrink-0 sticky top-0 h-screen px-[18px] pt-[26px] pb-5"
-        style={{ backgroundColor: 'var(--sidebar-bg)' }}
-      >
-        <Link href="/" className="block mb-7">
-          <div className="flex items-center gap-2.5">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <span className="flex shrink-0 bg-white rounded-md p-[3px]">
-              <img src="/logo.png" alt="" width={36} height={36} className="rounded-full" />
-            </span>
-            <div className="font-serif text-[26px] text-white leading-none">laButoane</div>
-          </div>
-          <div className="text-[10px] uppercase tracking-[0.14em] text-white/35 mt-2">Senat · Cameră · 2026</div>
-          {/* Romanian flag stripe — right under the wordmark, always visible */}
-          <div className="flex h-[4px] rounded-sm overflow-hidden gap-px mt-3.5">
-            <div className="flex-1" style={{ backgroundColor: 'var(--flag-blue)' }} />
-            <div className="flex-1" style={{ backgroundColor: 'var(--flag-yellow)' }} />
-            <div className="flex-1" style={{ backgroundColor: 'var(--flag-red)' }} />
-          </div>
-        </Link>
+    <header className="sticky top-0 z-20 bg-white border-b border-rim">
+      <div className="max-w-[1280px] mx-auto px-4 sm:px-8 lg:px-14">
 
-        <NavLinks variant="sidebar" />
-
-        <div className="pt-[18px] border-t border-white/10">
-          <Link
-            href="/search"
-            className="flex items-center gap-2 text-[13px] font-medium text-white/45 px-[11px] py-[7px] rounded-md hover:text-white/75 hover:bg-white/[0.06] transition-colors"
-          >
-            <SearchIcon /> Căutare
+        {/* ── Desktop ────────────────────────────────────── */}
+        <div className="hidden lg:flex items-center gap-6 h-[58px]">
+          <Link href="/" className="shrink-0 flex items-center">
+            <Logo size={26} />
           </Link>
-        </div>
-      </aside>
 
-      {/* ── Top bar (mobile) ────────────────────────────── */}
-      <nav className="lg:hidden sticky top-0 z-20 relative" style={{ backgroundColor: 'var(--sidebar-bg)' }}>
-        <div className="px-4 h-12 flex items-center justify-between gap-4">
-          <Link href="/" className="flex items-center gap-2 shrink-0">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <span className="flex shrink-0 bg-white rounded p-[2px]">
-              <img src="/logo.png" alt="" width={22} height={22} className="rounded-full" />
+          <NavLinks variant="top" />
+
+          <div className="ml-auto flex items-center gap-4 shrink-0">
+            <Link
+              href="/search"
+              aria-label="Căutare"
+              className="text-muted hover:text-foreground transition-colors p-1"
+            >
+              <SearchIcon size={15} />
+            </Link>
+            <span className="hidden xl:inline-block font-mono text-[9.5px] tracking-[0.1em] text-muted border border-[var(--color-absent)] rounded-[3px] px-2 py-[3px] select-none whitespace-nowrap">
+              NEAFILIAT POLITIC
             </span>
-            <span className="font-serif text-white text-lg leading-none">laButoane</span>
+          </div>
+        </div>
+
+        {/* ── Mobile ─────────────────────────────────────── */}
+        <div className="lg:hidden flex items-center justify-between h-12 relative">
+          <Link href="/" className="flex items-center shrink-0">
+            <Logo size={22} />
           </Link>
           <MobileNav />
         </div>
-      </nav>
-    </>
+      </div>
+    </header>
   )
 }

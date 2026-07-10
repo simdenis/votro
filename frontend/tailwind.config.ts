@@ -21,10 +21,15 @@ const config: Config = {
         respins:    'var(--color-against)',
         abstention: 'var(--color-abstention)',
         deviere:    'var(--color-deviation)',
+        info:       'var(--info)',
+        ink:        'var(--ink)',
       },
       fontFamily: {
         sans:  ['var(--font-sans)',  'system-ui', 'sans-serif'],
-        serif: ['var(--font-serif)', 'Georgia', 'serif'],
+        // The brand has no serif — legacy `font-serif` renders Plex Sans
+        // (weight bump lives in globals.css).
+        serif: ['var(--font-sans)', 'system-ui', 'sans-serif'],
+        mono:  ['var(--font-mono)', 'ui-monospace', 'monospace'],
       },
     },
   },

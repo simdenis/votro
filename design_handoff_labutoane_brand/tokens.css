@@ -1,0 +1,27 @@
+/* LaButoane.ro — design tokens */
+:root {
+  /* neutrals */
+  --ink: #171A1F;
+  --paper: #F5F6F8;
+  --white: #FFFFFF;
+  --slate-700: #3D4759;
+  --gray-500: #6E7480;
+  --gray-400: #9AA0AA;
+  --gray-300: #D8DBE0;
+  --gray-150: #E7E9EC;
+
+  /* functional hues — never decorative */
+  --vote-for: #2EA871;      --vote-for-dark: #1F7A51;      /* Pentru, active nav */
+  --vote-against: #EE7B5E;  --vote-against-dark: #C25539;  /* Împotrivă */
+  --vote-abstain: #E3A23C;  --vote-abstain-dark: #B27A24;  /* Abținere / legi tacite */
+  --info: #4E86D8;          --info-dark: #33639F;          /* links, informational */
+  --vote-absent: #D8DBE0;
+
+  /* type */
+  --font-sans: "IBM Plex Sans", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+
+  /* shape */
+  --radius-card: 12px;
+  --shadow-key: 0 5px 0; /* pair with a *-dark color; no blur */
+}
