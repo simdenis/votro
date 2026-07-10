@@ -4,6 +4,7 @@ import { getDB } from '@/lib/supabase'
 import { formatDate, countNoun, hasPartyLine, capFirst } from '@/lib/utils'
 import { OutcomeBadge } from '@/components/outcome-badge'
 import { ParliamentBar } from '@/components/parliament-bar'
+import { CountyMap } from '@/components/county-map'
 import type { VoteWithLaw, PartyCohesion } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
@@ -101,6 +102,20 @@ export default async function Dashboard() {
         </section>
       )}
 
+      {/* ── Parlamentarul tău — mini interactive map ─────── */}
+      <section className="mb-12">
+        <div className="flex items-baseline justify-between mb-3.5">
+          <h2 className="font-serif text-[20px] font-normal text-foreground">Parlamentarul tău</h2>
+          <Link href="/parlamentarul-tau" className="text-[12.5px] text-muted hover:text-foreground transition-colors">
+            Toate județele →
+          </Link>
+        </div>
+        <p className="text-[13px] text-muted mb-4">Apasă pe județul tău și vezi cine te reprezintă în Parlament.</p>
+        <div className="max-w-[560px]">
+          <CountyMap />
+        </div>
+      </section>
+
       {/* ── Vote list + cohesion sidebar ─────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_220px] gap-x-12 gap-y-10 items-start">
 
@@ -128,7 +143,7 @@ export default async function Dashboard() {
                   <span className="text-[11px] text-faint ml-auto">{formatDate(vote.vote_date)}</span>
                   <OutcomeBadge outcome={vote.outcome} />
                 </div>
-                <h3 className="font-serif text-[18px] leading-[1.32] text-foreground line-clamp-2">
+                <h3 className="font-serif text-[17px] leading-[1.3] text-foreground line-clamp-1">
                   {capFirst(vote.laws?.title ?? vote.description ?? '') || 'Vot de plen fără lege asociată'}
                 </h3>
                 <div className="flex items-center gap-3 mt-2.5">

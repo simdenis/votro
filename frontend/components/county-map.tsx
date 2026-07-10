@@ -35,13 +35,13 @@ export function CountyMap({ selected }: { selected?: string }) {
                 }}
                 className="cursor-pointer outline-none [transition:fill_120ms] focus-visible:stroke-[var(--color-abstention)]"
                 style={{
-                  fill: active ? 'var(--sidebar-bg)' : '#dfe7f5',
+                  fill: active ? 'var(--sidebar-bg)' : '#E7E9EC',
                   stroke: 'var(--sidebar-bg)',
                   strokeWidth: active ? 3.5 : 2.2,
                   strokeLinejoin: 'round',
                 }}
-                onMouseEnter={e => { if (!active) e.currentTarget.style.fill = '#9fb2d8' }}
-                onMouseLeave={e => { if (!active) e.currentTarget.style.fill = '#dfe7f5' }}
+                onMouseEnter={e => { if (!active) e.currentTarget.style.fill = '#C4CAD3' }}
+                onMouseLeave={e => { if (!active) e.currentTarget.style.fill = '#E7E9EC' }}
               >
                 <title>{name}</title>
               </path>
