@@ -102,22 +102,8 @@ export default async function Dashboard() {
         </section>
       )}
 
-      {/* ── Parlamentarul tău — mini interactive map ─────── */}
-      <section className="mb-12">
-        <div className="flex items-baseline justify-between mb-3.5">
-          <h2 className="font-serif text-[20px] font-normal text-foreground">Parlamentarul tău</h2>
-          <Link href="/parlamentarul-tau" className="text-[12.5px] text-muted hover:text-foreground transition-colors">
-            Toate județele →
-          </Link>
-        </div>
-        <p className="text-[13px] text-muted mb-4">Apasă pe județul tău și vezi cine te reprezintă în Parlament.</p>
-        <div className="max-w-[560px]">
-          <CountyMap />
-        </div>
-      </section>
-
       {/* ── Vote list + cohesion sidebar ─────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_220px] gap-x-12 gap-y-10 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-x-12 gap-y-10 items-start">
 
         {/* Recent votes */}
         <section>
@@ -170,9 +156,20 @@ export default async function Dashboard() {
           )}
         </section>
 
-        {/* Cohesion sidebar */}
+        {/* Sidebar: mini map + cohesion + shame corner */}
         {cohesionData.length > 0 && (
           <aside>
+            <div className="flex items-baseline justify-between border-b-2 border-sidebar pb-[5px] mb-3">
+              <h2 className="font-serif text-[16px] font-normal text-foreground">Parlamentarul tău</h2>
+              <Link href="/parlamentarul-tau" className="text-[11px] text-muted hover:text-foreground transition-colors">
+                Toate →
+              </Link>
+            </div>
+            <p className="text-[11px] text-faint mb-2">Apasă pe județul tău.</p>
+            <div className="mb-10">
+              <CountyMap />
+            </div>
+
             <h2 className="font-serif text-[16px] font-normal text-foreground border-b-2 border-sidebar pb-[5px] mb-4">
               Coeziune partide
             </h2>
