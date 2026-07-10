@@ -3,6 +3,7 @@ import { getDB } from '@/lib/supabase'
 import { PoliticianList } from '@/components/politician-list'
 import { getSwitcherIds } from '@/lib/switchers'
 import type { PoliticianStats } from '@/lib/types'
+import { SectionNav, PARLAMENTARI_SECTIONS } from '@/components/section-nav'
 
 export const revalidate = 3600
 export const metadata: Metadata = {
@@ -43,13 +44,16 @@ export default async function DeputiesPage({
   ])
 
   return (
-    <PoliticianList
+    <div>
+      <SectionNav items={PARLAMENTARI_SECTIONS} />
+      <PoliticianList
       title="Deputați"
       basePath="/deputies"
       people={data ?? []}
       sort={sort}
       dir={dir}
       switcherIds={switcherIds}
-    />
+      />
+    </div>
   )
 }

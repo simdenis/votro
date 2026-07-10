@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
 import { formatDate, countNoun } from '@/lib/utils'
 import type { PendingBill } from '@/lib/types'
+import { SectionNav, LEGI_SECTIONS } from '@/components/section-nav'
 
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = {
@@ -44,6 +45,7 @@ export default async function TacitePage() {
 
   return (
     <div className="space-y-6">
+      <SectionNav items={LEGI_SECTIONS} />
       <div>
         <h1 className="font-serif text-[30px] sm:text-[40px] font-normal tracking-[-0.01em] leading-[1.05] text-foreground">
           Termene tacite

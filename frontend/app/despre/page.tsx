@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { SectionNav, DESPRE_SECTIONS } from '@/components/section-nav'
 
 export const metadata: Metadata = {
   title: 'Despre LaButoane',
@@ -8,6 +9,7 @@ export const metadata: Metadata = {
 export default function DesprePage() {
   return (
     <div className="max-w-2xl space-y-10">
+      <SectionNav items={DESPRE_SECTIONS} />
       <h1 className="font-serif text-[30px] sm:text-[40px] font-normal tracking-[-0.01em] leading-[1.05] text-foreground">Despre LaButoane</h1>
 
       <section className="space-y-3">
