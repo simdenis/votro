@@ -81,7 +81,7 @@ export function IntroCard({ data }: { data: IntroCardData }) {
             Voturile Senatului și ale Camerei stau în PDF-uri și pagini web greu de citit. LaButoane le adună, le curăță și le explică pe înțelesul tuturor.
           </div>
         </div>
-        <div style={{ display: 'flex', padding: '0 64px 56px', fontSize: 18, color: C.text, opacity: 0.5 }}>sursă oficială: senat.ro · cdep.ro</div>
+        <div style={{ display: 'flex', padding: '0 64px 56px', fontSize: 18, color: C.text, opacity: 0.5 }}>surse oficiale: senat.ro · cdep.ro</div>
       </Frame>
     )
   }

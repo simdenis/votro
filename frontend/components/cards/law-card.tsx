@@ -181,7 +181,7 @@ export function LawCard({ data }: { data: LawCardData }) {
 
       <div style={{ display: 'flex', justifyContent: 'space-between', padding: '18px 64px', borderTopWidth: 1, borderTopStyle: 'solid', borderTopColor: C.hair, marginTop: 18 }}>
         <div style={{ display: 'flex', fontFamily: MONO, fontSize: 14, fontWeight: 500, color: '#171A1F' }}>@la.butoane</div>
-        <div style={{ display: 'flex', fontSize: 12, color: C.text, opacity: 0.55 }}>sursă: cdep.ro / senat.ro</div>
+        <div style={{ display: 'flex', fontSize: 12, color: C.text, opacity: 0.55 }}>surse: cdep.ro / senat.ro</div>
       </div>
     </div>
   )
