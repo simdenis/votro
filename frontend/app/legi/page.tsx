@@ -71,7 +71,7 @@ function presidentCell(status: PresidentialStatus | null, date: string | null) {
   }
   const label =
     status === 'promulgat' ? 'Promulgată'
-    : status === 'retrimis' ? 'Retrimisă'
+    : status === 'retrimis' ? 'Retrimisă la Parlament'
     : 'Sesizată CCR'
   const color =
     status === 'promulgat' ? 'text-adoptat'
