@@ -250,7 +250,52 @@ def post_carousel(cfg: Config, image_urls: list[str], caption: str) -> str:
 
 
 # Bump after card design changes — og images are CDN-cached immutable per URL.
-CARD_V = "6"
+CARD_V = "7"
+
+
+def _initiator_line(cfg: Config, law_id: str) -> str | None:
+    """Compact 'Inițiativă: …' line — mirrors the summarycard route logic."""
+    rows = _sb_get(cfg, "laws", {"id": f"eq.{law_id}", "select": "initiator_type", "limit": "1"})
+    itype = rows[0].get("initiator_type") if rows else None
+    if itype == "guvern":
+        return "Inițiativă: Guvernul României"
+    if itype == "cetateni":
+        return "Inițiativă cetățenească"
+    if itype != "parlamentari":
+        return None
+    people = _sb_get(cfg, "law_initiators", {"law_id": f"eq.{law_id}", "select": "role_raw,party_raw"})
+    n = len(people)
+    if not n:
+        return None
+    roles = {p.get("role_raw") for p in people if p.get("role_raw")}
+    noun = ("senator" if n == 1 else "senatori") if roles == {"senator"} else \
+           ("deputat" if n == 1 else "deputați") if roles == {"deputat"} else \
+           ("parlamentar" if n == 1 else "parlamentari")
+    de = "de " if n >= 20 else ""
+    # stored party strings can be raw fisa text — minority orgs fold into MIN
+    import re as _re
+    import unicodedata as _ud
+
+    def norm(p: str) -> str:
+        folded = "".join(c for c in _ud.normalize("NFKD", p) if not _ud.combining(c)).lower()
+        if "minorit" in folded:
+            return "MIN"
+        return _re.split(r"\s+A devenit|\(", p)[0].strip()
+
+    counts: dict[str, int] = {}
+    for p in people:
+        if p.get("party_raw"):
+            key = norm(p["party_raw"])
+            if key:
+                counts[key] = counts.get(key, 0) + 1
+    majority = next((k for k, c in counts.items() if c / n >= 0.8), None)
+    if majority:
+        return f"Inițiativă: {n} {de}{noun} {majority}"
+    if len(counts) > 3:
+        de_p = " de" if len(counts) >= 20 else ""
+        return f"Inițiativă: {n} {de}{noun} din {len(counts)}{de_p} partide"
+    parties = ", ".join(counts)
+    return f"Inițiativă: {n} {de}{noun}" + (f" ({parties})" if parties else "")
 
 
 def post_law(cfg: Config, law_id: str, dry_run: bool = False, hook: str | None = None) -> str | None:
@@ -305,6 +350,9 @@ def post_law(cfg: Config, law_id: str, dry_run: bool = False, hook: str | None =
         lines = [hook.strip(), ""] + lines
     if law.get("summary"):
         lines += ["", law["summary"].strip()]
+    ini = _initiator_line(cfg, law_id)
+    if ini:
+        lines += ["", ini]
     if outcome:
         lines += ["", outcome]
     if tacit:

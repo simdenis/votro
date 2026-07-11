@@ -10,6 +10,8 @@ export interface SummaryCardData {
   statusLabel: string
   statusColor: string
   dateLine: string | null
+  /** e.g. "Inițiativă: Guvernul României" / "Inițiativă: 64 de parlamentari AUR" */
+  initiatorLine?: string | null
 }
 
 const C = {
@@ -78,12 +80,17 @@ export function SummaryCard({ data }: { data: SummaryCardData }) {
         </div>
         <div style={{ display: 'flex', flexGrow: 1.6, minHeight: 24 }} />
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 22, marginBottom: 34 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 22, marginBottom: data.initiatorLine ? 14 : 34 }}>
           <div style={{ display: 'flex', background: data.statusColor, color: '#fff', fontSize: 18, fontWeight: 600, letterSpacing: 4, textTransform: 'uppercase', padding: '11px 30px', borderRadius: 3 }}>
             {data.statusLabel}
           </div>
           {data.dateLine && <div style={{ display: 'flex', fontSize: 17, color: C.text, opacity: 0.8 }}>{data.dateLine}</div>}
         </div>
+        {data.initiatorLine && (
+          <div style={{ display: 'flex', fontSize: 19, color: C.text, opacity: 0.75, marginBottom: 34 }}>
+            {data.initiatorLine}
+          </div>
+        )}
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', padding: '18px 64px', borderTopWidth: 1, borderTopStyle: 'solid', borderTopColor: C.hair }}>

@@ -106,11 +106,23 @@ def parse_initiators(html: str) -> tuple[str, list[dict]] | None:
             people.append({
                 "name_raw": em.group(1).strip(),
                 "role_raw": em.group(2).lower(),
-                "party_raw": (em.group(3) or "").strip() or None,
+                "party_raw": clean_party(em.group(3)),
             })
         else:
             people.append({"name_raw": raw, "role_raw": None, "party_raw": None})
     return ("parlamentari", people) if people else None
+
+
+def clean_party(raw: str | None) -> str | None:
+    """Party string sanitized: the 18 minority orgs fold into MIN (they sit as
+    one group), and trailing fisa text glued after the name is cut."""
+    if not raw:
+        return None
+    p = raw.strip()
+    if "minorit" in fold(p):
+        return "MIN"
+    p = re.split(r"\s+A devenit|\s+Respins|\s+Adoptat|\(", p)[0].strip()
+    return p[:20] or None
 
 
 class Store:
