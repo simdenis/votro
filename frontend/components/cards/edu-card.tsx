@@ -219,7 +219,7 @@ export function EduCard({ data }: { data: EduCardData }) {
         <div style={{ display: 'flex', width: '100%', height: 195, justifyContent: 'center', marginTop: 26 }}>
           <svg width={603} height={195} viewBox="0 0 952 308">
             {dots.map((d, i) => (
-              <circle key={i} cx={d.x} cy={d.y} r={4.5} fill="#D8DBE0" />
+              <circle key={i} cx={d.x} cy={d.y} r={6} fill="#D8DBE0" />
             ))}
           </svg>
         </div>

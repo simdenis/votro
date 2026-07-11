@@ -147,10 +147,10 @@ export function VoteCard({ data }: { data: VoteCardData }) {
           const arcH = (data.lawTitle.length > 200 || data.parties.length > 6) ? 360 : 430
           const arcW = Math.round(952 * (arcH / 308))
           return (
-            <div style={{ display: 'flex', width: '100%', height: arcH, justifyContent: 'center', marginBottom: 14 }}>
+            <div style={{ display: 'flex', width: '100%', height: arcH, justifyContent: 'center', marginBottom: 36 }}>
               <svg width={arcW} height={arcH} viewBox="0 0 952 308">
                 {dots.map((d, i) => (
-                  <circle key={i} cx={d.x} cy={d.y} r={4.5} fill={d.color} />
+                  <circle key={i} cx={d.x} cy={d.y} r={6} fill={d.color} />
                 ))}
               </svg>
             </div>

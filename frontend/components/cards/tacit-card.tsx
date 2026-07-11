@@ -61,7 +61,7 @@ export function TacitCard({ data }: { data: TacitCardData }) {
         <div style={{ display: 'flex', width: '100%', height: 300, justifyContent: 'center', marginTop: 40 }}>
           <svg width={927} height={300} viewBox="0 0 952 308">
             {dots.map((d, i) => (
-              <circle key={i} cx={d.x} cy={d.y} r={4.5} fill="#D8DBE0" />
+              <circle key={i} cx={d.x} cy={d.y} r={6} fill="#D8DBE0" />
             ))}
           </svg>
         </div>

@@ -250,7 +250,7 @@ def post_carousel(cfg: Config, image_urls: list[str], caption: str) -> str:
 
 
 # Bump after card design changes — og images are CDN-cached immutable per URL.
-CARD_V = "3"
+CARD_V = "4"
 
 
 def post_law(cfg: Config, law_id: str, dry_run: bool = False, hook: str | None = None) -> str | None:

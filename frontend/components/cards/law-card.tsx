@@ -91,10 +91,10 @@ export function LawCard({ data }: { data: LawCardData }) {
           const arcH = data.lawTitle.length > 220 || data.parties.length > 6 ? 340 : 420
           const arcW = Math.round(952 * (arcH / 308))
           return (
-            <div style={{ display: 'flex', width: '100%', height: arcH, justifyContent: 'center', marginBottom: 12 }}>
+            <div style={{ display: 'flex', width: '100%', height: arcH, justifyContent: 'center', marginBottom: 40 }}>
               <svg width={arcW} height={arcH} viewBox="0 0 952 308">
                 {dots.map((d, i) => (
-                  <circle key={i} cx={d.x} cy={d.y} r={4.5} fill={d.color} />
+                  <circle key={i} cx={d.x} cy={d.y} r={6} fill={d.color} />
                 ))}
               </svg>
             </div>
