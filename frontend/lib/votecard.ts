@@ -96,15 +96,10 @@ export function mapLawToCard(
   const cameraDone = law.camera_outcome === 'adoptat' || !!law.presidential_status
   const rejected = law.senate_outcome === 'respins' || law.camera_outcome === 'respins'
 
-  let finalStep: JourneyStep
-  if (promulgat) finalStep = { label: 'Lege', done: true, final: true }
-  else if (law.presidential_status === 'retrimis') finalStep = { label: 'Retrimisă la Parlament', done: false, final: true }
-  else if (law.presidential_status === 'sesizat_ccr') finalStep = { label: 'CCR', done: false, final: true }
-  else finalStep = { label: 'Președinte', done: false, final: true }
-
   let statusLabel = 'ÎN DEZBATERE'
   let statusColor = '#171A1F'
-  if (promulgat) { statusLabel = 'PROMULGATĂ'; statusColor = '#171A1F' }
+  // outcome colors: green = became law / passed, red = failed or bounced
+  if (promulgat) { statusLabel = 'PROMULGATĂ'; statusColor = '#1F7A51' }
   // a returned law passed both chambers, but green 'ADOPTATĂ' misleads —
   // the president bounced it back, and that is the story
   else if (law.presidential_status === 'retrimis') { statusLabel = 'RETRIMISĂ LA PARLAMENT'; statusColor = '#C25539' }
@@ -132,10 +127,10 @@ export function mapLawToCard(
     statusLabel,
     statusColor,
     dateLine,
+    // just the two chambers — the badge + title color carry the final outcome
     journey: [
       { label: 'Senat', done: senateDone },
       { label: 'Cameră', done: cameraDone },
-      finalStep,
     ],
     voteChamber: decisive ? (isCam ? 'CAMERA DEPUTAȚILOR' : 'SENAT') : null,
     votesFor: decisive ? (isCam ? law.camera_for : law.senate_for) : null,

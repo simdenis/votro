@@ -101,6 +101,9 @@ export function LawCard({ data }: { data: LawCardData }) {
           )
         })()}
 
+        {/* Slack sits here: parties hug the journey strip at the bottom */}
+        <div style={{ display: 'flex', flex: 1, minHeight: 8 }} />
+
         {/* Party vote — decisive plenary vote */}
         {data.parties.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', marginBottom: 24 }}>
@@ -153,15 +156,17 @@ export function LawCard({ data }: { data: LawCardData }) {
           </div>
         )}
 
-        {/* Legislative journey — pinned above the footer */}
-        <div style={{ display: 'flex', flex: 1, minHeight: 8 }} />
+        {/* Legislative journey */}
         <div style={{ display: 'flex', height: 1, background: C.hair, marginBottom: 22 }} />
         <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
           {data.journey.map((s, i) => {
-            const color = s.final && s.done ? C.navy : s.done ? C.for : '#9AA0AA'
+            // the chamber this slide shows lights up green
+            const active = (s.label === 'Senat' && data.voteChamber === 'SENAT')
+              || (s.label === 'Cameră' && data.voteChamber === 'CAMERA DEPUTAȚILOR')
+            const color = active ? '#1F7A51' : s.done ? C.for : '#9AA0AA'
             return (
               <div key={s.label} style={{ display: 'flex', alignItems: 'center', flexGrow: i === data.journey.length - 1 ? 0 : 1, flexShrink: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 17, fontWeight: s.final ? 700 : 600, letterSpacing: 1.5, textTransform: 'uppercase', color }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 17, fontWeight: active ? 700 : 600, letterSpacing: 1.5, textTransform: 'uppercase', color }}>
                   {s.label}
                   {s.done ? (
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round">
