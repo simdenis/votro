@@ -81,14 +81,14 @@ export function LawCard({ data }: { data: LawCardData }) {
           {data.dateLine && <div style={{ display: 'flex', fontSize: 17, color: C.text, opacity: 0.8 }}>{data.dateLine}</div>}
         </div>
 
-        <div style={{ display: 'flex', flex: 1, minHeight: 10 }} />
+        <div style={{ display: 'flex', height: 30 }} />
 
         {/* Parliament arc — the decisive plenary vote, as a semicircle */}
         {data.voteChamber && (data.votesFor != null || data.votesAgainst != null) && (() => {
           const f = data.votesFor ?? 0, a = data.votesAgainst ?? 0, ab = data.votesAbstain ?? 0
           const absent = data.parties.reduce((s, p) => s + p.absent, 0)
           const dots = computeArcDots(f, a, ab, 0, absent)
-          const arcH = data.lawTitle.length > 220 || data.parties.length > 6 ? 290 : 350
+          const arcH = data.lawTitle.length > 220 || data.parties.length > 6 ? 340 : 420
           const arcW = Math.round(952 * (arcH / 308))
           return (
             <div style={{ display: 'flex', width: '100%', height: arcH, justifyContent: 'center', marginBottom: 12 }}>
@@ -106,7 +106,7 @@ export function LawCard({ data }: { data: LawCardData }) {
           <div style={{ display: 'flex', flexDirection: 'column', marginBottom: 24 }}>
             <div style={{ display: 'flex', height: 1, background: C.hair, marginBottom: 14 }} />
             <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 10 }}>
-              <div style={{ display: 'flex', fontSize: 11, fontWeight: 600, color: C.navy, letterSpacing: 4, textTransform: 'uppercase', opacity: 0.85 }}>
+              <div style={{ display: 'flex', fontSize: 14, fontWeight: 600, color: C.navy, letterSpacing: 4, textTransform: 'uppercase', opacity: 0.85 }}>
                 {`Vot pe partide${data.voteChamber ? ` · ${data.voteChamber}` : ''}`}
               </div>
               {/* colored-dot legend with counts — the color key for arc + bars */}
@@ -123,8 +123,8 @@ export function LawCard({ data }: { data: LawCardData }) {
                 ] as const).map(([count, label, color]) =>
                   count != null ? (
                     <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <div style={{ display: 'flex', width: 9, height: 9, borderRadius: 5, background: color }} />
-                      <div style={{ display: 'flex', fontSize: 12.5, color: '#6E7480' }}>{`${count} ${label}`}</div>
+                      <div style={{ display: 'flex', width: 12, height: 12, borderRadius: 6, background: color }} />
+                      <div style={{ display: 'flex', fontSize: 17, color: '#6E7480' }}>{`${count} ${label}`}</div>
                     </div>
                   ) : null,
                 )}
@@ -132,20 +132,20 @@ export function LawCard({ data }: { data: LawCardData }) {
             </div>
             {(() => {
               const n = data.parties.length
-              const rowH = n > 8 ? 26 : n > 6 ? 30 : n > 5 ? 33 : 36
-              const barH = rowH < 32 ? 11 : 14
+              const rowH = n > 8 ? 32 : n > 6 ? 36 : n > 5 ? 40 : 44
+              const barH = rowH < 38 ? 13 : 16
               return data.parties.map(p => {
                 const t = p.for + p.against + p.abstain + p.absent
                 return (
                   <div key={p.name} style={{ display: 'flex', alignItems: 'center', height: rowH }}>
-                    <div style={{ display: 'flex', width: 62, justifyContent: 'flex-end', fontSize: 13, fontWeight: 600, color: C.text, opacity: 0.75, paddingRight: 10 }}>{p.name}</div>
+                    <div style={{ display: 'flex', width: 76, justifyContent: 'flex-end', fontSize: 16, fontWeight: 600, color: C.text, opacity: 0.75, paddingRight: 10 }}>{p.name}</div>
                     <div style={{ display: 'flex', flexGrow: 1, flexShrink: 1, flexBasis: 0, height: barH, borderRadius: 2, overflow: 'hidden', background: C.hair }}>
                       {seg(p.for, C.for)}
                       {seg(p.against, C.against)}
                       {seg(p.abstain, C.abstain)}
                       {seg(p.absent, C.absentDot)}
                     </div>
-                    <div style={{ display: 'flex', width: 34, fontSize: 11, color: C.text, opacity: 0.8, paddingLeft: 8 }}>{t}</div>
+                    <div style={{ display: 'flex', width: 46, fontSize: 15, color: C.text, opacity: 0.8, paddingLeft: 8 }}>{t}</div>
                   </div>
                 )
               })
@@ -153,14 +153,15 @@ export function LawCard({ data }: { data: LawCardData }) {
           </div>
         )}
 
-        {/* Legislative journey */}
+        {/* Legislative journey — pinned above the footer */}
+        <div style={{ display: 'flex', flex: 1, minHeight: 8 }} />
         <div style={{ display: 'flex', height: 1, background: C.hair, marginBottom: 22 }} />
         <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
           {data.journey.map((s, i) => {
             const color = s.final && s.done ? C.navy : s.done ? C.for : '#9AA0AA'
             return (
               <div key={s.label} style={{ display: 'flex', alignItems: 'center', flexGrow: i === data.journey.length - 1 ? 0 : 1, flexShrink: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 15, fontWeight: s.final ? 700 : 600, letterSpacing: 1.5, textTransform: 'uppercase', color }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 17, fontWeight: s.final ? 700 : 600, letterSpacing: 1.5, textTransform: 'uppercase', color }}>
                   {s.label}
                   {s.done ? (
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round">
