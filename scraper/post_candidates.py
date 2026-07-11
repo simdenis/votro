@@ -43,7 +43,7 @@ def main() -> None:
     # laws touched recently: a final plenary vote OR a presidential decision
     law_ids: set[str] = set()
     votes_by_law: dict[str, list[dict]] = {}
-    vote_params = {"select": "law_id,chamber,vote_date,votes_for,votes_against,votes_abstain,result",
+    vote_params = {"select": "law_id,chamber,vote_date,for_count,against_count,outcome",
                    "vote_type": "eq.vot final", "law_id": "not.is.null"}
     if not args.all:
         vote_params["vote_date"] = f"gte.{cutoff}"
@@ -80,8 +80,8 @@ def main() -> None:
         status = l.get("presidential_status") or ""
         margin = ""
         for v in sorted(votes_by_law.get(l["id"], []), key=lambda x: x["vote_date"] or "", reverse=True)[:1]:
-            f_, a_ = v.get("votes_for") or 0, v.get("votes_against") or 0
-            margin = f"  [{v['chamber']}: {f_}-{a_} {v.get('result') or ''} {v.get('vote_date') or ''}]"
+            f_, a_ = v.get("for_count") or 0, v.get("against_count") or 0
+            margin = f"  [{v['chamber']}: {f_}-{a_} {v.get('outcome') or ''} {v.get('vote_date') or ''}]"
         print(f"{score:>4}  {l['code']:<12} {status:<12} {l.get('interest_reason') or ''}{margin}")
         print(f"{'':>4}  {l['title'][:90]}")
         print(f"{'':>4}  {site}/legi/{l['id']}   →  python instagram_poster.py --law {l['id']} --dry-run")
