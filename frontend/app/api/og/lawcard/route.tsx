@@ -45,20 +45,32 @@ export async function GET(request: Request) {
   let breakdown: { party_abbr: string; vote_choice: string; count: number }[] = []
   const decisive = law
     ? forChamber
-      ? (forChamber === 'camera' && law.camera_vote_id ? { voteId: law.camera_vote_id }
-        : forChamber === 'senate' && law.senate_vote_id ? { voteId: law.senate_vote_id }
+      ? (forChamber === 'camera' && law.camera_vote_id ? { voteId: law.camera_vote_id, chamber: 'camera' as const }
+        : forChamber === 'senate' && law.senate_vote_id ? { voteId: law.senate_vote_id, chamber: 'senate' as const }
         : null)
       : lawDecisiveVoteId(law)
     : null
+  // current roster seats per party — turns the vote's recorded absents (senat.ro
+  // lists only voters) into true absents: party seats − party votes
+  let seatsByParty: Record<string, number> | null = null
   if (decisive) {
-    const r = await fetch(
-      `${U}/rest/v1/party_vote_breakdown?vote_id=eq.${decisive.voteId}&select=party_abbr,vote_choice,count`,
-      { headers: SB },
-    )
+    const dbChamber = decisive.chamber === 'camera' ? 'deputies' : 'senate'
+    const [r, roster] = await Promise.all([
+      fetch(`${U}/rest/v1/party_vote_breakdown?vote_id=eq.${decisive.voteId}&select=party_abbr,vote_choice,count`, { headers: SB }),
+      fetch(`${U}/rest/v1/politicians?chamber=eq.${dbChamber}&active=is.true&select=parties(abbreviation)`, { headers: SB }),
+    ])
     breakdown = (await r.json()) ?? []
+    const rows: { parties: { abbreviation: string } | null }[] = (await roster.json()) ?? []
+    if (Array.isArray(rows) && rows.length > 100) {
+      seatsByParty = {}
+      for (const row of rows) {
+        if (!row.parties) continue
+        seatsByParty[row.parties.abbreviation] = (seatsByParty[row.parties.abbreviation] ?? 0) + 1
+      }
+    }
   }
 
-  const data = law ? mapLawToCard(law, breakdown, forChamber) : SAMPLE
+  const data = law ? mapLawToCard(law, breakdown, forChamber, seatsByParty) : SAMPLE
   const fonts = await getCardFonts()
   // Render at 2× (2160px) — a 1080px PNG looks soft on hi-dpi screens.
   return new ImageResponse(

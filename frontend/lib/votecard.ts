@@ -84,12 +84,34 @@ export function lawDecisiveVoteId(law: LawStatus): { voteId: string; chamber: 'c
   return null
 }
 
+/** True absentees per party: the roster seats a party holds minus the votes it
+ *  cast. senat.ro breakdowns only list voters, so the recorded "absent" rows
+ *  wildly undercount (a 96-voter Senate vote showed "2 absenți"). Roster
+ *  parties that cast no vote at all become full-absent rows. Skipped for joint
+ *  sittings (participants > chamber seats). */
+export function fillTrueAbsents(parties: PartyVote[], seatsByParty: Record<string, number> | null): PartyVote[] {
+  if (!seatsByParty) return parties
+  const totalSeats = Object.values(seatsByParty).reduce((a, b) => a + b, 0)
+  const participants = parties.reduce((s, p) => s + p.for + p.against + p.abstain + p.absent, 0)
+  if (participants > totalSeats) return parties
+  const out = parties.map(p => {
+    const seats = seatsByParty[p.name]
+    if (!seats) return p
+    return { ...p, absent: Math.max(p.absent, seats - (p.for + p.against + p.abstain)) }
+  })
+  for (const [abbr, seats] of Object.entries(seatsByParty)) {
+    if (!out.some(p => p.name === abbr)) out.push({ name: abbr, for: 0, against: 0, abstain: 0, absent: seats })
+  }
+  return out.sort((a, b) => (b.for + b.against + b.abstain + b.absent) - (a.for + a.against + a.abstain + a.absent))
+}
+
 /** `forChamber` pins the party-vote section to one chamber (IG carousel slides);
- *  default keeps the decisive-vote behaviour. */
+ *  `seatsByParty` (current roster) turns recorded absents into true absents. */
 export function mapLawToCard(
   law: LawStatus,
   breakdownRows: BreakdownRow[] = [],
   forChamber: 'camera' | 'senate' | null = null,
+  seatsByParty: Record<string, number> | null = null,
 ): LawCardData {
   const promulgat = law.presidential_status === 'promulgat'
   const senateDone = law.senate_outcome === 'adoptat' || !!law.presidential_status
@@ -136,7 +158,7 @@ export function mapLawToCard(
     votesFor: decisive ? (isCam ? law.camera_for : law.senate_for) : null,
     votesAgainst: decisive ? (isCam ? law.camera_against : law.senate_against) : null,
     votesAbstain: decisive ? (isCam ? law.camera_abstentions : law.senate_abstentions) : null,
-    parties: decisive ? toParties(breakdownRows) : [],
+    parties: decisive ? fillTrueAbsents(toParties(breakdownRows), seatsByParty) : [],
   }
 }
 
