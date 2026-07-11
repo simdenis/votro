@@ -1,4 +1,4 @@
-// 1080×1080 deviation card — who broke party line on a vote, by name.
+// 1080×1350 (4:5) deviation card — who broke party line on a vote, by name.
 // Same brand language as VoteCard.
 
 export interface DeviatorRow {
@@ -66,7 +66,7 @@ export function DeviationCard({ data }: { data: DeviationCardData }) {
   const nameSize = shown.length > 7 ? 22 : 25
 
   return (
-    <div style={{ width: 1080, height: 1080, display: 'flex', flexDirection: 'column', background: C.bg, color: C.text, fontFamily: SANS }}>
+    <div style={{ width: 1080, height: 1350, display: 'flex', flexDirection: 'column', background: C.bg, color: C.text, fontFamily: SANS }}>
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '32px 64px 24px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 13 }}>
@@ -79,7 +79,7 @@ export function DeviationCard({ data }: { data: DeviationCardData }) {
       </div>
       <div style={{ display: 'flex', height: 1, margin: '0 64px', background: C.hair }} />
 
-      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, padding: '38px 64px 0' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'center', padding: '20px 64px' }}>
         {/* Headline */}
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: 24, marginBottom: 14 }}>
           <div style={{ display: 'flex', fontFamily: SERIF, fontSize: 130, lineHeight: 0.85, color: C.deviation }}>{n}</div>
@@ -106,11 +106,9 @@ export function DeviationCard({ data }: { data: DeviationCardData }) {
             </div>
           ))}
           {extra > 0 && (
-            <div style={{ display: 'flex', alignItems: 'center', height: 46, fontSize: 17, opacity: 0.7 }}>{`+ încă ${extra} — lista completă pe site (link în bio)`}</div>
+            <div style={{ display: 'flex', alignItems: 'center', height: 46, fontSize: 17, opacity: 0.7 }}>{`+ încă ${extra}: lista completă pe site (link în bio)`}</div>
           )}
         </div>
-
-        <div style={{ display: 'flex', flex: 1 }} />
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', padding: '18px 64px', borderTopWidth: 1, borderTopStyle: 'solid', borderTopColor: C.hair }}>

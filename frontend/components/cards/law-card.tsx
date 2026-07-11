@@ -1,4 +1,4 @@
-// 1080×1080 law-journey card — same brand language as VoteCard.
+// 1080×1350 (4:5) law-journey card — same brand language as VoteCard.
 
 import type { PartyVote } from './vote-card'
 import { computeArcDots } from './vote-card'
@@ -52,7 +52,7 @@ export function LawCard({ data }: { data: LawCardData }) {
     count > 0 ? <div style={{ flexGrow: count, flexShrink: 1, flexBasis: 0, background: color }} /> : null
 
   return (
-    <div style={{ width: 1080, height: 1080, display: 'flex', flexDirection: 'column', background: C.bg, color: C.text, fontFamily: SANS }}>
+    <div style={{ width: 1080, height: 1350, display: 'flex', flexDirection: 'column', background: C.bg, color: C.text, fontFamily: SANS }}>
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '32px 64px 24px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 13 }}>
@@ -88,7 +88,7 @@ export function LawCard({ data }: { data: LawCardData }) {
           const f = data.votesFor ?? 0, a = data.votesAgainst ?? 0, ab = data.votesAbstain ?? 0
           const absent = data.parties.reduce((s, p) => s + p.absent, 0)
           const dots = computeArcDots(f, a, ab, 0, absent)
-          const arcH = data.lawTitle.length > 220 || data.parties.length > 6 ? 210 : 268
+          const arcH = data.lawTitle.length > 220 || data.parties.length > 6 ? 290 : 350
           const arcW = Math.round(952 * (arcH / 308))
           return (
             <div style={{ display: 'flex', width: '100%', height: arcH, justifyContent: 'center', marginBottom: 12 }}>

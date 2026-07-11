@@ -2,7 +2,7 @@ import { ImageResponse } from 'next/og'
 import { ShameCard, type ShameCardData, type ShameEntry } from '@/components/cards/shame-card'
 import { getCardFonts } from '@/lib/og-fonts'
 
-// 1080×1080 Instagram shame-corner card — top absentees, both chambers.
+// 1080×1350 (4:5) Instagram shame-corner card — top absentees, both chambers.
 // Public URL the Instagram poster fetches: /api/og/shamecard
 
 export const runtime = 'edge'
@@ -44,10 +44,10 @@ export async function GET() {
   const fonts = await getCardFonts()
   return new ImageResponse(
     (
-      <div style={{ display: 'flex', width: 1080, height: 1080, transform: 'scale(2)', transformOrigin: 'top left' }}>
+      <div style={{ display: 'flex', width: 1080, height: 1350, transform: 'scale(2)', transformOrigin: 'top left' }}>
         <ShameCard data={data} />
       </div>
     ),
-    { width: 2160, height: 2160, fonts },
+    { width: 2160, height: 2700, fonts },
   )
 }

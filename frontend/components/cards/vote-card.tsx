@@ -120,7 +120,7 @@ export function VoteCard({ data }: { data: VoteCardData }) {
     count > 0 ? <div style={{ flexGrow: count, flexShrink: 1, flexBasis: 0, background: color }} /> : null
 
   return (
-    <div style={{ width: 1080, height: 1080, display: 'flex', flexDirection: 'column', background: C.bg, color: C.text, fontFamily: SANS }}>
+    <div style={{ width: 1080, height: 1350, display: 'flex', flexDirection: 'column', background: C.bg, color: C.text, fontFamily: SANS }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '32px 64px 24px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 13 }}>
@@ -138,10 +138,13 @@ export function VoteCard({ data }: { data: VoteCardData }) {
         <div style={{ display: 'flex', fontSize: 14, fontWeight: 500, color: C.navy, letterSpacing: 5, textTransform: 'uppercase', marginBottom: 12 }}>{data.lawCode}</div>
         <div style={{ fontFamily: SERIF, fontSize: titleFont(data.lawTitle.length), lineHeight: 1.14, color: C.text, marginBottom: 18 }}>{data.lawTitle}</div>
 
+        {/* Spacer — splits the 4:5 slack with its twin below the stats row */}
+        <div style={{ display: 'flex', flex: 1, minHeight: 4 }} />
+
         {/* Parliament arc — scales down when a long title or a full party list
             needs the vertical room (all parties are shown below). */}
         {(() => {
-          const arcH = (data.lawTitle.length > 200 || data.parties.length > 6) ? 236 : 308
+          const arcH = (data.lawTitle.length > 200 || data.parties.length > 6) ? 320 : 400
           const arcW = Math.round(952 * (arcH / 308))
           return (
             <div style={{ display: 'flex', width: '100%', height: arcH, justifyContent: 'center', marginBottom: 14 }}>

@@ -1,4 +1,4 @@
-// 1080×1080 "Pe scurt" card — the AI law summary as the hero, for IG posts.
+// 1080×1350 (4:5) "Pe scurt" card — the AI law summary as the hero, for IG posts.
 // Same brand language as LawCard/VoteCard.
 
 export interface SummaryCardData {
@@ -44,7 +44,7 @@ export function SummaryCard({ data }: { data: SummaryCardData }) {
   const title = data.lawTitle
 
   return (
-    <div style={{ width: 1080, height: 1080, display: 'flex', flexDirection: 'column', background: C.bg, color: C.text, fontFamily: SANS }}>
+    <div style={{ width: 1080, height: 1350, display: 'flex', flexDirection: 'column', background: C.bg, color: C.text, fontFamily: SANS }}>
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '32px 64px 24px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 13 }}>

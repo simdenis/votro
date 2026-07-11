@@ -1,4 +1,4 @@
-// 1080×1080 senator/deputy card — same brand language as VoteCard.
+// 1080×1350 (4:5) senator/deputy card — same brand language as VoteCard.
 
 import { countNoun } from '@/lib/utils'
 
@@ -60,7 +60,7 @@ export function SenatorCard({ data }: { data: SenatorCardData }) {
     count > 0 ? <div style={{ flexGrow: count, flexShrink: 1, flexBasis: 0, background: color }} /> : null
 
   return (
-    <div style={{ width: 1080, height: 1080, display: 'flex', flexDirection: 'column', background: C.bg, color: C.text, fontFamily: SANS }}>
+    <div style={{ width: 1080, height: 1350, display: 'flex', flexDirection: 'column', background: C.bg, color: C.text, fontFamily: SANS }}>
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '32px 64px 24px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 13 }}>
@@ -73,7 +73,8 @@ export function SenatorCard({ data }: { data: SenatorCardData }) {
       </div>
       <div style={{ display: 'flex', height: 1, margin: '0 64px', background: C.hair }} />
 
-      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, padding: '44px 64px 0' }}>
+      {/* justifyContent center — at 4:5 the content block floats mid-card */}
+      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'center', padding: '20px 64px' }}>
         {/* Name + party */}
         <div style={{ fontFamily: SERIF, fontSize: 60, lineHeight: 1.04, color: C.text, marginBottom: 18, maxHeight: 200, overflow: 'hidden' }}>{data.fullName}</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 44 }}>
@@ -132,8 +133,6 @@ export function SenatorCard({ data }: { data: SenatorCardData }) {
             ))}
           </div>
         )}
-
-        <div style={{ display: 'flex', flex: 1 }} />
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', padding: '18px 64px', borderTopWidth: 1, borderTopStyle: 'solid', borderTopColor: C.hair, marginTop: 12 }}>

@@ -5,7 +5,7 @@ import { getCardFonts } from '@/lib/og-fonts'
 import { isUuid } from '@/lib/utils'
 import { activeSeats } from '@/lib/seats'
 
-// 1080×1080 Instagram vote card — Satori export pipeline.
+// 1080×1350 (4:5) Instagram vote card — Satori export pipeline.
 // Public URL the Instagram poster fetches: /api/og/votecard?vote=<vote_id>
 
 export const runtime = 'edge'
@@ -35,10 +35,10 @@ export async function GET(request: Request) {
   // Render at 2× (2160px) — a 1080px PNG looks soft on hi-dpi screens.
   return new ImageResponse(
     (
-      <div style={{ display: 'flex', width: 1080, height: 1080, transform: 'scale(2)', transformOrigin: 'top left' }}>
+      <div style={{ display: 'flex', width: 1080, height: 1350, transform: 'scale(2)', transformOrigin: 'top left' }}>
         <VoteCard data={data} />
       </div>
     ),
-    { width: 2160, height: 2160, fonts },
+    { width: 2160, height: 2700, fonts },
   )
 }

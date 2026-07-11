@@ -1,4 +1,4 @@
-// 1080×1080 weekly recap card — "Săptămâna în Parlament".
+// 1080×1350 (4:5) weekly recap card — "Săptămâna în Parlament".
 // Same brand language as VoteCard.
 
 export interface WeekHighlight {
@@ -44,7 +44,7 @@ export function WeekCard({ data }: { data: WeekCardData }) {
   const h = data.closest
 
   return (
-    <div style={{ width: 1080, height: 1080, display: 'flex', flexDirection: 'column', background: C.bg, color: C.text, fontFamily: SANS }}>
+    <div style={{ width: 1080, height: 1350, display: 'flex', flexDirection: 'column', background: C.bg, color: C.text, fontFamily: SANS }}>
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '32px 64px 24px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 13 }}>

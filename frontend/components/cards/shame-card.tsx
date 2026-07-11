@@ -1,4 +1,4 @@
-// 1080×1080 shame-corner card — top absentees, both chambers.
+// 1080×1350 (4:5) shame-corner card — top absentees, both chambers.
 // Same brand language as VoteCard / WeekCard.
 
 export interface ShameEntry {
@@ -28,7 +28,7 @@ const MONO = 'IBM Plex Mono'
 
 export function ShameCard({ data }: { data: ShameCardData }) {
   return (
-    <div style={{ width: 1080, height: 1080, display: 'flex', flexDirection: 'column', background: C.bg, color: C.text, fontFamily: SANS }}>
+    <div style={{ width: 1080, height: 1350, display: 'flex', flexDirection: 'column', background: C.bg, color: C.text, fontFamily: SANS }}>
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '32px 64px 24px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 13 }}>
@@ -41,7 +41,7 @@ export function ShameCard({ data }: { data: ShameCardData }) {
       </div>
       <div style={{ display: 'flex', height: 1, margin: '0 64px', background: C.hair }} />
 
-      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, padding: '44px 64px 0' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'center', padding: '20px 64px' }}>
         <div style={{ fontFamily: SERIF, fontSize: 64, lineHeight: 1.05, color: C.against }}>Colțul rușinii</div>
         <div style={{ display: 'flex', fontSize: 21, opacity: 0.55, marginTop: 10, marginBottom: 40 }}>
           absențe la voturile din plen, de la validarea mandatului · Senat + Cameră
@@ -76,7 +76,7 @@ export function ShameCard({ data }: { data: ShameCardData }) {
         </div>
 
         <div style={{ display: 'flex', fontSize: 17, opacity: 0.7, marginTop: 34 }}>
-          Membrii Guvernului nu sunt incluși — absența lor e structurală, nu o alegere.
+          Membrii Guvernului nu sunt incluși (absența lor e structurală, nu o alegere).
         </div>
       </div>
 
