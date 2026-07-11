@@ -102,7 +102,7 @@ function ChamberSlide({ title, parties, note }: { title: string; parties: PartyS
       <div style={{ display: 'flex', width: '100%', height: 300, justifyContent: 'center', marginTop: 30 }}>
         <svg width={927} height={300} viewBox="0 0 952 308">
           {dots.map((d, i) => (
-            <circle key={i} cx={d.x} cy={d.y} r={4.5} fill={d.color} />
+            <circle key={i} cx={d.x} cy={d.y} r={6} fill={d.color} />
           ))}
         </svg>
       </div>
@@ -157,7 +157,7 @@ export function StructuraCard({ data }: { data: StructuraCardData }) {
           <div style={{ display: 'flex', width: '100%', height: 320, justifyContent: 'center', marginTop: 46 }}>
             <svg width={927} height={300} viewBox="0 0 952 308">
               {dots.map((d, i) => (
-                <circle key={i} cx={d.x} cy={d.y} r={4.5} fill={d.color} />
+                <circle key={i} cx={d.x} cy={d.y} r={6} fill={d.color} />
               ))}
             </svg>
           </div>
