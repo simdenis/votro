@@ -6,6 +6,7 @@ import { OutcomeBadge } from '@/components/outcome-badge'
 import { ParliamentBar } from '@/components/parliament-bar'
 import { CountyMap } from '@/components/county-map'
 import type { VoteWithLaw, PartyCohesion } from '@/lib/types'
+import { CategoryBadge } from '@/components/category-badge'
 
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = { title: 'Acasă' }
@@ -122,9 +123,7 @@ export default async function Dashboard() {
                     {vote.chamber === 'deputies' ? 'Camera' : 'Senat'}
                   </span>
                   {vote.laws?.law_category && (
-                    <span className="text-[9px] uppercase font-semibold bg-raised text-faint px-[5px] py-[1px] rounded-[3px]">
-                      {vote.laws.law_category}
-                    </span>
+                    <CategoryBadge category={vote.laws.law_category} className="text-[9px] uppercase font-semibold px-[5px] py-[1px] rounded-[3px]" />
                   )}
                   <span className="text-[11px] text-faint ml-auto">{formatDate(vote.vote_date)}</span>
                   <OutcomeBadge outcome={vote.outcome} />

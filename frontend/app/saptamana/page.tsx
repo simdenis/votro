@@ -6,6 +6,7 @@ import { OutcomeBadge } from '@/components/outcome-badge'
 import { MiniVoteBar } from '@/components/mini-vote-bar'
 import { CardDownload } from '@/components/card-download'
 import type { VoteWithLaw } from '@/lib/types'
+import { CategoryBadge } from '@/components/category-badge'
 
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = {
@@ -77,9 +78,7 @@ export default async function SaptamanaPage() {
                       {vote.chamber === 'deputies' ? 'Camera' : 'Senat'}
                     </span>
                     {vote.laws?.law_category && (
-                      <span className="text-[10px] text-faint bg-raised border border-rim rounded px-1.5 py-px">
-                        {vote.laws.law_category}
-                      </span>
+                      <CategoryBadge category={vote.laws.law_category} className="text-[10px] px-1.5 py-px rounded" />
                     )}
                     {vote.vote_type && (
                       <span className="text-[10px] text-faint">{vote.vote_type}</span>

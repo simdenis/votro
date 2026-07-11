@@ -7,6 +7,7 @@ import { MiniVoteBar } from '@/components/mini-vote-bar'
 import { VoteFilter } from '@/components/vote-filter'
 import type { VoteWithLaw } from '@/lib/types'
 import { SectionNav, LEGI_SECTIONS } from '@/components/section-nav'
+import { CategoryBadge } from '@/components/category-badge'
 
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = { title: 'Voturi', description: 'Toate voturile plenului Senatului și Camerei Deputaților României.' }
@@ -102,9 +103,7 @@ export default async function VotesPage({
                   </td>
                   <td className="py-3 pr-4 hidden lg:table-cell">
                     {vote.laws?.law_category
-                      ? <span className="text-xs bg-raised border border-rim text-muted rounded px-2 py-0.5">
-                          {vote.laws.law_category}
-                        </span>
+                      ? <CategoryBadge category={vote.laws.law_category} />
                       : <span className="text-faint text-xs">—</span>
                     }
                   </td>
