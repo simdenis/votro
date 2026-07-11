@@ -61,7 +61,7 @@ export default async function LawDetail({ params }: { params: Promise<{ id: stri
       .select('name_raw, party_raw, role_raw, politician_id, politicians(chamber)')
       .eq('law_id', id)
       .order('name_raw')
-      .then(r => (r.data ?? []) as { name_raw: string; party_raw: string | null; role_raw: string | null; politician_id: string | null; politicians: { chamber: string } | null }[]),
+      .then(r => (r.data ?? []) as unknown as { name_raw: string; party_raw: string | null; role_raw: string | null; politician_id: string | null; politicians: { chamber: string } | null }[]),
   ])
   const initiatorType = lawRow?.initiator_type ?? null
 
