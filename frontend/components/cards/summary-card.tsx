@@ -1,6 +1,8 @@
 // 1080×1350 (4:5) "Pe scurt" card — the AI law summary as the hero, for IG posts.
 // Same brand language as LawCard/VoteCard.
 
+import { categoryColor } from '@/lib/category-colors'
+
 export interface SummaryCardData {
   lawCode: string
   lawTitle: string
@@ -44,6 +46,7 @@ function titleFont(len: number): number {
 
 export function SummaryCard({ data }: { data: SummaryCardData }) {
   const title = data.lawTitle
+  const catColor = categoryColor(data.category) ?? C.navy
 
   return (
     <div style={{ width: 1080, height: 1350, display: 'flex', flexDirection: 'column', background: C.bg, color: C.text, fontFamily: SANS }}>
@@ -57,7 +60,7 @@ export function SummaryCard({ data }: { data: SummaryCardData }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 12 }}>
           <div style={{ display: 'flex', fontSize: 15, fontWeight: 500, color: C.navy, letterSpacing: 4, textTransform: 'uppercase' }}>{data.lawCode}</div>
           {data.category && (
-            <div style={{ display: 'flex', fontSize: 13, color: C.text, opacity: 0.6, textTransform: 'uppercase', letterSpacing: 1.5 }}>{data.category}</div>
+            <div style={{ display: 'flex', fontSize: 14, fontWeight: 600, color: catColor, textTransform: 'uppercase', letterSpacing: 1.5 }}>{data.category}</div>
           )}
         </div>
 
@@ -67,7 +70,7 @@ export function SummaryCard({ data }: { data: SummaryCardData }) {
         {/* The plain-language summary, slightly above vertical center */}
         <div style={{ display: 'flex', flexGrow: 1, minHeight: 24 }} />
         <div style={{ display: 'flex' }}>
-          <div style={{ display: 'flex', width: 5, borderRadius: 3, background: C.navy, marginRight: 30, flexShrink: 0 }} />
+          <div style={{ display: 'flex', width: 5, borderRadius: 3, background: catColor, marginRight: 30, flexShrink: 0 }} />
           <div style={{ display: 'flex', fontFamily: SERIF, fontSize: summaryFont(data.summary.length), lineHeight: 1.24, color: C.text }}>
             {data.summary}
           </div>

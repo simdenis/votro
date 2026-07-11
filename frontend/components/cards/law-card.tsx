@@ -2,6 +2,7 @@
 
 import type { PartyVote } from './vote-card'
 import { computeArcDots } from './vote-card'
+import { categoryColor } from '@/lib/category-colors'
 
 /** outcome is null when the chamber hasn't voted yet OR its vote comes later
  *  in the carousel than the displayed slide (revealed chronologically). */
@@ -65,7 +66,7 @@ export function LawCard({ data }: { data: LawCardData }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 14 }}>
           <div style={{ display: 'flex', fontSize: 15, fontWeight: 500, color: C.navy, letterSpacing: 4, textTransform: 'uppercase' }}>{data.lawCode}</div>
           {data.category && (
-            <div style={{ display: 'flex', fontSize: 13, color: C.text, opacity: 0.6, textTransform: 'uppercase', letterSpacing: 1.5 }}>{data.category}</div>
+            <div style={{ display: 'flex', fontSize: 14, fontWeight: 600, color: categoryColor(data.category) ?? '#6E7480', textTransform: 'uppercase', letterSpacing: 1.5 }}>{data.category}</div>
           )}
         </div>
         <div style={{ fontFamily: SERIF, fontSize: titleFont(data.lawTitle.length), lineHeight: 1.14, color: C.text, marginBottom: 28 }}>{data.lawTitle}</div>

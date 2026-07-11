@@ -128,11 +128,18 @@ export function mapLawToCard(
   else if (rejected) { statusLabel = 'RESPINSĂ'; statusColor = '#C25539' }
   else if (senateDone && cameraDone) { statusLabel = 'ADOPTATĂ'; statusColor = '#1F7A51' }
 
-  const dateLine = promulgat && law.presidential_date
-    ? `Promulgată · ${formatDate(law.presidential_date)}`
-    : cameraDone && law.camera_vote_date
-      ? `Adoptată · ${formatDate(law.camera_vote_date)}`
-      : null
+  // Chamber slides carry THEIR vote's date; only the unpinned (overview)
+  // card shows the promulgation date.
+  const chamberVoteDate = forChamber === 'senate' ? law.senate_vote_date
+    : forChamber === 'camera' ? law.camera_vote_date
+    : null
+  const dateLine = forChamber && chamberVoteDate
+    ? `Vot în ${forChamber === 'senate' ? 'Senat' : 'Camera Deputaților'} · ${formatDate(chamberVoteDate)}`
+    : promulgat && law.presidential_date
+      ? `Promulgată · ${formatDate(law.presidential_date)}`
+      : cameraDone && law.camera_vote_date
+        ? `Adoptată · ${formatDate(law.camera_vote_date)}`
+        : null
 
   const dateForYear = law.presidential_date || law.camera_vote_date || law.senate_vote_date
   const decisive = forChamber
