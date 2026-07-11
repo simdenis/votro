@@ -32,7 +32,7 @@ const STAGES = ['Inițiativa', 'Prima cameră', 'Camera decizională', 'Președi
 
 function Frame({ children, kicker }: { children: React.ReactNode; kicker: string }) {
   return (
-    <div style={{ width: 1080, height: 1080, display: 'flex', flexDirection: 'column', background: C.bg, color: C.text, fontFamily: SANS }}>
+    <div style={{ width: 1080, height: 1350, display: 'flex', flexDirection: 'column', background: C.bg, color: C.text, fontFamily: SANS }}>
       {/* no logo header on IG post slides — the profile picture already shows it */}
       <div style={{ display: 'flex', alignItems: 'center', padding: '36px 64px 22px' }}>
         <div style={{ display: 'flex', fontFamily: MONO, fontSize: 16, letterSpacing: 2.5, textTransform: 'uppercase', color: C.gray500 }}>{kicker}</div>
@@ -138,9 +138,9 @@ export function EduCard({ data }: { data: EduCardData }) {
           title="Inițiativa"
           intro="O lege începe cu un text depus în Parlament. Îl pot depune:"
           rows={[
-            { lead: 'Guvernul', rest: 'proiecte de lege (cele mai multe dintre legile adoptate)' },
-            { lead: 'Senatorii și deputații', rest: 'propuneri legislative, individual sau în grup' },
-            { lead: 'Cetățenii', rest: '100.000 de semnături, din cel puțin un sfert din județe' },
+            { lead: 'Guvernul', rest: 'Proiecte de lege (cele mai multe dintre legile adoptate).' },
+            { lead: 'Senatorii și deputații', rest: 'Propuneri legislative, individual sau în grup.' },
+            { lead: 'Cetățenii', rest: '100.000 de semnături, din cel puțin un sfert din județe.' },
           ]}
         />
       </Frame>
@@ -156,10 +156,11 @@ export function EduCard({ data }: { data: EduCardData }) {
           title="Prima cameră"
           intro="Textul intră întâi într-una dintre camere, stabilită de Constituție după subiectul legii."
           rows={[
-            { lead: 'Comisiile îl analizează', rest: 'raport cu amendamente: adoptare sau respingere' },
-            { lead: 'Plenul votează', rest: 'proiectul merge mai departe indiferent de rezultat' },
-            { lead: '45 sau 60 de zile', rest: 'termenul în care prima cameră trebuie să se pronunțe' },
+            { lead: 'Comisiile îl analizează', rest: 'Raport cu amendamente: adoptare sau respingere.' },
+            { lead: 'Plenul votează', rest: 'Proiectul merge mai departe indiferent de rezultat.' },
+            { lead: '45 sau 60 de zile', rest: 'Termenul în care prima cameră trebuie să se pronunțe.' },
           ]}
+          note="De exemplu: tratatele internaționale și organizarea statului (Guvern, instanțe, funcționari publici) intră întâi la Camera Deputaților. Restul, de la taxe la educație, intră întâi la Senat."
         />
       </Frame>
     )
@@ -174,8 +175,8 @@ export function EduCard({ data }: { data: EduCardData }) {
           title="Camera decizională"
           intro="Cealaltă cameră reia procesul: comisii, dezbatere, vot în plen."
           rows={[
-            { lead: 'Votul ei decide', rest: 'adoptat aici = adoptat de Parlament; respins aici = respins definitiv' },
-            { lead: 'Fără termen', rest: 'poate ține un proiect în dezbatere oricât; nimic nu trece automat' },
+            { lead: 'Votul ei decide', rest: 'Adoptat aici = adoptat de Parlament. Respins aici = respins definitiv.' },
+            { lead: 'Fără termen', rest: 'Poate ține un proiect în dezbatere oricât. Nimic nu trece automat.' },
           ]}
           note="De aceea, pe LaButoane, votul camerei decizionale e cel pe care îl vezi primul la fiecare lege."
         />
@@ -192,9 +193,9 @@ export function EduCard({ data }: { data: EduCardData }) {
           title="Președintele"
           intro="Legea adoptată de Parlament ajunge la Cotroceni. Președintele are 20 de zile și trei opțiuni:"
           rows={[
-            { lead: 'Promulgă', rest: 'legea apare în Monitorul Oficial și intră în vigoare' },
-            { lead: 'Retrimite la Parlament', rest: 'o singură dată, pentru reexaminare; apoi trebuie să promulge' },
-            { lead: 'Sesizează CCR', rest: 'dacă are îndoieli că legea respectă Constituția' },
+            { lead: 'Promulgă', rest: 'Legea apare în Monitorul Oficial și intră în vigoare.' },
+            { lead: 'Retrimite la Parlament', rest: 'O singură dată, pentru reexaminare. Apoi trebuie să promulge.' },
+            { lead: 'Sesizează CCR', rest: 'Dacă are îndoieli că legea respectă Constituția.' },
           ]}
         />
       </Frame>
@@ -231,7 +232,7 @@ export function EduCard({ data }: { data: EduCardData }) {
             {String(data.pendingCount ?? '—')}
           </div>
           <div style={{ display: 'flex', fontSize: 27, fontWeight: 600, color: C.text }}>
-            de proiecte au termenul în curs chiar acum
+            de proiecte au termenul în curs chiar acum.
           </div>
         </div>
         <div style={{ display: 'flex', fontSize: 24, color: C.gray500, marginTop: 12 }}>

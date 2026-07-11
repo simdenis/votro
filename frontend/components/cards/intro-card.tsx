@@ -20,7 +20,7 @@ const MONO = 'IBM Plex Mono'
 
 function Frame({ children, kicker }: { children: React.ReactNode; kicker: string }) {
   return (
-    <div style={{ width: 1080, height: 1080, display: 'flex', flexDirection: 'column', background: C.bg, color: C.text, fontFamily: SANS }}>
+    <div style={{ width: 1080, height: 1350, display: 'flex', flexDirection: 'column', background: C.bg, color: C.text, fontFamily: SANS }}>
       {/* no logo header on IG post slides — the profile picture already shows it */}
       <div style={{ display: 'flex', alignItems: 'center', padding: '36px 64px 22px' }}>
         <div style={{ display: 'flex', fontFamily: MONO, fontSize: 16, letterSpacing: 2.5, textTransform: 'uppercase', color: '#6E7480' }}>{kicker}</div>

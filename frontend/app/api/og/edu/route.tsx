@@ -2,7 +2,7 @@ import { ImageResponse } from 'next/og'
 import { EduCard, type EduCardData } from '@/components/cards/edu-card'
 import { getCardFonts } from '@/lib/og-fonts'
 
-// 1080×1080 educational carousel slides (post #2: cum funcționează).
+// 1080×1350 (4:5) educational carousel slides (post #2: cum funcționează).
 // URL: /api/og/edu?slide=1..6 — slide 6 shows the live pending-bills count.
 export const runtime = 'edge'
 
@@ -31,10 +31,10 @@ export async function GET(request: Request) {
   const fonts = await getCardFonts()
   return new ImageResponse(
     (
-      <div style={{ display: 'flex', width: 1080, height: 1080, transform: 'scale(2)', transformOrigin: 'top left' }}>
+      <div style={{ display: 'flex', width: 1080, height: 1350, transform: 'scale(2)', transformOrigin: 'top left' }}>
         <EduCard data={data} />
       </div>
     ),
-    { width: 2160, height: 2160, fonts },
+    { width: 2160, height: 2700, fonts },
   )
 }

@@ -2,7 +2,8 @@ import { ImageResponse } from 'next/og'
 import { IntroCard, type IntroCardData } from '@/components/cards/intro-card'
 import { getCardFonts } from '@/lib/og-fonts'
 
-// 1080×1080 launch carousel slides. Public URL: /api/og/intro?slide=1..4
+// 1080×1350 (4:5) launch carousel slides — portrait so the profile-grid 3:4
+// crop barely trims the sides. Public URL: /api/og/intro?slide=1..4
 export const runtime = 'edge'
 
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? 'https://vot-romania.vercel.app')
@@ -15,10 +16,10 @@ export async function GET(request: Request) {
   const fonts = await getCardFonts()
   return new ImageResponse(
     (
-      <div style={{ display: 'flex', width: 1080, height: 1080, transform: 'scale(2)', transformOrigin: 'top left' }}>
+      <div style={{ display: 'flex', width: 1080, height: 1350, transform: 'scale(2)', transformOrigin: 'top left' }}>
         <IntroCard data={data} />
       </div>
     ),
-    { width: 2160, height: 2160, fonts },
+    { width: 2160, height: 2700, fonts },
   )
 }
