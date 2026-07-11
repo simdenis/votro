@@ -249,7 +249,11 @@ def post_carousel(cfg: Config, image_urls: list[str], caption: str) -> str:
     return _publish(cfg, creation_id)
 
 
-def post_law(cfg: Config, law_id: str, dry_run: bool = False) -> str | None:
+# Bump after card design changes — og images are CDN-cached immutable per URL.
+CARD_V = "2"
+
+
+def post_law(cfg: Config, law_id: str, dry_run: bool = False, hook: str | None = None) -> str | None:
     """Standard law carousel: summary hook → chambers in chronological order
     (a missing chamber vote on a passed law = tacit adoption, said in the
     caption) → deviation slide when someone broke the party line."""
@@ -259,13 +263,16 @@ def post_law(cfg: Config, law_id: str, dry_run: bool = False) -> str | None:
         sys.exit(f"law {law_id} not found in law_status")
     law = rows[0]
 
-    slides = [f"{cfg.site_url}/api/og/summarycard?id={law_id}"]
+    # &v= cache-buster: og responses are CDN-cached immutable, so any slide URL
+    # fetched before a card redesign would serve the stale image forever. Bump
+    # CARD_V after visual changes.
+    slides = [f"{cfg.site_url}/api/og/summarycard?id={law_id}&v={CARD_V}"]
     passed = bool(law.get("presidential_status"))
     # Tacit slide right after the summary: a chamber the law passed without a
     # plenary vote gets the "nimeni nu a votat" card.
     for key, vote_field in (("senate", "senate_vote_id"), ("camera", "camera_vote_id")):
         if passed and not law.get(vote_field):
-            slides.append(f"{cfg.site_url}/api/og/tacitcard?id={law_id}&chamber={key}")
+            slides.append(f"{cfg.site_url}/api/og/tacitcard?id={law_id}&chamber={key}&v={CARD_V}")
     chambers = []  # (date, chamber_key, vote_id)
     if law.get("senate_vote_id"):
         chambers.append((law.get("senate_vote_date") or "", "senate", law["senate_vote_id"]))
@@ -273,7 +280,7 @@ def post_law(cfg: Config, law_id: str, dry_run: bool = False) -> str | None:
         chambers.append((law.get("camera_vote_date") or "", "camera", law["camera_vote_id"]))
     chambers.sort()
     for _, key, _vid in chambers:
-        slides.append(f"{cfg.site_url}/api/og/lawcard?id={law_id}&chamber={key}")
+        slides.append(f"{cfg.site_url}/api/og/lawcard?id={law_id}&chamber={key}&v={CARD_V}")
 
     # Deviation slide — only when someone actually broke the party line.
     dev_vote, dev_count = None, 0
@@ -284,7 +291,7 @@ def post_law(cfg: Config, law_id: str, dry_run: bool = False) -> str | None:
         if n > dev_count:
             dev_vote, dev_count = vid, n
     if dev_vote:
-        slides.append(f"{cfg.site_url}/api/og/deviationcard?vote={dev_vote}")
+        slides.append(f"{cfg.site_url}/api/og/deviationcard?vote={dev_vote}&v={CARD_V}")
 
     # Caption
     passed = bool(law.get("presidential_status"))
@@ -294,6 +301,8 @@ def post_law(cfg: Config, law_id: str, dry_run: bool = False) -> str | None:
         "sesizat_ccr": "TRIMISĂ LA CCR ⚖️",
     }.get(law.get("presidential_status") or "", "")
     lines = [f"{law['code']} · {(law.get('title') or '').strip()}"]
+    if hook:
+        lines = [hook.strip(), ""] + lines
     if law.get("summary"):
         lines += ["", law["summary"].strip()]
     if outcome:
@@ -303,8 +312,8 @@ def post_law(cfg: Config, law_id: str, dry_run: bool = False) -> str | None:
         lines += ["", f"⚠️ Adoptată tacit de {missing}: termenul constituțional a expirat fără vot (art. 75)."]
     if dev_count:
         lines += ["", f"⚡ {dev_count} parlamentari au votat împotriva propriului partid (ultimul slide)."]
-    lines += ["", f"Voturi individuale: {cfg.site_url}/legi/{law_id}", "",
-              "#parlament #politicaRomânească #laButoane #transparență #românia"]
+    lines += ["", "Voturile individuale, pe site: link în bio.", "",
+              "#parlament #transparență #românia #politică #laButoane"]
     caption = "\n".join(lines)
 
     if dry_run:
@@ -383,6 +392,7 @@ def main() -> None:
     ap.add_argument("--verify", action="store_true", help="check the access token / account")
     ap.add_argument("--vote", help="vote id to build and publish a post for")
     ap.add_argument("--law", help="law id — publish the standard law carousel (summary → chambers → deviations)")
+    ap.add_argument("--hook", help="editorial first line for the --law caption")
     ap.add_argument("--shame", action="store_true", help="publish the shame-corner card (top absentees)")
     ap.add_argument("--carousel", nargs="+", metavar="URL", help="publish a carousel from 2–10 image URLs (with --caption)")
     ap.add_argument("--image-url", help="post an arbitrary image URL (with --caption)")
@@ -407,7 +417,7 @@ def main() -> None:
         post_vote(cfg, args.vote, dry_run=args.dry_run)
         return
     if args.law:
-        post_law(cfg, args.law, dry_run=args.dry_run)
+        post_law(cfg, args.law, dry_run=args.dry_run, hook=args.hook)
         return
     if args.shame:
         post_shame(cfg, dry_run=args.dry_run)
