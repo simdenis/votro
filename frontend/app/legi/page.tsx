@@ -237,7 +237,12 @@ export default async function LegiPage({
                     <Link href={`/legi/${law.law_id}`} className="line-clamp-2 text-foreground hover:underline">
                       {capFirst(law.title)}
                     </Link>
-                    <div className="flex gap-1 mt-1 flex-wrap">
+                    <div className="flex gap-1 mt-1 flex-wrap items-center">
+                      {law.law_category && (
+                        <span className="lg:hidden inline-flex">
+                          <CategoryBadge category={law.law_category} className="text-[10px] px-1.5 py-px rounded" />
+                        </span>
+                      )}
                       <BaseLawBadges title={law.title} />
                     </div>
                   </td>
