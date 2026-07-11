@@ -123,7 +123,7 @@ export default async function Dashboard() {
                     {vote.chamber === 'deputies' ? 'Camera' : 'Senat'}
                   </span>
                   {vote.laws?.law_category && (
-                    <CategoryBadge category={vote.laws.law_category} className="text-[9px] uppercase font-semibold px-[5px] py-[1px] rounded-[3px]" />
+                    <CategoryBadge category={vote.laws.law_category} className="text-[9px] uppercase font-semibold px-[5px] py-[1px] rounded-[3px]" href={null} />
                   )}
                   <span className="text-[11px] text-faint ml-auto">{formatDate(vote.vote_date)}</span>
                   <OutcomeBadge outcome={vote.outcome} />

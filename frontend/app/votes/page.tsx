@@ -102,13 +102,13 @@ export default async function VotesPage({
                     </Link>
                     {vote.laws?.law_category && (
                       <div className="lg:hidden mt-1">
-                        <CategoryBadge category={vote.laws.law_category} className="text-[10px] px-1.5 py-px rounded" />
+                        <CategoryBadge category={vote.laws.law_category} className="text-[10px] px-1.5 py-px rounded" href={`/votes?category=${encodeURIComponent(vote.laws.law_category)}`} />
                       </div>
                     )}
                   </td>
                   <td className="py-3 pr-4 hidden lg:table-cell">
                     {vote.laws?.law_category
-                      ? <CategoryBadge category={vote.laws.law_category} />
+                      ? <CategoryBadge category={vote.laws.law_category} href={`/votes?category=${encodeURIComponent(vote.laws.law_category)}`} />
                       : <span className="text-faint text-xs">—</span>
                     }
                   </td>
