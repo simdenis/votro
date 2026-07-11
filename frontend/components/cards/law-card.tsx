@@ -3,7 +3,9 @@
 import type { PartyVote } from './vote-card'
 import { computeArcDots } from './vote-card'
 
-export interface JourneyStep { label: string; done: boolean; final?: boolean }
+/** outcome is null when the chamber hasn't voted yet OR its vote comes later
+ *  in the carousel than the displayed slide (revealed chronologically). */
+export interface JourneyStep { label: string; outcome: 'adoptat' | 'respins' | null; active: boolean }
 
 export interface LawCardData {
   lawCode: string
@@ -156,17 +158,22 @@ export function LawCard({ data }: { data: LawCardData }) {
         <div style={{ display: 'flex', height: 1, background: C.hair, marginBottom: 22 }} />
         <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
           {data.journey.map((s, i) => {
-            // the chamber this slide shows lights up green
-            const active = (s.label === 'Senat' && data.voteChamber === 'SENAT')
-              || (s.label === 'Cameră' && data.voteChamber === 'CAMERA DEPUTAȚILOR')
-            const color = active ? '#1F7A51' : s.done ? C.for : '#9AA0AA'
+            // green = adopted, red = rejected, gray = no vote yet (or a vote
+            // this carousel reveals on a later slide); the displayed chamber is bold
+            const color = s.outcome === 'adoptat' ? (s.active ? '#1F7A51' : C.for)
+              : s.outcome === 'respins' ? '#C25539'
+              : '#9AA0AA'
             return (
               <div key={s.label} style={{ display: 'flex', alignItems: 'center', flexGrow: i === data.journey.length - 1 ? 0 : 1, flexShrink: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 17, fontWeight: active ? 700 : 600, letterSpacing: 1.5, textTransform: 'uppercase', color }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 17, fontWeight: s.active ? 700 : 600, letterSpacing: 1.5, textTransform: 'uppercase', color }}>
                   {s.label}
-                  {s.done ? (
+                  {s.outcome === 'adoptat' ? (
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M20 6 9 17l-5-5" />
+                    </svg>
+                  ) : s.outcome === 'respins' ? (
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M18 6 6 18" /><path d="m6 6 12 12" />
                     </svg>
                   ) : (
                     <div style={{ display: 'flex', width: 7, height: 7, borderRadius: 4, background: '#D8DBE0' }} />

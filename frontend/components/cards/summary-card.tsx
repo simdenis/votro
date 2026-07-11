@@ -35,11 +35,11 @@ function summaryFont(len: number): number {
 
 /** Full title, sized down as it grows so it always fits — never truncated. */
 function titleFont(len: number): number {
-  if (len <= 90) return 29
-  if (len <= 150) return 25
-  if (len <= 230) return 22
-  if (len <= 340) return 19
-  return 17
+  if (len <= 90) return 34
+  if (len <= 150) return 29
+  if (len <= 230) return 25
+  if (len <= 340) return 22
+  return 19
 }
 
 export function SummaryCard({ data }: { data: SummaryCardData }) {
