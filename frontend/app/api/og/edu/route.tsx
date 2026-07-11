@@ -3,7 +3,7 @@ import { EduCard, type EduCardData } from '@/components/cards/edu-card'
 import { getCardFonts } from '@/lib/og-fonts'
 
 // 1080×1080 educational carousel slides (post #2: cum funcționează).
-// URL: /api/og/edu?slide=1..4 — slide 4 shows the live pending-bills count.
+// URL: /api/og/edu?slide=1..6 — slide 6 shows the live pending-bills count.
 export const runtime = 'edge'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -24,9 +24,9 @@ async function pendingCount(): Promise<number | undefined> {
 }
 
 export async function GET(request: Request) {
-  const slide = Math.min(4, Math.max(1, Number(new URL(request.url).searchParams.get('slide')) || 1))
+  const slide = Math.min(6, Math.max(1, Number(new URL(request.url).searchParams.get('slide')) || 1))
   const data: EduCardData = { slide }
-  if (slide === 4) data.pendingCount = await pendingCount()
+  if (slide === 6) data.pendingCount = await pendingCount()
 
   const fonts = await getCardFonts()
   return new ImageResponse(
