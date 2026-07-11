@@ -87,9 +87,18 @@ export function TacitCard({ data }: { data: TacitCardData }) {
         </div>
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '18px 64px', borderTopWidth: 1, borderTopStyle: 'solid', borderTopColor: C.hair }}>
-        <div style={{ display: 'flex', fontFamily: MONO, fontSize: 14, fontWeight: 500, color: '#171A1F' }}>@la.butoane</div>
-        <div style={{ display: 'flex', fontFamily: MONO, fontSize: 12, color: '#6E7480' }}>surse: cdep.ro / senat.ro</div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 64px', borderTopWidth: 1, borderTopStyle: 'solid', borderTopColor: C.hair }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 16 }}>
+          <div style={{ display: 'flex', fontFamily: MONO, fontSize: 14, fontWeight: 500, color: '#171A1F' }}>@la.butoane</div>
+          <div style={{ display: 'flex', fontFamily: MONO, fontSize: 12, color: '#6E7480' }}>surse: cdep.ro / senat.ro</div>
+        </div>
+        {/* logo lives bottom-right — the IG profile picture already brands the top */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <svg width="34" height="34" viewBox="0 0 64 64"><rect width="64" height="64" rx="15" fill="#171A1F" /><rect x="11" y="11" width="18" height="18" rx="6" fill="#2EA871" /><rect x="35" y="11" width="18" height="18" rx="6" fill="#E3A23C" /><rect x="11" y="35" width="18" height="18" rx="6" fill="#EE7B5E" /><rect x="35" y="35" width="18" height="18" rx="6" fill="#4E86D8" /></svg>
+          <div style={{ display: 'flex', alignItems: 'baseline', fontSize: 26, letterSpacing: '-0.015em', color: '#171A1F' }}>
+            <span style={{ fontWeight: 400 }}>La</span><span style={{ fontWeight: 700 }}>Butoane</span>
+          </div>
+        </div>
       </div>
     </div>
   )
