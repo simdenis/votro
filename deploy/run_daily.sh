@@ -86,6 +86,11 @@ log "=== Roster (active mandates + county) ==="
 log "=== Government roles (gov.ro) ==="
 "$PY" scraper/gov_scraper.py >>"$LOG" 2>&1 || { rc=1; log "Gov roles scrape FAILED"; }
 
+# Who proposed each law — initiators from the senat.ro fisa. Incremental
+# (initiators_checked_at IS NULL), retried, name-matched to politicians.
+log "=== Law initiators (senat.ro fisa) ==="
+"$PY" scraper/initiator_scraper.py >>"$LOG" 2>&1 || { rc=1; log "Initiator scrape FAILED"; }
+
 # Bills with running tacit-adoption terms (cdep "Verificare termene legale").
 log "=== Tacit deadlines ==="
 "$PY" scraper/tacit_scraper.py >>"$LOG" 2>&1 || { rc=1; log "Tacit scrape FAILED"; }

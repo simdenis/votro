@@ -47,7 +47,7 @@ export default async function LawDetail({ params }: { params: Promise<{ id: stri
   }
 
   // Fetch party breakdowns + absentees for both chambers in parallel
-  const [senateBreakdown, cameraBreakdown, senateAbsent, cameraAbsent] = await Promise.all([
+  const [senateBreakdown, cameraBreakdown, senateAbsent, cameraAbsent, lawRow, initiators] = await Promise.all([
     law.senate_vote_id
       ? db.from('party_vote_breakdown').select('*').eq('vote_id', law.senate_vote_id).then(r => r.data as PartyVoteBreakdown[] | null)
       : Promise.resolve(null),
@@ -56,7 +56,14 @@ export default async function LawDetail({ params }: { params: Promise<{ id: stri
       : Promise.resolve(null),
     absentFor(law.senate_vote_id, 'senate'),
     absentFor(law.camera_vote_id, 'deputies'),
+    db.from('laws').select('initiator_type').eq('id', id).maybeSingle().then(r => r.data as { initiator_type: string | null } | null),
+    db.from('law_initiators')
+      .select('name_raw, party_raw, role_raw, politician_id, politicians(chamber)')
+      .eq('law_id', id)
+      .order('name_raw')
+      .then(r => (r.data ?? []) as { name_raw: string; party_raw: string | null; role_raw: string | null; politician_id: string | null; politicians: { chamber: string } | null }[]),
   ])
+  const initiatorType = lawRow?.initiator_type ?? null
 
   return (
     <div className="space-y-10">
@@ -106,6 +113,44 @@ export default async function LawDetail({ params }: { params: Promise<{ id: stri
           >
             Citește expunerea de motive (PDF) →
           </a>
+        )}
+
+        {/* Who proposed it */}
+        {initiatorType === 'guvern' && (
+          <p className="mt-4 text-sm text-muted">
+            <span className="font-semibold text-foreground">Inițiativă:</span> Guvernul României
+          </p>
+        )}
+        {initiatorType === 'cetateni' && (
+          <p className="mt-4 text-sm text-muted">
+            <span className="font-semibold text-foreground">Inițiativă:</span> cetățenească
+          </p>
+        )}
+        {initiatorType === 'parlamentari' && initiators.length > 0 && (
+          <details className="mt-4 text-sm text-muted group">
+            <summary className="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
+              <span className="font-semibold text-foreground">{`Inițiatori (${initiators.length}):`}</span>{' '}
+              {initiators.slice(0, 3).map(i => i.name_raw).join(', ')}
+              {initiators.length > 3 && (
+                <span className="text-adoptat font-medium group-open:hidden">{` + încă ${initiators.length - 3} ›`}</span>
+              )}
+            </summary>
+            <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
+              {initiators.map(i => {
+                const href = i.politician_id
+                  ? `/${i.politicians?.chamber === 'deputies' ? 'deputies' : 'senators'}/${i.politician_id}`
+                  : null
+                const label = `${i.name_raw}${i.party_raw ? ` (${i.party_raw})` : ''}`
+                return href ? (
+                  <Link key={i.name_raw} href={href} className="hover:text-foreground underline underline-offset-2 transition-colors">
+                    {label}
+                  </Link>
+                ) : (
+                  <span key={i.name_raw}>{label}</span>
+                )
+              })}
+            </div>
+          </details>
         )}
         <div className="mt-4 flex gap-2 flex-wrap">
           <CardDownload href={`/api/og/lawcard?id=${law.law_id}`} filename={`labutoane-${law.code.replace(/[^\w]+/g, '-')}.png`} />
