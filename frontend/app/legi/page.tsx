@@ -4,6 +4,7 @@ import { getDB } from '@/lib/supabase'
 import { formatDate, capFirst } from '@/lib/utils'
 import { OutcomeBadge } from '@/components/outcome-badge'
 import { BaseLawBadges } from '@/components/base-law-badge'
+import { CategoryBadge } from '@/components/category-badge'
 import type { LawStatus, PresidentialStatus } from '@/lib/types'
 import { SectionNav, LEGI_SECTIONS } from '@/components/section-nav'
 
@@ -242,7 +243,7 @@ export default async function LegiPage({
                   </td>
                   <td className="py-3 pr-4 hidden lg:table-cell">
                     {law.law_category
-                      ? <span className="text-xs bg-raised border border-rim text-muted rounded px-2 py-0.5">{law.law_category}</span>
+                      ? <CategoryBadge category={law.law_category} />
                       : <span className="text-faint text-xs">—</span>}
                   </td>
                   <td className="py-3 pr-4">

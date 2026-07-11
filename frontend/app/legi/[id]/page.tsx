@@ -10,6 +10,7 @@ import { SeatArc } from '@/components/seat-arc'
 import { LawTimeline } from '@/components/law-timeline'
 import { BaseLawBadges } from '@/components/base-law-badge'
 import { CardDownload } from '@/components/card-download'
+import { CategoryBadge } from '@/components/category-badge'
 import type { LawStatus, PartyVoteBreakdown } from '@/lib/types'
 
 export const revalidate = 3600
@@ -86,11 +87,7 @@ export default async function LawDetail({ params }: { params: Promise<{ id: stri
       <div>
         <div className="flex items-center gap-2 mb-2 flex-wrap">
           <span className="font-mono text-sm font-bold text-muted">{law.code}</span>
-          {law.law_category && (
-            <span className="text-[10px] bg-raised border border-rim text-muted rounded px-1.5 py-px">
-              {law.law_category}
-            </span>
-          )}
+          {law.law_category && <CategoryBadge category={law.law_category} className="text-[10px]" />}
           <BaseLawBadges title={law.title} />
         </div>
         <h1 className="font-serif text-[30px] font-normal text-foreground leading-[1.12] tracking-[-0.01em]">{capFirst(law.title)}</h1>
