@@ -70,6 +70,11 @@ log "=== Presidential decrees (presidency.ro) ==="
 log "=== Law summaries (Gemini) ==="
 "$PY" scraper/gemini_summarizer.py >>"$LOG" 2>&1 || { rc=1; log "Gemini summarizer FAILED"; }
 
+# Public-interest scores (1-100) for post selection — runs after the summarizer
+# so fresh summaries feed the rating. Incremental, 429-safe, skips without key.
+log "=== Interest scores (Gemini) ==="
+"$PY" scraper/interest_scorer.py >>"$LOG" 2>&1 || { rc=1; log "Interest scorer FAILED"; }
+
 # Active mandates + electoral county from the official member lists. Never
 # mass-deactivates on a broken parse (sanity floors inside).
 log "=== Roster (active mandates + county) ==="
