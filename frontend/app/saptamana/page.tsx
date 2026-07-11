@@ -78,7 +78,7 @@ export default async function SaptamanaPage() {
                       {vote.chamber === 'deputies' ? 'Camera' : 'Senat'}
                     </span>
                     {vote.laws?.law_category && (
-                      <CategoryBadge category={vote.laws.law_category} className="text-[10px] px-1.5 py-px rounded" />
+                      <CategoryBadge category={vote.laws.law_category} className="text-[10px] px-1.5 py-px rounded" href={null} />
                     )}
                     {vote.vote_type && (
                       <span className="text-[10px] text-faint">{vote.vote_type}</span>
