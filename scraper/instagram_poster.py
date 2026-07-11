@@ -250,7 +250,7 @@ def post_carousel(cfg: Config, image_urls: list[str], caption: str) -> str:
 
 
 # Bump after card design changes — og images are CDN-cached immutable per URL.
-CARD_V = "7"
+CARD_V = "8"
 
 
 def _initiator_line(cfg: Config, law_id: str) -> str | None:

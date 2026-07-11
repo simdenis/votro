@@ -30,14 +30,8 @@ export function ShameCard({ data }: { data: ShameCardData }) {
   return (
     <div style={{ width: 1080, height: 1350, display: 'flex', flexDirection: 'column', background: C.bg, color: C.text, fontFamily: SANS }}>
 
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '32px 64px 24px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 13 }}>
-          <svg width="46" height="46" viewBox="0 0 64 64"><rect width="64" height="64" rx="15" fill="#171A1F" /><rect x="11" y="11" width="18" height="18" rx="6" fill="#2EA871" /><rect x="35" y="11" width="18" height="18" rx="6" fill="#E3A23C" /><rect x="11" y="35" width="18" height="18" rx="6" fill="#EE7B5E" /><rect x="35" y="35" width="18" height="18" rx="6" fill="#4E86D8" /></svg>
-          <div style={{ display: 'flex', alignItems: 'baseline', fontSize: 36, letterSpacing: '-0.015em', color: '#171A1F' }}>
-            <span style={{ fontWeight: 400 }}>La</span><span style={{ fontWeight: 700 }}>Butoane</span>
-          </div>
-        </div>
-        <div style={{ display: 'flex', fontFamily: MONO, fontSize: 14, letterSpacing: 2, textTransform: 'uppercase', color: '#6E7480' }}>{data.dateLabel}</div>
+      <div style={{ display: 'flex', alignItems: 'center', padding: '36px 64px 22px' }}>
+        <div style={{ display: 'flex', fontFamily: MONO, fontSize: 16, letterSpacing: 2.5, textTransform: 'uppercase', color: '#6E7480' }}>{data.dateLabel}</div>
       </div>
       <div style={{ display: 'flex', height: 1, margin: '0 64px', background: C.hair }} />
 
@@ -80,9 +74,18 @@ export function ShameCard({ data }: { data: ShameCardData }) {
         </div>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 64px 40px' }}>
-        <div style={{ display: 'flex', fontFamily: MONO, fontSize: 15, color: '#6E7480' }}>surse: senat.ro · cdep.ro</div>
-        <div style={{ display: 'flex', fontFamily: MONO, fontSize: 14, fontWeight: 500, color: '#171A1F' }}>@la.butoane</div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 64px 32px' }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 16 }}>
+          <div style={{ display: 'flex', fontFamily: MONO, fontSize: 14, fontWeight: 500, color: '#171A1F' }}>@la.butoane</div>
+          <div style={{ display: 'flex', fontFamily: MONO, fontSize: 12, color: '#6E7480' }}>surse: senat.ro · cdep.ro</div>
+        </div>
+        {/* logo lives bottom-right — the IG profile picture already brands the top */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <svg width="34" height="34" viewBox="0 0 64 64"><rect width="64" height="64" rx="15" fill="#171A1F" /><rect x="11" y="11" width="18" height="18" rx="6" fill="#2EA871" /><rect x="35" y="11" width="18" height="18" rx="6" fill="#E3A23C" /><rect x="11" y="35" width="18" height="18" rx="6" fill="#EE7B5E" /><rect x="35" y="35" width="18" height="18" rx="6" fill="#4E86D8" /></svg>
+          <div style={{ display: 'flex', alignItems: 'baseline', fontSize: 26, letterSpacing: '-0.015em', color: '#171A1F' }}>
+            <span style={{ fontWeight: 400 }}>La</span><span style={{ fontWeight: 700 }}>Butoane</span>
+          </div>
+        </div>
       </div>
     </div>
   )
