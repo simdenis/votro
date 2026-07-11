@@ -141,6 +141,23 @@ export function mapLawToCard(
       : null)
     : lawDecisiveVoteId(law)
   const isCam = decisive?.chamber === 'camera'
+
+  // Journey strip tells the story chronologically across carousel slides: a
+  // chamber shows its outcome color only up to the displayed slide's vote —
+  // the other chamber's later vote stays gray and gets revealed on its slide.
+  const outcomes = {
+    senate: (law.senate_outcome as 'adoptat' | 'respins' | null)
+      ?? (law.senate_vote_id ? null : law.presidential_status ? 'adoptat' as const : null), // tacit pass
+    camera: (law.camera_outcome as 'adoptat' | 'respins' | null)
+      ?? (law.camera_vote_id ? null : law.presidential_status ? 'adoptat' as const : null),
+  }
+  const voteDates = { senate: law.senate_vote_date ?? '', camera: law.camera_vote_date ?? '' }
+  const shownDate = decisive ? voteDates[decisive.chamber] : ''
+  const step = (ch: 'senate' | 'camera', label: string): JourneyStep => {
+    const active = decisive?.chamber === ch
+    const revealed = !decisive || active || !voteDates[ch] || voteDates[ch] <= shownDate
+    return { label, outcome: revealed ? outcomes[ch] : null, active }
+  }
   return {
     lawCode: law.code,
     lawTitle: capFirst(law.title) || '—',
@@ -149,11 +166,8 @@ export function mapLawToCard(
     statusLabel,
     statusColor,
     dateLine,
-    // just the two chambers — the badge + title color carry the final outcome
-    journey: [
-      { label: 'Senat', done: senateDone },
-      { label: 'Cameră', done: cameraDone },
-    ],
+    // just the two chambers — the badge carries the final outcome
+    journey: [step('senate', 'Senat'), step('camera', 'Cameră')],
     voteChamber: decisive ? (isCam ? 'CAMERA DEPUTAȚILOR' : 'SENAT') : null,
     votesFor: decisive ? (isCam ? law.camera_for : law.senate_for) : null,
     votesAgainst: decisive ? (isCam ? law.camera_against : law.senate_against) : null,

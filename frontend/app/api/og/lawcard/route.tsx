@@ -15,9 +15,8 @@ const SAMPLE: LawCardData = {
   lawCode: 'L 412/2026', lawTitle: 'Lege privind transparența deciziilor parlamentare', category: 'Administrație', year: 2026,
   statusLabel: 'PROMULGATĂ', statusColor: '#171A1F', dateLine: 'Promulgată · 24 mai 2026',
   journey: [
-    { label: 'Senat', done: true },
-    { label: 'Cameră', done: true },
-    { label: 'Lege', done: true, final: true },
+    { label: 'Senat', outcome: 'adoptat', active: false },
+    { label: 'Cameră', outcome: 'adoptat', active: true },
   ],
   voteChamber: 'CAMERA DEPUTAȚILOR', votesFor: 187, votesAgainst: 45, votesAbstain: 12,
   parties: [
