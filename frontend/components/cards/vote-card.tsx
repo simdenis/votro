@@ -144,7 +144,7 @@ export function VoteCard({ data }: { data: VoteCardData }) {
         {/* Parliament arc — scales down when a long title or a full party list
             needs the vertical room (all parties are shown below). */}
         {(() => {
-          const arcH = (data.lawTitle.length > 200 || data.parties.length > 6) ? 320 : 400
+          const arcH = (data.lawTitle.length > 200 || data.parties.length > 6) ? 360 : 430
           const arcW = Math.round(952 * (arcH / 308))
           return (
             <div style={{ display: 'flex', width: '100%', height: arcH, justifyContent: 'center', marginBottom: 14 }}>
@@ -178,7 +178,7 @@ export function VoteCard({ data }: { data: VoteCardData }) {
               }}
             >
               <div style={{ display: 'flex', fontFamily: SERIF, fontSize: 38, lineHeight: 1, color: c.color }}>{c.value}</div>
-              <div style={{ display: 'flex', fontSize: 11, color: C.text, opacity: 0.75, textTransform: 'uppercase', letterSpacing: 2.5, marginTop: 5 }}>{c.label}</div>
+              <div style={{ display: 'flex', fontSize: 14, color: C.text, opacity: 0.75, textTransform: 'uppercase', letterSpacing: 2.5, marginTop: 6 }}>{c.label}</div>
             </div>
           ))}
         </div>
@@ -192,13 +192,13 @@ export function VoteCard({ data }: { data: VoteCardData }) {
         )}
         {data.parties.length > 0 && (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-            <div style={{ display: 'flex', fontSize: 11, fontWeight: 600, color: C.navy, letterSpacing: 4, textTransform: 'uppercase' }}>Vot pe partide</div>
+            <div style={{ display: 'flex', fontSize: 14, fontWeight: 600, color: C.navy, letterSpacing: 4, textTransform: 'uppercase' }}>Vot pe partide</div>
             {/* color legend — every hue carries one meaning */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
               {([['Pentru', C.for], ['Împotrivă', C.against], ['Abțineri', C.abstain], ['Absenți', C.absentDot]] as const).map(([label, color]) => (
                 <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <div style={{ display: 'flex', width: 9, height: 9, borderRadius: 5, background: color }} />
-                  <div style={{ display: 'flex', fontSize: 12, color: '#6E7480' }}>{label}</div>
+                  <div style={{ display: 'flex', width: 12, height: 12, borderRadius: 6, background: color }} />
+                  <div style={{ display: 'flex', fontSize: 17, color: '#6E7480' }}>{label}</div>
                 </div>
               ))}
             </div>
@@ -208,20 +208,20 @@ export function VoteCard({ data }: { data: VoteCardData }) {
           // Row height shrinks as the party count grows so the full list always
           // fits the 1080px card (satori doesn't scroll — it would just clip).
           const n = data.parties.length
-          const rowH = n > 8 ? 26 : n > 6 ? 30 : n > 5 ? 34 : 38
-          const barH = rowH < 32 ? 11 : 14
+          const rowH = n > 8 ? 32 : n > 6 ? 36 : n > 5 ? 40 : 44
+          const barH = rowH < 38 ? 13 : 16
           return data.parties.map(p => {
             const t = p.for + p.against + p.abstain + p.absent
             return (
               <div key={p.name} style={{ display: 'flex', alignItems: 'center', height: rowH }}>
-                <div style={{ display: 'flex', width: 54, justifyContent: 'flex-end', fontSize: 13, fontWeight: 600, color: C.text, opacity: 0.75, paddingRight: 10 }}>{p.name}</div>
+                <div style={{ display: 'flex', width: 70, justifyContent: 'flex-end', fontSize: 16, fontWeight: 600, color: C.text, opacity: 0.75, paddingRight: 10 }}>{p.name}</div>
                 <div style={{ display: 'flex', flexGrow: 1, flexShrink: 1, flexBasis: 0, height: barH, borderRadius: 2, overflow: 'hidden', background: C.hair }}>
                   {seg(p.for, C.for)}
                   {seg(p.against, C.against)}
                   {seg(p.abstain, C.abstain)}
                   {seg(p.absent, C.absentDot)}
                 </div>
-                <div style={{ display: 'flex', width: 34, fontSize: 11, color: C.text, opacity: 0.8, paddingLeft: 8 }}>{t}</div>
+                <div style={{ display: 'flex', width: 46, fontSize: 15, color: C.text, opacity: 0.8, paddingLeft: 8 }}>{t}</div>
               </div>
             )
           })
