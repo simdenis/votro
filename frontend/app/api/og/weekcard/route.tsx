@@ -2,7 +2,7 @@ import { ImageResponse } from 'next/og'
 import { WeekCard, type WeekCardData, type WeekHighlight } from '@/components/cards/week-card'
 import { getCardFonts } from '@/lib/og-fonts'
 
-// 1080×1080 weekly recap — /api/og/weekcard  (last 7 days; ?to=YYYY-MM-DD to pin the end)
+// 1080×1350 (4:5) weekly recap — /api/og/weekcard  (last 7 days; ?to=YYYY-MM-DD to pin the end)
 
 export const runtime = 'edge'
 
@@ -75,10 +75,10 @@ export async function GET(request: Request) {
   const fonts = await getCardFonts()
   return new ImageResponse(
     (
-      <div style={{ display: 'flex', width: 1080, height: 1080, transform: 'scale(2)', transformOrigin: 'top left' }}>
+      <div style={{ display: 'flex', width: 1080, height: 1350, transform: 'scale(2)', transformOrigin: 'top left' }}>
         <WeekCard data={data} />
       </div>
     ),
-    { width: 2160, height: 2160, fonts },
+    { width: 2160, height: 2700, fonts },
   )
 }

@@ -5,7 +5,7 @@ import { getCardFonts } from '@/lib/og-fonts'
 import { isUuid } from '@/lib/utils'
 import type { LawStatus } from '@/lib/types'
 
-// 1080×1080 "Pe scurt" card — /api/og/summarycard?id=<law_id>
+// 1080×1350 (4:5) "Pe scurt" card — /api/og/summarycard?id=<law_id>
 // The plain-language AI summary as the hero; IG post format.
 
 export const runtime = 'edge'
@@ -48,10 +48,10 @@ export async function GET(request: Request) {
   // Render at 2× (2160px) — a 1080px PNG looks soft on hi-dpi screens.
   return new ImageResponse(
     (
-      <div style={{ display: 'flex', width: 1080, height: 1080, transform: 'scale(2)', transformOrigin: 'top left' }}>
+      <div style={{ display: 'flex', width: 1080, height: 1350, transform: 'scale(2)', transformOrigin: 'top left' }}>
         <SummaryCard data={data} />
       </div>
     ),
-    { width: 2160, height: 2160, fonts },
+    { width: 2160, height: 2700, fonts },
   )
 }

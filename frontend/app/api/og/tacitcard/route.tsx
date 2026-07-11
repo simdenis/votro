@@ -5,7 +5,7 @@ import { capFirst, isUuid } from '@/lib/utils'
 import { activeSeats } from '@/lib/seats'
 import { formatDate } from '@/lib/utils'
 
-// 1080×1080 tacit-adoption card. A chamber qualifies when the law moved past
+// 1080×1350 (4:5) tacit-adoption card. A chamber qualifies when the law moved past
 // Parliament (presidential_status set) yet has no plenary vote there.
 // URL: /api/og/tacitcard?id=<law_id>[&chamber=senate|camera]
 
@@ -65,10 +65,10 @@ export async function GET(request: Request) {
   const fonts = await getCardFonts()
   return new ImageResponse(
     (
-      <div style={{ display: 'flex', width: 1080, height: 1080, transform: 'scale(2)', transformOrigin: 'top left' }}>
+      <div style={{ display: 'flex', width: 1080, height: 1350, transform: 'scale(2)', transformOrigin: 'top left' }}>
         <TacitCard data={data} />
       </div>
     ),
-    { width: 2160, height: 2160, fonts },
+    { width: 2160, height: 2700, fonts },
   )
 }

@@ -1,4 +1,4 @@
-// 1080×1080 tacit-adoption card — "nobody voted this law".
+// 1080×1350 (4:5) tacit-adoption card — "nobody voted this law".
 // The hero visual is the parliament arc rendered entirely in absent-gray:
 // a plenary vote that never happened. Amber = the brand's tacit/abstain hue.
 
@@ -41,7 +41,7 @@ export function TacitCard({ data }: { data: TacitCardData }) {
   const dots = computeArcDots(0, 0, 0, 0, data.seats)
 
   return (
-    <div style={{ width: 1080, height: 1080, display: 'flex', flexDirection: 'column', background: C.bg, color: C.text, fontFamily: SANS }}>
+    <div style={{ width: 1080, height: 1350, display: 'flex', flexDirection: 'column', background: C.bg, color: C.text, fontFamily: SANS }}>
       {/* no logo header on IG post slides — the profile picture already shows it */}
       <div style={{ display: 'flex', alignItems: 'center', padding: '36px 64px 22px' }}>
         <div style={{ display: 'flex', fontFamily: MONO, fontSize: 16, letterSpacing: 2.5, textTransform: 'uppercase', color: C.gray500 }}>{`ADOPTARE TACITĂ · ${data.year}`}</div>
@@ -58,8 +58,8 @@ export function TacitCard({ data }: { data: TacitCardData }) {
         </div>
 
         {/* The vote that never happened — a full arc of absent-gray seats */}
-        <div style={{ display: 'flex', width: '100%', height: 250, justifyContent: 'center', marginTop: 26 }}>
-          <svg width={773} height={250} viewBox="0 0 952 308">
+        <div style={{ display: 'flex', width: '100%', height: 300, justifyContent: 'center', marginTop: 40 }}>
+          <svg width={927} height={300} viewBox="0 0 952 308">
             {dots.map((d, i) => (
               <circle key={i} cx={d.x} cy={d.y} r={4.5} fill="#D8DBE0" />
             ))}
