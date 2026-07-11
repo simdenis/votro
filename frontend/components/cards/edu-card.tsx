@@ -1,10 +1,13 @@
-// 1080×1080 educational carousel — "cum funcționează Parlamentul" (post #2).
-// Slides 1-4; slide order in the post interleaves the real tacit-card example.
+// 1080×1080 educational carousel — "cum devine un proiect lege" (post #2).
+// Slides 1-6: cover, the four stages of the process (with a progress strip
+// showing where you are), and the tacit-adoption exception as the closer.
 // Amber = the brand's tacit hue; colors stay functional.
+
+import { computeArcDots } from './vote-card'
 
 export interface EduCardData {
   slide: number
-  /** live count of bills with a running tacit term (slide 4) */
+  /** live count of bills with a running tacit term (slide 6) */
   pendingCount?: number
 }
 
@@ -19,10 +22,13 @@ const C = {
   hair: '#E7E9EC',
   gray500: '#6E7480',
   gray400: '#9AA0AA',
+  raised: '#F5F6F8',
 }
 const SERIF = 'Plex Display'   // IBM Plex Sans 700 (see og-fonts)
 const SANS = 'IBM Plex Sans'
 const MONO = 'IBM Plex Mono'
+
+const STAGES = ['Inițiativa', 'Prima cameră', 'Camera decizională', 'Președintele']
 
 function Frame({ children, kicker }: { children: React.ReactNode; kicker: string }) {
   return (
@@ -35,27 +41,65 @@ function Frame({ children, kicker }: { children: React.ReactNode; kicker: string
       {children}
       <div style={{ display: 'flex', justifyContent: 'space-between', padding: '18px 64px', borderTopWidth: 1, borderTopStyle: 'solid', borderTopColor: C.hair }}>
         <div style={{ display: 'flex', fontFamily: MONO, fontSize: 14, fontWeight: 500, color: '#171A1F' }}>@la.butoane</div>
-        <div style={{ display: 'flex', fontFamily: MONO, fontSize: 12, color: C.gray500 }}>Constituția României, art. 75</div>
+        <div style={{ display: 'flex', fontFamily: MONO, fontSize: 12, color: C.gray500 }}>Constituția României, art. 74-77</div>
       </div>
     </div>
   )
 }
 
-/** One step of the law's journey, with the annotation under it. */
-function Step({ label, note, color, last }: { label: string; note: string; color: string; last?: boolean }) {
+/** Where we are in the process: 4 pills, the active stage filled ink. */
+function ProgressStrip({ active }: { active: number }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'flex-start', flexGrow: last ? 0 : 1 }}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: 240 }}>
-        <div style={{ display: 'flex', background: color, color: '#FFFFFF', fontSize: 19, fontWeight: 600, letterSpacing: 1, textTransform: 'uppercase', height: 84, padding: '0 14px', borderRadius: 6, justifyContent: 'center', alignItems: 'center', textAlign: 'center', lineHeight: 1.25 }}>
-          {label}
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 52 }}>
+      {STAGES.map((s, i) => (
+        <div key={s} style={{ display: 'flex', alignItems: 'center', gap: 10, flexGrow: i === active ? 0 : 0 }}>
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 8, padding: '9px 16px', borderRadius: 999,
+            background: i === active ? C.text : C.raised,
+            color: i === active ? '#FFFFFF' : C.gray500,
+            fontSize: 17, fontWeight: i === active ? 600 : 500,
+          }}>
+            <span style={{ fontFamily: MONO, fontSize: 14 }}>{String(i + 1)}</span>
+            <span>{s}</span>
+          </div>
+          {i < 3 && (
+            <svg width="14" height="12" viewBox="0 0 14 12" fill="none" stroke={C.gray400} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M1 6h11" /><path d="m8 1 5 5-5 5" />
+            </svg>
+          )}
         </div>
-        <div style={{ display: 'flex', fontSize: 18, lineHeight: 1.35, color: C.gray500, justifyContent: 'center', textAlign: 'center' }}>{note}</div>
+      ))}
+    </div>
+  )
+}
+
+/** One fact row: bold lead + plain rest. */
+function Row({ lead, rest }: { lead: string; rest: string }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 4, padding: '20px 0', borderBottomWidth: 1, borderBottomStyle: 'solid', borderBottomColor: C.hair }}>
+      <div style={{ display: 'flex', fontSize: 28, fontWeight: 600, color: C.text }}>{lead}</div>
+      <div style={{ display: 'flex', fontSize: 24, lineHeight: 1.45, color: C.gray500 }}>{rest}</div>
+    </div>
+  )
+}
+
+function StepSlide({ n, title, intro, rows, note }: {
+  n: number; title: string; intro: string
+  rows: { lead: string; rest: string }[]
+  note?: string
+}) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'center', padding: '0 64px' }}>
+      <ProgressStrip active={n - 1} />
+      <div style={{ display: 'flex', fontFamily: MONO, fontSize: 17, letterSpacing: 3, textTransform: 'uppercase', color: C.amberDark, marginBottom: 12 }}>
+        {`Pasul ${n} din 4`}
       </div>
-      {!last && (
-        <div style={{ display: 'flex', flexGrow: 1, alignItems: 'center', height: 84, justifyContent: 'center' }}>
-          <svg width="34" height="16" viewBox="0 0 34 16" fill="none" stroke={C.gray400} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M2 8h26" /><path d="m24 2 6 6-6 6" />
-          </svg>
+      <div style={{ fontFamily: SERIF, fontSize: 58, lineHeight: 1.06, marginBottom: 16 }}>{title}</div>
+      <div style={{ display: 'flex', fontSize: 25, lineHeight: 1.45, color: C.gray500, marginBottom: 26, maxWidth: 920 }}>{intro}</div>
+      {rows.map(r => <Row key={r.lead} lead={r.lead} rest={r.rest} />)}
+      {note && (
+        <div style={{ display: 'flex', marginTop: 34, background: C.raised, borderRadius: 12, padding: '24px 30px', fontSize: 23, lineHeight: 1.45, color: C.text }}>
+          {note}
         </div>
       )}
     </div>
@@ -63,103 +107,135 @@ function Step({ label, note, color, last }: { label: string; note: string; color
 }
 
 export function EduCard({ data }: { data: EduCardData }) {
-  // ── Slide 1 — hook ────────────────────────────────────────────
+  // ── Slide 1 — cover ───────────────────────────────────────────
   if (data.slide === 1) {
     return (
-      <Frame kicker="CUM FUNCȚIONEAZĂ · 1/5">
+      <Frame kicker="CUM FUNCȚIONEAZĂ · 1/6">
         <div style={{ display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'center', padding: '0 64px' }}>
-          <div style={{ fontFamily: SERIF, fontSize: 84, lineHeight: 1.05, letterSpacing: '-1px', color: C.text }}>
-            O lege poate trece fără niciun vot.
+          <div style={{ fontFamily: SERIF, fontSize: 88, lineHeight: 1.05, letterSpacing: '-1px', color: C.text }}>
+            Cum devine un proiect lege?
           </div>
-          <div style={{ display: 'flex', fontSize: 33, lineHeight: 1.4, color: C.amberDark, marginTop: 30, fontWeight: 600 }}>
-            Legal. Se numește adoptare tacită.
+          <div style={{ display: 'flex', fontSize: 30, lineHeight: 1.45, color: C.gray500, marginTop: 30, maxWidth: 880 }}>
+            Tot drumul, pas cu pas: de la idee până în Monitorul Oficial.
           </div>
-          <div style={{ display: 'flex', fontSize: 26, lineHeight: 1.45, color: C.gray500, marginTop: 16 }}>
-            Uite cum funcționează, în 5 slide-uri.
+          <div style={{ display: 'flex', marginTop: 64 }}>
+            <ProgressStrip active={-1} />
+          </div>
+          <div style={{ display: 'flex', fontSize: 26, fontWeight: 600, color: C.amberDark, marginTop: 0 }}>
+            Plus: cum trece o lege fără niciun vot.
           </div>
         </div>
       </Frame>
     )
   }
 
-  // ── Slide 2 — drumul unei legi ────────────────────────────────
+  // ── Slide 2 — pasul 1: inițiativa ─────────────────────────────
   if (data.slide === 2) {
     return (
-      <Frame kicker="CUM FUNCȚIONEAZĂ · 2/5">
-        <div style={{ display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'center', padding: '0 64px' }}>
-          <div style={{ fontFamily: SERIF, fontSize: 60, lineHeight: 1.08, marginBottom: 20 }}>Drumul unei legi</div>
-          <div style={{ display: 'flex', fontSize: 26, lineHeight: 1.45, color: C.gray500, marginBottom: 64, maxWidth: 900 }}>
-            Orice proiect trece prin ambele camere ale Parlamentului, apoi ajunge la Președinte.
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'flex-start' }}>
-            <Step label="Prima cameră" note="are 45 sau 60 de zile să voteze" color={C.info} />
-            <Step label="Camera decizională" note="votul ei e cel care contează" color={C.text} />
-            <Step label="Președinte" note="promulgă, retrimite sau sesizează CCR" color={C.for} last />
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 80, background: '#F5F6F8', borderRadius: 12, padding: '30px 34px' }}>
-            <div style={{ display: 'flex', fontSize: 24, lineHeight: 1.45, color: C.text }}>
-              Care e „prima cameră" depinde de subiectul legii: uneori Senatul, alteori Camera Deputaților.
-            </div>
-            <div style={{ display: 'flex', fontSize: 24, lineHeight: 1.45, color: C.gray500 }}>
-              Cealaltă devine automat camera decizională, cu votul final.
-            </div>
-          </div>
-        </div>
+      <Frame kicker="CUM FUNCȚIONEAZĂ · 2/6">
+        <StepSlide
+          n={1}
+          title="Inițiativa"
+          intro="O lege începe cu un text depus în Parlament. Îl pot depune:"
+          rows={[
+            { lead: 'Guvernul', rest: 'proiecte de lege (cele mai multe dintre legile adoptate)' },
+            { lead: 'Senatorii și deputații', rest: 'propuneri legislative, individual sau în grup' },
+            { lead: 'Cetățenii', rest: '100.000 de semnături, din cel puțin un sfert din județe' },
+          ]}
+        />
       </Frame>
     )
   }
 
-  // ── Slide 3 — termenul tacit ──────────────────────────────────
+  // ── Slide 3 — pasul 2: prima cameră ───────────────────────────
   if (data.slide === 3) {
     return (
-      <Frame kicker="CUM FUNCȚIONEAZĂ · 3/5">
-        <div style={{ display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'center', padding: '0 64px' }}>
-          <div style={{ fontFamily: SERIF, fontSize: 54, lineHeight: 1.08, marginBottom: 18 }}>Termenul tacit</div>
-          <div style={{ display: 'flex', fontSize: 24, lineHeight: 1.5, color: C.gray500, marginBottom: 44, maxWidth: 920 }}>
-            Constituția dă primei camere un termen ca să se pronunțe. Dacă termenul expiră fără vot, legea e considerată adoptată automat.
-          </div>
-
-          {([
-            ['45 de zile', 'pentru legile obișnuite'],
-            ['60 de zile', 'pentru coduri și legi complexe'],
-            ['0 voturi', 'necesare când termenul expiră'],
-          ] as const).map(([big, small]) => (
-            <div key={big} style={{ display: 'flex', alignItems: 'baseline', gap: 22, padding: '18px 0', borderBottomWidth: 1, borderBottomStyle: 'solid', borderBottomColor: C.hair }}>
-              <div style={{ display: 'flex', fontFamily: SERIF, fontSize: 52, color: C.amberDark, width: 300 }}>{big}</div>
-              <div style={{ display: 'flex', fontSize: 25, color: C.text }}>{small}</div>
-            </div>
-          ))}
-
-          <div style={{ display: 'flex', marginTop: 44, background: '#F5F6F8', borderRadius: 12, padding: '26px 30px', fontSize: 22, lineHeight: 1.5, color: C.text }}>
-            Important: termenul există doar pentru prima cameră. Camera decizională nu are termen și trebuie să voteze mereu explicit.
-          </div>
-        </div>
+      <Frame kicker="CUM FUNCȚIONEAZĂ · 3/6">
+        <StepSlide
+          n={2}
+          title="Prima cameră"
+          intro="Textul intră întâi într-una dintre camere, stabilită de Constituție după subiectul legii."
+          rows={[
+            { lead: 'Comisiile îl analizează', rest: 'raport cu amendamente: adoptare sau respingere' },
+            { lead: 'Plenul votează', rest: 'proiectul merge mai departe indiferent de rezultat' },
+            { lead: '45 sau 60 de zile', rest: 'termenul în care prima cameră trebuie să se pronunțe' },
+          ]}
+        />
       </Frame>
     )
   }
 
-  // ── Slide 4 — stat live + CTA ─────────────────────────────────
+  // ── Slide 4 — pasul 3: camera decizională ─────────────────────
+  if (data.slide === 4) {
+    return (
+      <Frame kicker="CUM FUNCȚIONEAZĂ · 4/6">
+        <StepSlide
+          n={3}
+          title="Camera decizională"
+          intro="Cealaltă cameră reia procesul: comisii, dezbatere, vot în plen."
+          rows={[
+            { lead: 'Votul ei decide', rest: 'adoptat aici = adoptat de Parlament; respins aici = respins definitiv' },
+            { lead: 'Fără termen', rest: 'poate ține un proiect în dezbatere oricât; nimic nu trece automat' },
+          ]}
+          note="De aceea, pe LaButoane, votul camerei decizionale e cel pe care îl vezi primul la fiecare lege."
+        />
+      </Frame>
+    )
+  }
+
+  // ── Slide 5 — pasul 4: președintele ───────────────────────────
+  if (data.slide === 5) {
+    return (
+      <Frame kicker="CUM FUNCȚIONEAZĂ · 5/6">
+        <StepSlide
+          n={4}
+          title="Președintele"
+          intro="Legea adoptată de Parlament ajunge la Cotroceni. Președintele are 20 de zile și trei opțiuni:"
+          rows={[
+            { lead: 'Promulgă', rest: 'legea apare în Monitorul Oficial și intră în vigoare' },
+            { lead: 'Retrimite la Parlament', rest: 'o singură dată, pentru reexaminare; apoi trebuie să promulge' },
+            { lead: 'Sesizează CCR', rest: 'dacă are îndoieli că legea respectă Constituția' },
+          ]}
+        />
+      </Frame>
+    )
+  }
+
+  // ── Slide 6 — excepția: adoptarea tacită ──────────────────────
+  const dots = computeArcDots(0, 0, 0, 0, 134)
   return (
-    <Frame kicker="CUM FUNCȚIONEAZĂ · 5/5">
+    <Frame kicker="CUM FUNCȚIONEAZĂ · 6/6">
       <div style={{ display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'center', padding: '0 64px' }}>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 20 }}>
-          <div style={{ fontFamily: SERIF, fontSize: 150, lineHeight: 1, color: C.amberDark }}>
+        <div style={{ display: 'flex', fontFamily: MONO, fontSize: 17, letterSpacing: 3, textTransform: 'uppercase', color: C.amberDark, marginBottom: 12 }}>
+          Excepția de la pasul 2
+        </div>
+        <div style={{ fontFamily: SERIF, fontSize: 58, lineHeight: 1.06, marginBottom: 16 }}>Adoptarea tacită</div>
+        <div style={{ display: 'flex', fontSize: 25, lineHeight: 1.5, color: C.gray500, maxWidth: 920 }}>
+          Dacă termenul de 45 sau 60 de zile expiră fără vot, proiectul e considerat adoptat de prima cameră și merge mai departe. Automat, fără nicio dezbatere.
+        </div>
+
+        {/* the vote that never happened */}
+        <div style={{ display: 'flex', width: '100%', height: 195, justifyContent: 'center', marginTop: 26 }}>
+          <svg width={603} height={195} viewBox="0 0 952 308">
+            {dots.map((d, i) => (
+              <circle key={i} cx={d.x} cy={d.y} r={4.5} fill="#D8DBE0" />
+            ))}
+          </svg>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'center', fontFamily: MONO, fontSize: 14, letterSpacing: 1.5, color: C.gray500, marginTop: 2 }}>
+          0 VOTURI · TRECE ORICUM
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 16, marginTop: 40 }}>
+          <div style={{ fontFamily: SERIF, fontSize: 64, lineHeight: 1, color: C.amberDark }}>
             {String(data.pendingCount ?? '—')}
           </div>
-          <div style={{ display: 'flex', fontSize: 34, color: C.text, fontWeight: 600 }}>
-            {`de proiecte au termenul în curs`}
+          <div style={{ display: 'flex', fontSize: 27, fontWeight: 600, color: C.text }}>
+            de proiecte au termenul în curs chiar acum
           </div>
         </div>
-        <div style={{ display: 'flex', fontSize: 27, lineHeight: 1.5, color: C.gray500, marginTop: 26, maxWidth: 900 }}>
-          Chiar acum, la Camera Deputaților. Oricare dintre ele poate deveni lege fără să apese nimeni un buton.
-        </div>
-        <div style={{ display: 'flex', fontSize: 28, color: C.text, marginTop: 44, fontWeight: 600 }}>
-          Le urmărim pe toate, cu termenele lor oficiale.
-        </div>
-        <div style={{ display: 'flex', fontSize: 24, color: C.gray500, marginTop: 10 }}>
-          Site-ul: link în bio.
+        <div style={{ display: 'flex', fontSize: 24, color: C.gray500, marginTop: 12 }}>
+          Le urmărim pe toate, cu termenele lor oficiale. Site-ul: link în bio.
         </div>
       </div>
     </Frame>
