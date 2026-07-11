@@ -75,7 +75,10 @@ export function LawCard({ data }: { data: LawCardData }) {
           {data.dateLine && <div style={{ display: 'flex', fontSize: 17, color: C.text, opacity: 0.8 }}>{data.dateLine}</div>}
         </div>
 
-        <div style={{ display: 'flex', height: 30 }} />
+        {/* Equal flexible spacers above/below keep the arc vertically centered
+            between the status badge and the party section — tweak the two
+            flex/minHeight pairs here to rebalance. */}
+        <div style={{ display: 'flex', flex: 1, minHeight: 16 }} />
 
         {/* Parliament arc — the decisive plenary vote, as a semicircle */}
         {data.voteChamber && (data.votesFor != null || data.votesAgainst != null) && (() => {
@@ -85,7 +88,7 @@ export function LawCard({ data }: { data: LawCardData }) {
           const arcH = data.lawTitle.length > 220 || data.parties.length > 6 ? 340 : 420
           const arcW = Math.round(952 * (arcH / 308))
           return (
-            <div style={{ display: 'flex', width: '100%', height: arcH, justifyContent: 'center', marginBottom: 40 }}>
+            <div style={{ display: 'flex', width: '100%', height: arcH, justifyContent: 'center' }}>
               <svg width={arcW} height={arcH} viewBox="0 0 952 308">
                 {dots.map((d, i) => (
                   <circle key={i} cx={d.x} cy={d.y} r={6} fill={d.color} />
@@ -95,8 +98,7 @@ export function LawCard({ data }: { data: LawCardData }) {
           )
         })()}
 
-        {/* Slack sits here: parties hug the journey strip at the bottom */}
-        <div style={{ display: 'flex', flex: 1, minHeight: 8 }} />
+        <div style={{ display: 'flex', flex: 1, minHeight: 16 }} />
 
         {/* Party vote — decisive plenary vote */}
         {data.parties.length > 0 && (
