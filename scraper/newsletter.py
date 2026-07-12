@@ -201,7 +201,7 @@ def render(data: dict, site: str) -> tuple[str, str]:
   {absents_html}
   <tr><td style="padding-top:24px;font-size:13px;color:{GRAY};line-height:1.5;">
     Fiecare vot, fiecare absență, fiecare deviere de la linia de partid:
-    <a href="{site}" style="color:{INK};font-weight:600;">labutoane.vercel.app</a>
+    <a href="{site}" style="color:{INK};font-weight:600;">la-butoane.ro</a>
     &nbsp;·&nbsp; Instagram: <a href="https://instagram.com/la.butoane" style="color:{INK};">@la.butoane</a>
   </td></tr>
   <tr><td style="padding-top:18px;border-top:1px solid #E7E9EC;margin-top:18px;font-size:11px;color:{GRAY};">
