@@ -102,6 +102,15 @@ log "=== Tacit deadlines ==="
 log "=== Validation ==="
 "$PY" scraper/validate.py >>"$LOG" 2>&1 || { rc=1; log "Validation found bad data"; }
 
+# Saturday: the weekly email digest (absents of the week + laws adopted/
+# rejected). Needs RESEND_API_KEY / RESEND_AUDIENCE_ID / NEWSLETTER_FROM in
+# scraper/.env — skips gracefully when unset. Failure must not flip the
+# heartbeat: email trouble is not a data-pipeline problem.
+if [ "$(date -u +%u)" = "6" ]; then
+  log "=== Weekly newsletter (Saturday) ==="
+  "$PY" scraper/newsletter.py --send >>"$LOG" 2>&1 || log "WARN: newsletter send failed"
+fi
+
 # Heartbeat — lets the site footer tell "parliament idle" from "pipeline broken".
 "$PY" scraper/heartbeat.py "$rc" >>"$LOG" 2>&1 || log "WARN: heartbeat write failed"
 
