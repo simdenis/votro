@@ -68,13 +68,19 @@ export default async function Dashboard() {
     <div>
 
       {/* ── Header ───────────────────────────────────────── */}
-      <header className="mb-9">
-        <p className="text-[11px] uppercase tracking-[0.18em] text-faint mb-2.5">
-          Parlamentul României · Legislatura 2026
-        </p>
-        <h1 className="font-serif text-[42px] font-normal tracking-[-0.01em] leading-[1.04] text-foreground">
-          Cum votează Parlamentul?
-        </h1>
+      <header className="mb-9 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6">
+        <div>
+          <p className="text-[11px] uppercase tracking-[0.18em] text-faint mb-2.5">
+            Parlamentul României · Legislatura 2026
+          </p>
+          <h1 className="font-serif text-[42px] font-normal tracking-[-0.01em] leading-[1.04] text-foreground">
+            Cum votează Parlamentul?
+          </h1>
+        </div>
+        <div className="w-full sm:w-[340px] shrink-0">
+          <p className="text-[12px] font-semibold text-foreground mb-1.5">Parlamentul, pe email</p>
+          <NewsletterForm compact />
+        </div>
       </header>
 
       {/* ── Stats row ────────────────────────────────────── */}
@@ -212,12 +218,6 @@ export default async function Dashboard() {
               ))}
             </div>
 
-            {/* Newsletter — the audience channel we own */}
-            <h2 className="font-serif text-[16px] font-normal text-foreground border-b-2 border-sidebar pb-[5px] mb-3 mt-10">
-              Parlamentul, pe email
-            </h2>
-            <p className="text-[11px] text-faint mb-3">Ce s-a votat săptămâna asta, explicat simplu.</p>
-            <NewsletterForm compact />
           </aside>
         )}
       </div>
