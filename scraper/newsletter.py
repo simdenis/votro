@@ -72,7 +72,42 @@ class Data:
             key=lambda x: -(x["law"].get("interest_score") or 0),
         )
         pending = self.get("pending_bills", select="id")
+
+        # Absenții săptămânii: for each chamber's plenary votes this week,
+        # active members (ministers excluded — their absence is structural)
+        # ranked by missed votes. Absence = chamber votes − participations,
+        # same logic as the site's presence stat (senat.ro lists only voters).
+        absents: list[dict] = []
+        vote_ids_by_chamber: dict[str, list[str]] = {"senate": [], "deputies": []}
+        for v in votes:
+            if v.get("chamber") in vote_ids_by_chamber:
+                vote_ids_by_chamber[v["chamber"]].append(v["id"])
+        for chamber, vids in vote_ids_by_chamber.items():
+            if not vids:
+                continue
+            participated: dict[str, int] = {}
+            for i in range(0, len(vids), 60):
+                for r in self.get("politician_votes", select="politician_id,vote_choice",
+                                  vote_id=f"in.({','.join(vids[i:i + 60])})"):
+                    if r["vote_choice"] != "absent":
+                        participated[r["politician_id"]] = participated.get(r["politician_id"], 0) + 1
+            members = self.get("politicians", select="id,name,first_name,gov_role,parties(abbreviation)",
+                               chamber=f"eq.{chamber}", active="is.true")
+            for m in members:
+                if m.get("gov_role"):
+                    continue
+                missed = len(vids) - participated.get(m["id"], 0)
+                if missed > 0:
+                    absents.append({
+                        "name": f"{m.get('first_name') or ''} {m.get('name') or ''}".strip(),
+                        "party": (m.get("parties") or {}).get("abbreviation") or "IND",
+                        "chamber": "Senat" if chamber == "senate" else "Cameră",
+                        "missed": missed, "total": len(vids),
+                    })
+        absents.sort(key=lambda a: (-a["missed"] / a["total"], -a["missed"]))
+
         return {
+            "top_absents": absents[:5],
             "votes_total": len(votes),
             "adopted": sum(1 for v in votes if v.get("outcome") == "adoptat"),
             "rejected": sum(1 for v in votes if v.get("outcome") == "respins"),
@@ -111,8 +146,35 @@ def render(data: dict, site: str) -> tuple[str, str]:
           </div>
         </td></tr>"""
 
-    laws_html = "".join(law_block(i) for i in data["top_laws"]) or \
-        f'<tr><td style="padding:18px 0;color:{GRAY};font-size:14px;">Săptămână liniștită: niciun vot de plen (vacanță parlamentară).</td></tr>'
+    adopted = [i for i in data["top_laws"] if i["vote"].get("outcome") == "adoptat"]
+    rejected = [i for i in data["top_laws"] if i["vote"].get("outcome") == "respins"]
+
+    def section(title: str, color: str, items: list) -> str:
+        if not items:
+            return ""
+        head = f'<tr><td style="padding:26px 0 2px;font-size:12px;font-weight:700;letter-spacing:2px;color:{color};">{title}</td></tr>'
+        return head + "".join(law_block(i) for i in items)
+
+    laws_html = section("ADOPTATE SĂPTĂMÂNA ASTA", GREEN, adopted) + section("RESPINSE SĂPTĂMÂNA ASTA", RED, rejected)
+    if not laws_html:
+        laws_html = f'<tr><td style="padding:18px 0;color:{GRAY};font-size:14px;">Săptămână liniștită: niciun vot de plen (vacanță parlamentară).</td></tr>'
+
+    absents_rows = "".join(
+        f"""<tr>
+          <td style="padding:7px 0;font-size:14px;color:{INK};border-bottom:1px solid #E7E9EC;">
+            {html.escape(a['name'])} <span style="color:{GRAY};font-size:12px;">({html.escape(a['party'])} · {a['chamber']})</span>
+          </td>
+          <td align="right" style="padding:7px 0;font-size:14px;font-weight:700;color:{RED};border-bottom:1px solid #E7E9EC;white-space:nowrap;">
+            {a['missed']} din {a['total']} voturi
+          </td>
+        </tr>"""
+        for a in data.get("top_absents", []))
+    absents_html = f"""
+    <tr><td style="padding:26px 0 6px;font-size:12px;font-weight:700;letter-spacing:2px;color:{RED};">ABSENȚII SĂPTĂMÂNII</td></tr>
+    <tr><td>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0">{absents_rows}</table>
+      <div style="font-size:11px;color:{GRAY};padding-top:8px;">Absențe la voturile de plen din această săptămână. Membrii Guvernului nu sunt incluși.</div>
+    </td></tr>""" if absents_rows else ""
 
     body = f"""<!doctype html><html lang="ro"><body style="margin:0;padding:0;background:{PAPER};">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:{PAPER};padding:24px 12px;">
@@ -133,9 +195,10 @@ def render(data: dict, site: str) -> tuple[str, str]:
       <td style="font-size:13px;color:{GRAY};">Termene tacite în curs<br><span style="font-size:26px;font-weight:700;color:{AMBER};">{data['pending_tacit']}</span></td>
     </tr></table>
   </td></tr>
-  <tr><td style="padding-top:14px;">
+  <tr><td style="padding-top:4px;">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0">{laws_html}</table>
   </td></tr>
+  {absents_html}
   <tr><td style="padding-top:24px;font-size:13px;color:{GRAY};line-height:1.5;">
     Fiecare vot, fiecare absență, fiecare deviere de la linia de partid:
     <a href="{site}" style="color:{INK};font-weight:600;">labutoane.vercel.app</a>

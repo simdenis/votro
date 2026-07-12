@@ -34,7 +34,7 @@ export function NewsletterForm({ compact = false }: { compact?: boolean }) {
   if (state === 'done') {
     return (
       <p className={`${compact ? 'text-[12.5px]' : 'text-sm'} text-adoptat font-medium`}>
-        Te-ai abonat. Primul număr ajunge vinerea viitoare.
+        Te-ai abonat. Primul număr ajunge sâmbătă.
       </p>
     )
   }
@@ -60,7 +60,7 @@ export function NewsletterForm({ compact = false }: { compact?: boolean }) {
         </button>
       </div>
       {state === 'error' && <p className="text-[12px] text-respins">{message}</p>}
-      <p className="text-[11px] text-faint">Săptămânal, vinerea. Te poți dezabona oricând, dintr-un click.</p>
+      <p className="text-[11px] text-faint">Ce s-a votat săptămâna asta: sâmbăta, pe scurt. Te poți dezabona oricând.</p>
     </form>
   )
 }
