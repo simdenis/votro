@@ -7,6 +7,7 @@ import { ParliamentBar } from '@/components/parliament-bar'
 import { CountyMap } from '@/components/county-map'
 import type { VoteWithLaw, PartyCohesion } from '@/lib/types'
 import { CategoryBadge } from '@/components/category-badge'
+import { NewsletterForm } from '@/components/newsletter-form'
 
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = { title: 'Acasă' }
@@ -210,6 +211,13 @@ export default async function Dashboard() {
                 </Link>
               ))}
             </div>
+
+            {/* Newsletter — the audience channel we own */}
+            <h2 className="font-serif text-[16px] font-normal text-foreground border-b-2 border-sidebar pb-[5px] mb-3 mt-10">
+              Parlamentul, pe email
+            </h2>
+            <p className="text-[11px] text-faint mb-3">Ce s-a votat săptămâna asta, explicat simplu.</p>
+            <NewsletterForm compact />
           </aside>
         )}
       </div>
