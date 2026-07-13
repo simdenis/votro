@@ -42,6 +42,8 @@ export function Footer() {
           <span className="text-faint">·</span>
           <Link href="/despre" className="hover:text-foreground">Despre</Link>
           <span className="text-faint">·</span>
+          <Link href="/date" className="hover:text-foreground">Date deschise</Link>
+          <span className="text-faint">·</span>
           <Link href="/contribuie" className="hover:text-foreground">Contribuie</Link>
           <span className="text-faint">·</span>
           <span>Neafiliat politic</span>

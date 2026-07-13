@@ -48,7 +48,7 @@ export default async function SenatorProfile({
       .from('politician_votes')
       .select('*, votes!inner(*, laws(*))')
       .eq('politician_id', id)
-      .order('created_at', { ascending: false })
+      .order('votes(vote_date)', { ascending: false })
       .limit(100),
     // deviations fetched directly — they may be older than the 100-vote history window
     db
@@ -56,7 +56,7 @@ export default async function SenatorProfile({
       .select('*, votes!inner(*, laws(*))')
       .eq('politician_id', id)
       .eq('party_line_deviation', true)
-      .order('created_at', { ascending: false })
+      .order('votes(vote_date)', { ascending: false })
       .limit(8),
     db.from('politician_party_history')
       .select('*, parties(name, abbreviation, color)')

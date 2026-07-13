@@ -24,6 +24,7 @@ export const PARLAMENTARI_SECTIONS: SectionItem[] = [
 
 export const DESPRE_SECTIONS: SectionItem[] = [
   { href: '/despre', label: 'Despre' },
+  { href: '/date', label: 'Date deschise' },
   { href: '/contribuie', label: 'Contribuie' },
 ]
 

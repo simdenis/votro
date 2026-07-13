@@ -22,9 +22,14 @@ interface Props {
 
 export function PoliticianProfile({ stats, history, deviationRows, partyHistory, basePath, chamberLabel, siteUrl }: Props) {
   const total      = stats.total_votes
-  // IND/MIN have no party line — loyalty/deviation framing would be meaningless
+  const expressed  = stats.votes_for + stats.votes_against + stats.votes_abstention
+  // IND/MIN have no party line — loyalty/deviation framing would be meaningless.
+  // Below ~100 expressed votes the metric is noise, and worse: the most absent
+  // members are exactly the ones who'd flaunt a shiny "100% loyalty" badge.
+  const LOYALTY_MIN_VOTES = 100
+  const smallSample = expressed < LOYALTY_MIN_VOTES
   const noLine     = !hasPartyLine(stats.party_abbr)
-  const loyaltyPct = !noLine && stats.deviation_pct != null ? Math.floor(100 - stats.deviation_pct) : null
+  const loyaltyPct = !noLine && !smallSample && stats.deviation_pct != null ? Math.floor(100 - stats.deviation_pct) : null
   const isHighDev  = stats.deviation_pct != null && stats.deviation_pct > 10
 
   // Denominator = ALL plenary votes since mandate start, not just recorded
@@ -76,7 +81,9 @@ export function PoliticianProfile({ stats, history, deviationRows, partyHistory,
             <span className="text-xs text-muted">
               {chamberLabel}
               {stats.county && (stats.county === 'Diaspora' ? ' · Diaspora' : ` · ${stats.county}`)}
-              {' · '}{total} {countNoun(total, 'vot înregistrat', 'voturi înregistrate')}
+              {/* "a votat la X din Y" — the raw recorded-rows count made readers
+                  reconcile 54 vs 319 themselves */}
+              {' · '}a votat la {expressed} din {stats.chamber_votes || total} {countNoun(stats.chamber_votes || total, 'vot de plen', 'voturi de plen')}
             </span>
             {!stats.gov_role && stats.presence_pct != null && (
               <span
@@ -94,13 +101,23 @@ export function PoliticianProfile({ stats, history, deviationRows, partyHistory,
             <LoyaltyMeter loyaltyPct={loyaltyPct} size={112} />
           </div>
         )}
+        {!noLine && smallSample && (
+          <div
+            className="flex-shrink-0 w-[112px] text-center text-[11px] text-faint leading-snug"
+            title={`Loialitatea se afișează de la ${LOYALTY_MIN_VOTES} de voturi exprimate — sub acest prag procentul e zgomot statistic.`}
+          >
+            loialitate necalculată
+            <br />
+            <span className="text-[10px]">(doar {expressed} {countNoun(expressed, 'vot exprimat', 'voturi exprimate')})</span>
+          </div>
+        )}
       </div>
 
       {/* Share row */}
       <div className="flex items-center gap-3 flex-wrap">
         <ShareButtons
           url={`${siteUrl}${basePath}/${stats.politician_id}`}
-          tweet={noLine
+          tweet={noLine || smallSample
             ? `Cum votează ${stats.first_name} ${stats.name} în Parlament: ${siteUrl}${basePath}/${stats.politician_id}`
             : `${stats.first_name} ${stats.name} (${stats.party_abbr}) a deviat de la linia de partid în ${pct(stats.deviation_pct)} din voturi. ${siteUrl}${basePath}/${stats.politician_id}`}
         />
@@ -170,7 +187,7 @@ export function PoliticianProfile({ stats, history, deviationRows, partyHistory,
                   >
                     {row.votes.laws?.code ?? '—'}
                   </Link>
-                  <span className="text-xs text-muted truncate flex-1">{capFirst(row.votes.laws?.title ?? '') || 'Vot fără lege asociată'}</span>
+                  <span className="text-xs text-muted truncate flex-1">{capFirst(row.votes.laws?.title ?? row.votes.description ?? '') || 'Vot procedural (fără lege identificată)'}</span>
                   <span className="text-xs font-bold flex-shrink-0" style={{ color: choiceColor(row.vote_choice) }}>
                     {choiceLabel(row.vote_choice)}
                   </span>
@@ -209,13 +226,21 @@ export function PoliticianProfile({ stats, history, deviationRows, partyHistory,
                   <div className="flex items-center gap-2 mb-0.5 flex-wrap">
                     <span className="font-mono text-xs text-muted">{row.votes.laws?.code ?? '—'}</span>
                     <span className="text-[10px] text-faint">{formatDate(row.votes.vote_date)}</span>
+                    {/* same bill can be voted repeatedly in a day (amendments,
+                        procedure, final) — without the stage label, opposite
+                        votes on one law read as data corruption */}
+                    {row.votes.vote_type && (
+                      <span className="text-[10px] uppercase text-faint bg-raised border border-rim rounded px-1.5 py-px">
+                        {row.votes.vote_type}
+                      </span>
+                    )}
                     {row.party_line_deviation && (
                       <span className="text-[10px] bg-deviere/10 text-deviere font-bold rounded px-1.5 py-px">
                         ⚠ deviere
                       </span>
                     )}
                   </div>
-                  <p className="text-sm text-foreground truncate">{capFirst(row.votes.laws?.title ?? '') || 'Vot fără lege asociată'}</p>
+                  <p className="text-sm text-foreground truncate">{capFirst(row.votes.laws?.title ?? row.votes.description ?? '') || 'Vot procedural (fără lege identificată)'}</p>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
                   <span className="text-sm font-bold" style={{ color: choiceColor(row.vote_choice) }}>
