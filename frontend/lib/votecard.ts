@@ -1,8 +1,8 @@
-import { hasPartyLine } from './utils'
+import { hasPartyLine, loyaltyPct } from './utils'
 import type { VoteCardData, PartyVote } from '@/components/cards/vote-card'
 import type { SenatorCardData } from '@/components/cards/senator-card'
 import type { LawCardData, JourneyStep } from '@/components/cards/law-card'
-import type { PoliticianStats, LawStatus } from '@/lib/types'
+import { trueAbsent, type PoliticianStats, type LawStatus } from '@/lib/types'
 import { formatDate, capFirst } from '@/lib/utils'
 
 interface BreakdownRow { party_abbr: string; vote_choice: string; count: number }
@@ -63,13 +63,15 @@ export function mapSenatorToCard(s: PoliticianStats, chamber: 'senate' | 'deputi
     partyColor: s.party_color || '#9e9e9e',
     chamberLabel: chamber === 'deputies' ? 'DEPUTAT' : 'SENATOR',
     year: new Date().getFullYear(),
-    totalVotes: s.total_votes ?? 0,
+    // denominator = every plenary vote in the chamber; absents = true absences
+    // (recorded 'absent' rows undercount — sources rarely list absentees)
+    totalVotes: s.chamber_votes || s.total_votes || 0,
     votesFor: s.votes_for ?? 0,
     votesAgainst: s.votes_against ?? 0,
     votesAbstain: s.votes_abstention ?? 0,
-    votesAbsent: s.votes_absent ?? 0,
-    // floor: 0.4% deviation must not display as "100% loialitate"
-    loyaltyPct: s.deviation_pct != null ? Math.floor(100 - s.deviation_pct) : null,
+    votesAbsent: trueAbsent(s) ?? s.votes_absent ?? 0,
+    // aligned votes over ALL chamber votes — absences lower loyalty (lib/utils)
+    loyaltyPct: loyaltyPct(s),
     deviations: s.deviations ?? 0,
     deviationPct: s.deviation_pct != null ? Math.round(s.deviation_pct) : null,
     noLine,

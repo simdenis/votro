@@ -73,7 +73,7 @@ export function SenatorCard({ data }: { data: SenatorCardData }) {
         <div style={{ fontFamily: SERIF, fontSize: 60, lineHeight: 1.04, color: C.text, marginBottom: 18, maxHeight: 200, overflow: 'hidden' }}>{data.fullName}</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 44 }}>
           <div style={{ display: 'flex', background: data.partyColor, color: textOn(data.partyColor), fontSize: 20, fontWeight: 600, padding: '7px 18px', borderRadius: 4 }}>{data.partyAbbr}</div>
-          <div style={{ display: 'flex', fontSize: 17, opacity: 0.4 }}>{`${data.totalVotes} ${countNoun(data.totalVotes, 'vot înregistrat', 'voturi înregistrate')}`}</div>
+          <div style={{ display: 'flex', fontSize: 17, opacity: 0.4 }}>{`a votat la ${data.votesFor + data.votesAgainst + data.votesAbstain} din ${data.totalVotes} ${countNoun(data.totalVotes, 'vot de plen', 'voturi de plen')}`}</div>
         </div>
 
         {/* Headline metric */}
@@ -81,7 +81,7 @@ export function SenatorCard({ data }: { data: SenatorCardData }) {
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: 28, marginBottom: 40 }}>
             <div style={{ display: 'flex', fontFamily: SERIF, fontSize: 120, lineHeight: 0.9, color: C.navy }}>{`${data.loyaltyPct}%`}</div>
             <div style={{ display: 'flex', flexDirection: 'column', paddingBottom: 14 }}>
-              <div style={{ display: 'flex', fontSize: 19, fontWeight: 500 }}>loialitate față de partid</div>
+              <div style={{ display: 'flex', fontSize: 19, fontWeight: 500 }}>a votat cu partidul, din toate voturile de plen</div>
               <div style={{ display: 'flex', fontSize: 16, opacity: 0.7, marginTop: 4 }}>{`${data.deviations} ${countNoun(data.deviations, 'deviere', 'devieri')} · ${data.deviationPct === 0 && data.deviations > 0 ? '<1' : data.deviationPct ?? 0}% din voturi`}</div>
             </div>
           </div>

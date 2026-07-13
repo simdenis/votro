@@ -94,6 +94,20 @@ export function pct(n: number | null | undefined): string {
   return `${n.toFixed(1)}%`
 }
 
+/** Loyalty = votes cast WITH the party line over ALL plenary votes held in the
+ *  member's chamber. Absences pull it down: an 83%-absent MP can no longer
+ *  wear a "100% loyalty" badge computed on his 37 expressed votes. Floored so
+ *  0.4% deviation doesn't display as 100. Null without a denominator. */
+export function loyaltyPct(s: {
+  votes_for: number; votes_against: number; votes_abstention: number
+  deviations: number; chamber_votes: number; total_votes: number
+}): number | null {
+  const denom = s.chamber_votes || s.total_votes
+  if (!denom) return null
+  const expressed = (s.votes_for ?? 0) + (s.votes_against ?? 0) + (s.votes_abstention ?? 0)
+  return Math.floor(Math.max(0, expressed - (s.deviations ?? 0)) / denom * 100)
+}
+
 /** Constitution art. 66: ordinary sessions run Feb–Jun and Sep–Dec, so July,
  *  August and January are recess. Returns the next session start, or null when
  *  parliament is in session. Callers should also check that no recent vote
