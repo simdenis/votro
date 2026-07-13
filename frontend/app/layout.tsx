@@ -26,6 +26,9 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://labutoane.vercel.a
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
+  // per-page canonical on the real domain — the votro-beta.vercel.app mirror
+  // serves identical content and would otherwise split indexing
+  alternates: { canonical: './' },
   title: {
     default: 'LaButoane — Cum votează parlamentarii români',
     template: '%s | LaButoane',

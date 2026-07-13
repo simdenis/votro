@@ -6,6 +6,13 @@ const baseConfig: NextConfig = {
   // 308 them to the Romanian scheme.
   async redirects() {
     return [
+      // the *.vercel.app mirror must not compete with the real domain in Google
+      {
+        source: '/:path*',
+        has: [{ type: 'host', value: 'votro-beta.vercel.app' }],
+        destination: 'https://la-butoane.ro/:path*',
+        permanent: true,
+      },
       // :path* matches zero segments too, so these cover /votes and /votes/<id>
       { source: '/votes/:path*',    destination: '/voturi/:path*',   permanent: true },
       { source: '/senators/:path*', destination: '/senatori/:path*', permanent: true },
