@@ -145,13 +145,27 @@ export default async function Dashboard() {
                   <span className="text-[11px] text-faint ml-auto">{formatDate(vote.vote_date)}</span>
                   <OutcomeBadge outcome={vote.outcome} />
                 </div>
-                <h3 className="font-serif text-[17px] leading-[1.3] text-foreground line-clamp-1">
-                  {capFirst(vote.laws?.title ?? vote.description ?? '') || 'Vot de plen fără lege asociată'}
-                </h3>
-                {vote.laws?.summary && (
-                  <p className="text-[13px] text-muted leading-snug line-clamp-2 mt-1.5">
-                    {vote.laws.summary}
-                  </p>
+                {/* hierarchy: plain-language summary is the headline, the official
+                    title stays visible underneath as the verifiable receipt —
+                    an AI headline with no official anchor reads as editorializing */}
+                {vote.laws?.summary ? (
+                  <>
+                    <h3 className="font-serif text-[17px] leading-[1.3] text-foreground line-clamp-2">
+                      {vote.laws.summary}
+                    </h3>
+                    <p className="flex items-center gap-1.5 text-[12px] text-faint mt-1 min-w-0">
+                      {vote.laws.summary_is_ai && (
+                        <span className="text-[9px] uppercase font-semibold bg-raised px-[5px] py-[1px] rounded-[3px] flex-shrink-0">
+                          rezumat AI
+                        </span>
+                      )}
+                      <span className="truncate">{capFirst(vote.laws.title)}</span>
+                    </p>
+                  </>
+                ) : (
+                  <h3 className="font-serif text-[17px] leading-[1.3] text-foreground line-clamp-1">
+                    {capFirst(vote.laws?.title ?? vote.description ?? '') || 'Vot procedural (fără lege identificată)'}
+                  </h3>
                 )}
                 <div className="flex items-center gap-3 mt-2.5">
                   <div className="flex h-[6px] flex-1 rounded-[3px] overflow-hidden bg-raised">

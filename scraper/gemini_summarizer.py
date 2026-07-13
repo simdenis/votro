@@ -47,6 +47,8 @@ PROMPT = (
     "2006/112/CE”); spune în cuvinte ce înseamnă\n"
     "- 1-2 fraze scurte, maximum ~50 de cuvinte\n"
     "- folosește STRICT informația din document; nu inventa, nu adăuga opinii\n"
+    "- ton strict factual, fără adjective de evaluare („controversat”, „important”, "
+    "„binevenit”) — rezumatul apare ca titlu pe un site neafiliat politic\n"
     "Dacă documentul e ilizibil sau nu e o expunere de motive, răspunde exact: "
     "INDISPONIBIL. Răspunde doar cu explicația, fără preambul."
 )
