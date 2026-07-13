@@ -13,7 +13,7 @@ function FilterInner({ categories }: { categories: string[] }) {
     if (value) next.set(key, value)
     else next.delete(key)
     next.delete('page')
-    router.push(`/votes?${next.toString()}`)
+    router.push(`/voturi?${next.toString()}`)
   }
 
   const baseInput = 'border border-rim rounded-md text-sm px-3 py-1.5 bg-surface text-foreground focus:outline-none focus:ring-1 focus:ring-[#5050c0]'
@@ -59,7 +59,7 @@ function FilterInner({ categories }: { categories: string[] }) {
 
       {(params.get('outcome') || params.get('category') || params.get('from') || params.get('to')) && (
         <button
-          onClick={() => router.push('/votes')}
+          onClick={() => router.push('/voturi')}
           className="text-sm text-muted underline underline-offset-2"
         >
           Resetează filtrele

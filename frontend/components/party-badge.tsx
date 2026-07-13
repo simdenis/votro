@@ -21,7 +21,7 @@ export function PartyBadge({ abbreviation, color, size = 'sm', noLink }: Props) 
   }
   return (
     <Link
-      href={`/parties/${abbreviation}`}
+      href={`/partide/${abbreviation}`}
       className={`${cls} hover:opacity-75 transition-opacity`}
       style={{ backgroundColor: bg, color: fg }}
     >

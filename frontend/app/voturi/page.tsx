@@ -57,7 +57,7 @@ export default async function VotesPage({
     if (sp.to)       params.set('to', sp.to)
     if (p > 1)       params.set('page', String(p))
     const s = params.toString()
-    return `/votes${s ? `?${s}` : ''}`
+    return `/voturi${s ? `?${s}` : ''}`
   }
 
   return (
@@ -89,7 +89,7 @@ export default async function VotesPage({
               {votes.map(vote => (
                 <tr key={vote.id} className="border-b border-rim hover:bg-raised transition-colors">
                   <td className="py-3 pr-4">
-                    <Link href={`/votes/${vote.id}`} className="font-mono text-foreground hover:underline" style={{ color: 'var(--sidebar-bg)' }}>
+                    <Link href={`/voturi/${vote.id}`} className="font-mono text-foreground hover:underline" style={{ color: 'var(--sidebar-bg)' }}>
                       {vote.laws?.code ?? 'Plen'}
                     </Link>
                     <span className="block text-[9px] uppercase font-semibold text-faint mt-0.5">
@@ -97,18 +97,18 @@ export default async function VotesPage({
                     </span>
                   </td>
                   <td className="py-3 pr-4 max-w-sm">
-                    <Link href={`/votes/${vote.id}`} className="line-clamp-2 text-foreground hover:underline">
+                    <Link href={`/voturi/${vote.id}`} className="line-clamp-2 text-foreground hover:underline">
                       {vote.laws?.title ?? vote.description ?? 'Vot de plen fără lege asociată'}
                     </Link>
                     {vote.laws?.law_category && (
                       <div className="lg:hidden mt-1">
-                        <CategoryBadge category={vote.laws.law_category} className="text-[10px] px-1.5 py-px rounded" href={`/votes?category=${encodeURIComponent(vote.laws.law_category)}`} />
+                        <CategoryBadge category={vote.laws.law_category} className="text-[10px] px-1.5 py-px rounded" href={`/voturi?category=${encodeURIComponent(vote.laws.law_category)}`} />
                       </div>
                     )}
                   </td>
                   <td className="py-3 pr-4 hidden lg:table-cell">
                     {vote.laws?.law_category
-                      ? <CategoryBadge category={vote.laws.law_category} href={`/votes?category=${encodeURIComponent(vote.laws.law_category)}`} />
+                      ? <CategoryBadge category={vote.laws.law_category} href={`/voturi?category=${encodeURIComponent(vote.laws.law_category)}`} />
                       : <span className="text-faint text-xs">—</span>
                     }
                   </td>

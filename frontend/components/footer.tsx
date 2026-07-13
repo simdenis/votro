@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { getDB } from '@/lib/supabase'
-import { formatRelativeTime } from '@/lib/utils'
+import { formatRelativeTime, recessUntil } from '@/lib/utils'
 
 async function LastUpdated() {
   // Two different freshness facts: when the pipeline last ran successfully
@@ -15,8 +15,12 @@ async function LastUpdated() {
   const lastVote  = vote.data?.[0]?.vote_date as string | undefined
   if (!checkedAt) return <span>Actualizat zilnic</span>
   const stale = Date.now() - new Date(checkedAt).getTime() > 36 * 3_600_000
+  // A week-old "last vote" reads as a dead site when it's really just recess
+  const quiet  = lastVote && Date.now() - new Date(lastVote).getTime() > 7 * 86_400_000
+  const recess = quiet ? recessUntil() : null
   return (
     <span className={stale ? 'text-deviere' : ''}>
+      {recess ? `Parlamentul e în vacanță până la ${recess} · ` : ''}
       {lastVote ? `Ultimul vot: ${formatRelativeTime(lastVote)} · ` : ''}
       Verificat {formatRelativeTime(checkedAt)}{stale ? ' ⚠' : ''}
     </span>

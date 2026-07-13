@@ -89,8 +89,8 @@ export default async function SearchPage({
           <div className="bg-surface border border-rim rounded-xl overflow-hidden divide-y divide-rim">
             {politicians.map((p: any) => {
               const href = p.chamber === 'senate'
-                ? `/senators/${p.id}`
-                : `/deputies/${p.id}`
+                ? `/senatori/${p.id}`
+                : `/deputati/${p.id}`
               return (
                 <Link
                   key={p.id}

@@ -11,7 +11,7 @@ export default function NotFound() {
       </p>
       <div className="flex items-center justify-center gap-4 text-sm pt-2">
         <Link href="/" className="underline underline-offset-2 hover:text-foreground">Prima pagină</Link>
-        <Link href="/votes" className="underline underline-offset-2 hover:text-foreground">Voturi</Link>
+        <Link href="/voturi" className="underline underline-offset-2 hover:text-foreground">Voturi</Link>
         <Link href="/search" className="underline underline-offset-2 hover:text-foreground">Căutare</Link>
       </div>
     </div>

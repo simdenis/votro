@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
-import { formatDate, countNoun, hasPartyLine, capFirst } from '@/lib/utils'
+import { formatDate, countNoun, hasPartyLine, capFirst, recessUntil } from '@/lib/utils'
 import { OutcomeBadge } from '@/components/outcome-badge'
 import { ParliamentBar } from '@/components/parliament-bar'
 import { CountyMap } from '@/components/county-map'
@@ -17,15 +17,16 @@ export default async function Dashboard() {
 
   const [r0, r1, r2, r3, r4, r5, r6, r7, r8] = await Promise.all([
     db.from('law_status').select('*', { count: 'exact', head: true }),
-    db.from('party_cohesion').select('*').gte('votes_participated', 3).order('cohesion_pct', { ascending: false }),
+    // cohesion is computed on contested votes only (migration 027) — require
+    // enough of them for the percentage to mean something
+    db.from('party_cohesion').select('*').gte('votes_participated', 10).order('cohesion_pct', { ascending: false }),
     db.from('votes').select('*, laws(*)').order('vote_date', { ascending: false }).limit(8),
     db.from('law_status').select('*', { count: 'exact', head: true }).eq('presidential_status', 'promulgat'),
     db.from('law_status').select('*', { count: 'exact', head: true }).or('senate_outcome.eq.respins,camera_outcome.eq.respins'),
     db.from('parties').select('abbreviation, color, name'),
     db.from('politicians').select('party_id, parties(abbreviation)', { count: 'exact', head: false }).eq('active', true),
-    // Colțul rușinii — lowest presence since mandate start, both chambers.
-    // Government members (gov_role) never vote in plen — structural absence,
-    // not shame.
+    // Absențe top 5 — lowest presence since mandate start, both chambers.
+    // Government members (gov_role) never vote in plen — structural absence.
     db.from('senator_stats').select('politician_id, name, first_name, party_abbr, party_color, presence_pct')
       .eq('active', true).is('gov_role', null)
       .order('presence_pct', { ascending: true }).limit(5),
@@ -43,8 +44,8 @@ export default async function Dashboard() {
   const allParties    = r5.data ?? []
   type LowPresence = { politician_id: string; name: string; first_name: string; party_abbr: string; party_color: string; presence_pct: number; href: string }
   const lowPresence: LowPresence[] = [
-    ...((r7.data ?? []) as Omit<LowPresence, 'href'>[]).map(s => ({ ...s, href: `/senators/${s.politician_id}` })),
-    ...((r8.data ?? []) as Omit<LowPresence, 'href'>[]).map(s => ({ ...s, href: `/deputies/${s.politician_id}` })),
+    ...((r7.data ?? []) as Omit<LowPresence, 'href'>[]).map(s => ({ ...s, href: `/senatori/${s.politician_id}` })),
+    ...((r8.data ?? []) as Omit<LowPresence, 'href'>[]).map(s => ({ ...s, href: `/deputati/${s.politician_id}` })),
   ].sort((a, b) => a.presence_pct - b.presence_pct).slice(0, 5)
 
   const senatorCounts: Record<string, number> = {}
@@ -118,10 +119,21 @@ export default async function Dashboard() {
           <h2 className="font-serif text-[20px] font-normal text-foreground border-b-2 border-sidebar pb-[5px] mb-2">
             Voturi recente
           </h2>
+          {/* 12 days without votes reads as "abandoned site" when it's just recess */}
+          {(() => {
+            const last = recentVotes[0]?.vote_date
+            const quiet = last && Date.now() - new Date(last).getTime() > 7 * 86_400_000
+            const recess = quiet ? recessUntil() : null
+            return recess ? (
+              <p className="text-[12.5px] text-muted bg-raised rounded-md px-3 py-2 mt-2 mb-1">
+                Parlamentul e în vacanță până la {recess} — de aceea nu apar voturi noi.
+              </p>
+            ) : null
+          })()}
           {recentVotes.map(vote => {
             const tot = (vote.for_count ?? 0) + (vote.against_count ?? 0) + (vote.abstention_count ?? 0)
             return (
-              <Link key={vote.id} href={`/votes/${vote.id}`} className="block py-[18px] border-b border-rim hover:opacity-80 transition-opacity">
+              <Link key={vote.id} href={`/voturi/${vote.id}`} className="block py-[18px] border-b border-rim hover:opacity-80 transition-opacity">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-[11px] font-semibold tabular-nums" style={{ color: 'var(--sidebar-bg)' }}>
                     {vote.laws?.code ?? 'Plen'}
@@ -138,6 +150,11 @@ export default async function Dashboard() {
                 <h3 className="font-serif text-[17px] leading-[1.3] text-foreground line-clamp-1">
                   {capFirst(vote.laws?.title ?? vote.description ?? '') || 'Vot de plen fără lege asociată'}
                 </h3>
+                {vote.laws?.summary && (
+                  <p className="text-[13px] text-muted leading-snug line-clamp-2 mt-1.5">
+                    {vote.laws.summary}
+                  </p>
+                )}
                 <div className="flex items-center gap-3 mt-2.5">
                   <div className="flex h-[6px] flex-1 rounded-[3px] overflow-hidden bg-raised">
                     {(vote.for_count ?? 0) > 0 && <div style={{ flex: vote.for_count ?? 0, backgroundColor: 'var(--color-for)' }} />}
@@ -145,18 +162,18 @@ export default async function Dashboard() {
                     {(vote.abstention_count ?? 0) > 0 && <div style={{ flex: vote.abstention_count ?? 0, backgroundColor: 'var(--color-abstention)' }} />}
                   </div>
                   <span className="text-[12px] tabular-nums flex-shrink-0 font-medium">
-                    <span style={{ color: 'var(--color-for)' }}>{vote.for_count ?? 0}</span>
+                    <span style={{ color: 'var(--color-for)' }}>{vote.for_count ?? 0} pentru</span>
                     <span className="text-faint"> · </span>
-                    <span style={{ color: 'var(--color-against)' }}>{vote.against_count ?? 0}</span>
+                    <span style={{ color: 'var(--color-against)' }}>{vote.against_count ?? 0} împotrivă</span>
                     <span className="text-faint"> · </span>
-                    <span style={{ color: 'var(--color-abstention)' }}>{vote.abstention_count ?? 0}</span>
+                    <span style={{ color: 'var(--color-abstention)' }}>{vote.abstention_count ?? 0} {(vote.abstention_count ?? 0) === 1 ? 'abținere' : 'abțineri'}</span>
                   </span>
                 </div>
               </Link>
             )
           })}
           {recentVotes.length >= 8 && (
-            <Link href="/votes" className="inline-block mt-5 text-[13px] text-muted hover:text-foreground transition-colors">
+            <Link href="/voturi" className="inline-block mt-5 text-[13px] text-muted hover:text-foreground transition-colors">
               Toate voturile →
             </Link>
           )}
@@ -176,11 +193,11 @@ export default async function Dashboard() {
               <CountyMap />
             </div>
 
-            {/* Colțul rușinii — lowest plenary presence, both chambers */}
+            {/* Absențe — top 5: lowest plenary presence, both chambers */}
             {lowPresence.length > 0 && (
               <>
                 <h2 className="font-serif text-[16px] font-normal text-foreground border-b-2 border-respins/60 pb-[5px] mb-1">
-                  Colțul rușinii
+                  Absențe — top 5
                 </h2>
                 <p className="text-[11px] text-faint mb-3">absențe la voturile din plen · Senat + Cameră</p>
                 <div className="space-y-2">
@@ -201,14 +218,15 @@ export default async function Dashboard() {
               </>
             )}
 
-            <h2 className="font-serif text-[16px] font-normal text-foreground border-b-2 border-sidebar pb-[5px] mb-4 mt-10">
+            <h2 className="font-serif text-[16px] font-normal text-foreground border-b-2 border-sidebar pb-[5px] mb-1 mt-10">
               Coeziune partide
             </h2>
+            <p className="text-[11px] text-faint mb-3">doar voturi disputate — cele aproape unanime nu spun nimic</p>
             <div className="space-y-2">
               {cohesionData.map(c => (
                 <Link
                   key={c.party_id}
-                  href={`/parties/${c.abbreviation}`}
+                  href={`/partide/${c.abbreviation}`}
                   className="flex items-center justify-between bg-surface border border-rim rounded-lg px-3 py-2 hover:bg-raised transition-colors"
                   style={{ borderLeftWidth: 3, borderLeftColor: c.color }}
                 >

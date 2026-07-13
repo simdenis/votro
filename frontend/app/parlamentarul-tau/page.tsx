@@ -113,9 +113,9 @@ export default async function ParlamentarulTauPage({
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-10">
           {/* minorities seats exist only in the Camera — no empty Senate table */}
           {judet !== 'Minorități' && (
-            <MemberTable title={`Senatori — ${judet}`} members={senators} basePath="/senators" />
+            <MemberTable title={`Senatori — ${judet}`} members={senators} basePath="/senatori" />
           )}
-          <MemberTable title={`Deputați — ${judet}`} members={deputies} basePath="/deputies" />
+          <MemberTable title={`Deputați — ${judet}`} members={deputies} basePath="/deputati" />
         </div>
       )}
 

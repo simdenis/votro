@@ -36,7 +36,7 @@ export function ShameCard({ data }: { data: ShameCardData }) {
       <div style={{ display: 'flex', height: 1, margin: '0 64px', background: C.hair }} />
 
       <div style={{ display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'center', padding: '20px 64px' }}>
-        <div style={{ fontFamily: SERIF, fontSize: 64, lineHeight: 1.05, color: C.against }}>Colțul rușinii</div>
+        <div style={{ fontFamily: SERIF, fontSize: 64, lineHeight: 1.05, color: C.against }}>Absențe — top 5</div>
         <div style={{ display: 'flex', fontSize: 21, opacity: 0.55, marginTop: 10, marginBottom: 40 }}>
           absențe la voturile din plen, de la validarea mandatului · Senat + Cameră
         </div>

@@ -47,6 +47,13 @@ export default function DesprePage() {
           exprimate (pentru / împotrivă / abținere) contează. Parlamentarii neafiliați și grupul
           minorităților naționale nu au o linie de partid, deci nu calculăm devieri sau coeziune pentru ei.
         </p>
+        <p className="text-sm text-muted leading-relaxed">
+          Coeziunea unui partid se calculează <strong className="text-foreground">doar pe voturile
+          disputate</strong> — cele în care tabăra minoritară (pentru vs. împotrivă + abțineri) a strâns
+          cel puțin 20% din voturile exprimate. Majoritatea voturilor din plen sunt procedurale sau
+          aproape unanime; incluse în calcul, ar împinge toate partidele la 90%+ și cifra n-ar mai
+          spune nimic. Pe voturile disputate se vede diferența reală dintre partide.
+        </p>
       </section>
 
       <section className="space-y-3">
@@ -58,8 +65,13 @@ export default function DesprePage() {
         </p>
         <p className="text-sm text-muted leading-relaxed">
           Parlamentarii care fac parte din Guvern (premier, vicepremieri, miniștri) nu votează în
-          plen — sunt marcați cu o etichetă distinctă, nu apar în „Colțul rușinii" și nu intră în
+          plen — sunt marcați cu o etichetă distinctă, nu apar în topul absențelor și nu intră în
           media de absență a partidului, pentru că absența lor e structurală, nu o alegere.
+        </p>
+        <p className="text-sm text-muted leading-relaxed">
+          Sursele oficiale nu spun <em>de ce</em> lipsește cineva: o delegație parlamentară în
+          străinătate sau un concediu medical arată în date la fel ca o absență nemotivată. Afișăm
+          cifrele brute — interpretarea rămâne a cititorului.
         </p>
       </section>
 
@@ -76,8 +88,9 @@ export default function DesprePage() {
         </p>
         <p className="text-sm text-muted leading-relaxed">
           De aceea unele legi promulgate apar la noi fără votul uneia dintre camere: au fost
-          adoptate tacit (nu există un vot de consemnat) sau votul a avut loc înainte de perioada
-          acoperită de baza noastră de date. Le marcăm cu „Adoptată*".
+          adoptate tacit (nu există un vot de consemnat) sau votul a avut loc înainte de
+          2 februarie 2026, data de la care baza noastră de date acoperă voturile plenului.
+          Le marcăm cu „Adoptată*".
         </p>
       </section>
 
@@ -85,9 +98,11 @@ export default function DesprePage() {
         <h2 className="text-sm font-semibold uppercase tracking-widest text-muted">Rezumatele „Pe scurt"</h2>
         <p className="text-foreground leading-relaxed">
           Pentru multe legi afișăm un rezumat în limbaj simplu, generat automat (AI) din expunerea
-          de motive oficială — documentul în care inițiatorii explică ce vrea legea. Rezumatele
-          marcate „generat automat" pot conține imprecizii; linkul către PDF-ul oficial e mereu
-          alături. Tot automat atribuim și categoria legii (Sănătate, Justiție, Economie…).
+          de motive oficială — documentul în care inițiatorii explică ce vrea legea. Important:
+          expunerea de motive e <strong>argumentația inițiatorilor</strong>, nu o analiză neutră —
+          rezumatul îi preia inevitabil perspectiva. Citiți-l ca „ce spun inițiatorii că face legea";
+          linkul către PDF-ul oficial e mereu alături. Tot automat atribuim și categoria legii
+          (Sănătate, Justiție, Economie…).
         </p>
       </section>
 

@@ -75,7 +75,7 @@ export default async function DeputyPage({
       history={history ?? []}
       deviationRows={(r3.data as VoteHistoryRow[] | null) ?? []}
       partyHistory={(r4.data as PartyHistoryEntry[] | null) ?? []}
-      basePath="/deputies"
+      basePath="/deputati"
       chamberLabel="Camera Deputaților"
       siteUrl={SITE_URL}
     />

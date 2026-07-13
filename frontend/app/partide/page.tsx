@@ -28,7 +28,9 @@ export default async function PartiesPage() {
       <div>
         <h1 className="font-serif text-[30px] sm:text-[40px] font-normal tracking-[-0.01em] leading-[1.05] text-foreground">Partide</h1>
         <p className="text-[12.5px] text-muted mt-1.5">
-          Coeziunea se calculează pe baza <strong className="text-foreground">afilierii curente</strong> a parlamentarilor.
+          Coeziunea se calculează pe baza <strong className="text-foreground">afilierii curente</strong> a
+          parlamentarilor, doar pe <strong className="text-foreground">voturile disputate</strong> (tabăra
+          minoritară ≥ 20% din voturile exprimate) — voturile aproape unanime nu diferențiază partidele.
         </p>
       </div>
       {!parties?.length ? (
@@ -38,7 +40,7 @@ export default async function PartiesPage() {
           {parties.map(p => (
             <Link
               key={p.party_id}
-              href={`/parties/${p.abbreviation}`}
+              href={`/partide/${p.abbreviation}`}
               className="border border-rim rounded-xl p-5 bg-surface hover:bg-raised transition-colors block"
             >
               <div className="flex items-start justify-between mb-4">
