@@ -67,6 +67,19 @@ function outcomeCell(outcome: 'adoptat' | 'respins' | null, voteId: string | nul
   )
 }
 
+/** Sub-md the three outcome columns collapse into this compact line under the
+    title — the full table forced sideways swiping on phones. */
+function stageChip(label: string, outcome: 'adoptat' | 'respins' | null, voteId: string | null, passed: boolean) {
+  const mark = voteId
+    ? (outcome === 'respins'
+        ? <span className="text-respins font-bold">✗</span>
+        : <span className="text-adoptat font-bold">✓</span>)
+    : passed
+      ? <span className="text-adoptat/80">✓*</span>
+      : <span className="text-faint">—</span>
+  return <span className="whitespace-nowrap text-muted">{label} {mark}</span>
+}
+
 function presidentCell(status: PresidentialStatus | null, date: string | null) {
   if (!status) {
     return <span className="text-xs text-faint">—</span>
@@ -220,9 +233,9 @@ export default async function LegiPage({
                 <th className="text-left py-2.5 pr-4 font-medium">Cod</th>
                 <th className="text-left py-2.5 pr-4 font-medium">Titlu</th>
                 <th className="text-left py-2.5 pr-4 font-medium hidden lg:table-cell">Categorie</th>
-                <th className="text-left py-2.5 pr-4 font-medium">Senat</th>
-                <th className="text-left py-2.5 pr-4 font-medium">Camera</th>
-                <th className="text-left py-2.5 pr-4 font-medium">Președinte</th>
+                <th className="text-left py-2.5 pr-4 font-medium hidden md:table-cell">Senat</th>
+                <th className="text-left py-2.5 pr-4 font-medium hidden md:table-cell">Camera</th>
+                <th className="text-left py-2.5 font-medium hidden md:table-cell">Președinte</th>
               </tr>
             </thead>
             <tbody>
@@ -245,19 +258,34 @@ export default async function LegiPage({
                       )}
                       <BaseLawBadges title={law.title} />
                     </div>
+                    <div className="md:hidden mt-1.5 flex items-center gap-3 text-[11px]">
+                      {stageChip('Senat', law.senate_outcome, law.senate_vote_id, !!law.presidential_status)}
+                      {stageChip('Cameră', law.camera_outcome, law.camera_vote_id, !!law.presidential_status)}
+                      {law.presidential_status && (
+                        <span className={`whitespace-nowrap font-medium ${
+                          law.presidential_status === 'promulgat' ? 'text-adoptat'
+                          : law.presidential_status === 'retrimis' ? 'text-respins'
+                          : 'text-amber-500'
+                        }`}>
+                          {law.presidential_status === 'promulgat' ? 'Promulgată'
+                            : law.presidential_status === 'retrimis' ? 'Retrimisă'
+                            : 'CCR'}
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td className="py-3 pr-4 hidden lg:table-cell">
                     {law.law_category
                       ? <CategoryBadge category={law.law_category} />
                       : <span className="text-faint text-xs">—</span>}
                   </td>
-                  <td className="py-3 pr-4">
+                  <td className="py-3 pr-4 hidden md:table-cell">
                     {outcomeCell(law.senate_outcome, law.senate_vote_id, law.senate_vote_date, !!law.presidential_status)}
                   </td>
-                  <td className="py-3 pr-4">
+                  <td className="py-3 pr-4 hidden md:table-cell">
                     {outcomeCell(law.camera_outcome, law.camera_vote_id, law.camera_vote_date, !!law.presidential_status)}
                   </td>
-                  <td className="py-3">
+                  <td className="py-3 hidden md:table-cell">
                     {presidentCell(law.presidential_status, law.presidential_date)}
                   </td>
                 </tr>
