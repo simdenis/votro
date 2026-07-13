@@ -231,7 +231,8 @@ export default async function Dashboard() {
                   style={{ borderLeftWidth: 3, borderLeftColor: c.color }}
                 >
                   <span className="text-[13px] font-medium text-foreground">{c.abbreviation}</span>
-                  <span className="text-[13px] font-semibold tabular-nums text-foreground">{c.cohesion_pct?.toFixed(0)}%</span>
+                  {/* one decimal — whole-percent rounding collapses 99.3 and 98.5 into the same "99" */}
+                  <span className="text-[13px] font-semibold tabular-nums text-foreground">{c.cohesion_pct?.toFixed(1)}%</span>
                 </Link>
               ))}
             </div>
