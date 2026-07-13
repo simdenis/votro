@@ -96,8 +96,8 @@ export default async function PartyPage({ params }: { params: Promise<{ abbr: st
       {/* Members — two columns: senators | deputies */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-10">
       {[
-        { label: 'Senatori', members: senators, basePath: '/senators' },
-        { label: 'Deputați',  members: deputies,  basePath: '/deputies' },
+        { label: 'Senatori', members: senators, basePath: '/senatori' },
+        { label: 'Deputați',  members: deputies,  basePath: '/deputati' },
       ].map(({ label, members, basePath }) => (
         <div key={label}>
           <h2 className="text-xs font-semibold uppercase tracking-widest text-muted mb-4">
@@ -170,7 +170,7 @@ export default async function PartyPage({ params }: { params: Promise<{ abbr: st
                 {recentVotes.map(v => (
                   <tr key={v.vote_id} className="border-b border-rim hover:bg-raised transition-colors">
                     <td className="py-2.5 px-3">
-                      <Link href={`/votes/${v.vote_id}`} className="font-mono hover:underline text-foreground">
+                      <Link href={`/voturi/${v.vote_id}`} className="font-mono hover:underline text-foreground">
                         {v.law_code}
                       </Link>
                     </td>

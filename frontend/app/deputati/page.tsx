@@ -7,11 +7,11 @@ import { SectionNav, PARLAMENTARI_SECTIONS } from '@/components/section-nav'
 
 export const revalidate = 3600
 export const metadata: Metadata = {
-  title: 'Senatori',
-  description: 'Lista senatorilor români cu rata de deviere față de linia de partid.',
+  title: 'Deputați',
+  description: 'Lista deputaților români cu rata de deviere față de linia de partid.',
 }
 
-export default async function SenatorsPage({
+export default async function DeputiesPage({
   searchParams,
 }: {
   searchParams: Promise<{ sort?: string; dir?: string }>
@@ -20,7 +20,7 @@ export default async function SenatorsPage({
   const sort = sp.sort ?? 'name'
   const dir  = sp.dir === 'desc'
 
-  let query = getDB().from('senator_stats').select('*').eq('active', true)
+  let query = getDB().from('deputy_stats').select('*').eq('active', true)
   if (sort === 'party') {
     query = query.order('party_abbr', { ascending: !dir, nullsFirst: false }).order('name', { ascending: true })
   } else if (sort === 'absence') {
@@ -47,8 +47,8 @@ export default async function SenatorsPage({
     <div>
       <SectionNav items={PARLAMENTARI_SECTIONS} />
       <PoliticianList
-      title="Senatori"
-      basePath="/senators"
+      title="Deputați"
+      basePath="/deputati"
       people={data ?? []}
       sort={sort}
       dir={dir}

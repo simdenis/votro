@@ -73,7 +73,7 @@ export default async function SenatorProfile({
       history={(r1.data as VoteHistoryRow[] | null) ?? []}
       deviationRows={(r3.data as VoteHistoryRow[] | null) ?? []}
       partyHistory={(r4.data as PartyHistoryEntry[] | null) ?? []}
-      basePath="/senators"
+      basePath="/senatori"
       chamberLabel="Senat"
       siteUrl={SITE_URL}
     />

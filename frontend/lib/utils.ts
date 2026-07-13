@@ -94,6 +94,17 @@ export function pct(n: number | null | undefined): string {
   return `${n.toFixed(1)}%`
 }
 
+/** Constitution art. 66: ordinary sessions run Feb–Jun and Sep–Dec, so July,
+ *  August and January are recess. Returns the next session start, or null when
+ *  parliament is in session. Callers should also check that no recent vote
+ *  exists — extraordinary sessions can happen during recess. */
+export function recessUntil(now: Date = new Date()): string | null {
+  const m = now.getMonth()
+  if (m === 6 || m === 7) return '1 septembrie'
+  if (m === 0) return '1 februarie'
+  return null
+}
+
 export function formatRelativeTime(dateStr: string | null | undefined): string {
   if (!dateStr) return '—'
   const diff = Date.now() - new Date(dateStr).getTime()

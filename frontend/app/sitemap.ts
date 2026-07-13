@@ -17,21 +17,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const statics: MetadataRoute.Sitemap = [
     { url: base, changeFrequency: 'daily', priority: 1 },
-    { url: `${base}/votes`, changeFrequency: 'daily', priority: 0.9 },
+    { url: `${base}/voturi`, changeFrequency: 'daily', priority: 0.9 },
     { url: `${base}/legi`, changeFrequency: 'daily', priority: 0.9 },
     { url: `${base}/saptamana`, changeFrequency: 'daily', priority: 0.8 },
     { url: `${base}/tacite`, changeFrequency: 'daily', priority: 0.7 },
     { url: `${base}/parlamentarul-tau`, changeFrequency: 'weekly', priority: 0.7 },
-    { url: `${base}/senators`, changeFrequency: 'weekly', priority: 0.8 },
-    { url: `${base}/deputies`, changeFrequency: 'weekly', priority: 0.8 },
-    { url: `${base}/parties`, changeFrequency: 'weekly', priority: 0.7 },
+    { url: `${base}/senatori`, changeFrequency: 'weekly', priority: 0.8 },
+    { url: `${base}/deputati`, changeFrequency: 'weekly', priority: 0.8 },
+    { url: `${base}/partide`, changeFrequency: 'weekly', priority: 0.7 },
     { url: `${base}/traseisti`, changeFrequency: 'weekly', priority: 0.6 },
     { url: `${base}/despre`, changeFrequency: 'monthly', priority: 0.4 },
     { url: `${base}/contribuie`, changeFrequency: 'monthly', priority: 0.3 },
   ]
 
   const voteUrls: MetadataRoute.Sitemap = (votes.data ?? []).map(v => ({
-    url: `${base}/votes/${v.id}`,
+    url: `${base}/voturi/${v.id}`,
     lastModified: v.vote_date,
     changeFrequency: 'yearly',
     priority: 0.6,
@@ -44,19 +44,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }))
 
   const senatorUrls: MetadataRoute.Sitemap = (senators.data ?? []).map(s => ({
-    url: `${base}/senators/${s.politician_id}`,
+    url: `${base}/senatori/${s.politician_id}`,
     changeFrequency: 'weekly',
     priority: 0.5,
   }))
 
   const deputyUrls: MetadataRoute.Sitemap = (deputies.data ?? []).map(d => ({
-    url: `${base}/deputies/${d.politician_id}`,
+    url: `${base}/deputati/${d.politician_id}`,
     changeFrequency: 'weekly',
     priority: 0.5,
   }))
 
   const partyUrls: MetadataRoute.Sitemap = (parties.data ?? []).map(p => ({
-    url: `${base}/parties/${p.abbreviation}`,
+    url: `${base}/partide/${p.abbreviation}`,
     changeFrequency: 'weekly',
     priority: 0.5,
   }))

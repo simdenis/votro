@@ -95,7 +95,7 @@ def build_vote_caption(cfg: Config, vote: dict) -> str:
     outcome = vote.get("outcome")
     verdict = {"adoptat": "ADOPTAT ✅", "respins": "RESPINS ❌"}.get(outcome, "")
     fc, ac, bc = vote.get("for_count") or 0, vote.get("against_count") or 0, vote.get("abstention_count") or 0
-    link = f"{cfg.site_url}/votes/{vote['id']}"
+    link = f"{cfg.site_url}/voturi/{vote['id']}"
 
     summary = (law.get("summary") or "").strip()
 
@@ -390,7 +390,7 @@ def post_shame(cfg: Config, dry_run: bool = False) -> str | None:
     entries.sort(reverse=True)
     top = entries[:5]
 
-    lines = ["🔴 Colțul rușinii — cei mai absenți parlamentari", "",
+    lines = ["🔴 Absențe — top 5: cei mai absenți parlamentari", "",
              "Absențe la voturile din plen, de la validarea mandatului:", ""]
     lines += [f"{i+1}. {name} ({party}, {chamber}) — {pct}% absențe"
               for i, (pct, name, party, chamber) in enumerate(top)]

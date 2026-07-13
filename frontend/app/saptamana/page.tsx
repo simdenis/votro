@@ -59,7 +59,7 @@ export default async function SaptamanaPage() {
             {dayVotes.map(vote => (
               <Link
                 key={vote.id}
-                href={`/votes/${vote.id}`}
+                href={`/voturi/${vote.id}`}
                 className="bg-surface border border-rim rounded-xl px-4 py-3.5 flex items-center gap-3 hover:-translate-y-px hover:shadow-sm transition-all"
                 style={{
                   borderLeftWidth: 4,

@@ -2,6 +2,17 @@ import withPWA from '@ducanh2912/next-pwa'
 import type { NextConfig } from 'next'
 
 const baseConfig: NextConfig = {
+  // English slugs lived at launch (shared links, IG posts, Google index) —
+  // 308 them to the Romanian scheme.
+  async redirects() {
+    return [
+      // :path* matches zero segments too, so these cover /votes and /votes/<id>
+      { source: '/votes/:path*',    destination: '/voturi/:path*',   permanent: true },
+      { source: '/senators/:path*', destination: '/senatori/:path*', permanent: true },
+      { source: '/deputies/:path*', destination: '/deputati/:path*', permanent: true },
+      { source: '/parties/:path*',  destination: '/partide/:path*',  permanent: true },
+    ]
+  },
   async headers() {
     return [
       {

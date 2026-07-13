@@ -111,7 +111,7 @@ export default async function VoteDetail({
   const deviatorCount = senatorVotes?.filter(sv => sv.party_line_deviation).length ?? 0
   const sourceUrl     = voteSourceUrl(vote)
   const isDep         = vote.chamber === 'deputies'
-  const memberPath    = isDep ? '/deputies' : '/senators'
+  const memberPath    = isDep ? '/deputati' : '/senatori'
   const memberNoun    = (n: number) =>
     isDep ? countNoun(n, 'deputat', 'deputați') : countNoun(n, 'senator', 'senatori')
 
@@ -136,7 +136,7 @@ export default async function VoteDetail({
       <div className="bg-surface" style={{ borderLeft: `3px solid ${heroColor}`, paddingLeft: 16 }}>
         {/* Breadcrumb */}
         <div className="flex items-center gap-1.5 text-xs text-muted mb-3">
-          <Link href="/votes" className="hover:text-foreground transition-colors">Voturi</Link>
+          <Link href="/voturi" className="hover:text-foreground transition-colors">Voturi</Link>
           <span className="text-faint">›</span>
           {vote.law_id && vote.laws ? (
             <Link href={`/legi/${vote.law_id}`} className="hover:text-foreground transition-colors font-semibold">
@@ -193,8 +193,8 @@ export default async function VoteDetail({
         <div className="mt-3 pt-3 border-t border-rim/50 flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-3 flex-wrap">
             <ShareButtons
-              url={`${SITE_URL}/votes/${vote.id}`}
-              tweet={`${vote.laws?.code ?? 'Vot de plen'} — ${(vote.laws?.title ?? vote.description ?? 'vot fără lege asociată').slice(0, 80)}. ${vote.outcome === 'adoptat' ? 'Adoptat' : vote.outcome === 'respins' ? 'Respins' : ''} cu ${vote.for_count ?? 0} pentru și ${vote.against_count ?? 0} împotrivă. ${SITE_URL}/votes/${vote.id}`}
+              url={`${SITE_URL}/voturi/${vote.id}`}
+              tweet={`${vote.laws?.code ?? 'Vot de plen'} — ${(vote.laws?.title ?? vote.description ?? 'vot fără lege asociată').slice(0, 80)}. ${vote.outcome === 'adoptat' ? 'Adoptat' : vote.outcome === 'respins' ? 'Respins' : ''} cu ${vote.for_count ?? 0} pentru și ${vote.against_count ?? 0} împotrivă. ${SITE_URL}/voturi/${vote.id}`}
             />
             <CardDownload href={`/api/og/votecard?vote=${vote.id}`} filename={`labutoane-${(vote.laws?.code ?? 'vot').replace(/[^\w]+/g, '-')}.png`} />
             {deviatorCount > 0 && (
@@ -225,7 +225,7 @@ export default async function VoteDetail({
           <p className="text-[11px] font-semibold uppercase tracking-widest text-muted mb-2">Pe scurt</p>
           <p className="text-[15px] text-foreground leading-relaxed">{vote.laws.summary}</p>
           <div className="mt-3.5 pt-3 border-t border-rim flex items-center justify-between gap-x-4 gap-y-1.5 flex-wrap text-[11px] text-faint">
-            {vote.laws.summary_is_ai && <span>Rezumat generat automat</span>}
+            {vote.laws.summary_is_ai && <span>Rezumat AI al argumentelor inițiatorilor</span>}
             {vote.laws.em_url && (
               <a href={vote.laws.em_url} target="_blank" rel="noopener noreferrer" className="hover:text-foreground underline underline-offset-2">
                 Sursa: expunerea de motive (PDF)

@@ -165,7 +165,7 @@ export function PoliticianProfile({ stats, history, deviationRows, partyHistory,
                 <div key={row.id} className="flex items-center gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-deviere flex-shrink-0" />
                   <Link
-                    href={`/votes/${row.vote_id}`}
+                    href={`/voturi/${row.vote_id}`}
                     className="font-mono text-xs text-muted hover:text-foreground transition-colors w-20 flex-shrink-0"
                   >
                     {row.votes.laws?.code ?? '—'}
@@ -197,7 +197,7 @@ export function PoliticianProfile({ stats, history, deviationRows, partyHistory,
             {history.map(row => (
               <Link
                 key={row.id}
-                href={`/votes/${row.vote_id}`}
+                href={`/voturi/${row.vote_id}`}
                 className="flex items-center gap-3 px-4 py-3 hover:bg-raised transition-colors"
                 style={row.party_line_deviation ? { backgroundColor: 'oklch(98% 0.02 80)' } : undefined}
               >

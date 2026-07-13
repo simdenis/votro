@@ -11,13 +11,13 @@ export interface SectionItem {
 // Section groupings behind the 5 top-level tabs.
 export const LEGI_SECTIONS: SectionItem[] = [
   { href: '/legi', label: 'Legi' },
-  { href: '/votes', label: 'Voturi' },
+  { href: '/voturi', label: 'Voturi' },
   { href: '/tacite', label: 'Legi tacite' },
 ]
 
 export const PARLAMENTARI_SECTIONS: SectionItem[] = [
-  { href: '/senators', label: 'Senatori' },
-  { href: '/deputies', label: 'Deputați' },
+  { href: '/senatori', label: 'Senatori' },
+  { href: '/deputati', label: 'Deputați' },
   { href: '/traseisti', label: 'Traseiști' },
   { href: '/parlamentarul-tau', label: 'Parlamentarul tău' },
 ]

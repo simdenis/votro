@@ -98,7 +98,7 @@ export default async function LawDetail({ params }: { params: Promise<{ id: stri
             <p className="text-[11px] font-semibold uppercase tracking-widest text-muted mb-2">Pe scurt</p>
             <p className="text-[15px] text-foreground leading-relaxed">{law.summary}</p>
             <div className="mt-3.5 pt-3 border-t border-rim flex items-center justify-between gap-x-4 gap-y-1.5 flex-wrap text-[11px] text-faint">
-              {law.summary_is_ai && <span>Rezumat generat automat</span>}
+              {law.summary_is_ai && <span>Rezumat AI al argumentelor inițiatorilor</span>}
               {law.em_url && (
                 <a href={law.em_url} target="_blank" rel="noopener noreferrer" className="hover:text-foreground underline underline-offset-2">
                   Sursa: expunerea de motive (PDF)
@@ -142,7 +142,7 @@ export default async function LawDetail({ params }: { params: Promise<{ id: stri
             <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
               {initiators.map(i => {
                 const href = i.politician_id
-                  ? `/${i.politicians?.chamber === 'deputies' ? 'deputies' : 'senators'}/${i.politician_id}`
+                  ? `/${i.politicians?.chamber === 'deputies' ? 'deputati' : 'senatori'}/${i.politician_id}`
                   : null
                 const label = `${i.name_raw}${i.party_raw ? ` (${i.party_raw})` : ''}`
                 return href ? (
@@ -339,7 +339,7 @@ function ChamberSection({
           )}
 
           <Link
-            href={`/votes/${voteId}`}
+            href={`/voturi/${voteId}`}
             className="inline-flex text-xs text-muted hover:text-foreground transition-colors"
           >
             Vezi voturi individuale →

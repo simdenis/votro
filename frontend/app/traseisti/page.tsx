@@ -42,7 +42,7 @@ export default async function TraseistiPage() {
             {senate.length} din Senat, {camera.length} din Cameră.
           </p>
 
-          {([['Senat', senate, '/senators'], ['Camera Deputaților', camera, '/deputies']] as const).map(
+          {([['Senat', senate, '/senatori'], ['Camera Deputaților', camera, '/deputati']] as const).map(
             ([label, group, base]) =>
               group.length > 0 && (
                 <section key={label}>
