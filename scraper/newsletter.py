@@ -225,6 +225,11 @@ def main() -> None:
         sys.exit("pass --dry-run (preview) or --send")
 
     data = Data().week(args.days, args.top)
+    # Recess guard: an empty week means parliament is on vacation (Jul/Aug/Jan)
+    # or simply idle — either way an empty digest erodes trust. Skip the send.
+    if not data["votes_total"]:
+        print("No votes this week (recess?) — skipping newsletter.")
+        return
     site = os.environ.get("SITE_URL", "https://labutoane.vercel.app").rstrip("/")
     subject, body = render(data, site)
 

@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
-import { formatDate, formatDateShort, countNoun , capFirst } from '@/lib/utils'
+import { formatDate, formatDateShort, countNoun, capFirst, lastSessionRange } from '@/lib/utils'
 import { OutcomeBadge } from '@/components/outcome-badge'
 import { MiniVoteBar } from '@/components/mini-vote-bar'
 import { CardDownload } from '@/components/card-download'
@@ -25,6 +25,25 @@ export default async function SaptamanaPage() {
 
   const votes = (data as VoteWithLaw[] | null) ?? []
 
+  // Recess mode: an empty week during vacation gets the just-ended session in
+  // numbers instead of a dead "no votes" message.
+  const session = votes.length === 0 ? lastSessionRange() : null
+  let sessionStats: { votes: number; adopted: number; rejected: number; deviations: number } | null = null
+  if (session) {
+    const db = getDB()
+    const inRange = () => db.from('votes').select('id', { count: 'exact', head: true })
+      .gte('vote_date', session.from).lte('vote_date', session.to)
+    const [t, a, r, d] = await Promise.all([
+      inRange(),
+      inRange().eq('outcome', 'adoptat'),
+      inRange().eq('outcome', 'respins'),
+      db.from('politician_votes').select('id, votes!inner(vote_date)', { count: 'exact', head: true })
+        .eq('party_line_deviation', true)
+        .gte('votes.vote_date', session.from).lte('votes.vote_date', session.to),
+    ])
+    sessionStats = { votes: t.count ?? 0, adopted: a.count ?? 0, rejected: r.count ?? 0, deviations: d.count ?? 0 }
+  }
+
   // Group by date
   const byDate = new Map<string, VoteWithLaw[]>()
   for (const v of votes) {
@@ -41,13 +60,47 @@ export default async function SaptamanaPage() {
       </div>
 
       <div className="flex">
-        <CardDownload href="/api/og/weekcard" filename="labutoane-saptamana.png" label="Card recap săptămânal" />
+        <CardDownload
+          href="/api/og/weekcard"
+          filename={session ? 'labutoane-sesiune.png' : 'labutoane-saptamana.png'}
+          label={session ? 'Card recap sesiune' : 'Card recap săptămânal'}
+        />
       </div>
 
-      {votes.length === 0 && (
+      {votes.length === 0 && !sessionStats && (
         <p className="text-sm text-muted py-8">
           Nu au fost voturi în ultimele 7 zile.
         </p>
+      )}
+
+      {session && sessionStats && (
+        <div className="space-y-4">
+          <p className="text-sm text-muted">
+            Parlamentul e în vacanță — sesiunea următoare începe în {session.label.startsWith('februarie') ? 'septembrie' : 'februarie'}.
+            Între timp, sesiunea {session.label} în cifre:
+          </p>
+          <div className="grid grid-cols-2 sm:grid-cols-4 border-t-2 border-sidebar">
+            {[
+              { value: sessionStats.votes,      label: 'voturi în plen',   color: 'var(--text)' },
+              { value: sessionStats.adopted,    label: 'adoptate',         color: 'var(--color-for)' },
+              { value: sessionStats.rejected,   label: 'respinse',         color: 'var(--color-against)' },
+              { value: sessionStats.deviations, label: 'devieri de la partid', color: 'var(--color-deviation)' },
+            ].map((s, i) => (
+              <div key={s.label} className={`py-4 pr-4 ${i > 0 ? 'sm:border-l border-rim sm:pl-4' : ''}`}>
+                <div className="text-[30px] font-bold tabular-nums leading-none" style={{ color: s.color }}>{s.value}</div>
+                <div className="text-[12px] text-muted mt-1.5">{s.label}</div>
+              </div>
+            ))}
+          </div>
+          <div className="flex gap-4 text-sm">
+            <Link href={`/voturi?from=${session.from}&to=${session.to}`} className="text-muted hover:text-foreground underline underline-offset-2">
+              Toate voturile sesiunii →
+            </Link>
+            <Link href="/legi" className="text-muted hover:text-foreground underline underline-offset-2">
+              Legile urmărite →
+            </Link>
+          </div>
+        </div>
       )}
 
       {Array.from(byDate.entries()).map(([date, dayVotes]) => (

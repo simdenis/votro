@@ -1,8 +1,11 @@
 import { ImageResponse } from 'next/og'
 import { WeekCard, type WeekCardData, type WeekHighlight } from '@/components/cards/week-card'
 import { getCardFonts } from '@/lib/og-fonts'
+import { lastSessionRange } from '@/lib/utils'
 
 // 1080×1350 (4:5) weekly recap — /api/og/weekcard  (last 7 days; ?to=YYYY-MM-DD to pin the end)
+// During recess an empty week auto-falls back to a recap of the whole
+// just-ended session, so the weekly IG post never renders a zero card.
 
 export const runtime = 'edge'
 
@@ -18,14 +21,7 @@ function rangeLabel(from: Date, to: Date): string {
   return `${f}–${to.getUTCDate()} ${MONTHS[to.getUTCMonth()]} ${to.getUTCFullYear()}`
 }
 
-export async function GET(request: Request) {
-  const toParam = new URL(request.url).searchParams.get('to')
-  const toDate = toParam && /^\d{4}-\d{2}-\d{2}$/.test(toParam) ? new Date(`${toParam}T00:00:00Z`) : null
-  const to = toDate && !Number.isNaN(toDate.getTime()) ? toDate : new Date()
-  const from = new Date(to.getTime() - 6 * 86_400_000)
-  const fromISO = from.toISOString().slice(0, 10)
-  const toISO = to.toISOString().slice(0, 10)
-
+async function fetchRange(fromISO: string, toISO: string) {
   const [votesRes, devRes] = await Promise.all([
     fetch(
       `${U}/rest/v1/votes?vote_date=gte.${fromISO}&vote_date=lte.${toISO}` +
@@ -41,6 +37,26 @@ export async function GET(request: Request) {
   const votes: any[] = (await votesRes.json()) ?? []
   const devRange = devRes.headers.get('content-range')?.split('/')[1]
   const deviations = devRange && devRange !== '*' ? Number(devRange) : 0
+  return { votes, deviations }
+}
+
+export async function GET(request: Request) {
+  const toParam = new URL(request.url).searchParams.get('to')
+  const toDate = toParam && /^\d{4}-\d{2}-\d{2}$/.test(toParam) ? new Date(`${toParam}T00:00:00Z`) : null
+  const to = toDate && !Number.isNaN(toDate.getTime()) ? toDate : new Date()
+  const from = new Date(to.getTime() - 6 * 86_400_000)
+
+  let { votes, deviations } = await fetchRange(from.toISOString().slice(0, 10), to.toISOString().slice(0, 10))
+  let rangeText: string | null = null
+  let labels: Pick<WeekCardData, 'kicker' | 'title' | 'highlightLabel'> = {}
+
+  // Recess fallback: empty week + vacation calendar → whole-session recap
+  const session = votes.length === 0 && !toParam ? lastSessionRange() : null
+  if (session) {
+    ;({ votes, deviations } = await fetchRange(session.from, session.to))
+    rangeText = session.label
+    labels = { kicker: 'RECAP SESIUNE', title: 'Sesiunea în Parlament', highlightLabel: 'Cel mai strâns vot al sesiunii' }
+  }
 
   const decided = votes.filter(v => v.outcome && (v.for_count ?? 0) + (v.against_count ?? 0) > 20)
   // prefer votes on actual bills — a procedural "vot de plen" is a dull highlight
@@ -62,7 +78,8 @@ export async function GET(request: Request) {
     : null
 
   const data: WeekCardData = {
-    rangeLabel: rangeLabel(from, to),
+    ...labels,
+    rangeLabel: rangeText ?? rangeLabel(from, to),
     totalVotes: votes.length,
     adopted: votes.filter(v => v.outcome === 'adoptat').length,
     rejected: votes.filter(v => v.outcome === 'respins').length,

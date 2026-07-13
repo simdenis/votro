@@ -69,11 +69,13 @@ export default async function PartiesPage() {
                   </div>
                   <div className="text-xs text-muted">Coeziune</div>
                 </div>
+                {/* rate, not raw count — raw deviations scale with member count ×
+                    votes cast, so big present parties look worse than they are */}
                 <div>
                   <div className="text-2xl font-semibold tabular-nums text-deviere">
-                    {p.deviation_count}
+                    {p.total_active_votes ? (p.deviation_count / p.total_active_votes * 100).toFixed(1) : '—'}
                   </div>
-                  <div className="text-xs text-muted">Devieri</div>
+                  <div className="text-xs text-muted">Devieri / 100 voturi</div>
                 </div>
                 {absenceByParty[p.party_id] != null && (
                   <div>

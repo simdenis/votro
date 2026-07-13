@@ -19,6 +19,10 @@ export interface WeekCardData {
   senateVotes: number
   cameraVotes: number
   closest: WeekHighlight | null
+  /** Recess mode renders the whole just-ended session instead of a week. */
+  kicker?: string         // default "RECAP SĂPTĂMÂNAL"
+  title?: string          // default "Săptămâna în Parlament"
+  highlightLabel?: string // default "Cel mai strâns vot al săptămânii"
 }
 
 const C = {
@@ -47,12 +51,12 @@ export function WeekCard({ data }: { data: WeekCardData }) {
     <div style={{ width: 1080, height: 1350, display: 'flex', flexDirection: 'column', background: C.bg, color: C.text, fontFamily: SANS }}>
 
       <div style={{ display: 'flex', alignItems: 'center', padding: '36px 64px 22px' }}>
-        <div style={{ display: 'flex', fontFamily: MONO, fontSize: 16, letterSpacing: 2.5, textTransform: 'uppercase', color: '#6E7480' }}>RECAP SĂPTĂMÂNAL</div>
+        <div style={{ display: 'flex', fontFamily: MONO, fontSize: 16, letterSpacing: 2.5, textTransform: 'uppercase', color: '#6E7480' }}>{data.kicker ?? 'RECAP SĂPTĂMÂNAL'}</div>
       </div>
       <div style={{ display: 'flex', height: 1, margin: '0 64px', background: C.hair }} />
 
       <div style={{ display: 'flex', flexDirection: 'column', flex: 1, padding: '46px 64px 0' }}>
-        <div style={{ fontFamily: SERIF, fontSize: 58, lineHeight: 1.05, marginBottom: 10 }}>Săptămâna în Parlament</div>
+        <div style={{ fontFamily: SERIF, fontSize: 58, lineHeight: 1.05, marginBottom: 10 }}>{data.title ?? 'Săptămâna în Parlament'}</div>
         <div style={{ display: 'flex', fontSize: 21, opacity: 0.7, marginBottom: 44 }}>{data.rangeLabel}</div>
 
         {/* Stat row */}
@@ -76,7 +80,7 @@ export function WeekCard({ data }: { data: WeekCardData }) {
         {h && (
           <div style={{ display: 'flex', flexDirection: 'column', borderTopWidth: 1, borderTopStyle: 'solid', borderTopColor: C.hair, paddingTop: 26 }}>
             <div style={{ display: 'flex', fontSize: 13, fontWeight: 600, color: C.navy, letterSpacing: 4, textTransform: 'uppercase', opacity: 0.65, marginBottom: 14 }}>
-              Cel mai strâns vot al săptămânii
+              {data.highlightLabel ?? 'Cel mai strâns vot al săptămânii'}
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 10 }}>
               <div style={{ display: 'flex', fontSize: 14, fontWeight: 500, color: C.navy, letterSpacing: 4 }}>{h.lawCode}</div>

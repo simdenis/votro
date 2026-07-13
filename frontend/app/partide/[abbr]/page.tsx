@@ -87,7 +87,13 @@ export default async function PartyPage({ params }: { params: Promise<{ abbr: st
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         {!noLine && <StatsCard value={pct(cohesion.cohesion_pct)} label="Coeziune" accent={cohesion.color} />}
-        {!noLine && <StatsCard value={cohesion.deviation_count} label="Devieri totale" accent="var(--color-deviation)" />}
+        {!noLine && (
+          <StatsCard
+            value={cohesion.total_active_votes ? (cohesion.deviation_count / cohesion.total_active_votes * 100).toFixed(1) : '—'}
+            label="Devieri / 100 voturi"
+            accent="var(--color-deviation)"
+          />
+        )}
         {absencePct != null && (
           <StatsCard value={pct(absencePct)} label="Absență medie" accent="var(--color-against)" />
         )}
