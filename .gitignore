@@ -32,3 +32,6 @@ frontend/public/fallback-*.js
 votro-*.png
 .vercel
 .env*
+
+# Generated newsletter preview
+scraper/newsletter-preview.html
