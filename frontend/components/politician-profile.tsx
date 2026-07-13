@@ -47,8 +47,19 @@ export function PoliticianProfile({ stats, history, deviationRows, partyHistory,
 
   const deviations = deviationRows ?? history.filter(r => r.party_line_deviation)
 
+  const personLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Person',
+    name: `${stats.first_name} ${stats.name}`,
+    url: `${siteUrl}${basePath}/${stats.politician_id}`,
+    jobTitle: chamberLabel === 'Senat' ? 'Senator' : 'Deputat',
+    memberOf: { '@type': 'Organization', name: stats.party_name ?? stats.party_abbr },
+    worksFor: { '@type': 'Organization', name: 'Parlamentul României' },
+  }
+
   return (
     <div className="space-y-6">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(personLd) }} />
 
       {/* ── Header card ─────────────────────────────────── */}
       <div
