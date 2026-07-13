@@ -27,10 +27,14 @@ export function MobileNav() {
         </svg>
       </button>
 
-      {/* The white header grows downward to reveal the menu — no overlay */}
+      {/* The white header grows downward to reveal the menu — no overlay.
+          inert + aria-hidden: collapsed, the duplicate nav links must vanish
+          from the a11y tree and tab order (crawlers see one nav, not two) */}
       <div
         className="absolute left-0 right-0 top-full overflow-hidden transition-[max-height] duration-300 ease-out bg-white border-b border-rim"
         style={{ maxHeight: open ? 720 : 0 }}
+        inert={!open}
+        aria-hidden={!open}
       >
         <nav className="flex flex-col px-4 pb-3">
           {NAV_LINKS.map(({ href, label, match, children }) => {

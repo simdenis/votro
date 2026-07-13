@@ -14,8 +14,9 @@ Matching is token-based and order-free: gov.ro writes "Tánczos Barna"
 Andrei-Florin Gheorghiu — the surname tokens must all appear in the cabinet
 name AND at least one first-name token must too.
 
-Labels are cleared for MPs no longer in the cabinet, but only when the page
-parsed sanely (≥ 10 members) — a broken parse never wipes the labels.
+Labels are add-only: gov_role marks anyone who served in the Government this
+legislature (ex-members keep it — their absence while in office was
+structural). A broken parse (<10 members) never touches labels.
 
 gov.ro silently drops non-RO IPs (the EU VPS times out at TCP level — the
 inverse of cdep.ro's non-EU block). On unreachable it exits 0 with labels
@@ -119,10 +120,14 @@ def main() -> None:
         else:
             log.info("%s (%s) → not an MP", cab_name, role)
 
+    # Add-only: gov_role means "served in Government during this legislature",
+    # not "currently in cabinet". An ex-minister's plenary absence while in
+    # office was structural — clearing the label on exit would dump months of
+    # structural absence into the shame ranking (the Rogobete case, jul 2026).
     changes = 0
     for p in pols:
         new_role = matched.get(p["id"])
-        if new_role != p.get("gov_role"):
+        if new_role and new_role != p.get("gov_role"):
             log.info("update %s %s: %r → %r", p["first_name"], p["name"], p.get("gov_role"), new_role)
             if not args.dry_run:
                 db.table("politicians").update({"gov_role": new_role}).eq("id", p["id"]).execute()

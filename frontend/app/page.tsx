@@ -10,7 +10,8 @@ import { CategoryBadge } from '@/components/category-badge'
 import { NewsletterForm } from '@/components/newsletter-form'
 
 export const dynamic = 'force-dynamic'
-export const metadata: Metadata = { title: 'Acasă' }
+// absolute: the "%s | LaButoane" template would burn the homepage SERP line on "Acasă"
+export const metadata: Metadata = { title: { absolute: 'LaButoane — Cum votează Parlamentul României' } }
 
 export default async function Dashboard() {
   const db = getDB()
@@ -20,7 +21,8 @@ export default async function Dashboard() {
     // cohesion is computed on contested votes only (migration 027) — require
     // enough of them for the percentage to mean something
     db.from('party_cohesion').select('*').gte('votes_participated', 10).order('cohesion_pct', { ascending: false }),
-    db.from('votes').select('*, laws(*)').order('vote_date', { ascending: false }).limit(8),
+    // substantive votes only — presence checks / agenda changes drown the feed
+    db.from('votes').select('*, laws(*)').not('law_id', 'is', null).order('vote_date', { ascending: false }).limit(8),
     db.from('law_status').select('*', { count: 'exact', head: true }).eq('presidential_status', 'promulgat'),
     db.from('law_status').select('*', { count: 'exact', head: true }).or('senate_outcome.eq.respins,camera_outcome.eq.respins'),
     db.from('parties').select('abbreviation, color, name'),
@@ -78,9 +80,17 @@ export default async function Dashboard() {
             Cum votează Parlamentul?
           </h1>
         </div>
+        {/* personal hook first — "find your MP" converts a first-time visitor,
+            an email form doesn't (the signup moved to the sidebar) */}
         <div className="w-full sm:w-[340px] shrink-0">
-          <p className="text-[12px] font-semibold text-foreground mb-1.5">Parlamentul, pe email</p>
-          <NewsletterForm compact />
+          <div className="flex items-baseline justify-between mb-1.5">
+            <p className="text-[12px] font-semibold text-foreground">Cine te reprezintă?</p>
+            <Link href="/parlamentarul-tau" className="text-[11px] text-muted hover:text-foreground transition-colors">
+              Toți parlamentarii →
+            </Link>
+          </div>
+          <CountyMap />
+          <p className="text-[11px] text-faint mt-1.5">Apasă pe județul tău.</p>
         </div>
       </header>
 
@@ -182,24 +192,13 @@ export default async function Dashboard() {
         {/* Sidebar: mini map + cohesion + shame corner */}
         {cohesionData.length > 0 && (
           <aside>
-            <div className="flex items-baseline justify-between border-b-2 border-sidebar pb-[5px] mb-3">
-              <h2 className="font-serif text-[16px] font-normal text-foreground">Parlamentarul tău</h2>
-              <Link href="/parlamentarul-tau" className="text-[11px] text-muted hover:text-foreground transition-colors">
-                Toate →
-              </Link>
-            </div>
-            <p className="text-[11px] text-faint mb-2">Apasă pe județul tău.</p>
-            <div className="mb-10">
-              <CountyMap />
-            </div>
-
             {/* Absențe — top 5: lowest plenary presence, both chambers */}
             {lowPresence.length > 0 && (
               <>
                 <h2 className="font-serif text-[16px] font-normal text-foreground border-b-2 border-respins/60 pb-[5px] mb-1">
                   Absențe — top 5
                 </h2>
-                <p className="text-[11px] text-faint mb-3">absențe la voturile din plen · Senat + Cameră</p>
+                <p className="text-[11px] text-faint mb-3">absențe la voturile din plen · Senat + Cameră · fără membrii Guvernului</p>
                 <div className="space-y-2">
                   {lowPresence.map(s => (
                     <Link
@@ -218,7 +217,7 @@ export default async function Dashboard() {
               </>
             )}
 
-            <h2 className="font-serif text-[16px] font-normal text-foreground border-b-2 border-sidebar pb-[5px] mb-1 mt-10">
+            <h2 className="font-serif text-[16px] font-normal text-foreground border-b-2 border-sidebar pb-[5px] mb-1 mt-2">
               Coeziune partide
             </h2>
             <p className="text-[11px] text-faint mb-3">doar voturi disputate — cele aproape unanime nu spun nimic</p>
@@ -236,6 +235,11 @@ export default async function Dashboard() {
                 </Link>
               ))}
             </div>
+
+            <h2 className="font-serif text-[16px] font-normal text-foreground border-b-2 border-sidebar pb-[5px] mb-3 mt-10">
+              Parlamentul, pe email
+            </h2>
+            <NewsletterForm compact />
 
           </aside>
         )}
