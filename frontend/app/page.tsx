@@ -80,18 +80,6 @@ export default async function Dashboard() {
             Cum votează Parlamentul?
           </h1>
         </div>
-        {/* personal hook first — "find your MP" converts a first-time visitor,
-            an email form doesn't (the signup moved to the sidebar) */}
-        <div className="w-full sm:w-[340px] shrink-0">
-          <div className="flex items-baseline justify-between mb-1.5">
-            <p className="text-[12px] font-semibold text-foreground">Cine te reprezintă?</p>
-            <Link href="/parlamentarul-tau" className="text-[11px] text-muted hover:text-foreground transition-colors">
-              Toți parlamentarii →
-            </Link>
-          </div>
-          <CountyMap />
-          <p className="text-[11px] text-faint mt-1.5">Apasă pe județul tău.</p>
-        </div>
       </header>
 
       {/* ── Stats row ────────────────────────────────────── */}
@@ -192,6 +180,19 @@ export default async function Dashboard() {
         {/* Sidebar: mini map + cohesion + shame corner */}
         {cohesionData.length > 0 && (
           <aside>
+            {/* personal hook at the top of the sidebar — "find your MP"
+                converts a first-time visitor, an email form doesn't */}
+            <div className="flex items-baseline justify-between border-b-2 border-sidebar pb-[5px] mb-3">
+              <h2 className="font-serif text-[16px] font-normal text-foreground">Cine te reprezintă?</h2>
+              <Link href="/parlamentarul-tau" className="text-[11px] text-muted hover:text-foreground transition-colors">
+                Toți parlamentarii →
+              </Link>
+            </div>
+            <p className="text-[11px] text-faint mb-2">Apasă pe județul tău.</p>
+            <div className="mb-10">
+              <CountyMap />
+            </div>
+
             {/* Absențe — top 5: lowest plenary presence, both chambers */}
             {lowPresence.length > 0 && (
               <>
