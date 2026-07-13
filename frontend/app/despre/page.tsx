@@ -48,6 +48,12 @@ export default function DesprePage() {
           minorităților naționale nu au o linie de partid, deci nu calculăm devieri sau coeziune pentru ei.
         </p>
         <p className="text-sm text-muted leading-relaxed">
+          <strong className="text-foreground">Loialitatea</strong> unui parlamentar = voturile în care
+          s-a aliniat cu partidul, împărțite la <em>toate</em> voturile de plen ținute în camera sa —
+          absențele scad loialitatea. Un parlamentar absent la 80% din voturi nu poate avea loialitate
+          mare, oricât de disciplinat votează când e prezent.
+        </p>
+        <p className="text-sm text-muted leading-relaxed">
           Coeziunea unui partid se calculează <strong className="text-foreground">doar pe voturile
           disputate</strong> — cele în care tabăra minoritară (pentru vs. împotrivă + abțineri) a strâns
           cel puțin 20% din voturile exprimate. Majoritatea voturilor din plen sunt procedurale sau

@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { formatDate, choiceLabel, choiceColor, pct, countNoun, hasPartyLine, capFirst } from '@/lib/utils'
+import { formatDate, choiceLabel, choiceColor, pct, countNoun, hasPartyLine, capFirst, loyaltyPct } from '@/lib/utils'
 import { PartyBadge } from '@/components/party-badge'
 import { OutcomeBadge } from '@/components/outcome-badge'
 import { LoyaltyMeter } from '@/components/loyalty-meter'
@@ -23,13 +23,9 @@ interface Props {
 export function PoliticianProfile({ stats, history, deviationRows, partyHistory, basePath, chamberLabel, siteUrl }: Props) {
   const total      = stats.total_votes
   const expressed  = stats.votes_for + stats.votes_against + stats.votes_abstention
-  // IND/MIN have no party line — loyalty/deviation framing would be meaningless.
-  // Below ~100 expressed votes the metric is noise, and worse: the most absent
-  // members are exactly the ones who'd flaunt a shiny "100% loyalty" badge.
-  const LOYALTY_MIN_VOTES = 100
-  const smallSample = expressed < LOYALTY_MIN_VOTES
+  // IND/MIN have no party line — loyalty/deviation framing would be meaningless
   const noLine     = !hasPartyLine(stats.party_abbr)
-  const loyaltyPct = !noLine && !smallSample && stats.deviation_pct != null ? Math.floor(100 - stats.deviation_pct) : null
+  const loyalty    = noLine ? null : loyaltyPct(stats)
   const isHighDev  = stats.deviation_pct != null && stats.deviation_pct > 10
 
   // Denominator = ALL plenary votes since mandate start, not just recorded
@@ -96,19 +92,12 @@ export function PoliticianProfile({ stats, history, deviationRows, partyHistory,
           </div>
         </div>
 
-        {loyaltyPct != null && (
-          <div className="flex-shrink-0">
-            <LoyaltyMeter loyaltyPct={loyaltyPct} size={112} />
-          </div>
-        )}
-        {!noLine && smallSample && (
+        {loyalty != null && (
           <div
-            className="flex-shrink-0 w-[112px] text-center text-[11px] text-faint leading-snug"
-            title={`Loialitatea se afișează de la ${LOYALTY_MIN_VOTES} de voturi exprimate — sub acest prag procentul e zgomot statistic.`}
+            className="flex-shrink-0"
+            title="Voturi aliniate cu partidul, din toate voturile de plen ale camerei — absențele scad loialitatea."
           >
-            loialitate necalculată
-            <br />
-            <span className="text-[10px]">(doar {expressed} {countNoun(expressed, 'vot exprimat', 'voturi exprimate')})</span>
+            <LoyaltyMeter loyaltyPct={loyalty} size={112} />
           </div>
         )}
       </div>
@@ -117,9 +106,9 @@ export function PoliticianProfile({ stats, history, deviationRows, partyHistory,
       <div className="flex items-center gap-3 flex-wrap">
         <ShareButtons
           url={`${siteUrl}${basePath}/${stats.politician_id}`}
-          tweet={noLine || smallSample
+          tweet={noLine || loyalty == null
             ? `Cum votează ${stats.first_name} ${stats.name} în Parlament: ${siteUrl}${basePath}/${stats.politician_id}`
-            : `${stats.first_name} ${stats.name} (${stats.party_abbr}) a deviat de la linia de partid în ${pct(stats.deviation_pct)} din voturi. ${siteUrl}${basePath}/${stats.politician_id}`}
+            : `${stats.first_name} ${stats.name} (${stats.party_abbr}) a votat cu linia partidului la ${loyalty}% din voturile de plen ale camerei. ${siteUrl}${basePath}/${stats.politician_id}`}
         />
         <CardDownload href={`/api/og/senatorcard?id=${stats.politician_id}`} filename={`labutoane-${stats.first_name}-${stats.name}.png`.replace(/\s+/g, '-')} />
       </div>
