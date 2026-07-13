@@ -64,9 +64,12 @@ export default function DesprePage() {
           (100% − prezența). Absența medie a unui partid este media absențelor membrilor săi activi.
         </p>
         <p className="text-sm text-muted leading-relaxed">
-          Parlamentarii care fac parte din Guvern (premier, vicepremieri, miniștri) nu votează în
-          plen — sunt marcați cu o etichetă distinctă, nu apar în topul absențelor și nu intră în
-          media de absență a partidului, pentru că absența lor e structurală, nu o alegere.
+          Parlamentarii care fac sau au făcut parte din Guvern în această legislatură (premier,
+          vicepremieri, miniștri) nu votează în plen cât sunt în funcție — sunt marcați cu o
+          etichetă distinctă, nu apar în topul absențelor și nu intră în media de absență a
+          partidului, pentru că absența lor e structurală, nu o alegere. Eticheta rămâne și după
+          plecarea din Guvern: absențele acumulate în mandatul de ministru nu devin retroactiv
+          „chiul".
         </p>
         <p className="text-sm text-muted leading-relaxed">
           Sursele oficiale nu spun <em>de ce</em> lipsește cineva: o delegație parlamentară în

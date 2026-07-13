@@ -67,9 +67,9 @@ export function PoliticianProfile({ stats, history, deviationRows, partyHistory,
             {stats.gov_role && (
               <span
                 className="text-[10px] uppercase font-semibold tracking-wide bg-sidebar text-white rounded-[3px] px-1.5 py-px"
-                title="Membru al Guvernului — nu votează în plen, deci absența nu e relevantă."
+                title="În Guvern în această legislatură (actual sau fost) — în funcție nu votează în plen, deci absența e structurală, nu o alegere."
               >
-                {stats.gov_role}
+                guvern · {stats.gov_role}
               </span>
             )}
             <span className="text-[10px] text-faint" title="Partidul din care face parte acum. Voturile sunt atribuite afilierii curente.">afiliere curentă</span>
