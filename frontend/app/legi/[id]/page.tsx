@@ -73,8 +73,19 @@ export default async function LawDetail({ params }: { params: Promise<{ id: stri
   ])
   const initiatorType = lawRow?.initiator_type ?? null
 
+  const lawLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Legislation',
+    name: capFirst(law.title),
+    legislationIdentifier: law.code,
+    inLanguage: 'ro',
+    ...(law.summary ? { abstract: law.summary } : {}),
+    legislationPassedBy: { '@type': 'Organization', name: 'Parlamentul României' },
+  }
+
   return (
     <div className="space-y-10">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(lawLd) }} />
 
       {/* Breadcrumb */}
       <div className="flex items-center gap-1.5 text-xs text-muted">

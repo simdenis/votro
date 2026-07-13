@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { IBM_Plex_Sans, IBM_Plex_Mono } from 'next/font/google'
 import './globals.css'
+import { Analytics } from '@vercel/analytics/react'
 import { Nav } from '@/components/nav'
 import { Footer } from '@/components/footer'
 
@@ -51,17 +52,34 @@ export const metadata: Metadata = {
   },
 }
 
+// Sitelinks search box + site identity for Google
+const SITE_LD = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'LaButoane',
+  url: SITE_URL,
+  description: 'Cum votează Parlamentul României — voturi, absențe, devieri de la linia de partid.',
+  inLanguage: 'ro',
+  potentialAction: {
+    '@type': 'SearchAction',
+    target: { '@type': 'EntryPoint', urlTemplate: `${SITE_URL}/search?q={search_term_string}` },
+    'query-input': 'required name=search_term_string',
+  },
+}
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ro" className={`${plexSans.variable} ${plexMono.variable}`} suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://zmxewrkykbxawfhzxbni.supabase.co" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(SITE_LD) }} />
       </head>
       <body className="flex flex-col min-h-screen">
         <Nav />
         <main className="flex-1 max-w-[1280px] w-full mx-auto px-4 sm:px-8 lg:px-14 pt-6 sm:pt-8 pb-16">{children}</main>
         <Footer />
+        <Analytics />
       </body>
     </html>
   )

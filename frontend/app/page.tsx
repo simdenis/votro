@@ -79,6 +79,16 @@ export default async function Dashboard() {
           <h1 className="font-serif text-[42px] font-normal tracking-[-0.01em] leading-[1.04] text-foreground">
             Cum votează Parlamentul?
           </h1>
+          {/* plain GET form — works before hydration and for crawlers */}
+          <form action="/search" className="mt-4 max-w-[420px]">
+            <input
+              name="q"
+              type="search"
+              placeholder="Caută un parlamentar sau o lege…"
+              aria-label="Caută un parlamentar sau o lege"
+              className="w-full border border-rim rounded-lg px-3.5 py-2 text-[14px] bg-surface placeholder:text-faint focus:outline-none focus:border-foreground/40"
+            />
+          </form>
         </div>
       </header>
 
