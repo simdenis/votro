@@ -105,6 +105,15 @@ export function recessUntil(now: Date = new Date()): string | null {
   return null
 }
 
+/** The ordinary session that just ended, for recess-mode recaps (art. 66:
+ *  Feb–Jun and Sep–Dec). Null while parliament is in session. */
+export function lastSessionRange(now: Date = new Date()): { from: string; to: string; label: string } | null {
+  const m = now.getMonth(), y = now.getFullYear()
+  if (m === 6 || m === 7) return { from: `${y}-02-01`, to: `${y}-06-30`, label: `februarie–iunie ${y}` }
+  if (m === 0) return { from: `${y - 1}-09-01`, to: `${y - 1}-12-31`, label: `septembrie–decembrie ${y - 1}` }
+  return null
+}
+
 export function formatRelativeTime(dateStr: string | null | undefined): string {
   if (!dateStr) return '—'
   const diff = Date.now() - new Date(dateStr).getTime()
