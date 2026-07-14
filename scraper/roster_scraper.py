@@ -242,7 +242,7 @@ class Roster:
         while True:
             page = (
                 self.db.table("politicians")
-                .select("id, name, first_name, active, county, mandate_start")
+                .select("id, name, first_name, active, county, mandate_start, party_id")
                 .eq("chamber", chamber)
                 .range(start, start + 999)
                 .execute()
@@ -395,18 +395,31 @@ class Roster:
             return True
 
         active_ids = set(matched)
+        party_changes = 0
         for p in pols:
             should_be_active = p["id"] in active_ids
             new_county = counties.get(p["id"])
             new_start = starts.get(p["id"])
-            if p["active"] != should_be_active or new_county or new_start:
+            # The official roster group is authoritative for CURRENT affiliation:
+            # it reflects a move (e.g. going independent) the moment it happens,
+            # unlike party reconstructed from the member's last vote. The Senate
+            # list carries no group label (group_to_abbr → None), so party_id is
+            # left untouched there and stays vote-reconstructed.
+            mem = matched.get(p["id"])
+            new_party_id = self._party_id(group_to_abbr(mem.group)) if mem else None
+            party_changed = bool(new_party_id) and new_party_id != p.get("party_id")
+            if p["active"] != should_be_active or new_county or new_start or party_changed:
                 update: dict = {"active": should_be_active}
                 if new_county:
                     update["county"] = new_county
                 if new_start:
                     update["mandate_start"] = new_start
+                if party_changed:
+                    update["party_id"] = new_party_id
+                    party_changes += 1
                 self.db.table("politicians").update(update).eq("id", p["id"]).execute()
-        log.info("%s: updates applied (%d counties, %d mandate starts)", chamber, len(counties), len(starts))
+        log.info("%s: updates applied (%d counties, %d mandate starts, %d party changes)",
+                 chamber, len(counties), len(starts), party_changes)
         return True
 
 
