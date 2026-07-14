@@ -74,7 +74,7 @@ export default async function Dashboard() {
       <header className="mb-9 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6">
         <div>
           <p className="text-[11px] uppercase tracking-[0.18em] text-faint mb-2.5">
-            Parlamentul României · Legislatura 2026
+            Parlamentul României · Legislatura 2024–2028
           </p>
           <h1 className="font-serif text-[42px] font-normal tracking-[-0.01em] leading-[1.04] text-foreground">
             Cum votează Parlamentul?

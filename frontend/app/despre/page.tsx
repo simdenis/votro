@@ -98,7 +98,7 @@ export default function DesprePage() {
         <p className="text-sm text-muted leading-relaxed">
           De aceea unele legi promulgate apar la noi fără votul uneia dintre camere: au fost
           adoptate tacit (nu există un vot de consemnat) sau votul a avut loc înainte de
-          2 februarie 2026, data de la care baza noastră de date acoperă voturile plenului.
+          20 decembrie 2024, începutul actualei legislaturi — data de la care baza noastră de date acoperă voturile plenului.
           Le marcăm cu „Adoptată*".
         </p>
       </section>
