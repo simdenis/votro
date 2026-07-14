@@ -2,7 +2,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
 import { formatDate, capFirst, hasPartyLine } from '@/lib/utils'
-import { AgreementMatrix, type MatrixParty } from '@/components/charts/agreement-matrix'
+import { AgreementMatrix, type MatrixParty, type AgreementBucket } from '@/components/charts/agreement-matrix'
 import { AttendanceTrend, type TrendSeries } from '@/components/charts/attendance-trend'
 
 export const revalidate = 3600
@@ -15,7 +15,6 @@ export const metadata: Metadata = {
 const PARTY_ORDER = ['PSD', 'AUR', 'PNL', 'USR', 'UDMR', 'POT', 'SOSRO', 'PACE']
 const MONTHS_RO = ['ian', 'feb', 'mar', 'apr', 'mai', 'iun', 'iul', 'aug', 'sep', 'oct', 'nov', 'dec']
 
-type AgreeRow = { party_a: string; party_b: string; shared: number; agreement_pct: number }
 type AttendRow = { month: string; chamber: 'senate' | 'deputies'; attendance_pct: number }
 type ClosestRow = {
   id: string; vote_date: string; chamber: 'senate' | 'deputies'
@@ -25,8 +24,8 @@ type ClosestRow = {
 
 export default async function AnalizePage() {
   const db = getDB()
-  const [agreeRes, attendRes, closestRes, partiesRes] = await Promise.all([
-    db.from('party_agreement').select('party_a, party_b, shared, agreement_pct'),
+  const [bucketRes, attendRes, closestRes, partiesRes] = await Promise.all([
+    db.from('party_agreement_monthly').select('party_a, party_b, month, shared, agreed'),
     db.from('monthly_attendance').select('month, chamber, attendance_pct'),
     db.from('closest_votes').select('*').order('margin', { ascending: true }).limit(12),
     db.from('parties').select('abbreviation, color'),
@@ -36,16 +35,19 @@ export default async function AnalizePage() {
   for (const p of (partiesRes.data ?? []) as { abbreviation: string; color: string }[]) colorOf[p.abbreviation] = p.color
 
   // ── 1. Agreement matrix ────────────────────────────────────────────────
+  const buckets = (bucketRes.data ?? []) as AgreementBucket[]
+  // only parties that actually appear in contested-vote data (drops e.g. PACE,
+  // which currently has no members mapped to it)
+  const present = new Set<string>()
+  for (const b of buckets) { present.add(b.party_a); present.add(b.party_b) }
   const parties: MatrixParty[] = PARTY_ORDER
-    .filter(a => colorOf[a] && hasPartyLine(a))
+    .filter(a => colorOf[a] && hasPartyLine(a) && present.has(a))
     .map(a => ({ abbr: a, color: colorOf[a] }))
-  const pair: Record<string, { shared: number; pct: number }> = {}
-  const key = (a: string, b: string) => a < b ? `${a}|${b}` : `${b}|${a}`
-  for (const r of (agreeRes.data ?? []) as AgreeRow[]) pair[key(r.party_a, r.party_b)] = { shared: r.shared, pct: r.agreement_pct }
-  const cell = (a: string, b: string) => {
-    const rec = pair[key(a, b)]
-    return rec ? { pct: Math.round(rec.pct), shared: rec.shared } : null
-  }
+  const agMonths = [...new Set(buckets.map(b => b.month))].sort()
+  const agMonthLabels = agMonths.map(mk => {
+    const [y, m] = mk.split('-').map(Number)
+    return `${MONTHS_RO[m - 1]} '${String(y).slice(2)}`
+  })
 
   // ── 2. Closest votes ───────────────────────────────────────────────────
   const closest = (closestRes.data ?? []) as ClosestRow[]
@@ -80,8 +82,8 @@ export default async function AnalizePage() {
           Cât de des au votat la fel majoritățile a două partide, pe <strong className="text-foreground">voturile disputate</strong>.
           Nuanța închisă = acord mare. Voturile aproape unanime sunt excluse — altfel toate partidele ar părea aliate.
         </p>
-        {parties.length >= 2 && (agreeRes.data?.length ?? 0) > 0
-          ? <AgreementMatrix parties={parties} cell={cell} />
+        {parties.length >= 2 && buckets.length > 0
+          ? <AgreementMatrix parties={parties} months={agMonths} monthLabels={agMonthLabels} buckets={buckets} />
           : <p className="text-sm text-faint">Date insuficiente.</p>}
       </section>
 
