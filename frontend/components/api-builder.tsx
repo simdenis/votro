@@ -4,15 +4,18 @@ import { useMemo, useState } from 'react'
 
 // Interactive query builder for the open-data API: pick what you want, fill in
 // the blanks, get a runnable curl command + a one-click file download.
-type Preset = 'law_votes' | 'law_detail' | 'period_votes' | 'mp' | 'cohesion'
+type Preset = 'law_votes' | 'law_detail' | 'period_votes' | 'mp'
 
 const PRESETS: { id: Preset; label: string }[] = [
   { id: 'law_votes',    label: 'Cum s-a votat o lege' },
   { id: 'law_detail',   label: 'Drumul unei legi prin Parlament' },
   { id: 'period_votes', label: 'Voturile dintr-o perioadă' },
   { id: 'mp',           label: 'Fișa unui parlamentar' },
-  { id: 'cohesion',     label: 'Coeziunea partidelor' },
 ]
+
+// which presets have a ready-made shareable card image
+const cardKindOf = (p: Preset): 'law' | 'mp' | null =>
+  p === 'law_detail' || p === 'law_votes' ? 'law' : p === 'mp' ? 'mp' : null
 
 // encode spaces (names) but leave /, ., *, - readable
 const q = (v: string) => v.trim().replace(/ /g, '%20')
@@ -42,10 +45,36 @@ export function ApiBuilder({ baseUrl, apiKey }: { baseUrl: string; apiKey: strin
       }
       case 'mp':
         return `${mpChamber === 'senate' ? 'senator_stats' : 'deputy_stats'}?name=ilike.*${q(name)}*`
-      case 'cohesion':
-        return 'party_cohesion?select=abbreviation,cohesion_pct,deviation_count&order=cohesion_pct.desc'
     }
   }, [preset, code, from, to, chamber, mpChamber, name])
+
+  const cardKind = cardKindOf(preset)
+  // resolve the row id, then download our own OG card PNG for it
+  async function downloadCard() {
+    setBusy(true)
+    try {
+      let og = ''
+      if (cardKind === 'law') {
+        const r = await fetch(`${baseUrl}/rest/v1/laws?code=eq.${q(code)}&select=id&limit=1`, { headers: { apikey: apiKey } })
+        const id = (await r.json())[0]?.id
+        if (!id) return
+        og = `/api/og/summarycard?id=${id}`
+      } else if (cardKind === 'mp') {
+        const view = mpChamber === 'senate' ? 'senator_stats' : 'deputy_stats'
+        const r = await fetch(`${baseUrl}/rest/v1/${view}?name=ilike.*${q(name)}*&select=politician_id&limit=1`, { headers: { apikey: apiKey } })
+        const id = (await r.json())[0]?.politician_id
+        if (!id) return
+        og = `/api/og/senatorcard?id=${id}`
+      }
+      const res = await fetch(og)
+      const blob = await res.blob()
+      const a = document.createElement('a')
+      a.href = URL.createObjectURL(blob)
+      a.download = `labutoane-card.png`
+      document.body.appendChild(a); a.click(); a.remove()
+      URL.revokeObjectURL(a.href)
+    } catch { /* blocked */ } finally { setBusy(false) }
+  }
 
   const url = `${baseUrl}/rest/v1/${path}`
   const curl = `curl "${url}" \\\n  -H "apikey: ${apiKey}"${format === 'csv' ? ' \\\n  -H "Accept: text/csv"' : ''}`
@@ -109,8 +138,6 @@ export function ApiBuilder({ baseUrl, apiKey }: { baseUrl: string; apiKey: strin
               <input value={name} onChange={e => setName(e.target.value)} placeholder="Ponta" className={inputCls} /></label>
           </>
         )}
-        {preset === 'cohesion' && <p className="text-[12px] text-faint pb-1.5">Fără filtre — toate partidele.</p>}
-
         <label className="flex flex-col gap-1 ml-auto"><span className="text-[11px] text-faint">Format</span>
           <select value={format} onChange={e => setFormat(e.target.value as 'json' | 'csv')} className={inputCls}>
             <option value="json">JSON</option><option value="csv">CSV</option>
@@ -125,11 +152,19 @@ export function ApiBuilder({ baseUrl, apiKey }: { baseUrl: string; apiKey: strin
         </button>
       </div>
 
-      <button onClick={download} disabled={busy}
-        className="btn-tactile rounded-lg px-4 py-2 text-[13px] font-semibold text-white disabled:opacity-60"
-        style={{ background: 'var(--sidebar-bg)' }}>
-        {busy ? 'Se descarcă…' : `Descarcă fișierul .${format}`}
-      </button>
+      <div className="flex flex-wrap gap-2">
+        <button onClick={download} disabled={busy}
+          className="btn-tactile rounded-lg px-4 py-2 text-[13px] font-semibold text-white disabled:opacity-60"
+          style={{ background: 'var(--sidebar-bg)' }}>
+          {busy ? 'Se descarcă…' : `Descarcă fișierul .${format}`}
+        </button>
+        {cardKind && (
+          <button onClick={downloadCard} disabled={busy}
+            className="btn-tactile rounded-lg px-4 py-2 text-[13px] font-semibold bg-surface border border-rim text-foreground disabled:opacity-60">
+            🖼 Descarcă card (imagine)
+          </button>
+        )}
+      </div>
     </div>
   )
 }
