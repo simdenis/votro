@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getSwitchers } from '@/lib/switchers'
-import { textOnColor, countNoun } from '@/lib/utils'
+import { textOnColor, countNoun , personSlug } from '@/lib/utils'
 import { SectionNav, PARLAMENTARI_SECTIONS } from '@/components/section-nav'
 
 export const dynamic = 'force-dynamic'
@@ -53,7 +53,7 @@ export default async function TraseistiPage() {
                     {group.map(s => (
                       <Link
                         key={s.politician_id}
-                        href={`${base}/${s.politician_id}`}
+                        href={`${base}/${personSlug(s.first_name, s.name)}`}
                         className="flex items-center gap-4 bg-surface border border-rim rounded-xl px-4 py-3 hover:bg-raised transition-colors"
                       >
                         <span className="font-medium text-foreground min-w-0 flex-shrink-0 w-48 truncate">

@@ -1,6 +1,6 @@
 import type { MetadataRoute } from 'next'
 import { getDB } from '@/lib/supabase'
-import { lawSlug } from '@/lib/utils'
+import { lawSlug, personSlug } from '@/lib/utils'
 
 export const revalidate = 3600
 
@@ -10,8 +10,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const [votes, senators, deputies, laws, parties] = await Promise.all([
     db.from('votes').select('id, vote_date').order('vote_date', { ascending: false }),
-    db.from('senator_stats').select('politician_id'),
-    db.from('deputy_stats').select('politician_id'),
+    db.from('senator_stats').select('politician_id, name, first_name'),
+    db.from('deputy_stats').select('politician_id, name, first_name'),
     db.from('laws').select('id, code'),
     db.from('party_cohesion').select('abbreviation'),
   ])
@@ -46,14 +46,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }))
 
-  const senatorUrls: MetadataRoute.Sitemap = (senators.data ?? []).map(s => ({
-    url: `${base}/senatori/${s.politician_id}`,
+  const senatorUrls: MetadataRoute.Sitemap = (senators.data ?? []).map((s: any) => ({
+    url: `${base}/senatori/${personSlug(s.first_name, s.name)}`,
     changeFrequency: 'weekly',
     priority: 0.5,
   }))
 
-  const deputyUrls: MetadataRoute.Sitemap = (deputies.data ?? []).map(d => ({
-    url: `${base}/deputati/${d.politician_id}`,
+  const deputyUrls: MetadataRoute.Sitemap = (deputies.data ?? []).map((d: any) => ({
+    url: `${base}/deputati/${personSlug(d.first_name, d.name)}`,
     changeFrequency: 'weekly',
     priority: 0.5,
   }))

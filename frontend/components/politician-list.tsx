@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { pct, textOnColor, needsDe } from '@/lib/utils'
+import { pct, textOnColor, needsDe , personSlug } from '@/lib/utils'
 import { PartyBadge } from '@/components/party-badge'
 import { trueAbsent, type PoliticianStats } from '@/lib/types'
 
@@ -96,7 +96,7 @@ export function PoliticianList({ title, basePath, people, sort, dir, switcherIds
                 return (
                   <tr key={s.politician_id} className="border-b border-rim hover:bg-raised transition-colors">
                     <td className="py-3 pr-4">
-                      <Link href={`${basePath}/${s.politician_id}`} className="flex items-center gap-3 group">
+                      <Link href={`${basePath}/${personSlug(s.first_name, s.name)}`} className="flex items-center gap-3 group">
                         <span
                           className="w-9 h-9 rounded-full flex items-center justify-center text-[12px] font-bold flex-shrink-0 select-none"
                           style={{ backgroundColor: s.party_color ?? '#9e9e9e', color: textOnColor(s.party_color ?? '#9e9e9e') }}

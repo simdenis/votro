@@ -74,6 +74,20 @@ export function slugToCode(slug: string): string {
   return slug.replace('-', '/')
 }
 
+// MUST match the SQL generated column in migration 031 exactly, or slug links
+// won't resolve. Same FROM/TO translate maps, same "collapse to dash" regex.
+const SLUG_FROM = 'ăâîșțşţáàäéèêíóòöőúùüű'
+const SLUG_TO   = 'aaisttstaaaeeeioooouuuu'
+/** Human politician URL slug, e.g. ("Victor-Viorel","Ponta") → "victor-viorel-ponta". */
+export function personSlug(firstName: string | null | undefined, name: string | null | undefined): string {
+  const lower = `${firstName ?? ''} ${name ?? ''}`.toLowerCase()
+  const folded = Array.from(lower).map(ch => {
+    const i = SLUG_FROM.indexOf(ch)
+    return i >= 0 ? SLUG_TO[i] : ch
+  }).join('')
+  return folded.replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+}
+
 export function textOnColor(bgHex: string): string {
   // PNL yellow needs black text; everything else uses white
   return bgHex === '#ffdd00' ? '#000000' : '#ffffff'

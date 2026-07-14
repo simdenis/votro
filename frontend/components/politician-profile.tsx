@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { formatDate, formatDateShort, choiceLabel, choiceColor, pct, countNoun, hasPartyLine, capFirst, loyaltyPct } from '@/lib/utils'
+import { formatDate, formatDateShort, choiceLabel, choiceColor, pct, countNoun, hasPartyLine, capFirst, loyaltyPct , personSlug } from '@/lib/utils'
 import { PartyBadge } from '@/components/party-badge'
 import { OutcomeBadge } from '@/components/outcome-badge'
 import { LoyaltyMeter } from '@/components/loyalty-meter'
@@ -51,7 +51,7 @@ export function PoliticianProfile({ stats, history, deviationRows, partyHistory,
     '@context': 'https://schema.org',
     '@type': 'Person',
     name: `${stats.first_name} ${stats.name}`,
-    url: `${siteUrl}${basePath}/${stats.politician_id}`,
+    url: `${siteUrl}${basePath}/${personSlug(stats.first_name, stats.name)}`,
     jobTitle: chamberLabel === 'Senat' ? 'Senator' : 'Deputat',
     memberOf: { '@type': 'Organization', name: stats.party_name ?? stats.party_abbr },
     worksFor: { '@type': 'Organization', name: 'Parlamentul României' },
@@ -116,10 +116,10 @@ export function PoliticianProfile({ stats, history, deviationRows, partyHistory,
       {/* Share row */}
       <div className="flex items-center gap-3 flex-wrap">
         <ShareButtons
-          url={`${siteUrl}${basePath}/${stats.politician_id}`}
+          url={`${siteUrl}${basePath}/${personSlug(stats.first_name, stats.name)}`}
           tweet={noLine || loyalty == null
-            ? `Cum votează ${stats.first_name} ${stats.name} în Parlament: ${siteUrl}${basePath}/${stats.politician_id}`
-            : `${stats.first_name} ${stats.name} (${stats.party_abbr}) a votat cu linia partidului la ${loyalty}% din voturile de plen ale camerei. ${siteUrl}${basePath}/${stats.politician_id}`}
+            ? `Cum votează ${stats.first_name} ${stats.name} în Parlament: ${siteUrl}${basePath}/${personSlug(stats.first_name, stats.name)}`
+            : `${stats.first_name} ${stats.name} (${stats.party_abbr}) a votat cu linia partidului la ${loyalty}% din voturile de plen ale camerei. ${siteUrl}${basePath}/${personSlug(stats.first_name, stats.name)}`}
         />
         <CardDownload href={`/api/og/senatorcard?id=${stats.politician_id}`} filename={`labutoane-${stats.first_name}-${stats.name}.png`.replace(/\s+/g, '-')} />
       </div>
