@@ -122,8 +122,10 @@ export default async function Dashboard() {
       {/* ── Vote list + cohesion sidebar ─────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-x-12 gap-y-10 items-start">
 
-        {/* Recent votes */}
-        <section>
+        {/* Recent votes — min-w-0: grid items default to min-width auto, so the
+            nowrap official-title line would blow the column out to full title
+            width and force horizontal scrolling on the whole page */}
+        <section className="min-w-0">
           <h2 className="font-serif text-[20px] font-normal text-foreground border-b-2 border-sidebar pb-[5px] mb-2">
             Voturi recente
           </h2>
@@ -169,7 +171,7 @@ export default async function Dashboard() {
                           rezumat AI
                         </span>
                       )}
-                      <span className="truncate">{capFirst(vote.laws.title)}</span>
+                      <span className="truncate min-w-0 flex-1">{capFirst(vote.laws.title)}</span>
                     </p>
                   </>
                 ) : (
