@@ -26,6 +26,8 @@ const key = (a: string, b: string) => (a < b ? `${a}|${b}` : `${b}|${a}`)
 export function AgreementMatrix({ parties, months, monthLabels, buckets }: Props) {
   const [from, setFrom] = useState(0)
   const [to, setTo] = useState(Math.max(0, months.length - 1))
+  const [hov, setHov] = useState<{ a: string; b: string; pct: number; agreed: number; shared: number } | null>(null)
+  const colorOf = (a: string) => parties.find(p => p.abbr === a)?.color ?? '#9e9e9e'
 
   // Sum agreed/shared across the selected month window, per party pair.
   const pair = useMemo(() => {
@@ -62,6 +64,23 @@ export function AgreementMatrix({ parties, months, monthLabels, buckets }: Props
         </label>
       </div>
 
+      {/* cute hover readout — reserved height so the layout doesn't jump */}
+      <div className="min-h-[38px] flex items-center">
+        {hov ? (
+          <div className="flex items-center gap-2 text-[13px] bg-raised border border-rim rounded-lg px-3 py-1.5 animate-in fade-in duration-150">
+            <span className="w-[10px] h-[10px] rounded-[2px]" style={{ backgroundColor: colorOf(hov.a) }} />
+            <span className="font-semibold text-foreground">{hov.a}</span>
+            <span className="text-faint">↔</span>
+            <span className="w-[10px] h-[10px] rounded-[2px]" style={{ backgroundColor: colorOf(hov.b) }} />
+            <span className="font-semibold text-foreground">{hov.b}</span>
+            <span className="text-muted">— au votat la fel de <strong className="text-foreground">{hov.agreed}</strong> ori din <strong className="text-foreground">{hov.shared}</strong></span>
+            <span className="ml-auto text-[15px] font-bold tabular-nums text-foreground">{hov.pct}%</span>
+          </div>
+        ) : (
+          <p className="text-[12px] text-faint">Treci cu mouse-ul peste o celulă pentru detalii.</p>
+        )}
+      </div>
+
       <div className="overflow-x-auto">
         <div className="grid gap-[2px] min-w-[480px]" style={{ gridTemplateColumns: cols }}>
           <div />
@@ -88,16 +107,17 @@ export function AgreementMatrix({ parties, months, monthLabels, buckets }: Props
                 }
                 const rec = pair[key(rowP.abbr, colP.abbr)]
                 if (!rec || rec.shared < 3) {
-                  return <div key={colP.abbr} className="aspect-square rounded-[3px] bg-raised" title="Prea puține voturi disputate comune în această perioadă" />
+                  return <div key={colP.abbr} className="aspect-square rounded-[3px] bg-raised" />
                 }
                 const pct = Math.round((rec.agreed / rec.shared) * 100)
                 const { bg, ink } = cellBg(pct)
                 return (
                   <div key={colP.abbr}
-                       className="aspect-square rounded-[3px] flex items-center justify-center tabular-nums cursor-default"
-                       style={{ backgroundColor: bg }}
-                       title={`${rowP.abbr} și ${colP.abbr} au votat la fel de ${rec.agreed} ori din ${rec.shared} voturi disputate comune (${windowLabel})`}>
-                    <span className="text-[11px] font-semibold" style={{ color: ink }}>{pct}</span>
+                       onMouseEnter={() => setHov({ a: rowP.abbr, b: colP.abbr, pct, agreed: rec.agreed, shared: rec.shared })}
+                       onMouseLeave={() => setHov(null)}
+                       className="aspect-square rounded-[3px] flex items-center justify-center tabular-nums cursor-default ring-inset hover:ring-2 hover:ring-foreground/25 transition-[box-shadow]"
+                       style={{ backgroundColor: bg }}>
+                    <span className="text-[11px] font-semibold" style={{ color: ink }}>{pct}%</span>
                   </div>
                 )
               })}

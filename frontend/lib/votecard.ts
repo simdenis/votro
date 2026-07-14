@@ -69,7 +69,11 @@ export function mapSenatorToCard(s: PoliticianStats, chamber: 'senate' | 'deputi
     votesFor: s.votes_for ?? 0,
     votesAgainst: s.votes_against ?? 0,
     votesAbstain: s.votes_abstention ?? 0,
-    votesAbsent: trueAbsent(s) ?? s.votes_absent ?? 0,
+    // "absent" on the card = every chamber vote where the MP cast nothing
+    // (true absences + present-but-didn't-press), so the four numbers sum to
+    // the chamber total instead of leaving a silent gap.
+    votesAbsent: Math.max(0, (s.chamber_votes || s.total_votes || 0)
+      - (s.votes_for ?? 0) - (s.votes_against ?? 0) - (s.votes_abstention ?? 0)),
     // aligned votes over ALL chamber votes — absences lower loyalty (lib/utils)
     loyaltyPct: loyaltyPct(s),
     deviations: s.deviations ?? 0,

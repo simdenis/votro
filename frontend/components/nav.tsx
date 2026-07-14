@@ -25,13 +25,18 @@ export function Nav() {
           <NavLinks variant="top" />
 
           <div className="ml-auto flex items-center gap-4 shrink-0">
-            <Link
-              href="/search"
-              aria-label="Căutare"
-              className="text-muted hover:text-foreground transition-colors p-1"
-            >
-              <SearchIcon size={15} />
-            </Link>
+            <form action="/search" className="relative">
+              <input
+                name="q"
+                type="search"
+                placeholder="Caută…"
+                aria-label="Caută un parlamentar sau o lege"
+                className="w-36 focus:w-56 bg-raised border border-rim rounded-full pl-3.5 pr-8 py-1.5 text-[13px] text-foreground placeholder:text-faint focus:outline-none focus:border-foreground/40 transition-[width,border-color]"
+              />
+              <button type="submit" aria-label="Caută" className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted hover:text-foreground transition-colors">
+                <SearchIcon size={14} />
+              </button>
+            </form>
             <span className="hidden xl:inline-block font-mono text-[9.5px] tracking-[0.1em] text-muted border border-[var(--color-absent)] rounded-[3px] px-2 py-[3px] select-none whitespace-nowrap">
               NEAFILIAT POLITIC
             </span>

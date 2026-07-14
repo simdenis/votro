@@ -128,6 +128,25 @@ export default async function VoteDetail({
     ;((voters[party] ??= {})[sv.vote_choice] ??= []).push(person(sv))
   }
 
+  // party_vote_breakdown only counts recorded votes, so absentees per party
+  // read as ~0. Where we synthesized the full roster (single chamber), rebuild
+  // the breakdown from individualVotes so absents are attributed per party.
+  let breakdownRows = breakdown ?? []
+  if (!jointSession && individualVotes.length > 0) {
+    const acc = new Map<string, { color: string; ch: Record<string, number> }>()
+    for (const sv of individualVotes) {
+      const abbr = sv.politicians.parties.abbreviation
+      const e = acc.get(abbr) ?? acc.set(abbr, { color: sv.politicians.parties.color, ch: {} }).get(abbr)!
+      e.ch[sv.vote_choice] = (e.ch[sv.vote_choice] ?? 0) + 1
+    }
+    breakdownRows = [...acc].flatMap(([abbr, { color, ch }]) =>
+      Object.entries(ch).map(([choice, count]) => ({
+        vote_id: id, party_id: abbr, party_name: abbr, party_abbr: abbr,
+        party_color: color, vote_choice: choice as PartyVoteBreakdown['vote_choice'], count,
+      })),
+    )
+  }
+
 
   return (
     <div className="space-y-6">
@@ -277,12 +296,12 @@ export default async function VoteDetail({
           </div>
 
         {/* Party stance cards — right column on xl, second on mobile */}
-        {(breakdown?.length ?? 0) > 0 && (
+        {breakdownRows.length > 0 && (
           <div className="xl:col-start-2 xl:row-start-1 xl:row-span-2">
             <h2 className="text-xs font-semibold uppercase tracking-widest text-muted mb-3">
               Poziție partide
             </h2>
-            <PartyBreakdown rows={breakdown!} voters={voters} />
+            <PartyBreakdown rows={breakdownRows} voters={voters} />
           </div>
         )}
 
