@@ -58,7 +58,9 @@ curl "${U}/rest/v1/votes?select=*&order=vote_date.desc&limit=100" \\
   -H "apikey: ${K}" \\
   -H "Accept: text/csv" > voturi.csv`}</Code>
         <Code>{`# cum a votat fiecare partid la un vot anume
-curl "${U}/rest/v1/party_vote_breakdown?vote_id=eq.<UUID>" \\
+# (exemplu: legea electorală adoptată în Senat cu 55–54; înlocuiește
+#  vote_id cu al oricărui vot — îl iei din câmpul "id" al tabelei votes)
+curl "${U}/rest/v1/party_vote_breakdown?vote_id=eq.c5687cdf-41c8-42f6-9fc2-30fed9cb7cc4&select=party_abbr,vote_choice,count" \\
   -H "apikey: ${K}"`}</Code>
       </section>
 
