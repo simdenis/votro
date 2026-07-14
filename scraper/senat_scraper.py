@@ -962,6 +962,9 @@ _PARTY_ABBREV_MAP: dict[str, str] = {
     "uniți pentru": "POT",
     "upr": "POT",                # vote pages label the group with the short code "UPR"
     "pir": "PACE",               # likewise the senate "PACE - Întâi România" short code
+    "s.o.s": "SOSRO",            # dotted spelling → without this the acronym logic emits "SR"
+    "sos ro": "SOSRO",           # undotted spelling on some pages
+    "sos romania": "SOSRO",
     "partidul national liberal": "PNL",
     "partidul social democrat": "PSD",
     "uniunea democrată maghiară din România": "UDMR",
