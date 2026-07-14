@@ -94,6 +94,12 @@ export function pct(n: number | null | undefined): string {
   return `${n.toFixed(1)}%`
 }
 
+/** Contested-vote threshold used by party cohesion: the minority camp
+ *  (FOR vs AGAINST+ABSTAIN) gathered at least this % of votes cast.
+ *  MUST match supabase/migrations/027_contested_cohesion.sql — the UI copy
+ *  interpolates this constant so the wording can't drift from the data. */
+export const CONTESTED_MIN_PCT = 20
+
 /** Loyalty = votes cast WITH the party line over ALL plenary votes held in the
  *  member's chamber. Absences pull it down: an 83%-absent MP can no longer
  *  wear a "100% loyalty" badge computed on his 37 expressed votes. Floored so

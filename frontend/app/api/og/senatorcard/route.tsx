@@ -30,6 +30,8 @@ async function recentFor(id: string): Promise<{ label: string; rows: RecentVoteR
   if (!Array.isArray(rows) || rows.length === 0) return { label: 'Ultimele voturi', rows: [] }
   const toRow = (v: any): RecentVoteRow => ({
     lawCode: v.votes?.laws?.code ?? 'VOT DE PLEN',
+    // "2026-06-30" → "30.06.2026"
+    date: v.votes?.vote_date ? v.votes.vote_date.slice(0, 10).split('-').reverse().join('.') : null,
     title: v.votes?.laws?.title ?? v.votes?.description ?? 'Vot de plen',
     choice: v.vote_choice,
   })

@@ -4,6 +4,8 @@ import { countNoun } from '@/lib/utils'
 
 export interface RecentVoteRow {
   lawCode: string
+  /** DD.MM.YYYY */
+  date: string | null
   title: string
   choice: 'for' | 'against' | 'abstention' | 'not_voted' | 'absent'
 }
@@ -114,8 +116,9 @@ export function SenatorCard({ data }: { data: SenatorCardData }) {
             {data.recent!.slice(0, 3).map((r, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '9px 0', borderTopWidth: i > 0 ? 1 : 0, borderTopStyle: 'solid', borderTopColor: C.hair }}>
                 <div style={{ display: 'flex', fontSize: 15, fontWeight: 700, color: C.navy, minWidth: 118 }}>{r.lawCode}</div>
+                {r.date && <div style={{ display: 'flex', fontSize: 13, opacity: 0.45, minWidth: 84 }}>{r.date}</div>}
                 <div style={{ display: 'flex', flex: 1, fontSize: 15, opacity: 0.62 }}>
-                  {r.title.length > 64 ? r.title.slice(0, 64) + '…' : r.title}
+                  {r.title.length > 56 ? r.title.slice(0, 56) + '…' : r.title}
                 </div>
                 <div style={{
                   display: 'flex', fontSize: 13, fontWeight: 700,
