@@ -86,6 +86,11 @@ log "=== Interest scores (Gemini) ==="
 log "=== Roster (active mandates + county) ==="
 "$PY" scraper/roster_scraper.py >>"$LOG" 2>&1 || { rc=1; log "Roster scrape FAILED"; }
 
+# Refresh the party_agreement matrix (materialized view, migration 029) so
+# /analize reflects new votes. Cheap no-op during recess; non-fatal.
+log "=== Refresh analytics matviews ==="
+"$PY" scraper/refresh_matviews.py >>"$LOG" 2>&1 || { rc=1; log "Matview refresh FAILED"; }
+
 # Government roles (gov.ro cabinet page) — labels MPs serving as ministers.
 # Runs after the roster so newly inserted members can be labeled. Never wipes
 # labels on a broken parse (sanity floor inside).
