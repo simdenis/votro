@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
-import { formatDate, choiceLabel, choiceColor, countNoun, capFirst, lawSlug } from '@/lib/utils'
+import { formatDate, choiceLabel, choiceColor, countNoun, capFirst, lawSlug , personSlug } from '@/lib/utils'
 import { activeSeats } from '@/lib/seats'
 import { OutcomeBadge } from '@/components/outcome-badge'
 import { PartyBadge } from '@/components/party-badge'
@@ -306,7 +306,7 @@ export default async function VoteDetail({
                 {individualVotes.map(sv => (
                   <Link
                     key={sv.id}
-                    href={`${memberPath}/${sv.politician_id}`}
+                    href={`${memberPath}/${personSlug(sv.politicians.first_name, sv.politicians.name)}`}
                     className="flex items-center gap-3 px-4 py-3 hover:bg-raised transition-colors"
                     style={sv.party_line_deviation ? { borderLeft: '2px solid var(--color-deviation)' } : undefined}
                   >

@@ -2,7 +2,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
 import { PartyBadge } from '@/components/party-badge'
-import { hasPartyLine } from '@/lib/utils'
+import { hasPartyLine , personSlug } from '@/lib/utils'
 import { CountyMap } from '@/components/county-map'
 import { ScrollIntoView } from '@/components/scroll-into-view'
 import type { PoliticianStats } from '@/lib/types'
@@ -42,7 +42,7 @@ function MemberTable({ title, members, basePath }: {
               {members.map(m => (
                 <tr key={m.politician_id} className="border-b border-rim hover:bg-raised transition-colors">
                   <td className="py-2.5 pr-4">
-                    <Link href={`${basePath}/${m.politician_id}`} className="font-medium text-foreground hover:underline">
+                    <Link href={`${basePath}/${personSlug(m.first_name, m.name)}`} className="font-medium text-foreground hover:underline">
                       {m.first_name} {m.name}
                     </Link>
                   </td>

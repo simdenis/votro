@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
-import { formatDate, choiceLabel, choiceColor, pct, hasPartyLine } from '@/lib/utils'
+import { formatDate, choiceLabel, choiceColor, pct, hasPartyLine , personSlug } from '@/lib/utils'
 import { OutcomeBadge } from '@/components/outcome-badge'
 import { StatsCard } from '@/components/stats-card'
 import { DonutChart } from '@/components/donut-chart'
@@ -125,7 +125,7 @@ export default async function PartyPage({ params }: { params: Promise<{ abbr: st
                   {members.map(m => (
                     <tr key={m.politician_id} className="border-b border-rim hover:bg-raised transition-colors">
                       <td className="py-2.5 px-3">
-                        <Link href={`${basePath}/${m.politician_id}`} className="font-medium text-foreground hover:underline">
+                        <Link href={`${basePath}/${personSlug(m.first_name, m.name)}`} className="font-medium text-foreground hover:underline">
                           {m.first_name} {m.name}
                         </Link>
                       </td>

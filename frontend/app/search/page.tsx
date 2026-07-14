@@ -1,4 +1,4 @@
-import { capFirst, lawSlug } from '@/lib/utils'
+import { capFirst, lawSlug , personSlug } from '@/lib/utils'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
@@ -89,8 +89,8 @@ export default async function SearchPage({
           <div className="bg-surface border border-rim rounded-xl overflow-hidden divide-y divide-rim">
             {politicians.map((p: any) => {
               const href = p.chamber === 'senate'
-                ? `/senatori/${p.id}`
-                : `/deputati/${p.id}`
+                ? `/senatori/${personSlug(p.first_name, p.name)}`
+                : `/deputati/${personSlug(p.first_name, p.name)}`
               return (
                 <Link
                   key={p.id}
