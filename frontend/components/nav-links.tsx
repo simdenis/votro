@@ -10,6 +10,7 @@ export const NAV_LINKS: { href: string; label: string; match: string[]; children
   { href: '/legi',      label: 'Legi',         match: ['/legi', '/voturi', '/tacite'], children: LEGI_SECTIONS },
   { href: '/senatori',  label: 'Parlamentari', match: ['/senatori', '/deputati', '/traseisti', '/parlamentarul-tau'], children: PARLAMENTARI_SECTIONS },
   { href: '/partide',   label: 'Partide',      match: ['/partide'] },
+  { href: '/analize',   label: 'Analize',      match: ['/analize'] },
   { href: '/despre',    label: 'Despre',       match: ['/despre', '/date', '/contribuie'], children: DESPRE_SECTIONS },
 ]
 
