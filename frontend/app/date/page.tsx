@@ -11,19 +11,6 @@ export const metadata: Metadata = {
 const U = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const K = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
-const TABLES: { name: string; desc: string }[] = [
-  { name: 'votes',                'desc': 'toate voturile de plen (dată, cameră, rezultat, numărători)' },
-  { name: 'politician_votes',     'desc': 'votul fiecărui parlamentar la fiecare vot (pentru/împotrivă/abținere/absent) + devierea de la linia de partid' },
-  { name: 'politicians',          'desc': 'parlamentarii: nume, cameră, județ, partid curent, rol în Guvern' },
-  { name: 'parties',              'desc': 'partidele parlamentare' },
-  { name: 'laws',                 'desc': 'legile urmărite: cod, titlu, categorie, rezumat' },
-  { name: 'law_status',           'desc': 'drumul fiecărei legi: voturile din ambele camere + statusul prezidențial' },
-  { name: 'senator_stats',        'desc': 'agregate per senator: prezență, devieri, comportament de vot' },
-  { name: 'deputy_stats',         'desc': 'agregate per deputat' },
-  { name: 'party_cohesion',       'desc': 'coeziunea partidelor pe voturile disputate' },
-  { name: 'party_vote_breakdown', 'desc': 'distribuția voturilor pe partid, pentru fiecare vot' },
-]
-
 const Code = CopyCode
 
 export default function DatePage() {
@@ -67,22 +54,6 @@ curl "${U}/rest/v1/votes?select=*&order=vote_date.desc&limit=100" \\
 #  vote_id cu al oricărui vot — îl iei din câmpul "id" al tabelei votes)
 curl "${U}/rest/v1/party_vote_breakdown?vote_id=eq.c5687cdf-41c8-42f6-9fc2-30fed9cb7cc4&select=party_abbr,vote_choice,count" \\
   -H "apikey: ${K}"`}</Code>
-      </section>
-
-      <section className="space-y-3">
-        <h2 className="text-sm font-semibold uppercase tracking-widest text-muted">Tabele și view-uri disponibile</h2>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <tbody>
-              {TABLES.map(t => (
-                <tr key={t.name} className="border-b border-rim">
-                  <td className="py-2 pr-4 font-mono text-[12.5px] text-foreground whitespace-nowrap align-top">{t.name}</td>
-                  <td className="py-2 text-muted">{t.desc}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
       </section>
 
       <section className="space-y-3">

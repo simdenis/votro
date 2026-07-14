@@ -8,6 +8,10 @@ import { CountyMap } from '@/components/county-map'
 import type { VoteWithLaw } from '@/lib/types'
 import { CategoryBadge } from '@/components/category-badge'
 import { NewsletterForm } from '@/components/newsletter-form'
+import { ApiBuilder } from '@/components/api-builder'
+
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const SUPABASE_ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
 export const dynamic = 'force-dynamic'
 // absolute: the "%s | LaButoane" template would burn the homepage SERP line on "Acasă"
@@ -271,6 +275,21 @@ export default async function Dashboard() {
 
           </aside>
       </div>
+
+      {/* ── Open-data builder ────────────────────────────── */}
+      <section className="mt-14 border-t-2 border-sidebar pt-8">
+        <div className="flex items-baseline justify-between mb-1.5">
+          <h2 className="font-serif text-[20px] font-normal text-foreground">Ia datele</h2>
+          <Link href="/date" className="text-[12px] text-muted hover:text-foreground transition-colors">
+            Despre API →
+          </Link>
+        </div>
+        <p className="text-[13px] text-muted mb-4 max-w-2xl">
+          Alege ce vrei, completează câmpurile, și primești comanda gata de rulat, fișierul CSV/JSON
+          sau cardul de partajat — fără cont, fără cod.
+        </p>
+        <ApiBuilder baseUrl={SUPABASE_URL} apiKey={SUPABASE_ANON} />
+      </section>
     </div>
   )
 }
