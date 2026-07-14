@@ -77,7 +77,7 @@ export function slugToCode(slug: string): string {
 // MUST match the SQL generated column in migration 031 exactly, or slug links
 // won't resolve. Same FROM/TO translate maps, same "collapse to dash" regex.
 const SLUG_FROM = 'ăâîșțşţáàäéèêíóòöőúùüű'
-const SLUG_TO   = 'aaisttstaaaeeeioooouuuu'
+const SLUG_TO   = 'aaiststaaaeeeioooouuuu'
 /** Human politician URL slug, e.g. ("Victor-Viorel","Ponta") → "victor-viorel-ponta". */
 export function personSlug(firstName: string | null | undefined, name: string | null | undefined): string {
   const lower = `${firstName ?? ''} ${name ?? ''}`.toLowerCase()
