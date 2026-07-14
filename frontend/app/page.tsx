@@ -1,11 +1,11 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
-import { formatDate, countNoun, hasPartyLine, capFirst, recessUntil, CONTESTED_MIN_PCT } from '@/lib/utils'
+import { formatDate, countNoun, capFirst, recessUntil } from '@/lib/utils'
 import { OutcomeBadge } from '@/components/outcome-badge'
 import { ParliamentBar } from '@/components/parliament-bar'
 import { CountyMap } from '@/components/county-map'
-import type { VoteWithLaw, PartyCohesion } from '@/lib/types'
+import type { VoteWithLaw } from '@/lib/types'
 import { CategoryBadge } from '@/components/category-badge'
 import { NewsletterForm } from '@/components/newsletter-form'
 
@@ -16,11 +16,8 @@ export const metadata: Metadata = { title: { absolute: 'LaButoane — Cum voteaz
 export default async function Dashboard() {
   const db = getDB()
 
-  const [r0, r1, r2, r3, r4, r5, r6, r7, r8] = await Promise.all([
+  const [r0, r2, r3, r4, r5, r6, r7, r8] = await Promise.all([
     db.from('law_status').select('*', { count: 'exact', head: true }),
-    // cohesion is computed on contested votes only (migration 027) — require
-    // enough of them for the percentage to mean something
-    db.from('party_cohesion').select('*').gte('votes_participated', 10).order('cohesion_pct', { ascending: false }),
     // substantive votes only — presence checks / agenda changes drown the feed
     db.from('votes').select('*, laws(*)').not('law_id', 'is', null).order('vote_date', { ascending: false }).limit(8),
     db.from('law_status').select('*', { count: 'exact', head: true }).eq('presidential_status', 'promulgat'),
@@ -38,8 +35,6 @@ export default async function Dashboard() {
   ])
 
   const totalLaws     = r0.count ?? 0
-  // IND/MIN are catch-all labels, not parties — "cohesion" is meaningless there
-  const cohesionData  = ((r1.data as PartyCohesion[] | null) ?? []).filter(c => hasPartyLine(c.abbreviation))
   const recentVotes   = (r2.data as VoteWithLaw[] | null) ?? []
   const promulgatedCount = r3.count ?? 0
   const respinsCount  = r4.count ?? 0
@@ -203,9 +198,8 @@ export default async function Dashboard() {
           )}
         </section>
 
-        {/* Sidebar: mini map + cohesion + shame corner */}
-        {cohesionData.length > 0 && (
-          <aside>
+        {/* Sidebar: find-your-MP map · top absences · open data · newsletter */}
+        <aside>
             {/* personal hook at the top of the sidebar — "find your MP"
                 converts a first-time visitor, an email form doesn't */}
             <div className="flex items-baseline justify-between border-b-2 border-sidebar pb-[5px] mb-3">
@@ -244,29 +238,24 @@ export default async function Dashboard() {
               </>
             )}
 
-            <h2 className="font-serif text-[16px] font-normal text-foreground border-b-2 border-sidebar pb-[5px] mb-1 mt-2">
-              Coeziune partide
+            {/* Open data — the growth channel: journalists/researchers building
+                on the API cite the site, which is how these tools become
+                institutions. Replaces the cohesion widget (near-identical %
+                across the big parties told a citizen nothing). */}
+            <h2 className="font-serif text-[16px] font-normal text-foreground border-b-2 border-sidebar pb-[5px] mb-3 mt-10">
+              Date deschise
             </h2>
-            <p
-              className="text-[11px] text-faint mb-3"
-              title={`Vot disputat = tabăra minoritară (pentru vs. împotrivă + abțineri) a strâns cel puțin ${CONTESTED_MIN_PCT}% din voturile exprimate. Voturile aproape unanime nu diferențiază partidele.`}
+            <Link
+              href="/date"
+              className="block bg-surface border border-rim rounded-lg p-3.5 hover:bg-raised transition-colors"
             >
-              doar voturi disputate (minoritatea ≥ {CONTESTED_MIN_PCT}% din voturile exprimate)
-            </p>
-            <div className="space-y-2">
-              {cohesionData.map(c => (
-                <Link
-                  key={c.party_id}
-                  href={`/partide/${c.abbreviation}`}
-                  className="flex items-center justify-between bg-surface border border-rim rounded-lg px-3 py-2 hover:bg-raised transition-colors"
-                  style={{ borderLeftWidth: 3, borderLeftColor: c.color }}
-                >
-                  <span className="text-[13px] font-medium text-foreground">{c.abbreviation}</span>
-                  {/* one decimal — whole-percent rounding collapses 99.3 and 98.5 into the same "99" */}
-                  <span className="text-[13px] font-semibold tabular-nums text-foreground">{c.cohesion_pct?.toFixed(1)}%</span>
-                </Link>
-              ))}
-            </div>
+              <p className="text-[12.5px] text-foreground leading-snug">
+                Toate voturile, absențele și legile — API public + export CSV/JSON, fără cont.
+              </p>
+              <span className="inline-block mt-2 text-[11px] font-medium text-muted">
+                Pentru jurnaliști și cercetători →
+              </span>
+            </Link>
 
             <h2 className="font-serif text-[16px] font-normal text-foreground border-b-2 border-sidebar pb-[5px] mb-3 mt-10">
               Parlamentul, pe email
@@ -274,7 +263,6 @@ export default async function Dashboard() {
             <NewsletterForm compact />
 
           </aside>
-        )}
       </div>
     </div>
   )
