@@ -70,6 +70,12 @@ log "=== Presidential decrees (presidency.ro) ==="
 log "=== Law summaries (Gemini) ==="
 "$PY" scraper/gemini_summarizer.py >>"$LOG" 2>&1 || { rc=1; log "Gemini summarizer FAILED"; }
 
+# AI categories (Haiku) for laws the title-regex classifier missed — reads the
+# fresh summary, so it runs after the summarizer and before interest scoring
+# (which uses the category). Only fills law_category IS NULL, ~$0.0003/law.
+log "=== Law categories (Haiku) ==="
+"$PY" scraper/categorize_laws.py >>"$LOG" 2>&1 || { rc=1; log "Categorizer FAILED"; }
+
 # Public-interest scores (1-100) for post selection — runs after the summarizer
 # so fresh summaries feed the rating. Incremental, 429-safe, skips without key.
 log "=== Interest scores (Gemini) ==="
