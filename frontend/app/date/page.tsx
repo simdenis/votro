@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { SectionNav, DESPRE_SECTIONS } from '@/components/section-nav'
+import { CopyCode } from '@/components/copy-code'
 
 export const metadata: Metadata = {
   title: 'Date deschise',
@@ -22,13 +23,7 @@ const TABLES: { name: string; desc: string }[] = [
   { name: 'party_vote_breakdown', 'desc': 'distribuția voturilor pe partid, pentru fiecare vot' },
 ]
 
-function Code({ children }: { children: string }) {
-  return (
-    <pre className="bg-raised border border-rim rounded-lg p-3.5 text-[12px] leading-relaxed overflow-x-auto whitespace-pre">
-      <code>{children}</code>
-    </pre>
-  )
-}
+const Code = CopyCode
 
 export default function DatePage() {
   return (
