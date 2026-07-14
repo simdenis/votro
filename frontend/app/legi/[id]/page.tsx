@@ -1,4 +1,4 @@
-import { notFound, redirect } from 'next/navigation'
+import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
@@ -39,8 +39,8 @@ export default async function LawDetail({ params }: { params: Promise<{ id: stri
   const { data } = await lawQuery(db, id, '*').maybeSingle()
   const law = data as LawStatus | null
   if (!law) notFound()
-  // canonicalize: a UUID (or wrong-case slug) redirects to the code slug
-  if (id !== lawSlug(law.code)) redirect(`/legi/${lawSlug(law.code)}`)
+  // UUID / wrong-case URLs still serve the page; the canonical tag (in
+  // generateMetadata) points search engines at the code-slug URL.
 
   // Absentees per chamber: official seats − present. Joint sessions (present >
   // one chamber's seats) return null — the single-chamber framing doesn't apply.
