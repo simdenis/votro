@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
-import { formatDate, countNoun, hasPartyLine, capFirst, recessUntil } from '@/lib/utils'
+import { formatDate, countNoun, hasPartyLine, capFirst, recessUntil, CONTESTED_MIN_PCT } from '@/lib/utils'
 import { OutcomeBadge } from '@/components/outcome-badge'
 import { ParliamentBar } from '@/components/parliament-bar'
 import { CountyMap } from '@/components/county-map'
@@ -247,7 +247,12 @@ export default async function Dashboard() {
             <h2 className="font-serif text-[16px] font-normal text-foreground border-b-2 border-sidebar pb-[5px] mb-1 mt-2">
               Coeziune partide
             </h2>
-            <p className="text-[11px] text-faint mb-3">doar voturi disputate — cele aproape unanime nu spun nimic</p>
+            <p
+              className="text-[11px] text-faint mb-3"
+              title={`Vot disputat = tabăra minoritară (pentru vs. împotrivă + abțineri) a strâns cel puțin ${CONTESTED_MIN_PCT}% din voturile exprimate. Voturile aproape unanime nu diferențiază partidele.`}
+            >
+              doar voturi disputate (minoritatea ≥ {CONTESTED_MIN_PCT}% din voturile exprimate)
+            </p>
             <div className="space-y-2">
               {cohesionData.map(c => (
                 <Link

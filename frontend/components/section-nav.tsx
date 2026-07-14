@@ -18,7 +18,7 @@ export const LEGI_SECTIONS: SectionItem[] = [
 export const PARLAMENTARI_SECTIONS: SectionItem[] = [
   { href: '/senatori', label: 'Senatori' },
   { href: '/deputati', label: 'Deputați' },
-  { href: '/traseisti', label: 'Traseiști' },
+  { href: '/traseisti', label: 'Schimbări de afiliere' },
   { href: '/parlamentarul-tau', label: 'Parlamentarul tău' },
 ]
 

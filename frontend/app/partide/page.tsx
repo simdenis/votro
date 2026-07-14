@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
-import { pct, textOnColor, hasPartyLine } from '@/lib/utils'
+import { pct, textOnColor, hasPartyLine, CONTESTED_MIN_PCT } from '@/lib/utils'
 import { DonutChart } from '@/components/donut-chart'
 import type { PartyCohesion, PartyAbsence } from '@/lib/types'
 
@@ -30,7 +30,7 @@ export default async function PartiesPage() {
         <p className="text-[12.5px] text-muted mt-1.5">
           Coeziunea se calculează pe baza <strong className="text-foreground">afilierii curente</strong> a
           parlamentarilor, doar pe <strong className="text-foreground">voturile disputate</strong> (tabăra
-          minoritară ≥ 20% din voturile exprimate) — voturile aproape unanime nu diferențiază partidele.
+          minoritară ≥ {CONTESTED_MIN_PCT}% din voturile exprimate) — voturile aproape unanime nu diferențiază partidele.
         </p>
       </div>
       {!parties?.length ? (

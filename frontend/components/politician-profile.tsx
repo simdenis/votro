@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { formatDate, choiceLabel, choiceColor, pct, countNoun, hasPartyLine, capFirst, loyaltyPct } from '@/lib/utils'
+import { formatDate, formatDateShort, choiceLabel, choiceColor, pct, countNoun, hasPartyLine, capFirst, loyaltyPct } from '@/lib/utils'
 import { PartyBadge } from '@/components/party-badge'
 import { OutcomeBadge } from '@/components/outcome-badge'
 import { LoyaltyMeter } from '@/components/loyalty-meter'
@@ -187,6 +187,7 @@ export function PoliticianProfile({ stats, history, deviationRows, partyHistory,
                   >
                     {row.votes.laws?.code ?? '—'}
                   </Link>
+                  <span className="text-[10px] text-faint tabular-nums flex-shrink-0">{formatDateShort(row.votes.vote_date)}</span>
                   <span className="text-xs text-muted truncate flex-1">{capFirst(row.votes.laws?.title ?? row.votes.description ?? '') || 'Vot procedural (fără lege identificată)'}</span>
                   <span className="text-xs font-bold flex-shrink-0" style={{ color: choiceColor(row.vote_choice) }}>
                     {choiceLabel(row.vote_choice)}

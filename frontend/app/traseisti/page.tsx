@@ -6,7 +6,7 @@ import { SectionNav, PARLAMENTARI_SECTIONS } from '@/components/section-nav'
 
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = {
-  title: 'Traseiști',
+  title: 'Schimbări de afiliere',
   description: 'Parlamentarii care au schimbat partidul în timpul mandatului actual — cu traseul complet.',
 }
 
@@ -24,7 +24,7 @@ export default async function TraseistiPage() {
       <SectionNav items={PARLAMENTARI_SECTIONS} />
       <div>
         <h1 className="font-serif text-[30px] sm:text-[40px] font-normal tracking-[-0.01em] leading-[1.05] text-foreground">
-          Traseiști
+          Schimbări de afiliere
         </h1>
         <p className="text-sm text-muted mt-3 max-w-2xl">
           Parlamentarii care au schimbat partidul (sau au devenit neafiliați) de la începutul
@@ -34,7 +34,7 @@ export default async function TraseistiPage() {
       </div>
 
       {!switchers.length ? (
-        <p className="text-sm text-muted py-8">Niciun traseist înregistrat până acum.</p>
+        <p className="text-sm text-muted py-8">Nicio schimbare de afiliere înregistrată până acum.</p>
       ) : (
         <div className="space-y-8">
           <p className="text-[13px] text-muted">

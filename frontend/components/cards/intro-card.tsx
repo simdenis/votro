@@ -96,7 +96,7 @@ export function IntroCard({ data }: { data: IntroCardData }) {
           <Bullet>Absențele reale de la voturile din plen.</Bullet>
           <Bullet>Cine deviază de la linia de partid.</Bullet>
           <Bullet>Legile adoptate tacit (fără niciun vot).</Bullet>
-          <Bullet>Traseiștii (cine și-a schimbat partidul).</Bullet>
+          <Bullet>Schimbările de afiliere (cine și-a schimbat partidul).</Bullet>
           <Bullet>Fiecare lege, explicată simplu.</Bullet>
         </div>
         <div style={{ display: 'flex', padding: '0 64px 48px', fontSize: 20, fontWeight: 600, color: C.navy }}>@la.butoane</div>

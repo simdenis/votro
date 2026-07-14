@@ -119,7 +119,7 @@ export function PoliticianList({ title, basePath, people, sort, dir, switcherIds
                             className="text-[10px] font-semibold text-deviere bg-deviere/10 rounded-[3px] px-1.5 py-px flex-shrink-0"
                             title="A schimbat partidul în acest mandat"
                           >
-                            ⇄ traseist
+                            ⇄ a schimbat partidul
                           </span>
                         )}
                       </Link>
