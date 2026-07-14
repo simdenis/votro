@@ -247,8 +247,13 @@ export default async function LegiPage({
                     </Link>
                   </td>
                   <td className="py-3 pr-4 max-w-xs">
-                    <Link href={`/legi/${lawSlug(law.code)}`} className="line-clamp-1 text-foreground hover:underline" title={capFirst(law.title)}>
-                      {capFirst(law.title)}
+                    {/* plain-language summary is the headline where we have one;
+                        the official title stays as the small verifiable subtitle */}
+                    <Link href={`/legi/${lawSlug(law.code)}`} className="block hover:underline" title={capFirst(law.title)}>
+                      <span className="line-clamp-2 text-foreground">{law.summary || capFirst(law.title)}</span>
+                      {law.summary && (
+                        <span className="line-clamp-1 text-[11px] text-faint mt-0.5">{capFirst(law.title)}</span>
+                      )}
                     </Link>
                     <div className="flex gap-1 mt-1 flex-wrap items-center">
                       {law.law_category && (

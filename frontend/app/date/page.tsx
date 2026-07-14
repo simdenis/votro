@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { SectionNav, DESPRE_SECTIONS } from '@/components/section-nav'
 import { CopyCode } from '@/components/copy-code'
+import { ApiBuilder } from '@/components/api-builder'
 
 export const metadata: Metadata = {
   title: 'Date deschise',
@@ -38,6 +39,15 @@ export default function DatePage() {
           (senat.ro, cdep.ro) și acoperă voturile de plen de la începutul actualei legislaturi (20 decembrie 2024).
         </p>
       </div>
+
+      <section className="space-y-3">
+        <h2 className="text-sm font-semibold uppercase tracking-widest text-muted">Constructor de interogări</h2>
+        <p className="text-sm text-foreground leading-relaxed">
+          Alege ce vrei, completează câmpurile, și primești comanda gata de rulat — sau descarcă
+          direct fișierul. Fără cont, fără cod.
+        </p>
+        <ApiBuilder baseUrl={U} apiKey={K} />
+      </section>
 
       <section className="space-y-3">
         <h2 className="text-sm font-semibold uppercase tracking-widest text-muted">Acces rapid</h2>
