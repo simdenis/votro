@@ -1,4 +1,4 @@
-import { capFirst } from '@/lib/utils'
+import { capFirst, lawSlug } from '@/lib/utils'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
@@ -127,7 +127,7 @@ export default async function SearchPage({
             {laws.map((l: any) => (
               <Link
                 key={l.id}
-                href={`/legi/${l.id}`}
+                href={`/legi/${lawSlug(l.code)}`}
                 className="flex items-start gap-3 px-4 py-3 hover:bg-raised transition-colors"
               >
                 <span className="font-mono text-xs text-muted font-semibold mt-0.5 shrink-0">

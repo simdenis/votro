@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
-import { formatDate, capFirst } from '@/lib/utils'
+import { formatDate, capFirst, lawSlug } from '@/lib/utils'
 import { OutcomeBadge } from '@/components/outcome-badge'
 import { BaseLawBadges } from '@/components/base-law-badge'
 import { CategoryBadge } from '@/components/category-badge'
@@ -242,12 +242,12 @@ export default async function LegiPage({
               {laws.map(law => (
                 <tr key={law.law_id} className="border-b border-rim hover:bg-raised transition-colors">
                   <td className="py-3 pr-4">
-                    <Link href={`/legi/${law.law_id}`} className="font-mono hover:underline whitespace-nowrap" style={{ color: 'var(--sidebar-bg)' }}>
+                    <Link href={`/legi/${lawSlug(law.code)}`} className="font-mono hover:underline whitespace-nowrap" style={{ color: 'var(--sidebar-bg)' }}>
                       {law.code}
                     </Link>
                   </td>
                   <td className="py-3 pr-4 max-w-xs">
-                    <Link href={`/legi/${law.law_id}`} className="line-clamp-1 text-foreground hover:underline" title={capFirst(law.title)}>
+                    <Link href={`/legi/${lawSlug(law.code)}`} className="line-clamp-1 text-foreground hover:underline" title={capFirst(law.title)}>
                       {capFirst(law.title)}
                     </Link>
                     <div className="flex gap-1 mt-1 flex-wrap items-center">

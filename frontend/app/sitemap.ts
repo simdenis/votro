@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next'
 import { getDB } from '@/lib/supabase'
+import { lawSlug } from '@/lib/utils'
 
 export const revalidate = 3600
 
@@ -11,7 +12,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     db.from('votes').select('id, vote_date').order('vote_date', { ascending: false }),
     db.from('senator_stats').select('politician_id'),
     db.from('deputy_stats').select('politician_id'),
-    db.from('laws').select('id'),
+    db.from('laws').select('id, code'),
     db.from('party_cohesion').select('abbreviation'),
   ])
 
@@ -40,7 +41,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }))
 
   const lawUrls: MetadataRoute.Sitemap = (laws.data ?? []).map(l => ({
-    url: `${base}/legi/${l.id}`,
+    url: `${base}/legi/${lawSlug(l.code)}`,
     changeFrequency: 'weekly',
     priority: 0.6,
   }))

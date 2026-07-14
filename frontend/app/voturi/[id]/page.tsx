@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
-import { formatDate, choiceLabel, choiceColor, countNoun, capFirst } from '@/lib/utils'
+import { formatDate, choiceLabel, choiceColor, countNoun, capFirst, lawSlug } from '@/lib/utils'
 import { activeSeats } from '@/lib/seats'
 import { OutcomeBadge } from '@/components/outcome-badge'
 import { PartyBadge } from '@/components/party-badge'
@@ -139,7 +139,7 @@ export default async function VoteDetail({
           <Link href="/voturi" className="hover:text-foreground transition-colors">Voturi</Link>
           <span className="text-faint">›</span>
           {vote.law_id && vote.laws ? (
-            <Link href={`/legi/${vote.law_id}`} className="hover:text-foreground transition-colors font-semibold">
+            <Link href={`/legi/${lawSlug(vote.laws.code)}`} className="hover:text-foreground transition-colors font-semibold">
               {vote.laws.code}
             </Link>
           ) : (
