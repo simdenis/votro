@@ -247,7 +247,7 @@ export default async function LegiPage({
                     </Link>
                   </td>
                   <td className="py-3 pr-4 max-w-xs">
-                    <Link href={`/legi/${law.law_id}`} className="line-clamp-2 text-foreground hover:underline">
+                    <Link href={`/legi/${law.law_id}`} className="line-clamp-1 text-foreground hover:underline" title={capFirst(law.title)}>
                       {capFirst(law.title)}
                     </Link>
                     <div className="flex gap-1 mt-1 flex-wrap items-center">

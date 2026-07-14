@@ -97,8 +97,12 @@ export default async function VotesPage({
                     </span>
                   </td>
                   <td className="py-3 pr-4 max-w-sm">
-                    <Link href={`/voturi/${vote.id}`} className="line-clamp-2 text-foreground hover:underline">
-                      {vote.laws?.title ?? vote.description ?? 'Vot de plen fără lege asociată'}
+                    <Link
+                      href={`/voturi/${vote.id}`}
+                      className="line-clamp-1 text-foreground hover:underline"
+                      title={vote.laws?.title ?? vote.description ?? undefined}
+                    >
+                      {vote.laws?.title ?? vote.description ?? 'Vot procedural (fără lege identificată)'}
                     </Link>
                     {vote.laws?.law_category && (
                       <div className="lg:hidden mt-1">
