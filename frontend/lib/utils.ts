@@ -65,6 +65,15 @@ export function isUuid(v: string | null | undefined): v is string {
   return !!v && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v)
 }
 
+/** Human, shareable law URL slug. Codes are "L597/2025" / "PLx12/2026" — one
+ *  slash, no spaces — so "/" ⇄ "-" round-trips unambiguously. */
+export function lawSlug(code: string): string {
+  return code.replace('/', '-')
+}
+export function slugToCode(slug: string): string {
+  return slug.replace('-', '/')
+}
+
 export function textOnColor(bgHex: string): string {
   // PNL yellow needs black text; everything else uses white
   return bgHex === '#ffdd00' ? '#000000' : '#ffffff'

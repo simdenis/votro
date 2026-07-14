@@ -75,14 +75,21 @@ export default async function Dashboard() {
             Cum votează Parlamentul?
           </h1>
           {/* plain GET form — works before hydration and for crawlers */}
-          <form action="/search" className="mt-4 max-w-[420px]">
+          <form action="/search" className="mt-4 max-w-[420px] flex gap-2">
             <input
               name="q"
               type="search"
               placeholder="Caută un parlamentar sau o lege…"
               aria-label="Caută un parlamentar sau o lege"
-              className="w-full border border-rim rounded-lg px-3.5 py-2 text-[14px] bg-surface placeholder:text-faint focus:outline-none focus:border-foreground/40"
+              className="flex-1 min-w-0 border border-rim rounded-lg px-3.5 py-2 text-[14px] bg-surface placeholder:text-faint focus:outline-none focus:border-foreground/40"
             />
+            <button
+              type="submit"
+              className="btn-tactile shrink-0 rounded-lg px-4 py-2 text-[14px] font-semibold text-white"
+              style={{ background: 'var(--sidebar-bg)' }}
+            >
+              Caută
+            </button>
           </form>
         </div>
       </header>

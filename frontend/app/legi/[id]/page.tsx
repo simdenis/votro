@@ -1,8 +1,8 @@
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
-import { formatDate, capFirst } from '@/lib/utils'
+import { formatDate, capFirst, isUuid, lawSlug, slugToCode } from '@/lib/utils'
 import { activeSeats } from '@/lib/seats'
 import { OutcomeBadge } from '@/components/outcome-badge'
 import { PartyBreakdown } from '@/components/party-breakdown'
@@ -15,21 +15,32 @@ import type { LawStatus, PartyVoteBreakdown } from '@/lib/types'
 
 export const revalidate = 3600
 
+// A law is addressed by its code slug (/legi/L597-2025); UUIDs still resolve
+// (old shared/indexed links) and get redirected to the canonical slug.
+function lawQuery(db: ReturnType<typeof getDB>, id: string, cols: string) {
+  const q = db.from('law_status').select(cols)
+  return isUuid(id) ? q.eq('law_id', id) : q.eq('code', slugToCode(id))
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params
-  const db = getDB()
-  const { data } = await db.from('law_status').select('code, title').eq('law_id', id).maybeSingle()
+  const { data } = await lawQuery(getDB(), id, 'code, title').maybeSingle<{ code: string; title: string }>()
   if (!data) return { title: 'Lege' }
-  return { title: `${data.code} — ${(data.title ?? '').slice(0, 60)}` }
+  return {
+    title: `${data.code} — ${(data.title ?? '').slice(0, 60)}`,
+    alternates: { canonical: `/legi/${lawSlug(data.code)}` },
+  }
 }
 
 export default async function LawDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const db = getDB()
 
-  const { data } = await db.from('law_status').select('*').eq('law_id', id).maybeSingle()
+  const { data } = await lawQuery(db, id, '*').maybeSingle()
   const law = data as LawStatus | null
   if (!law) notFound()
+  // canonicalize: a UUID (or wrong-case slug) redirects to the code slug
+  if (id !== lawSlug(law.code)) redirect(`/legi/${lawSlug(law.code)}`)
 
   // Absentees per chamber: official seats − present. Joint sessions (present >
   // one chamber's seats) return null — the single-chamber framing doesn't apply.
