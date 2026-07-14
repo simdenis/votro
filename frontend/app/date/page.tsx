@@ -40,7 +40,7 @@ export default function DatePage() {
           Toate datele LaButoane sunt publice și interogabile direct, fără cont și fără limită de
           utilizare rezonabilă — API REST (PostgREST) cu răspuns JSON sau CSV. Dacă publici ceva pe
           baza lor, un link către la-butoane.ro e tot ce cerem. Datele provin din sursele oficiale
-          (senat.ro, cdep.ro) și acoperă voturile de plen începând cu 2 februarie 2026.
+          (senat.ro, cdep.ro) și acoperă voturile de plen de la începutul actualei legislaturi (20 decembrie 2024).
         </p>
       </div>
 

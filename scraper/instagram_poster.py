@@ -391,7 +391,7 @@ def post_shame(cfg: Config, dry_run: bool = False) -> str | None:
     top = entries[:5]
 
     lines = ["🔴 Absențe — top 5: cei mai absenți parlamentari", "",
-             "Absențe la voturile din plen, de când urmărim voturile (2 februarie 2026):", ""]
+             "Absențe la voturile din plen, de la începutul legislaturii (20 decembrie 2024):", ""]
     lines += [f"{i+1}. {name} ({party}, {chamber}) — {pct}% absențe"
               for i, (pct, name, party, chamber) in enumerate(top)]
     lines += ["", "Membrii Guvernului nu sunt incluși — ei nu votează în plen.",
