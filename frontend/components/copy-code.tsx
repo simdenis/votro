@@ -25,8 +25,8 @@ export function CopyCode({ children }: { children: string }) {
       <button
         onClick={copy}
         aria-label={copied ? 'Copiat' : 'Copiază'}
-        className={`btn-tactile absolute top-2 right-2 rounded-md px-2.5 py-1 text-[11px] font-semibold transition-colors ${
-          copied ? 'bg-adoptat text-white' : 'bg-surface border border-rim text-muted hover:text-foreground'
+        className={`absolute top-2 right-2 px-1.5 py-0.5 text-[11px] font-semibold transition-colors ${
+          copied ? 'text-adoptat' : 'text-faint hover:text-foreground'
         }`}
       >
         {copied ? 'Copiat ✓' : 'Copiază'}

@@ -78,23 +78,6 @@ export default async function Dashboard() {
           <h1 className="font-serif text-[42px] font-normal tracking-[-0.01em] leading-[1.04] text-foreground">
             Cum votează Parlamentul?
           </h1>
-          {/* plain GET form — works before hydration and for crawlers */}
-          <form action="/search" className="mt-4 max-w-[420px] flex gap-2">
-            <input
-              name="q"
-              type="search"
-              placeholder="Caută un parlamentar sau o lege…"
-              aria-label="Caută un parlamentar sau o lege"
-              className="flex-1 min-w-0 border border-rim rounded-lg px-3.5 py-2 text-[14px] bg-surface placeholder:text-faint focus:outline-none focus:border-foreground/40"
-            />
-            <button
-              type="submit"
-              className="btn-tactile shrink-0 rounded-lg px-4 py-2 text-[14px] font-semibold text-white"
-              style={{ background: 'var(--sidebar-bg)' }}
-            >
-              Caută
-            </button>
-          </form>
         </div>
       </header>
 
@@ -249,25 +232,8 @@ export default async function Dashboard() {
               </>
             )}
 
-            {/* Open data — the growth channel: journalists/researchers building
-                on the API cite the site, which is how these tools become
-                institutions. Replaces the cohesion widget (near-identical %
-                across the big parties told a citizen nothing). */}
-            <h2 className="font-serif text-[16px] font-normal text-foreground border-b-2 border-sidebar pb-[5px] mb-3 mt-10">
-              Date deschise
-            </h2>
-            <Link
-              href="/date"
-              className="block bg-surface border border-rim rounded-lg p-3.5 hover:bg-raised transition-colors"
-            >
-              <p className="text-[12.5px] text-foreground leading-snug">
-                Toate voturile, absențele și legile — API public + export CSV/JSON, fără cont.
-              </p>
-              <span className="inline-block mt-2 text-[11px] font-medium text-muted">
-                Pentru jurnaliști și cercetători →
-              </span>
-            </Link>
-
+            {/* (open-data card removed — the "Ia datele" query builder below
+                the fold now serves this, per request) */}
             <h2 className="font-serif text-[16px] font-normal text-foreground border-b-2 border-sidebar pb-[5px] mb-3 mt-10">
               Parlamentul, pe email
             </h2>

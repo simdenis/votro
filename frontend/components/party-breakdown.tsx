@@ -8,6 +8,7 @@ interface PartyData {
   for: number
   against: number
   abstention: number
+  absent: number
   total: number
 }
 
@@ -27,12 +28,13 @@ export function PartyBreakdown({ rows, voters }: Props) {
   for (const r of rows) {
     const abbr = foldAbbr(r.party_abbr)
     if (!byParty.has(abbr)) {
-      byParty.set(abbr, { abbr, color: r.party_color, for: 0, against: 0, abstention: 0, total: 0 })
+      byParty.set(abbr, { abbr, color: r.party_color, for: 0, against: 0, abstention: 0, absent: 0, total: 0 })
     }
     const p = byParty.get(abbr)!
     if (r.vote_choice === 'for')        p.for        += r.count
     if (r.vote_choice === 'against')    p.against    += r.count
     if (r.vote_choice === 'abstention') p.abstention += r.count
+    if (r.vote_choice === 'absent' || r.vote_choice === 'not_voted') p.absent += r.count
     p.total += r.count
   }
 
@@ -90,6 +92,9 @@ export function PartyBreakdown({ rows, voters }: Props) {
                 <HoverNames people={voters?.[p.abbr]?.abstention ?? []} title={`${p.abbr} — abțineri`}>
                   <span><span className="text-[var(--color-abstention)] font-semibold">{p.abstention}</span> abțineri</span>
                 </HoverNames>
+              )}
+              {p.absent > 0 && (
+                <span className="text-faint"><span className="font-semibold">{p.absent}</span> absenți</span>
               )}
             </div>
           </div>

@@ -147,7 +147,7 @@ export function ApiBuilder({ baseUrl, apiKey }: { baseUrl: string; apiKey: strin
       {/* command */}
       <div className="relative">
         <pre className="bg-raised border border-rim rounded-lg p-3 pr-20 text-[11.5px] leading-relaxed overflow-x-auto whitespace-pre"><code>{curl}</code></pre>
-        <button onClick={copy} className={`btn-tactile absolute top-2 right-2 rounded-md px-2.5 py-1 text-[11px] font-semibold ${copied ? 'bg-adoptat text-white' : 'bg-surface border border-rim text-muted hover:text-foreground'}`}>
+        <button onClick={copy} className={`absolute top-2 right-2 px-1.5 py-0.5 text-[11px] font-semibold transition-colors ${copied ? 'text-adoptat' : 'text-faint hover:text-foreground'}`}>
           {copied ? 'Copiat ✓' : 'Copiază'}
         </button>
       </div>
