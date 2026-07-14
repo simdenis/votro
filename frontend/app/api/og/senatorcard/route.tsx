@@ -47,9 +47,9 @@ const SAMPLE: SenatorCardData = {
   loyaltyPct: 92, deviations: 24, deviationPct: 8, noLine: false,
   recentLabel: 'Devieri recente — a votat altfel decât partidul',
   recent: [
-    { lawCode: 'L 412/2026', title: 'Lege privind transparența deciziilor parlamentare', choice: 'against' },
-    { lawCode: 'L 388/2026', title: 'Modificarea Codului fiscal — TVA redus pentru alimente de bază', choice: 'abstention' },
-    { lawCode: 'L 341/2026', title: 'Statutul personalului didactic auxiliar', choice: 'for' },
+    { lawCode: 'L 412/2026', date: '12.06.2026', title: 'Lege privind transparența deciziilor parlamentare', choice: 'against' },
+    { lawCode: 'L 388/2026', date: '03.06.2026', title: 'Modificarea Codului fiscal — TVA redus pentru alimente de bază', choice: 'abstention' },
+    { lawCode: 'L 341/2026', date: '21.05.2026', title: 'Statutul personalului didactic auxiliar', choice: 'for' },
   ],
 }
 
