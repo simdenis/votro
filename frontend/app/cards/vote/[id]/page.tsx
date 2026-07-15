@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import { getDB } from '@/lib/supabase'
 import { VoteCard } from '@/components/cards/vote-card'
 import { mapVoteToCard } from '@/lib/votecard'
-import { activeSeats } from '@/lib/seats'
+import { activeSeats, activeSeatsByParty } from '@/lib/seats'
 
 export const dynamic = 'force-dynamic'
 
@@ -18,8 +18,9 @@ export default async function VoteCardPreview({ params }: { params: Promise<{ id
   ])
   if (!voteRes.data) notFound()
 
-  const seats = await activeSeats(voteRes.data.chamber as 'senate' | 'deputies')
-  const data = mapVoteToCard(voteRes.data, bdRes.data ?? [], seats)
+  const chamber = voteRes.data.chamber as 'senate' | 'deputies'
+  const [seats, seatsByParty] = await Promise.all([activeSeats(chamber), activeSeatsByParty(chamber)])
+  const data = mapVoteToCard(voteRes.data, bdRes.data ?? [], seats, seatsByParty)
 
   return (
     <>

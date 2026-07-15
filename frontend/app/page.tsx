@@ -232,29 +232,28 @@ export default async function Dashboard() {
               </>
             )}
 
-            {/* (open-data card removed — the "Ia datele" query builder below
-                the fold now serves this, per request) */}
-            <h2 className="font-serif text-[16px] font-normal text-foreground border-b-2 border-sidebar pb-[5px] mb-3 mt-10">
-              Parlamentul, pe email
-            </h2>
-            <NewsletterForm compact />
-
+            {/* Ia datele — compact open-data builder, tucked under the absence
+                list; the full-width version used to live below the grid */}
+            <div className="mt-10">
+              <div className="flex items-baseline justify-between border-b-2 border-sidebar pb-[5px] mb-3">
+                <h2 className="font-serif text-[16px] font-normal text-foreground">Ia datele</h2>
+                <Link href="/date" className="text-[11px] text-muted hover:text-foreground transition-colors">Despre API →</Link>
+              </div>
+              <p className="text-[11px] text-faint mb-3">Alege ce vrei și primești comanda, fișierul CSV/JSON sau cardul — fără cont, fără cod.</p>
+              <ApiBuilder baseUrl={SUPABASE_URL} apiKey={SUPABASE_ANON} />
+            </div>
           </aside>
       </div>
 
-      {/* ── Open-data builder ────────────────────────────── */}
+      {/* ── Newsletter ───────────────────────────────────── */}
       <section className="mt-14 border-t-2 border-sidebar pt-8">
-        <div className="flex items-baseline justify-between mb-1.5">
-          <h2 className="font-serif text-[20px] font-normal text-foreground">Ia datele</h2>
-          <Link href="/date" className="text-[12px] text-muted hover:text-foreground transition-colors">
-            Despre API →
-          </Link>
-        </div>
+        <h2 className="font-serif text-[20px] font-normal text-foreground mb-1.5">Parlamentul, pe email</h2>
         <p className="text-[13px] text-muted mb-4 max-w-2xl">
-          Alege ce vrei, completează câmpurile, și primești comanda gata de rulat, fișierul CSV/JSON
-          sau cardul de partajat — fără cont, fără cod.
+          Un rezumat scurt al voturilor, direct în inbox. Fără spam.
         </p>
-        <ApiBuilder baseUrl={SUPABASE_URL} apiKey={SUPABASE_ANON} />
+        <div className="max-w-md">
+          <NewsletterForm />
+        </div>
       </section>
     </div>
   )

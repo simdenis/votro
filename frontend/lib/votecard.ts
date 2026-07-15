@@ -26,7 +26,7 @@ export function toParties(rows: BreakdownRow[]): PartyVote[] {
 /** Map a votes row (with joined laws) + breakdown rows to the VoteCard model.
  *  `seats` = current chamber size; enables true absentees (seats − participants)
  *  and the "X din Y prezenți" line. */
-export function mapVoteToCard(vote: any, rows: BreakdownRow[], seats: number | null = null): VoteCardData {
+export function mapVoteToCard(vote: any, rows: BreakdownRow[], seats: number | null = null, seatsByParty: Record<string, number> | null = null): VoteCardData {
   const isDep = vote.chamber === 'deputies'
   const forC = vote.for_count ?? 0
   const againstC = vote.against_count ?? 0
@@ -50,7 +50,8 @@ export function mapVoteToCard(vote: any, rows: BreakdownRow[], seats: number | n
     votesAbsent: seats ? Math.max(0, seats - participants) : 0,
     seats,
     source: isDep ? 'cdep.ro' : 'senat.ro',
-    parties: toParties(rows),
+    // roster seats − party votes = the absentees the source omits (see fillTrueAbsents)
+    parties: fillTrueAbsents(toParties(rows), seatsByParty),
   }
 }
 

@@ -3,7 +3,7 @@ import { VoteCard, type VoteCardData } from '@/components/cards/vote-card'
 import { mapVoteToCard, SAMPLE_VOTE_CARD } from '@/lib/votecard'
 import { getCardFonts } from '@/lib/og-fonts'
 import { isUuid } from '@/lib/utils'
-import { activeSeats } from '@/lib/seats'
+import { activeSeats, activeSeatsByParty } from '@/lib/seats'
 
 // 1080×1350 (4:5) Instagram vote card — Satori export pipeline.
 // Public URL the Instagram poster fetches: /api/og/votecard?vote=<vote_id>
@@ -27,8 +27,14 @@ export async function GET(request: Request) {
   const id = isUuid(idParam) ? idParam : null
   const vote = id ? await fetchVote(id) : null
 
+  const chamber = vote?.chamber as 'senate' | 'deputies' | undefined
   const data: VoteCardData = vote
-    ? mapVoteToCard(vote, await fetchBreakdown(id!), await activeSeats(vote.chamber as 'senate' | 'deputies'))
+    ? mapVoteToCard(
+        vote,
+        await fetchBreakdown(id!),
+        await activeSeats(chamber!),
+        await activeSeatsByParty(chamber!),
+      )
     : SAMPLE_VOTE_CARD
 
   const fonts = await getCardFonts()

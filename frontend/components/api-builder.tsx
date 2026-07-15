@@ -83,14 +83,16 @@ export function ApiBuilder({ baseUrl, apiKey }: { baseUrl: string; apiKey: strin
   async function copy() {
     try { await navigator.clipboard.writeText(curl); setCopied(true); setTimeout(() => setCopied(false), 1600) } catch {}
   }
-  async function download() {
+  // fmt passed explicitly — the variant buttons setFormat() (for the shown curl)
+  // and download in one click, and setState wouldn't be visible synchronously
+  async function download(fmt: 'json' | 'csv' = format) {
     setBusy(true)
     try {
-      const res = await fetch(url, { headers: { apikey: apiKey, ...(format === 'csv' ? { Accept: 'text/csv' } : {}) } })
+      const res = await fetch(url, { headers: { apikey: apiKey, ...(fmt === 'csv' ? { Accept: 'text/csv' } : {}) } })
       const blob = await res.blob()
       const a = document.createElement('a')
       a.href = URL.createObjectURL(blob)
-      a.download = `labutoane-${preset}.${format}`
+      a.download = `labutoane-${preset}.${fmt}`
       document.body.appendChild(a); a.click(); a.remove()
       URL.revokeObjectURL(a.href)
     } catch { /* network/clipboard blocked */ } finally { setBusy(false) }
@@ -138,32 +140,41 @@ export function ApiBuilder({ baseUrl, apiKey }: { baseUrl: string; apiKey: strin
               <input value={name} onChange={e => setName(e.target.value)} placeholder="Ponta" className={inputCls} /></label>
           </>
         )}
-        <label className="flex flex-col gap-1 ml-auto"><span className="text-[11px] text-faint">Format</span>
-          <select value={format} onChange={e => setFormat(e.target.value as 'json' | 'csv')} className={inputCls}>
-            <option value="json">JSON</option><option value="csv">CSV</option>
-          </select></label>
       </div>
 
       {/* command */}
-      <div className="relative">
-        <pre className="bg-raised border border-rim rounded-lg p-3 pr-20 text-[11.5px] leading-relaxed overflow-x-auto whitespace-pre"><code>{curl}</code></pre>
-        <button onClick={copy} className={`absolute top-2 right-2 px-1.5 py-0.5 text-[11px] font-semibold transition-colors ${copied ? 'text-adoptat' : 'text-faint hover:text-foreground'}`}>
-          {copied ? 'Copiat ✓' : 'Copiază'}
-        </button>
+      {/* command — copy button sits in the header row, not over the code, so it
+          stays legible in the narrow sidebar column */}
+      <div>
+        <div className="flex items-center justify-between mb-1.5">
+          <span className="text-[11px] uppercase tracking-widest text-muted font-semibold">Comandă</span>
+          <button onClick={copy} className={`px-1.5 py-0.5 text-[11px] font-semibold transition-colors ${copied ? 'text-adoptat' : 'text-faint hover:text-foreground'}`}>
+            {copied ? 'Copiat ✓' : 'Copiază'}
+          </button>
+        </div>
+        <pre className="bg-raised border border-rim rounded-lg p-3 text-[11.5px] leading-relaxed overflow-x-auto whitespace-pre"><code>{curl}</code></pre>
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        <button onClick={download} disabled={busy}
-          className="btn-tactile rounded-lg px-4 py-2 text-[13px] font-semibold text-white disabled:opacity-60"
-          style={{ background: 'var(--sidebar-bg)' }}>
-          {busy ? 'Se descarcă…' : `Descarcă fișierul .${format}`}
-        </button>
-        {cardKind && (
-          <button onClick={downloadCard} disabled={busy}
-            className="btn-tactile rounded-lg px-4 py-2 text-[13px] font-semibold bg-surface border border-rim text-foreground disabled:opacity-60">
-            🖼 Descarcă card (imagine)
+      {/* output variants — JSON / CSV download the query, imagine grabs the card */}
+      <div>
+        <span className="text-[11px] uppercase tracking-widest text-muted font-semibold">Descarcă</span>
+        <div className="flex flex-wrap gap-2 mt-1.5">
+          <button onClick={() => { setFormat('json'); download('json') }} disabled={busy}
+            className="btn-tactile rounded-lg px-3.5 py-1.5 text-[12px] font-semibold text-white disabled:opacity-60"
+            style={{ background: 'var(--sidebar-bg)' }}>
+            JSON
           </button>
-        )}
+          <button onClick={() => { setFormat('csv'); download('csv') }} disabled={busy}
+            className="btn-tactile rounded-lg px-3.5 py-1.5 text-[12px] font-semibold bg-surface border border-rim text-foreground disabled:opacity-60">
+            CSV
+          </button>
+          {cardKind && (
+            <button onClick={downloadCard} disabled={busy}
+              className="btn-tactile rounded-lg px-3.5 py-1.5 text-[12px] font-semibold bg-surface border border-rim text-foreground disabled:opacity-60">
+              🖼 Imagine
+            </button>
+          )}
+        </div>
       </div>
     </div>
   )
