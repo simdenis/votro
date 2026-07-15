@@ -5,7 +5,7 @@ import { countNoun, hasPartyLine, isUuid, personSlug } from '@/lib/utils'
 import { PoliticianProfile } from '@/components/politician-profile'
 import type { SenatorStats, VoteHistoryRow, PartyHistoryEntry } from '@/lib/types'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 600 // ISR — CDN-cache per senator for 10 min
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://labutoane.vercel.app'
 

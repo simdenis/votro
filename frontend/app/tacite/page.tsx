@@ -4,7 +4,7 @@ import { formatDate, countNoun } from '@/lib/utils'
 import type { PendingBill } from '@/lib/types'
 import { SectionNav, LEGI_SECTIONS } from '@/components/section-nav'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 600 // ISR — CDN-cache for 10 min
 export const metadata: Metadata = {
   title: 'Termene tacite',
   description:

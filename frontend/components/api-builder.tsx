@@ -20,48 +20,51 @@ const cardKindOf = (p: Preset): 'law' | 'mp' | null =>
 // encode spaces (names) but leave /, ., *, - readable
 const q = (v: string) => v.trim().replace(/ /g, '%20')
 
-export function ApiBuilder({ baseUrl, apiKey }: { baseUrl: string; apiKey: string }) {
+export function ApiBuilder({ siteUrl }: { siteUrl: string }) {
   const [preset, setPreset] = useState<Preset>('law_votes')
   const [code, setCode] = useState('L230/2025')
   const [from, setFrom] = useState('2026-02-01')
   const [to, setTo] = useState('2026-06-30')
-  const [chamber, setChamber] = useState('')          // '' = ambele (period) / 'deputies' default (mp)
+  const [chamber, setChamber] = useState('')          // '' = ambele (period)
   const [mpChamber, setMpChamber] = useState<'deputies' | 'senate'>('deputies')
   const [name, setName] = useState('Ponta')
   const [format, setFormat] = useState<'json' | 'csv'>('json')
   const [busy, setBusy] = useState(false)
 
-  const path = useMemo(() => {
+  // Public /api/v1 endpoint (server-side proxy, no key, CDN-cached) — replaces
+  // the old direct Supabase REST line that leaked the anon key.
+  const camera = (c: 'deputies' | 'senate') => (c === 'senate' ? 'senat' : 'camera')
+  const endpoint = useMemo(() => {
     switch (preset) {
       case 'law_votes':
-        return `votes?select=vote_date,chamber,outcome,for_count,against_count,abstention_count,laws!inner(code,title)&laws.code=eq.${q(code)}&order=vote_date.desc`
+        return `/api/v1/votes?code=${q(code)}`
       case 'law_detail':
-        return `law_status?code=eq.${q(code)}`
+        return `/api/v1/laws?code=${q(code)}`
       case 'period_votes': {
-        const p = [`vote_date=gte.${q(from)}`, `vote_date=lte.${q(to)}`]
-        if (chamber) p.push(`chamber=eq.${chamber}`)
-        p.push('order=vote_date.desc')
-        return `votes?${p.join('&')}`
+        const p = [`from=${q(from)}`, `to=${q(to)}`]
+        if (chamber) p.push(`camera=${camera(chamber as 'deputies' | 'senate')}`)
+        return `/api/v1/votes?${p.join('&')}`
       }
       case 'mp':
-        return `${mpChamber === 'senate' ? 'senator_stats' : 'deputy_stats'}?name=ilike.*${q(name)}*`
+        return `/api/v1/parlamentari?camera=${camera(mpChamber)}&nume=${q(name)}`
     }
   }, [preset, code, from, to, chamber, mpChamber, name])
 
+  const withFmt = (fmt: 'json' | 'csv') => `${endpoint}${endpoint.includes('?') ? '&' : '?'}format=${fmt}`
+
   const cardKind = cardKindOf(preset)
-  // resolve the row id, then download our own OG card PNG for it
+  // resolve the row id via our own cached API, then grab the OG card PNG
   async function downloadCard() {
     setBusy(true)
     try {
       let og = ''
       if (cardKind === 'law') {
-        const r = await fetch(`${baseUrl}/rest/v1/laws?code=eq.${q(code)}&select=id&limit=1`, { headers: { apikey: apiKey } })
-        const id = (await r.json())[0]?.id
+        const r = await fetch(`/api/v1/laws?code=${q(code)}`)
+        const id = (await r.json())[0]?.law_id
         if (!id) return
         og = `/api/og/summarycard?id=${id}`
       } else if (cardKind === 'mp') {
-        const view = mpChamber === 'senate' ? 'senator_stats' : 'deputy_stats'
-        const r = await fetch(`${baseUrl}/rest/v1/${view}?name=ilike.*${q(name)}*&select=politician_id&limit=1`, { headers: { apikey: apiKey } })
+        const r = await fetch(`/api/v1/parlamentari?camera=${camera(mpChamber)}&nume=${q(name)}`)
         const id = (await r.json())[0]?.politician_id
         if (!id) return
         og = `/api/og/senatorcard?id=${id}`
@@ -76,8 +79,7 @@ export function ApiBuilder({ baseUrl, apiKey }: { baseUrl: string; apiKey: strin
     } catch { /* blocked */ } finally { setBusy(false) }
   }
 
-  const url = `${baseUrl}/rest/v1/${path}`
-  const curl = `curl "${url}" \\\n  -H "apikey: ${apiKey}"${format === 'csv' ? ' \\\n  -H "Accept: text/csv"' : ''}`
+  const curl = `curl "${siteUrl}${endpoint}"`
 
   const [copied, setCopied] = useState(false)
   async function copy() {
@@ -88,7 +90,7 @@ export function ApiBuilder({ baseUrl, apiKey }: { baseUrl: string; apiKey: strin
   async function download(fmt: 'json' | 'csv' = format) {
     setBusy(true)
     try {
-      const res = await fetch(url, { headers: { apikey: apiKey, ...(fmt === 'csv' ? { Accept: 'text/csv' } : {}) } })
+      const res = await fetch(withFmt(fmt))
       const blob = await res.blob()
       const a = document.createElement('a')
       a.href = URL.createObjectURL(blob)

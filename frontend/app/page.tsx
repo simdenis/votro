@@ -10,10 +10,12 @@ import { CategoryBadge } from '@/components/category-badge'
 import { NewsletterForm } from '@/components/newsletter-form'
 import { ApiBuilder } from '@/components/api-builder'
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const SUPABASE_ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://labutoane.vercel.app'
 
-export const dynamic = 'force-dynamic'
+// ISR: CDN-cache the homepage for 10 min instead of rendering from origin on
+// every hit — votes change daily at most, so freshness is unaffected while
+// Fast Origin Transfer drops sharply.
+export const revalidate = 600
 // absolute: the "%s | LaButoane" template would burn the homepage SERP line on "Acasă"
 export const metadata: Metadata = { title: { absolute: 'LaButoane — Cum votează Parlamentul României' } }
 
@@ -240,7 +242,7 @@ export default async function Dashboard() {
                 <Link href="/date" className="text-[11px] text-muted hover:text-foreground transition-colors">Despre API →</Link>
               </div>
               <p className="text-[11px] text-faint mb-3">Alege ce vrei și primești comanda, fișierul CSV/JSON sau cardul — fără cont, fără cod.</p>
-              <ApiBuilder baseUrl={SUPABASE_URL} apiKey={SUPABASE_ANON} />
+              <ApiBuilder siteUrl={SITE_URL} />
             </div>
           </aside>
       </div>
