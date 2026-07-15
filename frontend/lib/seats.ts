@@ -23,3 +23,27 @@ export async function activeSeats(chamber: 'senate' | 'deputies'): Promise<numbe
   } catch { /* fall through */ }
   return CHAMBER_SEATS[chamber]
 }
+
+/** Occupied seats per party for a chamber (active mandates grouped by party
+ *  abbreviation). Turns a vote's recorded absents into true absents: senat.ro
+ *  breakdowns list only voters, so party seats − party votes = the absentees
+ *  the source omits. Returns null on a broken/short roster so callers keep the
+ *  recorded numbers. */
+export async function activeSeatsByParty(chamber: 'senate' | 'deputies'): Promise<Record<string, number> | null> {
+  try {
+    const r = await fetch(
+      `${U}/rest/v1/politicians?chamber=eq.${chamber}&active=is.true&select=parties(abbreviation)`,
+      { headers: { apikey: K, Authorization: `Bearer ${K}` }, next: { revalidate: 3600 } },
+    )
+    const rows: { parties: { abbreviation: string } | null }[] = (await r.json()) ?? []
+    if (!Array.isArray(rows) || rows.length <= 100) return null
+    const out: Record<string, number> = {}
+    for (const row of rows) {
+      if (!row.parties) continue
+      out[row.parties.abbreviation] = (out[row.parties.abbreviation] ?? 0) + 1
+    }
+    return out
+  } catch {
+    return null
+  }
+}
