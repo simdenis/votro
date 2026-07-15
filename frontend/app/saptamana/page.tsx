@@ -8,7 +8,7 @@ import { CardDownload } from '@/components/card-download'
 import type { VoteWithLaw } from '@/lib/types'
 import { CategoryBadge } from '@/components/category-badge'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 600 // ISR — CDN-cache for 10 min
 export const metadata: Metadata = {
   title: 'Această săptămână',
   description: 'Voturile din ultimele 7 zile în Parlamentul României.',

@@ -14,7 +14,7 @@ import { CardDownload } from '@/components/card-download'
 import { voteSourceUrl } from '@/lib/types'
 import type { VoteWithLaw, PoliticianVoteWithDetails, PartyVoteBreakdown } from '@/lib/types'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 600 // ISR — CDN-cache per vote for 10 min (see homepage note)
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://labutoane.vercel.app'
 
