@@ -4,9 +4,8 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { LEGI_SECTIONS, PARLAMENTARI_SECTIONS, DESPRE_SECTIONS, type SectionItem } from './section-nav'
 
-// Five clean top-level tabs; sections with children get a hover dropdown.
+// Top-level tabs; sections with children get a hover dropdown.
 export const NAV_LINKS: { href: string; label: string; match: string[]; children?: SectionItem[] }[] = [
-  { href: '/saptamana', label: 'Săptămâna',    match: ['/saptamana'] },
   { href: '/legi',      label: 'Legi',         match: ['/legi', '/voturi', '/tacite'], children: LEGI_SECTIONS },
   { href: '/senatori',  label: 'Parlamentari', match: ['/senatori', '/deputati', '/traseisti', '/parlamentarul-tau'], children: PARLAMENTARI_SECTIONS },
   { href: '/partide',   label: 'Partide',      match: ['/partide'] },

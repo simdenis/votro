@@ -17,6 +17,8 @@ const baseConfig: NextConfig = {
         destination: 'https://la-butoane.ro/:path*',
         permanent: true,
       },
+      // /saptamana was removed — send its inbound links (newsletter, index) to /voturi
+      { source: '/saptamana', destination: '/voturi', permanent: true },
       // :path* matches zero segments too, so these cover /votes and /votes/<id>
       { source: '/votes/:path*',    destination: '/voturi/:path*',   permanent: true },
       { source: '/senators/:path*', destination: '/senatori/:path*', permanent: true },
