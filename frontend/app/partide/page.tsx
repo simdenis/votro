@@ -1,36 +1,42 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
-import { pct, textOnColor, hasPartyLine, CONTESTED_MIN_PCT } from '@/lib/utils'
-import { DonutChart } from '@/components/donut-chart'
+import { pct, textOnColor, hasPartyLine } from '@/lib/utils'
 import type { PartyCohesion, PartyAbsence } from '@/lib/types'
 
 export const revalidate = 3600
-export const metadata: Metadata = { title: 'Partide', description: 'Coeziunea internă și absența medie a partidelor din Parlamentul României.' }
+export const metadata: Metadata = { title: 'Partide', description: 'Numărul de membri, rata de deviere și absența medie a partidelor din Parlamentul României.' }
 
 export default async function PartiesPage() {
   const db = getDB()
-  const [r0, r1] = await Promise.all([
+  const [r0, r1, r2] = await Promise.all([
     db.from('party_cohesion')
       .select('*')
       .gt('votes_participated', 0)
       .order('votes_participated', { ascending: false }),
     db.from('party_absence').select('*'),
+    db.from('politicians').select('party_id').eq('active', true),
   ])
   const data = r0.data as PartyCohesion[] | null
   // IND/MIN are catch-all labels, not parties — "cohesion" is meaningless there
   const parties = data?.filter(p => hasPartyLine(p.abbreviation))
   const absenceByParty: Record<string, number | null> = {}
   for (const a of (r1.data ?? []) as PartyAbsence[]) absenceByParty[a.party_id] = a.absence_pct
+  // Member count per party — cohesion was ~identical for everyone (92–99%), so
+  // the donut said nothing; party size is the legible, distinguishing number.
+  const membersByParty: Record<string, number> = {}
+  for (const row of (r2.data ?? []) as { party_id: string }[]) {
+    membersByParty[row.party_id] = (membersByParty[row.party_id] ?? 0) + 1
+  }
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="font-serif text-[30px] sm:text-[40px] font-normal tracking-[-0.01em] leading-[1.05] text-foreground">Partide</h1>
         <p className="text-[12.5px] text-muted mt-1.5">
-          Coeziunea se calculează pe baza <strong className="text-foreground">afilierii curente</strong> a
-          parlamentarilor, doar pe <strong className="text-foreground">voturile disputate</strong> (tabăra
-          minoritară ≥ {CONTESTED_MIN_PCT}% din voturile exprimate) — voturile aproape unanime nu diferențiază partidele.
+          Numărul de membri activi, <strong className="text-foreground">rata de deviere</strong> de la linia de
+          partid și absența medie — pe baza <strong className="text-foreground">afilierii curente</strong> a
+          parlamentarilor.
         </p>
       </div>
       {!parties?.length ? (
@@ -53,21 +59,13 @@ export default async function PartiesPage() {
                   </span>
                   <div className="text-sm text-muted mt-1.5 line-clamp-1">{p.name}</div>
                 </div>
-                <DonutChart
-                  segments={[
-                    { value: p.cohesion_pct ?? 0,           color: p.color },
-                    { value: 100 - (p.cohesion_pct ?? 0),   color: 'var(--rim)' },
-                  ]}
-                  size={64}
-                  ring={14}
-                />
               </div>
               <div className="flex gap-6">
                 <div>
                   <div className="text-2xl font-semibold tabular-nums text-foreground">
-                    {pct(p.cohesion_pct)}
+                    {membersByParty[p.party_id] ?? '—'}
                   </div>
-                  <div className="text-xs text-muted">Coeziune</div>
+                  <div className="text-xs text-muted">Membri</div>
                 </div>
                 {/* rate, not raw count — raw deviations scale with member count ×
                     votes cast, so big present parties look worse than they are */}
