@@ -1,11 +1,11 @@
-import Link from 'next/link'
-import { formatDate, formatDateShort, choiceLabel, choiceColor, pct, countNoun, hasPartyLine, capFirst, loyaltyPct , personSlug } from '@/lib/utils'
+import { pct, countNoun, hasPartyLine, loyaltyParts , personSlug } from '@/lib/utils'
 import { PartyBadge } from '@/components/party-badge'
-import { OutcomeBadge } from '@/components/outcome-badge'
 import { LoyaltyMeter } from '@/components/loyalty-meter'
 import { ShareButtons } from '@/components/share-buttons'
 import { CardDownload } from '@/components/card-download'
 import { PartyHistory } from '@/components/party-history'
+import { VoteHistory } from '@/components/vote-history'
+import { DeviationList } from '@/components/deviation-list'
 import { trueAbsent, type PoliticianStats, type VoteHistoryRow, type PartyHistoryEntry } from '@/lib/types'
 
 interface Props {
@@ -25,7 +25,8 @@ export function PoliticianProfile({ stats, history, deviationRows, partyHistory,
   const expressed  = stats.votes_for + stats.votes_against + stats.votes_abstention
   // IND/MIN have no party line — loyalty/deviation framing would be meaningless
   const noLine     = !hasPartyLine(stats.party_abbr)
-  const loyalty    = noLine ? null : loyaltyPct(stats)
+  const parts      = loyaltyParts(stats)
+  const loyalty    = noLine ? null : parts.loyaltyPct
   const isHighDev  = stats.deviation_pct != null && stats.deviation_pct > 10
 
   // Denominator = ALL plenary votes since mandate start, not just recorded
@@ -105,13 +106,35 @@ export function PoliticianProfile({ stats, history, deviationRows, partyHistory,
 
         {loyalty != null && (
           <div
-            className="flex-shrink-0"
-            title="Voturi aliniate cu partidul, din toate voturile de plen ale camerei — absențele scad loialitatea."
+            className="flex-shrink-0 flex flex-col items-center"
+            title={`A votat la fel ca partidul la ${parts.withParty} din ${parts.expressed} voturi exprimate. Prezența e o metrică separată (vezi „absență").`}
           >
             <LoyaltyMeter loyaltyPct={loyalty} size={112} />
+            <span className="text-[11px] text-faint tabular-nums -mt-1">
+              {parts.withParty}/{parts.expressed} exprimate
+            </span>
           </div>
         )}
       </div>
+
+      {/* ── Context note + contest path ──────────────────────
+          Absence numbers have no defense mechanism on their own: a documented
+          concediu medical / delegație reads as truancy. Show the curator note
+          when we have one, and always offer a contest path. */}
+      {stats.context_note && (
+        <div className="bg-surface border border-rim rounded-xl px-4 py-3 flex items-start gap-2.5">
+          <span className="text-muted text-sm leading-none mt-0.5" aria-hidden>ⓘ</span>
+          <p className="text-sm text-muted leading-relaxed">
+            <span className="font-medium text-foreground">Context absențe:</span> {stats.context_note}
+            {stats.context_note_url && (
+              <>
+                {' '}
+                <a href={stats.context_note_url} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-foreground">sursă</a>
+              </>
+            )}
+          </p>
+        </div>
+      )}
 
       {/* Share row */}
       <div className="flex items-center gap-3 flex-wrap">
@@ -119,9 +142,16 @@ export function PoliticianProfile({ stats, history, deviationRows, partyHistory,
           url={`${siteUrl}${basePath}/${personSlug(stats.first_name, stats.name)}`}
           tweet={noLine || loyalty == null
             ? `Cum votează ${stats.first_name} ${stats.name} în Parlament: ${siteUrl}${basePath}/${personSlug(stats.first_name, stats.name)}`
-            : `${stats.first_name} ${stats.name} (${stats.party_abbr}) a votat cu linia partidului la ${loyalty}% din voturile de plen ale camerei. ${siteUrl}${basePath}/${personSlug(stats.first_name, stats.name)}`}
+            : `${stats.first_name} ${stats.name} (${stats.party_abbr}): loialitate ${loyalty}% (${parts.withParty}/${parts.expressed} voturi exprimate)${stats.presence_pct != null ? `, prezență ${Math.round(stats.presence_pct)}%` : ''}. ${siteUrl}${basePath}/${personSlug(stats.first_name, stats.name)}`}
         />
         <CardDownload href={`/api/og/senatorcard?id=${stats.politician_id}`} filename={`labutoane-${stats.first_name}-${stats.name}.png`.replace(/\s+/g, '-')} />
+        <a
+          href={`mailto:siminiucdenis@gmail.com?subject=${encodeURIComponent(`Contestație date — ${stats.first_name} ${stats.name}`)}&body=${encodeURIComponent(`Pagină: ${siteUrl}${basePath}/${personSlug(stats.first_name, stats.name)}\n\nCe date consider greșite (ex. absență justificată prin concediu medical / delegație) și sursa:\n`)}`}
+          className="text-xs text-muted underline underline-offset-2 hover:text-foreground"
+          title="Semnalează o eroare sau o absență justificată. Verificăm și, dacă e cazul, adăugăm o notă de context."
+        >
+          Datele sunt greșite? Contestă
+        </a>
       </div>
 
       {/* ── Two-column analytics ────────────────────────── */}
@@ -177,24 +207,7 @@ export function PoliticianProfile({ stats, history, deviationRows, partyHistory,
           {deviations.length === 0 ? (
             <p className="text-sm text-faint">Nicio deviere înregistrată.</p>
           ) : (
-            <div className="space-y-2.5">
-              {deviations.slice(0, 8).map(row => (
-                <div key={row.id} className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-deviere flex-shrink-0" />
-                  <Link
-                    href={`/voturi/${row.vote_id}`}
-                    className="font-mono text-xs text-muted hover:text-foreground transition-colors w-20 flex-shrink-0"
-                  >
-                    {row.votes.laws?.code ?? '—'}
-                  </Link>
-                  <span className="text-[10px] text-faint tabular-nums flex-shrink-0">{formatDateShort(row.votes.vote_date)}</span>
-                  <span className="text-xs text-muted truncate flex-1">{capFirst(row.votes.laws?.title ?? row.votes.description ?? '') || 'Vot procedural (fără lege identificată)'}</span>
-                  <span className="text-xs font-bold flex-shrink-0" style={{ color: choiceColor(row.vote_choice) }}>
-                    {choiceLabel(row.vote_choice)}
-                  </span>
-                </div>
-              ))}
-            </div>
+            <DeviationList rows={deviations} total={stats.deviations} />
           )}
           </>)}
         </div>
@@ -204,56 +217,7 @@ export function PoliticianProfile({ stats, history, deviationRows, partyHistory,
       {partyHistory && <PartyHistory history={partyHistory} currentParty={stats.party_abbr} />}
 
       {/* ── Vote history timeline ────────────────────────── */}
-      <div>
-        <h2 className="text-xs font-semibold uppercase tracking-widest text-muted mb-3">
-          Activitate recentă
-        </h2>
-        {!history.length ? (
-          <p className="text-sm text-muted">Nu există voturi înregistrate.</p>
-        ) : (
-          <div className="bg-surface border border-rim rounded-xl overflow-hidden divide-y divide-rim">
-            {history.map(row => (
-              <Link
-                key={row.id}
-                href={`/voturi/${row.vote_id}`}
-                className="flex items-center gap-3 px-4 py-3 hover:bg-raised transition-colors"
-                style={row.party_line_deviation ? { backgroundColor: 'oklch(98% 0.02 80)' } : undefined}
-              >
-                <div
-                  className="w-0.5 h-9 rounded-full flex-shrink-0"
-                  style={{ backgroundColor: choiceColor(row.vote_choice) }}
-                />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                    <span className="font-mono text-xs text-muted">{row.votes.laws?.code ?? '—'}</span>
-                    <span className="text-[10px] text-faint">{formatDate(row.votes.vote_date)}</span>
-                    {/* same bill can be voted repeatedly in a day (amendments,
-                        procedure, final) — without the stage label, opposite
-                        votes on one law read as data corruption */}
-                    {row.votes.vote_type && (
-                      <span className="text-[10px] uppercase text-faint bg-raised border border-rim rounded px-1.5 py-px">
-                        {row.votes.vote_type}
-                      </span>
-                    )}
-                    {row.party_line_deviation && (
-                      <span className="text-[10px] bg-deviere/10 text-deviere font-bold rounded px-1.5 py-px">
-                        ⚠ deviere
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-sm text-foreground truncate">{capFirst(row.votes.laws?.title ?? row.votes.description ?? '') || 'Vot procedural (fără lege identificată)'}</p>
-                </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <span className="text-sm font-bold" style={{ color: choiceColor(row.vote_choice) }}>
-                    {choiceLabel(row.vote_choice)}
-                  </span>
-                  <OutcomeBadge outcome={row.votes.outcome} />
-                </div>
-              </Link>
-            ))}
-          </div>
-        )}
-      </div>
+      <VoteHistory rows={history} />
     </div>
   )
 }

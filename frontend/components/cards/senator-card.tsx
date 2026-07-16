@@ -83,8 +83,8 @@ export function SenatorCard({ data }: { data: SenatorCardData }) {
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: 28, marginBottom: 40 }}>
             <div style={{ display: 'flex', fontFamily: SERIF, fontSize: 120, lineHeight: 0.9, color: C.navy }}>{`${data.loyaltyPct}%`}</div>
             <div style={{ display: 'flex', flexDirection: 'column', paddingBottom: 14 }}>
-              <div style={{ display: 'flex', fontSize: 19, fontWeight: 500 }}>a votat cu partidul, din toate voturile de plen</div>
-              <div style={{ display: 'flex', fontSize: 16, opacity: 0.7, marginTop: 4 }}>{`${data.deviations} ${countNoun(data.deviations, 'deviere', 'devieri')} · ${data.deviationPct === 0 && data.deviations > 0 ? '<1' : data.deviationPct ?? 0}% din voturi`}</div>
+              <div style={{ display: 'flex', fontSize: 19, fontWeight: 500 }}>a votat cu partidul, din voturile exprimate</div>
+              <div style={{ display: 'flex', fontSize: 16, opacity: 0.7, marginTop: 4 }}>{`${data.deviations} ${countNoun(data.deviations, 'deviere', 'devieri')} · ${data.deviationPct === 0 && data.deviations > 0 ? '<1' : data.deviationPct ?? 0}% din voturile exprimate`}</div>
             </div>
           </div>
         )}

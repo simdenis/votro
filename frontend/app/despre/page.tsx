@@ -48,10 +48,13 @@ export default function DesprePage() {
           minorităților naționale nu au o linie de partid, deci nu calculăm devieri sau coeziune pentru ei.
         </p>
         <p className="text-sm text-muted leading-relaxed">
-          <strong className="text-foreground">Loialitatea</strong> unui parlamentar = voturile în care
-          s-a aliniat cu partidul, împărțite la <em>toate</em> voturile de plen ținute în camera sa —
-          absențele scad loialitatea. Un parlamentar absent la 80% din voturi nu poate avea loialitate
-          mare, oricât de disciplinat votează când e prezent.
+          <strong className="text-foreground">Loialitatea</strong> și <strong className="text-foreground">prezența</strong> sunt
+          două lucruri diferite și le arătăm separat, cu numitori expliciți — a le contopi
+          într-o singură cifră face ca un absent să pară un rebel. <strong className="text-foreground">Loialitate</strong> =
+          voturile aliniate cu partidul / voturile <em>exprimate</em> (ex. 397/415 = 96%).{' '}
+          <strong className="text-foreground">Prezență</strong> = voturile exprimate / toate voturile de plen
+          ținute în camera sa (ex. 415/958 = 43%). Un parlamentar poate fi 96% loial și, în același timp,
+          prezent la doar 43% din voturi.
         </p>
         <p className="text-sm text-muted leading-relaxed">
           Coeziunea unui partid se calculează <strong className="text-foreground">doar pe voturile
@@ -80,7 +83,11 @@ export default function DesprePage() {
         <p className="text-sm text-muted leading-relaxed">
           Sursele oficiale nu spun <em>de ce</em> lipsește cineva: o delegație parlamentară în
           străinătate sau un concediu medical arată în date la fel ca o absență nemotivată. Afișăm
-          cifrele brute — interpretarea rămâne a cititorului.
+          cifrele brute — interpretarea rămâne a cititorului. Când avem o justificare documentată
+          (concediu medical, delegație oficială), o adăugăm ca <strong className="text-foreground">notă
+          de context</strong> pe fișa parlamentarului, iar în topul absențelor numele apare marcat cu
+          „ⓘ". Orice parlamentar sau cetățean poate <strong className="text-foreground">contesta</strong> o
+          cifră prin butonul de pe fiecare fișă; verificăm și, dacă e cazul, adăugăm nota.
         </p>
       </section>
 

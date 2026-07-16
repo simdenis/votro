@@ -24,7 +24,7 @@ export function formatDateShort(dateStr: string): string {
   })
 }
 
-export function choiceLabel(choice: VoteChoice | string): string {
+export function choiceLabel(choice: VoteChoice | string | null | undefined): string {
   const map: Record<string, string> = {
     for: 'Pentru',
     against: 'Împotrivă',
@@ -32,7 +32,8 @@ export function choiceLabel(choice: VoteChoice | string): string {
     not_voted: 'Nu a votat',
     absent: 'Absent',
   }
-  return map[choice] ?? choice
+  // Null/unknown choices previously rendered as a blank label (L630/2025).
+  return (choice && map[choice]) || choice || '—'
 }
 
 export function choiceColor(choice: VoteChoice | string): string {
@@ -123,18 +124,34 @@ export function pct(n: number | null | undefined): string {
  *  interpolates this constant so the wording can't drift from the data. */
 export const CONTESTED_MIN_PCT = 20
 
-/** Loyalty = votes cast WITH the party line over ALL plenary votes held in the
- *  member's chamber. Absences pull it down: an 83%-absent MP can no longer
- *  wear a "100% loyalty" badge computed on his 37 expressed votes. Floored so
- *  0.4% deviation doesn't display as 100. Null without a denominator. */
-export function loyaltyPct(s: {
+type LoyaltyInput = {
   votes_for: number; votes_against: number; votes_abstention: number
   deviations: number; chamber_votes: number; total_votes: number
-}): number | null {
-  const denom = s.chamber_votes || s.total_votes
-  if (!denom) return null
+}
+
+/** Loyalty and presence are TWO variables and must never be folded into one
+ *  number — an earlier version divided aligned votes by ALL chamber votes, so
+ *  an absentee read as a rebel (Ponta: 96% aligned on votes cast, but the badge
+ *  showed 41%). We report them separately, each with its own denominator:
+ *    loyalty  = votes WITH the party line / votes EXPRESSED   (397/415 = 96%)
+ *    presence = votes EXPRESSED           / chamber votes held (415/958 = 43%)
+ *  Loyalty is floored so a 0.4% deviation doesn't round up to 100. */
+export function loyaltyParts(s: LoyaltyInput): {
+  expressed: number; withParty: number; chamber: number; loyaltyPct: number | null
+} {
   const expressed = (s.votes_for ?? 0) + (s.votes_against ?? 0) + (s.votes_abstention ?? 0)
-  return Math.floor(Math.max(0, expressed - (s.deviations ?? 0)) / denom * 100)
+  const withParty = Math.max(0, expressed - (s.deviations ?? 0))
+  const chamber   = s.chamber_votes || s.total_votes || 0
+  // Presence is NOT computed here on purpose — it has its own canonical metric
+  // (presence_pct, which counts "present but didn't press"). Deriving a second
+  // presence figure from expressed/chamber would put two different numbers for
+  // the same concept on one page — the very bug this split exists to kill.
+  return { expressed, withParty, chamber, loyaltyPct: expressed ? Math.floor((withParty / expressed) * 100) : null }
+}
+
+/** Party loyalty over votes EXPRESSED (not chamber total — see loyaltyParts). */
+export function loyaltyPct(s: LoyaltyInput): number | null {
+  return loyaltyParts(s).loyaltyPct
 }
 
 /** Constitution art. 66: ordinary sessions run Feb–Jun and Sep–Dec, so July,

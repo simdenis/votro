@@ -1,16 +1,17 @@
 'use client'
 
 interface Props {
-  /** 0–100: votes cast with the party line / ALL chamber plenary votes (see lib/utils loyaltyPct) */
+  /** 0–100: votes cast WITH the party line / votes EXPRESSED (see lib/utils loyaltyParts).
+      Presence is a separate number — this gauge deliberately excludes absences. */
   loyaltyPct: number
   /** SVG width. Height is ~75% of width. Default 128 */
   size?: number
 }
 
 /**
- * Arc gauge showing party loyalty percentage.
- * Bands calibrated on the actual distribution (median 68, p90 82):
- * Green ≥ 75 · Amber 55–74 · Red < 55
+ * Arc gauge showing party loyalty over votes cast.
+ * Deviation is rare in RO party-line voting, so loyalty clusters high;
+ * bands flag the exceptions: Green ≥ 90 · Amber 80–89 · Red < 80
  */
 export function LoyaltyMeter({ loyaltyPct, size = 128 }: Props) {
   const cx = size / 2
@@ -37,13 +38,13 @@ export function LoyaltyMeter({ loyaltyPct, size = 128 }: Props) {
   const largeArcFilled = (loyaltyPct / 100) * 270 > 180 ? 1 : 0
 
   const color =
-    loyaltyPct >= 75 ? 'var(--color-for)' : loyaltyPct >= 55 ? 'var(--color-deviation)' : 'var(--color-against)'
+    loyaltyPct >= 90 ? 'var(--color-for)' : loyaltyPct >= 80 ? 'var(--color-deviation)' : 'var(--color-against)'
 
   const fmt = (n: number) => n.toFixed(2)
 
   return (
     <svg width={size} height={height} style={{ overflow: 'visible' }}>
-      <title>Voturi aliniate cu partidul, din toate voturile de plen ale camerei — absențele scad loialitatea.</title>
+      <title>Voturi aliniate cu partidul, din voturile exprimate. Prezența e o metrică separată.</title>
       {/* Track */}
       <path
         d={`M ${fmt(start.x)} ${fmt(start.y)} A ${r} ${r} 0 1 1 ${fmt(trackEnd.x)} ${fmt(trackEnd.y)}`}
