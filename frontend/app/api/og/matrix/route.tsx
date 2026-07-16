@@ -8,6 +8,14 @@ const SB = { apikey: K, Authorization: `Bearer ${K}` }
 
 const PARTY_ORDER = ['PSD', 'AUR', 'PNL', 'USR', 'UDMR', 'POT', 'SOSRO', 'PACE']
 const BASE = '47, 111, 208' // matches components/charts/agreement-matrix.tsx
+const MONTHS_RO = ['ian', 'feb', 'mar', 'apr', 'mai', 'iun', 'iul', 'aug', 'sep', 'oct', 'nov', 'dec']
+
+// 'YYYY-MM' → "iun '26"; null-safe.
+function fmtMonth(m: string | null): string | null {
+  if (!m || !/^\d{4}-\d{2}$/.test(m)) return null
+  const [y, mo] = m.split('-').map(Number)
+  return `${MONTHS_RO[mo - 1]} '${String(y).slice(2)}`
+}
 
 // Darker = more agreement, over a light surface. Mirrors the on-page matrix.
 function cellBg(pct: number) {
@@ -15,12 +23,16 @@ function cellBg(pct: number) {
   return { bg: `rgba(${BASE}, ${a.toFixed(2)})`, ink: a > 0.5 ? '#ffffff' : '#171A1F' }
 }
 
-export async function GET() {
+export async function GET(request: Request) {
+  const sp = new URL(request.url).searchParams
+  const from = fmtMonth(sp.get('from')) ? sp.get('from') : null
+  const to = fmtMonth(sp.get('to')) ? sp.get('to') : null
+
   const [agRes, pRes] = await Promise.all([
-    fetch(`${U}/rest/v1/party_agreement_monthly?select=party_a,party_b,shared,agreed`, { headers: SB }),
+    fetch(`${U}/rest/v1/party_agreement_monthly?select=party_a,party_b,month,shared,agreed`, { headers: SB }),
     fetch(`${U}/rest/v1/parties?select=abbreviation,color`, { headers: SB }),
   ])
-  const rows = (await agRes.json()) as { party_a: string; party_b: string; shared: number; agreed: number }[]
+  const rows = (await agRes.json()) as { party_a: string; party_b: string; month: string; shared: number; agreed: number }[]
   const pj = (await pRes.json()) as { abbreviation: string; color: string }[]
 
   const colorOf: Record<string, string> = {}
@@ -30,11 +42,18 @@ export async function GET() {
   const present = new Set<string>()
   const acc: Record<string, { shared: number; agreed: number }> = {}
   for (const r of Array.isArray(rows) ? rows : []) {
+    // respect the slider's month window when passed
+    if (from && r.month < from) continue
+    if (to && r.month > to) continue
     present.add(r.party_a); present.add(r.party_b)
     const k = key(r.party_a, r.party_b)
     ;(acc[k] ??= { shared: 0, agreed: 0 })
     acc[k].shared += r.shared; acc[k].agreed += r.agreed
   }
+
+  const rangeLabel = from && to
+    ? (from === to ? fmtMonth(from)! : `${fmtMonth(from)} – ${fmtMonth(to)}`)
+    : 'toată legislatura'
   const parties = PARTY_ORDER.filter(a => colorOf[a] && hasPartyLine(a) && present.has(a))
   const pctOf = (a: string, b: string) => {
     const r = acc[key(a, b)]
@@ -63,7 +82,7 @@ export async function GET() {
           </svg>
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <div style={{ fontSize: 46, fontWeight: 700, color: '#171A1F', fontFamily: 'Plex Display' }}>Cine votează cu cine</div>
-            <div style={{ fontSize: 22, color: '#6E7480' }}>Acord pe voturile disputate · toată legislatura</div>
+            <div style={{ fontSize: 22, color: '#6E7480' }}>{`Acord pe voturile disputate · ${rangeLabel}`}</div>
           </div>
         </div>
 

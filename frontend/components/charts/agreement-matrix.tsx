@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import { textOnColor } from '@/lib/utils'
+import { CardDownload } from '@/components/card-download'
 
 export interface MatrixParty { abbr: string; color: string }
 export interface AgreementBucket { party_a: string; party_b: string; month: string; shared: number; agreed: number }
@@ -43,6 +44,8 @@ export function AgreementMatrix({ parties, months, monthLabels, buckets }: Props
 
   const windowLabel = `${monthLabels[Math.min(from, to)]} – ${monthLabels[Math.max(from, to)]}`
   const cols = `minmax(52px, auto) repeat(${parties.length}, minmax(0, 1fr))`
+  // Downloadable image reflects the selected month window (see /api/og/matrix)
+  const ogUrl = `/api/og/matrix?from=${months[Math.min(from, to)]}&to=${months[Math.max(from, to)]}`
 
   return (
     <div className="space-y-4">
@@ -124,6 +127,10 @@ export function AgreementMatrix({ parties, months, monthLabels, buckets }: Props
             </div>
           ))}
         </div>
+      </div>
+
+      <div className="flex">
+        <CardDownload href={ogUrl} filename="labutoane-cine-voteaza-cu-cine.png" label="Descarcă imaginea" />
       </div>
     </div>
   )
