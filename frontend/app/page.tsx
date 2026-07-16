@@ -133,6 +133,45 @@ export default async function Dashboard() {
               Toate voturile →
             </Link>
           )}
+
+          {/* Legi tacite — soonest deadlines. Nobody else tracks tacit adoption,
+              and the deadlines keep running during recess. Under the feed (not
+              the sidebar) so it reads as primary content. */}
+          {tacitBills.length > 0 && (
+            <div className="mt-10">
+              <div className="flex items-baseline justify-between border-b-2 border-sidebar pb-[5px] mb-1">
+                <h2 className="font-serif text-[20px] font-normal text-foreground">Legi tacite — termene apropiate</h2>
+                <Link href="/tacite" className="text-[11px] text-muted hover:text-foreground transition-colors">Toate →</Link>
+              </div>
+              <p className="text-[11px] text-faint mb-3">Proiecte adoptate <strong className="font-semibold">fără vot</strong> dacă nu sunt dezbătute la timp (art. 75).</p>
+              <div className="space-y-2">
+                {tacitBills.map(b => {
+                  const days = b.tacit_deadline
+                    ? Math.ceil((new Date(b.tacit_deadline + 'T23:59:59+03:00').getTime() - Date.now()) / 86_400_000)
+                    : null
+                  return (
+                    <a
+                      key={b.id}
+                      href={b.source_url ?? '/tacite'}
+                      target={b.source_url ? '_blank' : undefined}
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-between gap-2 bg-surface border border-rim rounded-lg px-3 py-2.5 hover:bg-raised transition-colors"
+                    >
+                      <span className="min-w-0">
+                        <span className="block text-[13px] font-medium text-foreground truncate">{b.title ?? b.code}</span>
+                        <span className="block font-mono text-[10px] text-muted">{b.code}</span>
+                      </span>
+                      {days != null && (
+                        <span className={`text-[12px] font-bold tabular-nums flex-shrink-0 ${days <= 7 ? 'text-respins' : days <= 30 ? 'text-deviere' : 'text-muted'}`}>
+                          {days} {days === 1 ? 'zi' : 'zile'}
+                        </span>
+                      )}
+                    </a>
+                  )
+                })}
+              </div>
+            </div>
+          )}
         </section>
 
         {/* Sidebar: find-your-MP map · top absences · open data · newsletter */}
@@ -149,44 +188,6 @@ export default async function Dashboard() {
             <div className="mb-10">
               <CountyMap />
             </div>
-
-            {/* Legi tacite — soonest deadlines. Nobody else tracks tacit
-                adoption, and the deadlines keep running during recess. */}
-            {tacitBills.length > 0 && (
-              <div className="mb-10">
-                <div className="flex items-baseline justify-between border-b-2 border-sidebar pb-[5px] mb-1">
-                  <h2 className="font-serif text-[16px] font-normal text-foreground">Legi tacite — termene apropiate</h2>
-                  <Link href="/tacite" className="text-[11px] text-muted hover:text-foreground transition-colors">Toate →</Link>
-                </div>
-                <p className="text-[11px] text-faint mb-3">Proiecte adoptate <strong className="font-semibold">fără vot</strong> dacă nu sunt dezbătute la timp (art. 75).</p>
-                <div className="space-y-2">
-                  {tacitBills.map(b => {
-                    const days = b.tacit_deadline
-                      ? Math.ceil((new Date(b.tacit_deadline + 'T23:59:59+03:00').getTime() - Date.now()) / 86_400_000)
-                      : null
-                    return (
-                      <a
-                        key={b.id}
-                        href={b.source_url ?? '/tacite'}
-                        target={b.source_url ? '_blank' : undefined}
-                        rel="noopener noreferrer"
-                        className="flex items-center justify-between gap-2 bg-surface border border-rim rounded-lg px-3 py-2 hover:bg-raised transition-colors"
-                      >
-                        <span className="min-w-0">
-                          <span className="block text-[12.5px] font-medium text-foreground truncate">{b.title ?? b.code}</span>
-                          <span className="block font-mono text-[10px] text-muted">{b.code}</span>
-                        </span>
-                        {days != null && (
-                          <span className={`text-[11px] font-bold tabular-nums flex-shrink-0 ${days <= 7 ? 'text-respins' : days <= 30 ? 'text-deviere' : 'text-muted'}`}>
-                            {days} {days === 1 ? 'zi' : 'zile'}
-                          </span>
-                        )}
-                      </a>
-                    )
-                  })}
-                </div>
-              </div>
-            )}
 
             {/* Absențe — top 5: lowest plenary presence, both chambers */}
             {lowPresence.length > 0 && (

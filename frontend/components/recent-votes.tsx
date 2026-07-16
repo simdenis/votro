@@ -132,7 +132,7 @@ export function RecentVotes({ votes }: { votes: VoteWithLaw[] }) {
 
       {visible.length === 0 ? (
         <p className="text-[13px] text-muted py-3">Niciun vot pentru filtrele alese.</p>
-      ) : visible.slice(0, 25).map(vote => (
+      ) : visible.slice(0, 6).map(vote => (
         <Link key={vote.id} href={`/voturi/${vote.id}`} className="block py-[18px] border-b border-rim hover:opacity-80 transition-opacity">
           <div className="flex items-center gap-2 mb-2">
             <span className="text-[11px] font-semibold tabular-nums" style={{ color: 'var(--sidebar-bg)' }}>
