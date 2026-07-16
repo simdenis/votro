@@ -142,7 +142,7 @@ export default async function Dashboard() {
                   <span className="text-[9px] uppercase font-semibold bg-raised text-faint px-[5px] py-[1px] rounded-[3px]">
                     {vote.chamber === 'deputies' ? 'Camera' : 'Senat'}
                   </span>
-                  {vote.laws?.law_category && (
+                  {vote.laws?.law_category && vote.laws?.summary_is_ai && (
                     <CategoryBadge category={vote.laws.law_category} className="text-[9px] uppercase font-semibold px-[5px] py-[1px] rounded-[3px]" href={null} />
                   )}
                   <span className="text-[11px] text-faint ml-auto">{formatDate(vote.vote_date)}</span>
