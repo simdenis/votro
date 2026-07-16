@@ -55,6 +55,8 @@ export interface Law {
   summary_is_ai: boolean
   em_url: string | null
   scraped_at: string
+  /** Gemini public-interest score 1–100 (migration 025) — "hotness". */
+  interest_score: number | null
 }
 
 export interface Vote {
