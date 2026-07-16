@@ -4,7 +4,6 @@ import { getCardFonts } from '@/lib/og-fonts'
 
 // 1080×1350 (4:5) structure carousel (post #3: cine stă la butoane).
 // URL: /api/og/structura?slide=1..4 — seat counts come live from the roster.
-export const runtime = 'edge'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!

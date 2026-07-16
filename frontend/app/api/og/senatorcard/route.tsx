@@ -4,7 +4,6 @@ import { mapSenatorToCard } from '@/lib/votecard'
 import { getCardFonts } from '@/lib/og-fonts'
 import { isUuid } from '@/lib/utils'
 
-export const runtime = 'edge'
 
 const U = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const K = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!

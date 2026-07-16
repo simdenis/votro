@@ -4,7 +4,6 @@ import { getCardFonts } from '@/lib/og-fonts'
 
 // 1080×1350 (4:5) launch carousel slides — portrait so the profile-grid 3:4
 // crop barely trims the sides. Public URL: /api/og/intro?slide=1..4
-export const runtime = 'edge'
 
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? 'https://vot-romania.vercel.app')
   .replace(/^https?:\/\//, '')

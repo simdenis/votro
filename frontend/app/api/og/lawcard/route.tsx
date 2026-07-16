@@ -5,7 +5,6 @@ import { getCardFonts } from '@/lib/og-fonts'
 import { isUuid } from '@/lib/utils'
 import type { LawStatus } from '@/lib/types'
 
-export const runtime = 'edge'
 
 const U = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const K = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!

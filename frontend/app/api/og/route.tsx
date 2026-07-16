@@ -3,7 +3,6 @@ import { getCardFonts } from '@/lib/og-fonts'
 
 // 1200×630 site link preview — brand lockup per the social/OG mock:
 // centered glyph above the wordmark, white, ink text.
-export const runtime = 'edge'
 
 export async function GET() {
   const fonts = await getCardFonts()

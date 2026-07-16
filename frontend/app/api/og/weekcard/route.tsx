@@ -7,7 +7,6 @@ import { lastSessionRange } from '@/lib/utils'
 // During recess an empty week auto-falls back to a recap of the whole
 // just-ended session, so the weekly IG post never renders a zero card.
 
-export const runtime = 'edge'
 
 const U = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const K = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!

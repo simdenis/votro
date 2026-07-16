@@ -4,7 +4,6 @@ import { getCardFonts } from '@/lib/og-fonts'
 
 // 1080×1350 (4:5) educational carousel slides (post #2: cum funcționează).
 // URL: /api/og/edu?slide=1..6 — slide 6 shows the live pending-bills count.
-export const runtime = 'edge'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!

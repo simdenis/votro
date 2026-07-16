@@ -5,7 +5,6 @@ import { countNoun, isUuid } from '@/lib/utils'
 
 // 1080×1350 (4:5) deviation card — /api/og/deviationcard?vote=<vote_id>
 
-export const runtime = 'edge'
 
 const U = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const K = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!

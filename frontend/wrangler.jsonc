@@ -1,0 +1,15 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "main": ".open-next/worker.js",
+  "name": "votro",
+  "compatibility_date": "2025-03-01",
+  // nodejs_compat: run the Node.js runtime (OpenNext requires it, edge is unsupported).
+  // global_fetch_strictly_public: same-zone fetch() goes over the public internet
+  // (our OG routes fetch Supabase by absolute URL — keeps them from looping internally).
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
+  "services": [{ "binding": "WORKER_SELF_REFERENCE", "service": "votro" }],
+  // ISR / on-demand revalidation cache. Create with:
+  //   wrangler r2 bucket create votro-cache
+  "r2_buckets": [{ "binding": "NEXT_INC_CACHE_R2_BUCKET", "bucket_name": "votro-cache" }]
+}

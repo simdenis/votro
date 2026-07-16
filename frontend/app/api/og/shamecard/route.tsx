@@ -5,7 +5,6 @@ import { getCardFonts } from '@/lib/og-fonts'
 // 1080×1350 (4:5) Instagram shame-corner card — top absentees, both chambers.
 // Public URL the Instagram poster fetches: /api/og/shamecard
 
-export const runtime = 'edge'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
