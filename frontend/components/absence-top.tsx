@@ -2,11 +2,13 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { textOnColor } from '@/lib/utils'
 
 type Item = {
   politician_id: string
   name: string
   first_name: string
+  party_abbr: string
   party_color: string
   presence_pct: number
   context_note: string | null
@@ -32,7 +34,12 @@ export function AbsenceTop({ items }: { items: Item[] }) {
           >
             <span className="flex items-center gap-1.5 text-[12.5px] font-medium text-foreground min-w-0">
               <span className="text-[10px] text-faint tabular-nums w-4 flex-shrink-0">{page * PAGE + i + 1}.</span>
-              <span className="w-[9px] h-[9px] rounded-[2px] flex-shrink-0" style={{ backgroundColor: s.party_color || '#9e9e9e' }} />
+              <span
+                className="text-[9px] uppercase font-bold px-1 py-px rounded flex-shrink-0"
+                style={{ backgroundColor: s.party_color || '#9e9e9e', color: textOnColor(s.party_color || '#9e9e9e') }}
+              >
+                {s.party_abbr}
+              </span>
               <span className="truncate">{s.first_name} {s.name}</span>
               {s.context_note && (
                 <span className="text-faint flex-shrink-0" title={s.context_note} aria-label="Există o notă de context pentru absențe">ⓘ</span>
