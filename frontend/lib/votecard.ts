@@ -75,7 +75,8 @@ export function mapSenatorToCard(s: PoliticianStats, chamber: 'senate' | 'deputi
     // the chamber total instead of leaving a silent gap.
     votesAbsent: Math.max(0, (s.chamber_votes || s.total_votes || 0)
       - (s.votes_for ?? 0) - (s.votes_against ?? 0) - (s.votes_abstention ?? 0)),
-    // aligned votes over ALL chamber votes — absences lower loyalty (lib/utils)
+    // loyalty over votes EXPRESSED — presence ("a votat la X din Y") is shown
+    // separately so an absentee never reads as a rebel (lib/utils loyaltyParts)
     loyaltyPct: loyaltyPct(s),
     deviations: s.deviations ?? 0,
     deviationPct: s.deviation_pct != null ? Math.round(s.deviation_pct) : null,

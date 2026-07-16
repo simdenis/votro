@@ -63,7 +63,7 @@ export default async function SenatorProfile({ params }: { params: Promise<{ id:
       .eq('politician_id', pid)
       .eq('party_line_deviation', true)
       .order('votes(vote_date)', { ascending: false })
-      .limit(8),
+      .limit(50),
     db.from('politician_party_history')
       .select('*, parties(name, abbreviation, color)')
       .eq('politician_id', pid)

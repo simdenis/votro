@@ -125,6 +125,10 @@ export interface PoliticianStats {
   /** Plenary votes held in the member's chamber since mandate start —
       the real absence denominator (sources don't list every absentee). */
   chamber_votes: number
+  /** Curator note explaining a documented/structural absence (medical leave,
+      official delegation…). Null for most MPs. See migration 033. */
+  context_note?: string | null
+  context_note_url?: string | null
 }
 
 /** True absences: chamber votes held minus every recorded participation. */

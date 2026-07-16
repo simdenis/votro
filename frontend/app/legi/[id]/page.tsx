@@ -6,6 +6,7 @@ import { formatDate, capFirst, isUuid, lawSlug, slugToCode } from '@/lib/utils'
 import { activeSeats } from '@/lib/seats'
 import { OutcomeBadge } from '@/components/outcome-badge'
 import { PartyBreakdown } from '@/components/party-breakdown'
+import { AiSummary } from '@/components/ai-summary'
 import { SeatArc } from '@/components/seat-arc'
 import { LawTimeline } from '@/components/law-timeline'
 import { BaseLawBadges } from '@/components/base-law-badge'
@@ -115,18 +116,8 @@ export default async function LawDetail({ params }: { params: Promise<{ id: stri
         <h1 className="font-serif text-[30px] font-normal text-foreground leading-[1.12] tracking-[-0.01em]">{capFirst(law.title)}</h1>
 
         {law.summary && (
-          <div className="relative mt-5 bg-surface border border-rim rounded-xl p-5 pl-6 overflow-hidden">
-            <span aria-hidden className="absolute inset-y-0 left-0 w-[3px] bg-sidebar" />
-            <p className="text-[11px] font-semibold uppercase tracking-widest text-muted mb-2">Pe scurt</p>
-            <p className="text-[15px] text-foreground leading-relaxed">{law.summary}</p>
-            <div className="mt-3.5 pt-3 border-t border-rim flex items-center justify-between gap-x-4 gap-y-1.5 flex-wrap text-[11px] text-faint">
-              {law.summary_is_ai && <span>Rezumat AI al argumentelor inițiatorilor</span>}
-              {law.em_url && (
-                <a href={law.em_url} target="_blank" rel="noopener noreferrer" className="hover:text-foreground underline underline-offset-2">
-                  Sursa: expunerea de motive (PDF)
-                </a>
-              )}
-            </div>
+          <div className="mt-5">
+            <AiSummary summary={law.summary} isAi={law.summary_is_ai} emUrl={law.em_url} code={law.code} />
           </div>
         )}
 

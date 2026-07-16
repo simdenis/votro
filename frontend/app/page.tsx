@@ -32,10 +32,10 @@ export default async function Dashboard() {
     db.from('politicians').select('party_id, parties(abbreviation)', { count: 'exact', head: false }).eq('active', true),
     // Absențe top 5 — lowest presence since mandate start, both chambers.
     // Government members (gov_role) never vote in plen — structural absence.
-    db.from('senator_stats').select('politician_id, name, first_name, party_abbr, party_color, presence_pct')
+    db.from('senator_stats').select('politician_id, name, first_name, party_abbr, party_color, presence_pct, context_note')
       .eq('active', true).is('gov_role', null)
       .order('presence_pct', { ascending: true }).limit(5),
-    db.from('deputy_stats').select('politician_id, name, first_name, party_abbr, party_color, presence_pct')
+    db.from('deputy_stats').select('politician_id, name, first_name, party_abbr, party_color, presence_pct, context_note')
       .eq('active', true).is('gov_role', null)
       .order('presence_pct', { ascending: true }).limit(5),
   ])
@@ -45,7 +45,7 @@ export default async function Dashboard() {
   const promulgatedCount = r3.count ?? 0
   const respinsCount  = r4.count ?? 0
   const allParties    = r5.data ?? []
-  type LowPresence = { politician_id: string; name: string; first_name: string; party_abbr: string; party_color: string; presence_pct: number; href: string }
+  type LowPresence = { politician_id: string; name: string; first_name: string; party_abbr: string; party_color: string; presence_pct: number; context_note: string | null; href: string }
   const lowPresence: LowPresence[] = [
     ...((r7.data ?? []) as Omit<LowPresence, 'href'>[]).map(s => ({ ...s, href: `/senatori/${personSlug(s.first_name, s.name)}` })),
     ...((r8.data ?? []) as Omit<LowPresence, 'href'>[]).map(s => ({ ...s, href: `/deputati/${personSlug(s.first_name, s.name)}` })),
@@ -226,6 +226,9 @@ export default async function Dashboard() {
                       <span className="flex items-center gap-1.5 text-[12.5px] font-medium text-foreground min-w-0">
                         <span className="w-[9px] h-[9px] rounded-[2px] flex-shrink-0" style={{ backgroundColor: s.party_color || '#9e9e9e' }} />
                         <span className="truncate">{s.first_name} {s.name}</span>
+                        {s.context_note && (
+                          <span className="text-faint flex-shrink-0" title={s.context_note} aria-label="Există o notă de context pentru absențe">ⓘ</span>
+                        )}
                       </span>
                       <span className="text-[13px] font-bold tabular-nums text-respins flex-shrink-0">{Math.round(100 - s.presence_pct)}%</span>
                     </Link>
