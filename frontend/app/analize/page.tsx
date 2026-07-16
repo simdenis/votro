@@ -4,6 +4,7 @@ import { getDB } from '@/lib/supabase'
 import { formatDate, capFirst, hasPartyLine } from '@/lib/utils'
 import { AgreementMatrix, type MatrixParty, type AgreementBucket } from '@/components/charts/agreement-matrix'
 import { AttendanceTrend, type TrendSeries } from '@/components/charts/attendance-trend'
+import { CardDownload } from '@/components/card-download'
 
 export const revalidate = 3600
 export const metadata: Metadata = {
@@ -83,7 +84,12 @@ export default async function AnalizePage() {
           Nuanța închisă = acord mare. Voturile aproape unanime sunt excluse — altfel toate partidele ar părea aliate.
         </p>
         {parties.length >= 2 && buckets.length > 0
-          ? <AgreementMatrix parties={parties} months={agMonths} monthLabels={agMonthLabels} buckets={buckets} />
+          ? <>
+              <AgreementMatrix parties={parties} months={agMonths} monthLabels={agMonthLabels} buckets={buckets} />
+              <div className="flex pt-1">
+                <CardDownload href="/api/og/matrix" filename="labutoane-cine-voteaza-cu-cine.png" label="Descarcă imaginea" />
+              </div>
+            </>
           : <p className="text-sm text-faint">Date insuficiente.</p>}
       </section>
 
