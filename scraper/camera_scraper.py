@@ -174,6 +174,13 @@ _PARTY_FULL_NAME: dict[str, str] = {
 # minorities) — no party line exists, so no party_line_deviation is computed.
 NO_LINE_PARTIES = {"IND", "MIN"}
 
+# Members cdep lists under a group label that maps to the wrong party. Keyed by
+# normalized "lastname|firstname" (see _norm). Applied in _upsert_politician so
+# the correction survives every roster/vote scrape instead of reverting.
+_PARTY_OVERRIDE: dict[str, str] = {
+    "grosaru|ioana": "MIN",   # national-minorities deputy, shown as IND on cdep
+}
+
 
 def _norm(s: str) -> str:
     """Lowercase + strip all diacritics, so 'ţ' (cedilla) and 'ț' (comma) match."""
@@ -738,6 +745,12 @@ class CameraScraper:
         key = f"{last_name}|{first_name}"
         if key in self._pol_id_cache:           # in-memory hit — no DB round-trip
             return self._pol_id_cache[key]
+
+        # Force the correct party for known-misclassified members (overrides the
+        # party the group-label mapping resolved). Upsert then corrects the row.
+        override = _PARTY_OVERRIDE.get(f"{_norm(last_name)}|{_norm(first_name)}")
+        if override:
+            party_id = self._upsert_party(override, _PARTY_FULL_NAME.get(override, override)) or party_id
 
         payload: dict = {"name": last_name, "first_name": first_name, "chamber": "deputies"}
         if party_id:
