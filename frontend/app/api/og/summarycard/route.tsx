@@ -8,7 +8,6 @@ import type { LawStatus } from '@/lib/types'
 // 1080×1350 (4:5) "Pe scurt" card — /api/og/summarycard?id=<law_id>
 // The plain-language AI summary as the hero; IG post format.
 
-export const runtime = 'edge'
 
 const U = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const K = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!

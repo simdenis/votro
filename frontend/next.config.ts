@@ -1,5 +1,9 @@
 import withPWA from '@ducanh2912/next-pwa'
 import type { NextConfig } from 'next'
+import { initOpenNextCloudflareForDev } from '@opennextjs/cloudflare'
+
+// Makes Cloudflare bindings (R2 cache, env) available during `next dev`.
+initOpenNextCloudflareForDev()
 
 const baseConfig: NextConfig = {
   // English slugs lived at launch (shared links, IG posts, Google index) —
