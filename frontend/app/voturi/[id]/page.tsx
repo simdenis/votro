@@ -259,6 +259,7 @@ export default async function VoteDetail({
                 againstCount={vote.against_count ?? 0}
                 abstentionCount={vote.abstention_count ?? 0}
                 notVotedCount={vote.not_voted_count ?? 0}
+                absentCount={absentCount ?? 0}
                 outcome={vote.outcome}
               />
               <div className="flex gap-4 mt-3 flex-wrap justify-center">
