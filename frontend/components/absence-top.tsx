@@ -1,0 +1,66 @@
+'use client'
+
+import { useState } from 'react'
+import Link from 'next/link'
+
+type Item = {
+  politician_id: string
+  name: string
+  first_name: string
+  party_color: string
+  presence_pct: number
+  context_note: string | null
+  href: string
+}
+
+const PAGE = 5
+
+/** Absence ranking, paged 5 at a time — the homepage used to cap at a flat 5. */
+export function AbsenceTop({ items }: { items: Item[] }) {
+  const [page, setPage] = useState(0)
+  const pages = Math.ceil(items.length / PAGE)
+  const slice = items.slice(page * PAGE, page * PAGE + PAGE)
+
+  return (
+    <>
+      <div className="space-y-2">
+        {slice.map((s, i) => (
+          <Link
+            key={s.politician_id}
+            href={s.href}
+            className="flex items-center justify-between gap-2 bg-surface border border-rim rounded-lg px-3 py-2 hover:bg-raised transition-colors"
+          >
+            <span className="flex items-center gap-1.5 text-[12.5px] font-medium text-foreground min-w-0">
+              <span className="text-[10px] text-faint tabular-nums w-4 flex-shrink-0">{page * PAGE + i + 1}.</span>
+              <span className="w-[9px] h-[9px] rounded-[2px] flex-shrink-0" style={{ backgroundColor: s.party_color || '#9e9e9e' }} />
+              <span className="truncate">{s.first_name} {s.name}</span>
+              {s.context_note && (
+                <span className="text-faint flex-shrink-0" title={s.context_note} aria-label="Există o notă de context pentru absențe">ⓘ</span>
+              )}
+            </span>
+            <span className="text-[13px] font-bold tabular-nums text-respins flex-shrink-0">{Math.round(100 - s.presence_pct)}%</span>
+          </Link>
+        ))}
+      </div>
+      {pages > 1 && (
+        <div className="flex items-center justify-between mt-2.5">
+          <button
+            onClick={() => setPage(p => Math.max(0, p - 1))}
+            disabled={page === 0}
+            className="text-[11px] px-2 py-1 rounded-md border border-rim text-muted disabled:opacity-40 hover:text-foreground transition-colors"
+          >
+            ← Anterior
+          </button>
+          <span className="text-[11px] text-faint tabular-nums">{page + 1}/{pages}</span>
+          <button
+            onClick={() => setPage(p => Math.min(pages - 1, p + 1))}
+            disabled={page === pages - 1}
+            className="text-[11px] px-2 py-1 rounded-md border border-rim text-muted disabled:opacity-40 hover:text-foreground transition-colors"
+          >
+            Următorii →
+          </button>
+        </div>
+      )}
+    </>
+  )
+}

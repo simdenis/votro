@@ -3,13 +3,12 @@ import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
 import { countNoun, personSlug } from '@/lib/utils'
 import { RecentVotes } from '@/components/recent-votes'
+import { AbsenceTop } from '@/components/absence-top'
 import { ParliamentBar } from '@/components/parliament-bar'
 import { CountyMap } from '@/components/county-map'
 import type { VoteWithLaw } from '@/lib/types'
 import { NewsletterForm } from '@/components/newsletter-form'
-import { ApiBuilder } from '@/components/api-builder'
-
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://labutoane.vercel.app'
+import { LawQuick } from '@/components/law-quick'
 
 // ISR: CDN-cache the homepage for 10 min instead of rendering from origin on
 // every hit — votes change daily at most, so freshness is unaffected while
@@ -21,7 +20,8 @@ export const metadata: Metadata = { title: { absolute: 'LaButoane — Cum voteaz
 export default async function Dashboard() {
   const db = getDB()
 
-  const [r0, r2, r3, r4, r5, r6, r7, r8] = await Promise.all([
+  const today = new Date().toISOString().slice(0, 10)
+  const [r0, r2, r3, r4, r5, r6, r7, r8, r9] = await Promise.all([
     db.from('law_status').select('*', { count: 'exact', head: true }),
     // substantive votes only — presence checks / agenda changes drown the feed.
     // Fetch a window (not just 8) so the on-page sort by interest/category has
@@ -35,10 +35,15 @@ export default async function Dashboard() {
     // Government members (gov_role) never vote in plen — structural absence.
     db.from('senator_stats').select('politician_id, name, first_name, party_abbr, party_color, presence_pct, context_note')
       .eq('active', true).is('gov_role', null)
-      .order('presence_pct', { ascending: true }).limit(5),
+      .order('presence_pct', { ascending: true }).limit(15),
     db.from('deputy_stats').select('politician_id, name, first_name, party_abbr, party_color, presence_pct, context_note')
       .eq('active', true).is('gov_role', null)
-      .order('presence_pct', { ascending: true }).limit(5),
+      .order('presence_pct', { ascending: true }).limit(15),
+    // Legi tacite — soonest upcoming constitutional deadlines (art. 75). The one
+    // thing that doesn't stop during recess, so it belongs on the homepage.
+    db.from('pending_bills').select('id, code, title, tacit_deadline, source_url')
+      .not('tacit_deadline', 'is', null).gte('tacit_deadline', today)
+      .order('tacit_deadline', { ascending: true }).limit(5),
   ])
 
   const totalLaws     = r0.count ?? 0
@@ -50,7 +55,8 @@ export default async function Dashboard() {
   const lowPresence: LowPresence[] = [
     ...((r7.data ?? []) as Omit<LowPresence, 'href'>[]).map(s => ({ ...s, href: `/senatori/${personSlug(s.first_name, s.name)}` })),
     ...((r8.data ?? []) as Omit<LowPresence, 'href'>[]).map(s => ({ ...s, href: `/deputati/${personSlug(s.first_name, s.name)}` })),
-  ].sort((a, b) => a.presence_pct - b.presence_pct).slice(0, 5)
+  ].sort((a, b) => a.presence_pct - b.presence_pct).slice(0, 15)
+  const tacitBills = (r9.data ?? []) as { id: string; code: string; title: string | null; tacit_deadline: string | null; source_url: string | null }[]
 
   const senatorCounts: Record<string, number> = {}
   for (const p of (r6.data ?? []) as any[]) {
@@ -144,31 +150,52 @@ export default async function Dashboard() {
               <CountyMap />
             </div>
 
+            {/* Legi tacite — soonest deadlines. Nobody else tracks tacit
+                adoption, and the deadlines keep running during recess. */}
+            {tacitBills.length > 0 && (
+              <div className="mb-10">
+                <div className="flex items-baseline justify-between border-b-2 border-sidebar pb-[5px] mb-1">
+                  <h2 className="font-serif text-[16px] font-normal text-foreground">Legi tacite — termene apropiate</h2>
+                  <Link href="/tacite" className="text-[11px] text-muted hover:text-foreground transition-colors">Toate →</Link>
+                </div>
+                <p className="text-[11px] text-faint mb-3">Proiecte adoptate <strong className="font-semibold">fără vot</strong> dacă nu sunt dezbătute la timp (art. 75).</p>
+                <div className="space-y-2">
+                  {tacitBills.map(b => {
+                    const days = b.tacit_deadline
+                      ? Math.ceil((new Date(b.tacit_deadline + 'T23:59:59+03:00').getTime() - Date.now()) / 86_400_000)
+                      : null
+                    return (
+                      <a
+                        key={b.id}
+                        href={b.source_url ?? '/tacite'}
+                        target={b.source_url ? '_blank' : undefined}
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-between gap-2 bg-surface border border-rim rounded-lg px-3 py-2 hover:bg-raised transition-colors"
+                      >
+                        <span className="min-w-0">
+                          <span className="block text-[12.5px] font-medium text-foreground truncate">{b.title ?? b.code}</span>
+                          <span className="block font-mono text-[10px] text-muted">{b.code}</span>
+                        </span>
+                        {days != null && (
+                          <span className={`text-[11px] font-bold tabular-nums flex-shrink-0 ${days <= 7 ? 'text-respins' : days <= 30 ? 'text-deviere' : 'text-muted'}`}>
+                            {days} {days === 1 ? 'zi' : 'zile'}
+                          </span>
+                        )}
+                      </a>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
             {/* Absențe — top 5: lowest plenary presence, both chambers */}
             {lowPresence.length > 0 && (
               <>
                 <h2 className="font-serif text-[16px] font-normal text-foreground border-b-2 border-respins/60 pb-[5px] mb-1">
-                  Absențe — top 5
+                  Absențe — clasament
                 </h2>
                 <p className="text-[11px] text-faint mb-3">absențe la voturile din plen · Senat + Cameră · fără membrii Guvernului</p>
-                <div className="space-y-2">
-                  {lowPresence.map(s => (
-                    <Link
-                      key={s.politician_id}
-                      href={s.href}
-                      className="flex items-center justify-between gap-2 bg-surface border border-rim rounded-lg px-3 py-2 hover:bg-raised transition-colors"
-                    >
-                      <span className="flex items-center gap-1.5 text-[12.5px] font-medium text-foreground min-w-0">
-                        <span className="w-[9px] h-[9px] rounded-[2px] flex-shrink-0" style={{ backgroundColor: s.party_color || '#9e9e9e' }} />
-                        <span className="truncate">{s.first_name} {s.name}</span>
-                        {s.context_note && (
-                          <span className="text-faint flex-shrink-0" title={s.context_note} aria-label="Există o notă de context pentru absențe">ⓘ</span>
-                        )}
-                      </span>
-                      <span className="text-[13px] font-bold tabular-nums text-respins flex-shrink-0">{Math.round(100 - s.presence_pct)}%</span>
-                    </Link>
-                  ))}
-                </div>
+                <AbsenceTop items={lowPresence} />
               </>
             )}
 
@@ -177,10 +204,10 @@ export default async function Dashboard() {
             <div className="mt-10">
               <div className="flex items-baseline justify-between border-b-2 border-sidebar pb-[5px] mb-3">
                 <h2 className="font-serif text-[16px] font-normal text-foreground">Ia datele</h2>
-                <Link href="/date" className="text-[11px] text-muted hover:text-foreground transition-colors">Despre API →</Link>
+                <Link href="/date" className="text-[11px] text-muted hover:text-foreground transition-colors">API complet →</Link>
               </div>
-              <p className="text-[11px] text-faint mb-3">Alege ce vrei și primești comanda, fișierul CSV/JSON sau cardul — fără cont, fără cod.</p>
-              <ApiBuilder siteUrl={SITE_URL} />
+              <p className="text-[11px] text-faint mb-3">Orice lege ca imagine sau JSON — după cod, fără cont.</p>
+              <LawQuick />
             </div>
           </aside>
       </div>
