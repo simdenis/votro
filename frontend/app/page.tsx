@@ -24,9 +24,9 @@ export default async function Dashboard() {
   const [r0, r2, r3, r4, r5, r6, r7, r8, r9] = await Promise.all([
     db.from('law_status').select('*', { count: 'exact', head: true }),
     // substantive votes only — presence checks / agenda changes drown the feed.
-    // Fetch a window (not just 8) so the on-page sort by interest/category has
-    // something to work with; RecentVotes sorts client-side.
-    db.from('votes').select('*, laws(*)').not('law_id', 'is', null).order('vote_date', { ascending: false }).limit(15),
+    // Fetch a wider window so the feed's sort + category filter + date slider
+    // have real data to work over (RecentVotes filters/sorts client-side).
+    db.from('votes').select('*, laws(*)').not('law_id', 'is', null).order('vote_date', { ascending: false }).limit(120),
     db.from('law_status').select('*', { count: 'exact', head: true }).eq('presidential_status', 'promulgat'),
     db.from('law_status').select('*', { count: 'exact', head: true }).or('senate_outcome.eq.respins,camera_outcome.eq.respins'),
     db.from('parties').select('abbreviation, color, name'),

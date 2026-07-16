@@ -2,17 +2,21 @@
 
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
-import { formatDate, capFirst, recessUntil } from '@/lib/utils'
+import { formatDate, formatDateShort, capFirst, recessUntil } from '@/lib/utils'
+import { CATEGORY_COLORS } from '@/lib/category-colors'
 import { CategoryBadge } from '@/components/category-badge'
 import { OutcomeBadge } from '@/components/outcome-badge'
 import type { VoteWithLaw } from '@/lib/types'
 
 type Field = 'recent' | 'hot'
 
+const DAY = 86_400_000
+const ALL_CATEGORIES = Object.keys(CATEGORY_COLORS).sort((a, b) => a.localeCompare(b, 'ro'))
+
 /**
- * Homepage vote feed: sort by Recente or Interes (laws.interest_score, Gemini
- * 1–100, migration 025) with a ↑↓ toggle, plus a category *filter* that reveals
- * the category list when opened. Votes arrive recent-first from the server.
+ * Homepage vote browser: sort (Recente / Interes = laws.interest_score,
+ * migration 025), a date slider that widens/narrows the window back from the
+ * latest vote, and a multi-select category filter over ALL categories.
  */
 export function RecentVotes({ votes }: { votes: VoteWithLaw[] }) {
   const [field, setField] = useState<Field>('recent')
@@ -20,46 +24,52 @@ export function RecentVotes({ votes }: { votes: VoteWithLaw[] }) {
   const [selected, setSelected] = useState<string[]>([])
   const [catOpen, setCatOpen] = useState(false)
 
-  function pick(f: Field) {
-    if (f === field) setDir(d => (d === 'asc' ? 'desc' : 'asc'))
-    else { setField(f); setDir('desc') }
-  }
-
-  const categories = useMemo(() => {
-    const set = new Set<string>()
-    for (const v of votes) if (v.laws?.law_category) set.add(v.laws.law_category)
-    return [...set].sort((a, b) => a.localeCompare(b, 'ro'))
+  // Slider is relative to the newest vote (during recess "today" has no votes).
+  const { newest, spanDays } = useMemo(() => {
+    if (!votes.length) return { newest: 0, spanDays: 0 }
+    let hi = -Infinity, lo = Infinity
+    for (const v of votes) {
+      const t = new Date(v.vote_date).getTime()
+      if (t > hi) hi = t
+      if (t < lo) lo = t
+    }
+    return { newest: hi, spanDays: Math.max(1, Math.ceil((hi - lo) / DAY) + 1) }
   }, [votes])
+
+  const [days, setDays] = useState(0) // 0 until initialised below
+  const maxDays = spanDays
+  const effDays = days || Math.min(14, maxDays) // default: last 2 weeks of activity
+  const cutoff = newest - (effDays - 1) * DAY
 
   const recentDesc = (a: VoteWithLaw, b: VoteWithLaw) =>
     new Date(b.vote_date).getTime() - new Date(a.vote_date).getTime()
 
   const visible = useMemo(() => {
     const sign = dir === 'asc' ? 1 : -1
-    const filtered = selected.length
-      ? votes.filter(v => v.laws?.law_category && selected.includes(v.laws.law_category))
-      : votes
-    return [...filtered].sort((a, b) => {
+    const filtered = votes.filter(v => {
+      if (new Date(v.vote_date).getTime() < cutoff) return false
+      if (selected.length && !(v.laws?.law_category && selected.includes(v.laws.law_category))) return false
+      return true
+    })
+    return filtered.sort((a, b) => {
       if (field === 'hot') {
         const av = a.laws?.interest_score ?? -1, bv = b.laws?.interest_score ?? -1
         return av !== bv ? sign * (av - bv) : recentDesc(a, b)
       }
       return -sign * recentDesc(a, b)
     })
-  }, [votes, field, dir, selected])
+  }, [votes, field, dir, selected, cutoff])
 
-  // A week without votes reads as "abandoned" when it's really recess
   const last = votes[0]?.vote_date
-  const quiet = last && Date.now() - new Date(last).getTime() > 7 * 86_400_000
+  const quiet = last && Date.now() - new Date(last).getTime() > 7 * DAY
   const recess = quiet ? recessUntil() : null
 
   const arrow = dir === 'asc' ? '↑' : '↓'
+  const pick = (f: Field) => { if (f === field) setDir(d => (d === 'asc' ? 'desc' : 'asc')); else { setField(f); setDir('desc') } }
   const Btn = ({ f, label }: { f: Field; label: string }) => (
     <button
       onClick={() => pick(f)}
-      className={`text-[11px] px-2 py-1 rounded-md border transition-colors ${
-        field === f ? 'border-sidebar text-foreground font-medium' : 'border-rim text-muted hover:text-foreground'
-      }`}
+      className={`text-[11px] px-2 py-1 rounded-md border transition-colors ${field === f ? 'border-sidebar text-foreground font-medium' : 'border-rim text-muted hover:text-foreground'}`}
     >
       {label}{field === f ? ` ${arrow}` : ''}
     </button>
@@ -71,19 +81,15 @@ export function RecentVotes({ votes }: { votes: VoteWithLaw[] }) {
         <span className="text-[11px] text-faint mr-0.5">Sortează:</span>
         <Btn f="recent" label="Recente" />
         <Btn f="hot" label="Interes" />
-        {categories.length > 0 && (
-          <button
-            onClick={() => setCatOpen(o => !o)}
-            className={`text-[11px] px-2 py-1 rounded-md border transition-colors ${
-              selected.length || catOpen ? 'border-sidebar text-foreground font-medium' : 'border-rim text-muted hover:text-foreground'
-            }`}
-          >
-            {selected.length ? `Categorie (${selected.length})` : 'Categorie'} {catOpen ? '▴' : '▾'}
-          </button>
-        )}
+        <button
+          onClick={() => setCatOpen(o => !o)}
+          className={`text-[11px] px-2 py-1 rounded-md border transition-colors ${selected.length || catOpen ? 'border-sidebar text-foreground font-medium' : 'border-rim text-muted hover:text-foreground'}`}
+        >
+          {selected.length ? `Categorie (${selected.length})` : 'Categorie'} {catOpen ? '▴' : '▾'}
+        </button>
       </div>
 
-      {catOpen && categories.length > 0 && (
+      {catOpen && (
         <div className="flex flex-wrap gap-1.5 mb-3">
           <button
             onClick={() => setSelected([])}
@@ -91,7 +97,7 @@ export function RecentVotes({ votes }: { votes: VoteWithLaw[] }) {
           >
             Toate
           </button>
-          {categories.map(c => (
+          {ALL_CATEGORIES.map(c => (
             <button
               key={c}
               onClick={() => setSelected(s => s.includes(c) ? s.filter(x => x !== c) : [...s, c])}
@@ -103,6 +109,21 @@ export function RecentVotes({ votes }: { votes: VoteWithLaw[] }) {
         </div>
       )}
 
+      {maxDays > 7 && (
+        <div className="flex items-center gap-3 mb-3 bg-surface border border-rim rounded-lg px-3 py-2">
+          <span className="text-[11px] text-faint flex-shrink-0">Perioadă</span>
+          <input
+            type="range" min={7} max={maxDays} value={effDays}
+            onChange={e => setDays(Math.max(7, +e.target.value))}
+            className="flex-1 accent-[var(--sidebar-bg)]"
+            aria-label="Perioadă afișată"
+          />
+          <span className="text-[11px] text-muted tabular-nums flex-shrink-0 min-w-[8.5rem] text-right">
+            din {formatDateShort(new Date(cutoff).toISOString().slice(0, 10))}
+          </span>
+        </div>
+      )}
+
       {recess && (
         <p className="text-[12.5px] text-muted bg-raised rounded-md px-3 py-2 mb-1">
           Parlamentul e în vacanță până la {recess} — de aceea nu apar voturi noi.
@@ -110,8 +131,8 @@ export function RecentVotes({ votes }: { votes: VoteWithLaw[] }) {
       )}
 
       {visible.length === 0 ? (
-        <p className="text-[13px] text-muted py-3">Niciun vot în categoriile alese.</p>
-      ) : visible.map(vote => (
+        <p className="text-[13px] text-muted py-3">Niciun vot pentru filtrele alese.</p>
+      ) : visible.slice(0, 25).map(vote => (
         <Link key={vote.id} href={`/voturi/${vote.id}`} className="block py-[18px] border-b border-rim hover:opacity-80 transition-opacity">
           <div className="flex items-center gap-2 mb-2">
             <span className="text-[11px] font-semibold tabular-nums" style={{ color: 'var(--sidebar-bg)' }}>
