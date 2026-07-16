@@ -20,7 +20,9 @@ const cardKindOf = (p: Preset): 'law' | 'mp' | null =>
 // encode spaces (names) but leave /, ., *, - readable
 const q = (v: string) => v.trim().replace(/ /g, '%20')
 
-export function ApiBuilder({ siteUrl }: { siteUrl: string }) {
+// `minimal` (homepage) drops the curl command block and the CSV button —
+// keeps the 4 presets, JSON, and the card image. Full builder lives on /date.
+export function ApiBuilder({ siteUrl = '', minimal = false }: { siteUrl?: string; minimal?: boolean }) {
   const [preset, setPreset] = useState<Preset>('law_votes')
   const [code, setCode] = useState('L230/2025')
   const [from, setFrom] = useState('2026-02-01')
@@ -144,18 +146,19 @@ export function ApiBuilder({ siteUrl }: { siteUrl: string }) {
         )}
       </div>
 
-      {/* command */}
       {/* command — copy button sits in the header row, not over the code, so it
-          stays legible in the narrow sidebar column */}
-      <div>
-        <div className="flex items-center justify-between mb-1.5">
-          <span className="text-[11px] uppercase tracking-widest text-muted font-semibold">Comandă</span>
-          <button onClick={copy} className={`px-1.5 py-0.5 text-[11px] font-semibold transition-colors ${copied ? 'text-adoptat' : 'text-faint hover:text-foreground'}`}>
-            {copied ? 'Copiat ✓' : 'Copiază'}
-          </button>
+          stays legible in the narrow sidebar column. Hidden in minimal mode. */}
+      {!minimal && (
+        <div>
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[11px] uppercase tracking-widest text-muted font-semibold">Comandă</span>
+            <button onClick={copy} className={`px-1.5 py-0.5 text-[11px] font-semibold transition-colors ${copied ? 'text-adoptat' : 'text-faint hover:text-foreground'}`}>
+              {copied ? 'Copiat ✓' : 'Copiază'}
+            </button>
+          </div>
+          <pre className="bg-raised border border-rim rounded-lg p-3 text-[11.5px] leading-relaxed overflow-x-auto whitespace-pre"><code>{curl}</code></pre>
         </div>
-        <pre className="bg-raised border border-rim rounded-lg p-3 text-[11.5px] leading-relaxed overflow-x-auto whitespace-pre"><code>{curl}</code></pre>
-      </div>
+      )}
 
       {/* output variants — JSON / CSV download the query, imagine grabs the card */}
       <div>
@@ -166,10 +169,12 @@ export function ApiBuilder({ siteUrl }: { siteUrl: string }) {
             style={{ background: 'var(--sidebar-bg)' }}>
             JSON
           </button>
-          <button onClick={() => { setFormat('csv'); download('csv') }} disabled={busy}
-            className="btn-tactile rounded-lg px-3.5 py-1.5 text-[12px] font-semibold bg-surface border border-rim text-foreground disabled:opacity-60">
-            CSV
-          </button>
+          {!minimal && (
+            <button onClick={() => { setFormat('csv'); download('csv') }} disabled={busy}
+              className="btn-tactile rounded-lg px-3.5 py-1.5 text-[12px] font-semibold bg-surface border border-rim text-foreground disabled:opacity-60">
+              CSV
+            </button>
+          )}
           {cardKind && (
             <button onClick={downloadCard} disabled={busy}
               className="btn-tactile rounded-lg px-3.5 py-1.5 text-[12px] font-semibold bg-surface border border-rim text-foreground disabled:opacity-60">

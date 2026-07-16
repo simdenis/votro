@@ -8,7 +8,7 @@ import { ParliamentBar } from '@/components/parliament-bar'
 import { CountyMap } from '@/components/county-map'
 import type { VoteWithLaw } from '@/lib/types'
 import { NewsletterForm } from '@/components/newsletter-form'
-import { LawQuick } from '@/components/law-quick'
+import { ApiBuilder } from '@/components/api-builder'
 
 // ISR: CDN-cache the homepage for 10 min instead of rendering from origin on
 // every hit — votes change daily at most, so freshness is unaffected while
@@ -206,8 +206,8 @@ export default async function Dashboard() {
                 <h2 className="font-serif text-[16px] font-normal text-foreground">Ia datele</h2>
                 <Link href="/date" className="text-[11px] text-muted hover:text-foreground transition-colors">API complet →</Link>
               </div>
-              <p className="text-[11px] text-faint mb-3">Orice lege ca imagine sau JSON — după cod, fără cont.</p>
-              <LawQuick />
+              <p className="text-[11px] text-faint mb-3">Alege ce vrei — imagine sau JSON, fără cont, fără cod.</p>
+              <ApiBuilder minimal />
             </div>
           </aside>
       </div>
