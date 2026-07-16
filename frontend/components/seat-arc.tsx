@@ -5,6 +5,10 @@ interface Props {
   againstCount: number
   abstentionCount: number
   notVotedCount?: number
+  /** True absentees (chamber seats − participants). Drawn as the lightest grey
+   *  dots so the arc represents the FULL chamber, matching the shareable vote
+   *  card and this component's own legend. Omit/0 on joint sessions. */
+  absentCount?: number
   outcome: 'adoptat' | 'respins' | null
   /** Internal SVG coordinate width. The SVG is responsive and fills its
    *  container regardless — this only sets the drawing resolution. Default 400 */
@@ -14,14 +18,16 @@ interface Props {
 /**
  * Semicircular parliament seating diagram.
  * Responsive: scales to fill its container via viewBox (no fixed pixel width).
- * Seats arranged in 4 concentric arcs, coloured by vote choice.
+ * Seats arranged in concentric arcs, coloured by vote choice.
  * Order: for (green) → against (red) → abstention (purple) → not_voted (grey)
+ *        → absent (lightest grey)
  */
 export function SeatArc({
   forCount,
   againstCount,
   abstentionCount,
   notVotedCount = 0,
+  absentCount = 0,
   outcome,
   width = 400,
 }: Props) {
@@ -36,6 +42,7 @@ export function SeatArc({
     ...Array(againstCount).fill('var(--color-against)'),
     ...Array(abstentionCount).fill('var(--color-abstention)'),
     ...Array(notVotedCount).fill('var(--faint)'),
+    ...Array(Math.max(0, absentCount)).fill('var(--color-absent)'),
   ]
 
   // Rows scale with the vote size: 4 rows fit the Senate (~136), Camera
