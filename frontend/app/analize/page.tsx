@@ -24,15 +24,24 @@ type ClosestRow = {
 
 export default async function AnalizePage() {
   const db = getDB()
-  const [bucketRes, attendRes, closestRes, partiesRes] = await Promise.all([
+  const [bucketRes, attendRes, closestRes, partiesRes, contestedRes] = await Promise.all([
     db.from('party_agreement_monthly').select('party_a, party_b, month, shared, agreed'),
     db.from('monthly_attendance').select('month, chamber, attendance_pct'),
     db.from('closest_votes').select('*').order('margin', { ascending: true }).limit(12),
     db.from('parties').select('abbreviation, color'),
+    // contested-vote counts per chamber per month (migration 034 — resilient:
+    // if the view isn't applied yet, .data is null and the footer just omits counts)
+    db.from('contested_votes_by_month').select('chamber, month, n'),
   ])
 
   const colorOf: Record<string, string> = {}
   for (const p of (partiesRes.data ?? []) as { abbreviation: string; color: string }[]) colorOf[p.abbreviation] = p.color
+
+  // month → { senate, deputies } contested-vote counts for the matrix footer
+  const contestedByMonth: Record<string, { senate: number; deputies: number }> = {}
+  for (const r of (contestedRes.data ?? []) as { chamber: 'senate' | 'deputies'; month: string; n: number }[]) {
+    ;(contestedByMonth[r.month] ??= { senate: 0, deputies: 0 })[r.chamber] = r.n
+  }
 
   // ── 1. Agreement matrix ────────────────────────────────────────────────
   const buckets = (bucketRes.data ?? []) as AgreementBucket[]
@@ -82,8 +91,12 @@ export default async function AnalizePage() {
           Cât de des au votat la fel majoritățile a două partide, pe <strong className="text-foreground">voturile disputate</strong>.
           Nuanța închisă = acord mare. Voturile aproape unanime sunt excluse — altfel toate partidele ar părea aliate.
         </p>
+        <p className="text-[12.5px] text-faint max-w-2xl">
+          Citește o celulă așa: <strong className="text-muted">X%</strong> = din voturile disputate din perioada aleasă,
+          de câte ori majoritățile celor două partide au ales la fel (pentru / împotrivă / abținere).
+        </p>
         {parties.length >= 2 && buckets.length > 0
-          ? <AgreementMatrix parties={parties} months={agMonths} monthLabels={agMonthLabels} buckets={buckets} />
+          ? <AgreementMatrix parties={parties} months={agMonths} monthLabels={agMonthLabels} buckets={buckets} contestedByMonth={contestedByMonth} />
           : <p className="text-sm text-faint">Date insuficiente.</p>}
       </section>
 

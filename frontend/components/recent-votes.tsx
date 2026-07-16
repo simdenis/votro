@@ -17,7 +17,7 @@ type Field = 'recent' | 'hot'
 export function RecentVotes({ votes }: { votes: VoteWithLaw[] }) {
   const [field, setField] = useState<Field>('recent')
   const [dir, setDir] = useState<'asc' | 'desc'>('desc')
-  const [category, setCategory] = useState('')
+  const [selected, setSelected] = useState<string[]>([])
   const [catOpen, setCatOpen] = useState(false)
 
   function pick(f: Field) {
@@ -36,7 +36,9 @@ export function RecentVotes({ votes }: { votes: VoteWithLaw[] }) {
 
   const visible = useMemo(() => {
     const sign = dir === 'asc' ? 1 : -1
-    const filtered = category ? votes.filter(v => v.laws?.law_category === category) : votes
+    const filtered = selected.length
+      ? votes.filter(v => v.laws?.law_category && selected.includes(v.laws.law_category))
+      : votes
     return [...filtered].sort((a, b) => {
       if (field === 'hot') {
         const av = a.laws?.interest_score ?? -1, bv = b.laws?.interest_score ?? -1
@@ -44,7 +46,7 @@ export function RecentVotes({ votes }: { votes: VoteWithLaw[] }) {
       }
       return -sign * recentDesc(a, b)
     })
-  }, [votes, field, dir, category])
+  }, [votes, field, dir, selected])
 
   // A week without votes reads as "abandoned" when it's really recess
   const last = votes[0]?.vote_date
@@ -73,10 +75,10 @@ export function RecentVotes({ votes }: { votes: VoteWithLaw[] }) {
           <button
             onClick={() => setCatOpen(o => !o)}
             className={`text-[11px] px-2 py-1 rounded-md border transition-colors ${
-              category || catOpen ? 'border-sidebar text-foreground font-medium' : 'border-rim text-muted hover:text-foreground'
+              selected.length || catOpen ? 'border-sidebar text-foreground font-medium' : 'border-rim text-muted hover:text-foreground'
             }`}
           >
-            {category || 'Categorie'} {catOpen ? '▴' : '▾'}
+            {selected.length ? `Categorie (${selected.length})` : 'Categorie'} {catOpen ? '▴' : '▾'}
           </button>
         )}
       </div>
@@ -84,16 +86,16 @@ export function RecentVotes({ votes }: { votes: VoteWithLaw[] }) {
       {catOpen && categories.length > 0 && (
         <div className="flex flex-wrap gap-1.5 mb-3">
           <button
-            onClick={() => setCategory('')}
-            className={`text-[11px] px-2 py-0.5 rounded-full border transition-colors ${!category ? 'border-sidebar text-foreground font-medium' : 'border-rim text-muted hover:text-foreground'}`}
+            onClick={() => setSelected([])}
+            className={`text-[11px] px-2 py-0.5 rounded-full border transition-colors ${!selected.length ? 'border-sidebar text-foreground font-medium' : 'border-rim text-muted hover:text-foreground'}`}
           >
             Toate
           </button>
           {categories.map(c => (
             <button
               key={c}
-              onClick={() => setCategory(c === category ? '' : c)}
-              className={`text-[11px] px-2 py-0.5 rounded-full border transition-colors ${category === c ? 'border-sidebar text-foreground font-medium' : 'border-rim text-muted hover:text-foreground'}`}
+              onClick={() => setSelected(s => s.includes(c) ? s.filter(x => x !== c) : [...s, c])}
+              className={`text-[11px] px-2 py-0.5 rounded-full border transition-colors ${selected.includes(c) ? 'border-sidebar text-foreground font-medium' : 'border-rim text-muted hover:text-foreground'}`}
             >
               {c}
             </button>
@@ -108,7 +110,7 @@ export function RecentVotes({ votes }: { votes: VoteWithLaw[] }) {
       )}
 
       {visible.length === 0 ? (
-        <p className="text-[13px] text-muted py-3">Niciun vot în categoria „{category}".</p>
+        <p className="text-[13px] text-muted py-3">Niciun vot în categoriile alese.</p>
       ) : visible.map(vote => (
         <Link key={vote.id} href={`/voturi/${vote.id}`} className="block py-[18px] border-b border-rim hover:opacity-80 transition-opacity">
           <div className="flex items-center gap-2 mb-2">
