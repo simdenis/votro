@@ -35,7 +35,7 @@ export async function GET(request: Request) {
       <div
         style={{
           width: '100%', height: '100%',
-          background: '#111111',
+          background: '#FFFFFF',
           display: 'flex', flexDirection: 'column',
           padding: '56px 64px',
           fontFamily: 'sans-serif',
@@ -59,7 +59,7 @@ export async function GET(request: Request) {
         {/* Name */}
         <div
           style={{
-            fontSize: 64, fontWeight: 900, color: '#ffffff',
+            fontSize: 64, fontWeight: 900, color: '#171A1F',
             letterSpacing: '-2px', lineHeight: 1.1, marginBottom: 'auto',
           }}
         >
@@ -69,19 +69,19 @@ export async function GET(request: Request) {
         {/* Stats row */}
         <div style={{ display: 'flex', gap: 56, alignItems: 'flex-end' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <span style={{ fontSize: 48, fontWeight: 900, color: '#ffffff' }}>{totalV}</span>
-            <span style={{ fontSize: 14, color: '#666', textTransform: 'uppercase', letterSpacing: 2 }}>VOTURI</span>
+            <span style={{ fontSize: 48, fontWeight: 900, color: '#171A1F' }}>{totalV}</span>
+            <span style={{ fontSize: 14, color: '#8A8F98', textTransform: 'uppercase', letterSpacing: 2 }}>VOTURI</span>
           </div>
           {devPct != null && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <span style={{ fontSize: 48, fontWeight: 900, color: isHighDev ? '#E3A23C' : '#ffffff' }}>
+              <span style={{ fontSize: 48, fontWeight: 900, color: isHighDev ? '#E3A23C' : '#171A1F' }}>
                 {devPct.toFixed(1)}%
               </span>
-              <span style={{ fontSize: 14, color: '#666', textTransform: 'uppercase', letterSpacing: 2 }}>DEVIERE</span>
+              <span style={{ fontSize: 14, color: '#8A8F98', textTransform: 'uppercase', letterSpacing: 2 }}>DEVIERE</span>
             </div>
           )}
-          <div style={{ marginLeft: 'auto', fontSize: 22, color: '#555', fontWeight: 700, letterSpacing: 2 }}>
-            VOTRO
+          <div style={{ marginLeft: 'auto', fontSize: 22, color: '#B0B4BA', fontWeight: 700, letterSpacing: 1 }}>
+            la-butoane.ro
           </div>
         </div>
       </div>

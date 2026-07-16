@@ -33,40 +33,40 @@ export async function GET(request: Request) {
       <div
         style={{
           width: '100%', height: '100%',
-          background: '#111111',
+          background: '#FFFFFF',
           display: 'flex', flexDirection: 'column',
           padding: '56px 64px',
           fontFamily: 'sans-serif',
         }}
       >
         {/* LaButoane wordmark */}
-        <div style={{ fontSize: 22, color: '#888888', fontWeight: 700, letterSpacing: 2, marginBottom: 'auto' }}>
-          VOTRO
+        <div style={{ fontSize: 22, color: '#B0B4BA', fontWeight: 700, letterSpacing: 1, marginBottom: 'auto' }}>
+          la-butoane.ro
         </div>
 
         {/* Law code */}
-        <div style={{ fontSize: 52, fontWeight: 900, color: '#ffffff', letterSpacing: '-1px', marginBottom: 16 }}>
+        <div style={{ fontSize: 52, fontWeight: 900, color: '#171A1F', letterSpacing: '-1px', marginBottom: 16 }}>
           {code}
         </div>
 
         {/* Law title */}
-        <div style={{ fontSize: 28, color: '#aaaaaa', lineHeight: 1.35, marginBottom: 40 }}>
+        <div style={{ fontSize: 28, color: '#6E7480', lineHeight: 1.35, marginBottom: 40 }}>
           {short}
         </div>
 
         {/* Counts row */}
         <div style={{ display: 'flex', gap: 48, alignItems: 'flex-end' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <span style={{ fontSize: 48, fontWeight: 900, color: '#22c55e' }}>{forC}</span>
-            <span style={{ fontSize: 14, color: '#666', textTransform: 'uppercase', letterSpacing: 2 }}>PENTRU</span>
+            <span style={{ fontSize: 48, fontWeight: 900, color: '#2EA871' }}>{forC}</span>
+            <span style={{ fontSize: 14, color: '#8A8F98', textTransform: 'uppercase', letterSpacing: 2 }}>PENTRU</span>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <span style={{ fontSize: 48, fontWeight: 900, color: '#ef4444' }}>{agaC}</span>
-            <span style={{ fontSize: 14, color: '#666', textTransform: 'uppercase', letterSpacing: 2 }}>ÎMPOTRIVĂ</span>
+            <span style={{ fontSize: 48, fontWeight: 900, color: '#D64545' }}>{agaC}</span>
+            <span style={{ fontSize: 14, color: '#8A8F98', textTransform: 'uppercase', letterSpacing: 2 }}>ÎMPOTRIVĂ</span>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <span style={{ fontSize: 48, fontWeight: 900, color: '#888888' }}>{absC}</span>
-            <span style={{ fontSize: 14, color: '#666', textTransform: 'uppercase', letterSpacing: 2 }}>ABȚINERI</span>
+            <span style={{ fontSize: 48, fontWeight: 900, color: '#8A8F98' }}>{absC}</span>
+            <span style={{ fontSize: 14, color: '#8A8F98', textTransform: 'uppercase', letterSpacing: 2 }}>ABȚINERI</span>
           </div>
           {outcome && (
             <div
@@ -74,8 +74,8 @@ export async function GET(request: Request) {
                 marginLeft: 'auto',
                 padding: '10px 24px',
                 borderRadius: 8,
-                background: outcome === 'adoptat' ? '#166534' : '#7f1d1d',
-                color: outcome === 'adoptat' ? '#22c55e' : '#ef4444',
+                background: outcome === 'adoptat' ? '#E7F5EE' : '#FBEAE7',
+                color: outcome === 'adoptat' ? '#1F7A51' : '#C0392B',
                 fontSize: 20,
                 fontWeight: 900,
                 textTransform: 'uppercase',
