@@ -28,12 +28,22 @@ export async function GET(request: Request) {
   const from = fmtMonth(sp.get('from')) ? sp.get('from') : null
   const to = fmtMonth(sp.get('to')) ? sp.get('to') : null
 
-  const [agRes, pRes] = await Promise.all([
+  const [agRes, pRes, cRes] = await Promise.all([
     fetch(`${U}/rest/v1/party_agreement_monthly?select=party_a,party_b,month,shared,agreed`, { headers: SB }),
     fetch(`${U}/rest/v1/parties?select=abbreviation,color`, { headers: SB }),
+    fetch(`${U}/rest/v1/contested_votes_by_month?select=chamber,month,n`, { headers: SB }),
   ])
   const rows = (await agRes.json()) as { party_a: string; party_b: string; month: string; shared: number; agreed: number }[]
   const pj = (await pRes.json()) as { abbreviation: string; color: string }[]
+  // contested-vote counts for the window (migration 034; resilient if absent)
+  const cData = await cRes.json().catch(() => [])
+  const contested = { senate: 0, deputies: 0 }
+  for (const r of Array.isArray(cData) ? cData as { chamber: 'senate' | 'deputies'; month: string; n: number }[] : []) {
+    if (from && r.month < from) continue
+    if (to && r.month > to) continue
+    if (r.chamber === 'senate' || r.chamber === 'deputies') contested[r.chamber] += r.n
+  }
+  const contestedTotal = contested.senate + contested.deputies
 
   const colorOf: Record<string, string> = {}
   for (const p of pj) colorOf[p.abbreviation] = p.color
@@ -86,6 +96,10 @@ export async function GET(request: Request) {
           </div>
         </div>
 
+        <div style={{ display: 'flex', fontSize: 22, color: '#8A8F98', marginTop: 18, lineHeight: 1.35 }}>
+          {'O celulă X% = din voturile disputate, de câte ori majoritățile celor două partide au ales la fel.'}
+        </div>
+
         <div style={{ display: 'flex', flexDirection: 'column', margin: 'auto', alignSelf: 'center' }}>
           <div style={{ display: 'flex' }}>
             <div style={{ width: cell, height: cell, display: 'flex' }} />
@@ -115,7 +129,11 @@ export async function GET(request: Request) {
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ display: 'flex', fontSize: 20, color: '#8A8F98' }}>Nuanță închisă = acord mare</div>
+          <div style={{ display: 'flex', fontSize: 20, color: '#8A8F98' }}>
+            {contestedTotal > 0
+              ? `${contestedTotal} voturi disputate · Senat ${contested.senate} · Cameră ${contested.deputies}`
+              : 'Nuanță închisă = acord mare'}
+          </div>
           <div style={{ display: 'flex', fontSize: 24, color: '#B0B4BA', fontWeight: 700 }}>la-butoane.ro</div>
         </div>
       </div>

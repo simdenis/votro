@@ -12,6 +12,8 @@ interface Props {
   months: string[]        // sorted 'YYYY-MM'
   monthLabels: string[]   // display, same order
   buckets: AgreementBucket[]
+  /** month → contested-vote counts per chamber, for the footer (migration 034) */
+  contestedByMonth?: Record<string, { senate: number; deputies: number }>
 }
 
 // Sequential single-hue ramp (one blue, light→dark = low→high agreement) as
@@ -24,7 +26,7 @@ function cellBg(pct: number): { bg: string; ink: string } {
 
 const key = (a: string, b: string) => (a < b ? `${a}|${b}` : `${b}|${a}`)
 
-export function AgreementMatrix({ parties, months, monthLabels, buckets }: Props) {
+export function AgreementMatrix({ parties, months, monthLabels, buckets, contestedByMonth }: Props) {
   const [from, setFrom] = useState(0)
   const [to, setTo] = useState(Math.max(0, months.length - 1))
   const [hov, setHov] = useState<{ a: string; b: string; pct: number; agreed: number; shared: number } | null>(null)
@@ -46,6 +48,16 @@ export function AgreementMatrix({ parties, months, monthLabels, buckets }: Props
   const cols = `minmax(52px, auto) repeat(${parties.length}, minmax(0, 1fr))`
   // Downloadable image reflects the selected month window (see /api/og/matrix)
   const ogUrl = `/api/og/matrix?from=${months[Math.min(from, to)]}&to=${months[Math.max(from, to)]}`
+  // # contested votes (laws) that went into the calculation for the window
+  const contested = months.slice(Math.min(from, to), Math.max(from, to) + 1).reduce(
+    (acc, m) => {
+      const c = contestedByMonth?.[m]
+      if (c) { acc.senate += c.senate; acc.deputies += c.deputies }
+      return acc
+    },
+    { senate: 0, deputies: 0 },
+  )
+  const contestedTotal = contested.senate + contested.deputies
 
   return (
     <div className="space-y-4">
@@ -128,6 +140,12 @@ export function AgreementMatrix({ parties, months, monthLabels, buckets }: Props
           ))}
         </div>
       </div>
+
+      {contestedTotal > 0 && (
+        <p className="text-[11.5px] text-faint">
+          <span className="text-muted font-medium">{windowLabel}</span> · {contestedTotal} {contestedTotal === 1 ? 'vot disputat' : 'voturi disputate'} în calcul — Senat {contested.senate} · Cameră {contested.deputies}
+        </p>
+      )}
 
       <div className="flex">
         <CardDownload href={ogUrl} filename="labutoane-cine-voteaza-cu-cine.png" label="Descarcă imaginea" />
