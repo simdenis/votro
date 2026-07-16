@@ -256,7 +256,7 @@ export default async function LegiPage({
                       )}
                     </Link>
                     <div className="flex gap-1 mt-1 flex-wrap items-center">
-                      {law.law_category && (
+                      {law.law_category && law.summary_is_ai && (
                         <span className="lg:hidden inline-flex">
                           <CategoryBadge category={law.law_category} className="text-[10px] px-1.5 py-px rounded" />
                         </span>
@@ -280,7 +280,7 @@ export default async function LegiPage({
                     </div>
                   </td>
                   <td className="py-3 pr-4 hidden lg:table-cell">
-                    {law.law_category
+                    {law.law_category && law.summary_is_ai
                       ? <CategoryBadge category={law.law_category} />
                       : <span className="text-faint text-xs">—</span>}
                   </td>

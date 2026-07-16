@@ -193,9 +193,9 @@ export default async function VoteDetail({
               titles and the numbers never crowd or clip each other */}
           <div className="flex gap-4 sm:gap-6 justify-between sm:justify-start w-full xl:w-auto xl:flex-shrink-0 border border-rim bg-raised/40 rounded-lg px-4 py-3 xl:border-0 xl:bg-transparent xl:p-0">
             {[
-              { label: 'Pentru',    value: vote.for_count,        color: 'var(--color-for)' },
-              { label: 'Împotrivă', value: vote.against_count,    color: 'var(--color-against)' },
-              { label: 'Abțineri',  value: vote.abstention_count, color: 'var(--color-abstention)' },
+              { label: 'Pentru',    value: vote.for_count ?? 0,        color: 'var(--color-for)' },
+              { label: 'Împotrivă', value: vote.against_count ?? 0,    color: 'var(--color-against)' },
+              { label: 'Abțineri',  value: vote.abstention_count ?? 0, color: 'var(--color-abstention)' },
               // Absentees: seats − present. null on joint sessions (both chambers).
               { label: 'Absenți',   value: absentCount,           color: 'var(--muted)' },
             ].map(({ label, value, color }) => (
@@ -264,9 +264,9 @@ export default async function VoteDetail({
               />
               <div className="flex gap-4 mt-3 flex-wrap justify-center">
                 {[
-                  { color: 'var(--color-for)',        label: 'Pentru',    value: vote.for_count },
-                  { color: 'var(--color-against)',    label: 'Împotrivă', value: vote.against_count },
-                  { color: 'var(--color-abstention)', label: 'Abțineri',  value: vote.abstention_count },
+                  { color: 'var(--color-for)',        label: 'Pentru',    value: vote.for_count ?? 0 },
+                  { color: 'var(--color-against)',    label: 'Împotrivă', value: vote.against_count ?? 0 },
+                  { color: 'var(--color-abstention)', label: 'Abțineri',  value: vote.abstention_count ?? 0 },
                   // grey dots in the arc — present but didn't press a button
                   ...((vote.not_voted_count ?? 0) > 0
                     ? [{ color: 'var(--faint)', label: 'Prezenți, nu au votat', value: vote.not_voted_count }]
