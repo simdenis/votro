@@ -7,39 +7,44 @@ import { CategoryBadge } from '@/components/category-badge'
 import { OutcomeBadge } from '@/components/outcome-badge'
 import type { VoteWithLaw } from '@/lib/types'
 
-type Field = 'recent' | 'hot' | 'category'
+type Field = 'recent' | 'hot'
 
 /**
- * Homepage vote feed with on-page sorting. "Interes" uses laws.interest_score
- * (Gemini 1–100, migration 025). Votes arrive recent-first from the server;
- * clicking the active field flips direction.
+ * Homepage vote feed: sort by Recente or Interes (laws.interest_score, Gemini
+ * 1–100, migration 025) with a ↑↓ toggle, plus a category *filter* that reveals
+ * the category list when opened. Votes arrive recent-first from the server.
  */
 export function RecentVotes({ votes }: { votes: VoteWithLaw[] }) {
   const [field, setField] = useState<Field>('recent')
   const [dir, setDir] = useState<'asc' | 'desc'>('desc')
+  const [category, setCategory] = useState('')
+  const [catOpen, setCatOpen] = useState(false)
 
   function pick(f: Field) {
     if (f === field) setDir(d => (d === 'asc' ? 'desc' : 'asc'))
-    else { setField(f); setDir(f === 'category' ? 'asc' : 'desc') }
+    else { setField(f); setDir('desc') }
   }
+
+  const categories = useMemo(() => {
+    const set = new Set<string>()
+    for (const v of votes) if (v.laws?.law_category) set.add(v.laws.law_category)
+    return [...set].sort((a, b) => a.localeCompare(b, 'ro'))
+  }, [votes])
 
   const recentDesc = (a: VoteWithLaw, b: VoteWithLaw) =>
     new Date(b.vote_date).getTime() - new Date(a.vote_date).getTime()
 
-  const sorted = useMemo(() => {
+  const visible = useMemo(() => {
     const sign = dir === 'asc' ? 1 : -1
-    return [...votes].sort((a, b) => {
+    const filtered = category ? votes.filter(v => v.laws?.law_category === category) : votes
+    return [...filtered].sort((a, b) => {
       if (field === 'hot') {
         const av = a.laws?.interest_score ?? -1, bv = b.laws?.interest_score ?? -1
         return av !== bv ? sign * (av - bv) : recentDesc(a, b)
       }
-      if (field === 'category') {
-        const av = a.laws?.law_category ?? '￿', bv = b.laws?.law_category ?? '￿'
-        return av !== bv ? sign * av.localeCompare(bv, 'ro') : recentDesc(a, b)
-      }
       return -sign * recentDesc(a, b)
     })
-  }, [votes, field, dir])
+  }, [votes, field, dir, category])
 
   // A week without votes reads as "abandoned" when it's really recess
   const last = votes[0]?.vote_date
@@ -60,12 +65,41 @@ export function RecentVotes({ votes }: { votes: VoteWithLaw[] }) {
 
   return (
     <>
-      <div className="flex items-center gap-1.5 mb-3 flex-wrap">
+      <div className="flex items-center gap-1.5 mb-2 flex-wrap">
         <span className="text-[11px] text-faint mr-0.5">Sortează:</span>
         <Btn f="recent" label="Recente" />
         <Btn f="hot" label="Interes" />
-        <Btn f="category" label="Categorie" />
+        {categories.length > 0 && (
+          <button
+            onClick={() => setCatOpen(o => !o)}
+            className={`text-[11px] px-2 py-1 rounded-md border transition-colors ${
+              category || catOpen ? 'border-sidebar text-foreground font-medium' : 'border-rim text-muted hover:text-foreground'
+            }`}
+          >
+            {category || 'Categorie'} {catOpen ? '▴' : '▾'}
+          </button>
+        )}
       </div>
+
+      {catOpen && categories.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 mb-3">
+          <button
+            onClick={() => setCategory('')}
+            className={`text-[11px] px-2 py-0.5 rounded-full border transition-colors ${!category ? 'border-sidebar text-foreground font-medium' : 'border-rim text-muted hover:text-foreground'}`}
+          >
+            Toate
+          </button>
+          {categories.map(c => (
+            <button
+              key={c}
+              onClick={() => setCategory(c === category ? '' : c)}
+              className={`text-[11px] px-2 py-0.5 rounded-full border transition-colors ${category === c ? 'border-sidebar text-foreground font-medium' : 'border-rim text-muted hover:text-foreground'}`}
+            >
+              {c}
+            </button>
+          ))}
+        </div>
+      )}
 
       {recess && (
         <p className="text-[12.5px] text-muted bg-raised rounded-md px-3 py-2 mb-1">
@@ -73,7 +107,9 @@ export function RecentVotes({ votes }: { votes: VoteWithLaw[] }) {
         </p>
       )}
 
-      {sorted.map(vote => (
+      {visible.length === 0 ? (
+        <p className="text-[13px] text-muted py-3">Niciun vot în categoria „{category}".</p>
+      ) : visible.map(vote => (
         <Link key={vote.id} href={`/voturi/${vote.id}`} className="block py-[18px] border-b border-rim hover:opacity-80 transition-opacity">
           <div className="flex items-center gap-2 mb-2">
             <span className="text-[11px] font-semibold tabular-nums" style={{ color: 'var(--sidebar-bg)' }}>
