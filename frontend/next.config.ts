@@ -21,7 +21,13 @@ const baseConfig: NextConfig = {
       { source: '/saptamana', destination: '/voturi', permanent: true },
       // /search was the last English route — renamed to match the RO scheme
       { source: '/search', destination: '/cautare', permanent: true },
-      // :path* matches zero segments too, so these cover /votes and /votes/<id>
+      // Bare section routes need their OWN exact redirect: with :path* empty,
+      // Next emits the literal "/voturi/:path*" as the Location (a redirect into
+      // a 404). These exact rules must precede the wildcard ones to win the match.
+      { source: '/votes',    destination: '/voturi',   permanent: true },
+      { source: '/senators', destination: '/senatori', permanent: true },
+      { source: '/deputies', destination: '/deputati', permanent: true },
+      { source: '/parties',  destination: '/partide',  permanent: true },
       { source: '/votes/:path*',    destination: '/voturi/:path*',   permanent: true },
       { source: '/senators/:path*', destination: '/senatori/:path*', permanent: true },
       { source: '/deputies/:path*', destination: '/deputati/:path*', permanent: true },
