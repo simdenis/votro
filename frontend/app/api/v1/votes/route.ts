@@ -1,4 +1,4 @@
-import { proxy, proxyAll, json, cleanCode, cleanDate, cleanChamber, nominalVoteRows, toCsv, wantsCsv } from '@/lib/api-v1'
+import { proxy, proxyAll, json, cleanCode, cleanDate, cleanChamber, nominalVoteRows, toCsv, wantsCsv, CSV_BOM } from '@/lib/api-v1'
 import { todayRo } from '@/lib/utils'
 
 // GET /api/v1/votes
@@ -28,7 +28,7 @@ export async function GET(req: Request) {
         'Access-Control-Allow-Origin': '*',
       }
       if (csv) headers['Content-Disposition'] = `attachment; filename="vot-nominal-${slug}.csv"`
-      return new Response(csv ? toCsv(rows) : JSON.stringify(rows), { status: 200, headers })
+      return new Response(csv ? CSV_BOM + toCsv(rows) : JSON.stringify(rows), { status: 200, headers })
     }
 
     const path = `votes?select=vote_date,chamber,outcome,for_count,against_count,abstention_count,laws!inner(code,title)`

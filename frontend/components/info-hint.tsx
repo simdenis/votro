@@ -47,6 +47,8 @@ export const METRIC_TIPS = {
     'Media absențelor membrilor activi la voturile de plen — ca procent din toate voturile ținute în camera lor. Membrii Guvernului nu sunt incluși.',
   pozitie:
     'Cum a votat majoritatea membrilor partidului la fiecare vot: pentru, împotrivă sau abținere.',
+  interes:
+    'Scor generat automat (AI, Gemini) de la 1 la 100: cât de mult ar interesa legea un cetățean obișnuit. Ține cont de impactul direct asupra vieții de zi cu zi (bani, taxe, pensii, sănătate, școală, prețuri, drepturi) și de cât de discutată e public. Legile tehnice sau de rutină primesc scoruri mici.',
 } as const
 
 /** A defined term styled as a colored, semibold trigger for InfoHint. */

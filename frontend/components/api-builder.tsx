@@ -4,13 +4,14 @@ import { useMemo, useState } from 'react'
 
 // Interactive query builder for the open-data API: pick what you want, fill in
 // the blanks, get a runnable curl command + a one-click file download.
-type Preset = 'law_votes' | 'law_detail' | 'period_votes' | 'mp'
+type Preset = 'law_votes' | 'law_detail' | 'period_votes' | 'mp' | 'mp_votes'
 
 const PRESETS: { id: Preset; label: string }[] = [
   { id: 'law_votes',    label: 'Cum s-a votat o lege' },
   { id: 'law_detail',   label: 'Drumul unei legi prin Parlament' },
   { id: 'period_votes', label: 'Voturile dintr-o perioadă' },
-  { id: 'mp',           label: 'Fișa unui parlamentar' },
+  { id: 'mp',           label: 'Fișa unui parlamentar (statistici)' },
+  { id: 'mp_votes',     label: 'Toate voturile unui parlamentar (+ linia de partid)' },
 ]
 
 // encode spaces (names) but leave /, ., *, - readable
@@ -46,6 +47,9 @@ export function ApiBuilder({ siteUrl = '', minimal = false }: { siteUrl?: string
       }
       case 'mp':
         return `/api/v1/parlamentari?camera=${camera(mpChamber)}&nume=${q(name)}`
+      case 'mp_votes':
+        // one row per vote: law, the MP's choice, and the party's majority choice
+        return `/api/v1/parlamentari?camera=${camera(mpChamber)}&nume=${q(name)}&voturi=1`
     }
   }, [preset, code, from, to, chamber, mpChamber, name])
 
@@ -104,7 +108,7 @@ export function ApiBuilder({ siteUrl = '', minimal = false }: { siteUrl?: string
               </select></label>
           </>
         )}
-        {preset === 'mp' && (
+        {(preset === 'mp' || preset === 'mp_votes') && (
           <>
             <label className="flex flex-col gap-1"><span className="text-[11px] text-faint">Cameră</span>
               <select value={mpChamber} onChange={e => setMpChamber(e.target.value as 'deputies' | 'senate')} className={inputCls}>
@@ -135,7 +139,7 @@ export function ApiBuilder({ siteUrl = '', minimal = false }: { siteUrl?: string
       <div>
         <span className="text-[11px] uppercase tracking-widest text-muted font-semibold">Descarcă</span>
         <div className="flex flex-wrap gap-2 mt-1.5">
-          {(preset === 'law_votes' ? ['csv', 'json'] as const : ['json', 'csv'] as const).map((fmt, i) => (
+          {(preset === 'law_votes' || preset === 'mp_votes' ? ['csv', 'json'] as const : ['json', 'csv'] as const).map((fmt, i) => (
             <button key={fmt} onClick={() => { setFormat(fmt); download(fmt) }} disabled={busy}
               className={`btn-tactile rounded-lg px-3.5 py-1.5 text-[12px] font-semibold disabled:opacity-60 ${
                 i === 0 ? 'text-white' : 'bg-surface border border-rim text-foreground'
