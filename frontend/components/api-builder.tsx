@@ -39,7 +39,8 @@ export function ApiBuilder({ siteUrl = '', minimal = false }: { siteUrl?: string
   const endpoint = useMemo(() => {
     switch (preset) {
       case 'law_votes':
-        return `/api/v1/votes?code=${q(code)}`
+        // nominal=1 → one row per parliamentarian per vote (cum a votat fiecare)
+        return `/api/v1/votes?code=${q(code)}&nominal=1`
       case 'law_detail':
         return `/api/v1/laws?code=${q(code)}`
       case 'period_votes': {
@@ -55,29 +56,29 @@ export function ApiBuilder({ siteUrl = '', minimal = false }: { siteUrl?: string
   const withFmt = (fmt: 'json' | 'csv') => `${endpoint}${endpoint.includes('?') ? '&' : '?'}format=${fmt}`
 
   const cardKind = cardKindOf(preset)
-  // resolve the row id via our own cached API, then grab the OG card PNG
+  const saveBlob = (blob: Blob, filename: string) => {
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
+    a.download = filename
+    document.body.appendChild(a); a.click(); a.remove()
+    URL.revokeObjectURL(a.href)
+  }
+  // law → ZIP with the Instagram-carousel cards + nominal-vote CSV;
+  // mp → the politician's OG card PNG (id resolved via our cached API)
   async function downloadCard() {
     setBusy(true)
     try {
-      let og = ''
       if (cardKind === 'law') {
-        const r = await fetch(`/api/v1/laws?code=${q(code)}`)
-        const id = (await r.json())[0]?.law_id
-        if (!id) return
-        og = `/api/og/summarycard?id=${id}`
+        const res = await fetch(`/api/v1/pachet?code=${q(code)}`)
+        if (!res.ok) return
+        saveBlob(await res.blob(), `labutoane-${code.trim().replace(/[^\w]+/g, '-')}.zip`)
       } else if (cardKind === 'mp') {
         const r = await fetch(`/api/v1/parlamentari?camera=${camera(mpChamber)}&nume=${q(name)}`)
         const id = (await r.json())[0]?.politician_id
         if (!id) return
-        og = `/api/og/senatorcard?id=${id}`
+        const res = await fetch(`/api/og/senatorcard?id=${id}`)
+        saveBlob(await res.blob(), 'labutoane-card.png')
       }
-      const res = await fetch(og)
-      const blob = await res.blob()
-      const a = document.createElement('a')
-      a.href = URL.createObjectURL(blob)
-      a.download = `labutoane-card.png`
-      document.body.appendChild(a); a.click(); a.remove()
-      URL.revokeObjectURL(a.href)
     } catch { /* blocked */ } finally { setBusy(false) }
   }
 
@@ -160,25 +161,40 @@ export function ApiBuilder({ siteUrl = '', minimal = false }: { siteUrl?: string
         </div>
       )}
 
-      {/* output variants — JSON / CSV download the query, imagine grabs the card */}
+      {/* output variants — CSV/JSON download the query, imagine grabs the
+          card (a ZIP with the carousel cards + nominal CSV for a law) */}
       <div>
         <span className="text-[11px] uppercase tracking-widest text-muted font-semibold">Descarcă</span>
         <div className="flex flex-wrap gap-2 mt-1.5">
-          <button onClick={() => { setFormat('json'); download('json') }} disabled={busy}
-            className="btn-tactile rounded-lg px-3.5 py-1.5 text-[12px] font-semibold text-white disabled:opacity-60"
-            style={{ background: 'var(--sidebar-bg)' }}>
-            JSON
-          </button>
-          {!minimal && (
+          {preset === 'law_votes' ? (
+            // the nominal query is a table (a row per parlamentar) — CSV first
+            <button onClick={() => { setFormat('csv'); download('csv') }} disabled={busy}
+              className="btn-tactile rounded-lg px-3.5 py-1.5 text-[12px] font-semibold text-white disabled:opacity-60"
+              style={{ background: 'var(--sidebar-bg)' }}>
+              CSV
+            </button>
+          ) : (
+            <button onClick={() => { setFormat('json'); download('json') }} disabled={busy}
+              className="btn-tactile rounded-lg px-3.5 py-1.5 text-[12px] font-semibold text-white disabled:opacity-60"
+              style={{ background: 'var(--sidebar-bg)' }}>
+              JSON
+            </button>
+          )}
+          {!minimal && (preset === 'law_votes' ? (
+            <button onClick={() => { setFormat('json'); download('json') }} disabled={busy}
+              className="btn-tactile rounded-lg px-3.5 py-1.5 text-[12px] font-semibold bg-surface border border-rim text-foreground disabled:opacity-60">
+              JSON
+            </button>
+          ) : (
             <button onClick={() => { setFormat('csv'); download('csv') }} disabled={busy}
               className="btn-tactile rounded-lg px-3.5 py-1.5 text-[12px] font-semibold bg-surface border border-rim text-foreground disabled:opacity-60">
               CSV
             </button>
-          )}
+          ))}
           {cardKind && (
             <button onClick={downloadCard} disabled={busy}
               className="btn-tactile rounded-lg px-3.5 py-1.5 text-[12px] font-semibold bg-surface border border-rim text-foreground disabled:opacity-60">
-              🖼 Imagine
+              {cardKind === 'law' ? '🖼 Imagini (ZIP)' : '🖼 Imagine'}
             </button>
           )}
         </div>
