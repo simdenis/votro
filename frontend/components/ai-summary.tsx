@@ -28,7 +28,7 @@ export function AiSummary({
             className="text-[9px] uppercase tracking-wide font-semibold text-muted bg-raised border border-rim rounded px-1.5 py-px"
             title="Text generat automat dintr-un model AI pe baza expunerii de motive. Poate conține erori — verifică sursa."
           >
-            generat automat
+            generat automat · poate conține erori
           </span>
         )}
       </div>
