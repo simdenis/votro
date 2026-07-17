@@ -13,10 +13,6 @@ const PRESETS: { id: Preset; label: string }[] = [
   { id: 'mp',           label: 'Fișa unui parlamentar' },
 ]
 
-// which presets have a ready-made shareable card image
-const cardKindOf = (p: Preset): 'law' | 'mp' | null =>
-  p === 'law_detail' || p === 'law_votes' ? 'law' : p === 'mp' ? 'mp' : null
-
 // encode spaces (names) but leave /, ., *, - readable
 const q = (v: string) => v.trim().replace(/ /g, '%20')
 
@@ -54,33 +50,6 @@ export function ApiBuilder({ siteUrl = '', minimal = false }: { siteUrl?: string
   }, [preset, code, from, to, chamber, mpChamber, name])
 
   const withFmt = (fmt: 'json' | 'csv') => `${endpoint}${endpoint.includes('?') ? '&' : '?'}format=${fmt}`
-
-  const cardKind = cardKindOf(preset)
-  const saveBlob = (blob: Blob, filename: string) => {
-    const a = document.createElement('a')
-    a.href = URL.createObjectURL(blob)
-    a.download = filename
-    document.body.appendChild(a); a.click(); a.remove()
-    URL.revokeObjectURL(a.href)
-  }
-  // law → ZIP with the Instagram-carousel cards + nominal-vote CSV;
-  // mp → the politician's OG card PNG (id resolved via our cached API)
-  async function downloadCard() {
-    setBusy(true)
-    try {
-      if (cardKind === 'law') {
-        const res = await fetch(`/api/v1/pachet?code=${q(code)}`)
-        if (!res.ok) return
-        saveBlob(await res.blob(), `labutoane-${code.trim().replace(/[^\w]+/g, '-')}.zip`)
-      } else if (cardKind === 'mp') {
-        const r = await fetch(`/api/v1/parlamentari?camera=${camera(mpChamber)}&nume=${q(name)}`)
-        const id = (await r.json())[0]?.politician_id
-        if (!id) return
-        const res = await fetch(`/api/og/senatorcard?id=${id}`)
-        saveBlob(await res.blob(), 'labutoane-card.png')
-      }
-    } catch { /* blocked */ } finally { setBusy(false) }
-  }
 
   const curl = `curl "${siteUrl}${endpoint}"`
 
@@ -161,42 +130,20 @@ export function ApiBuilder({ siteUrl = '', minimal = false }: { siteUrl?: string
         </div>
       )}
 
-      {/* output variants — CSV/JSON download the query, imagine grabs the
-          card (a ZIP with the carousel cards + nominal CSV for a law) */}
+      {/* output variants — the nominal law query is a table (a row per
+          parlamentar), so CSV leads there; JSON leads elsewhere */}
       <div>
         <span className="text-[11px] uppercase tracking-widest text-muted font-semibold">Descarcă</span>
         <div className="flex flex-wrap gap-2 mt-1.5">
-          {preset === 'law_votes' ? (
-            // the nominal query is a table (a row per parlamentar) — CSV first
-            <button onClick={() => { setFormat('csv'); download('csv') }} disabled={busy}
-              className="btn-tactile rounded-lg px-3.5 py-1.5 text-[12px] font-semibold text-white disabled:opacity-60"
-              style={{ background: 'var(--sidebar-bg)' }}>
-              CSV
-            </button>
-          ) : (
-            <button onClick={() => { setFormat('json'); download('json') }} disabled={busy}
-              className="btn-tactile rounded-lg px-3.5 py-1.5 text-[12px] font-semibold text-white disabled:opacity-60"
-              style={{ background: 'var(--sidebar-bg)' }}>
-              JSON
-            </button>
-          )}
-          {!minimal && (preset === 'law_votes' ? (
-            <button onClick={() => { setFormat('json'); download('json') }} disabled={busy}
-              className="btn-tactile rounded-lg px-3.5 py-1.5 text-[12px] font-semibold bg-surface border border-rim text-foreground disabled:opacity-60">
-              JSON
-            </button>
-          ) : (
-            <button onClick={() => { setFormat('csv'); download('csv') }} disabled={busy}
-              className="btn-tactile rounded-lg px-3.5 py-1.5 text-[12px] font-semibold bg-surface border border-rim text-foreground disabled:opacity-60">
-              CSV
+          {(preset === 'law_votes' ? ['csv', 'json'] as const : ['json', 'csv'] as const).map((fmt, i) => (
+            <button key={fmt} onClick={() => { setFormat(fmt); download(fmt) }} disabled={busy}
+              className={`btn-tactile rounded-lg px-3.5 py-1.5 text-[12px] font-semibold disabled:opacity-60 ${
+                i === 0 ? 'text-white' : 'bg-surface border border-rim text-foreground'
+              }`}
+              style={i === 0 ? { background: 'var(--sidebar-bg)' } : undefined}>
+              {fmt.toUpperCase()}
             </button>
           ))}
-          {cardKind && (
-            <button onClick={downloadCard} disabled={busy}
-              className="btn-tactile rounded-lg px-3.5 py-1.5 text-[12px] font-semibold bg-surface border border-rim text-foreground disabled:opacity-60">
-              {cardKind === 'law' ? '🖼 Imagini (ZIP)' : '🖼 Imagine'}
-            </button>
-          )}
         </div>
       </div>
     </div>
