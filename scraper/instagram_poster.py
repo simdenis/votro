@@ -359,7 +359,10 @@ def post_law(cfg: Config, law_id: str, dry_run: bool = False, hook: str | None =
         missing = "Senat" if not law.get("senate_vote_id") else "Camera Deputaților"
         lines += ["", f"⚠️ Adoptată tacit de {missing}: termenul constituțional a expirat fără vot (art. 75)."]
     if dev_count:
-        lines += ["", f"⚡ {dev_count} parlamentari au votat împotriva propriului partid (ultimul slide)."]
+        lines += ["", (
+            "⚡ 1 parlamentar a votat împotriva propriului partid (ultimul slide)." if dev_count == 1
+            else f"⚡ {dev_count} parlamentari au votat împotriva propriului partid (ultimul slide)."
+        )]
     lines += ["", "Voturile individuale, pe site: link în bio.", "",
               "#parlament #transparență #românia #politică #laButoane"]
     caption = "\n".join(lines)
