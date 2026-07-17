@@ -1,6 +1,8 @@
+import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
-import { formatDate, countNoun } from '@/lib/utils'
+import { formatDate, lawSlug } from '@/lib/utils'
+import { DeadlineBadge } from '@/components/deadline-badge'
 import type { PendingBill } from '@/lib/types'
 import { SectionNav, LEGI_SECTIONS } from '@/components/section-nav'
 
@@ -9,31 +11,6 @@ export const metadata: Metadata = {
   title: 'Termene tacite',
   description:
     'Proiecte de lege care trec fără vot dacă prima cameră nu le dezbate la timp — termenele constituționale de adoptare tacită (art. 75).',
-}
-
-function daysLeft(deadline: string): number {
-  const ms = new Date(deadline + 'T23:59:59+03:00').getTime() - Date.now()
-  return Math.ceil(ms / 86_400_000)
-}
-
-function DeadlineBadge({ deadline }: { deadline: string }) {
-  const d = daysLeft(deadline)
-  if (d < 0) {
-    return (
-      <span className="inline-flex text-[11px] font-bold uppercase tracking-wide rounded px-2 py-0.5 bg-raised text-muted">
-        termen depășit
-      </span>
-    )
-  }
-  const urgent = d <= 10
-  return (
-    <span
-      className="inline-flex text-[11px] font-bold uppercase tracking-wide rounded px-2 py-0.5 text-white"
-      style={{ backgroundColor: urgent ? 'var(--color-against)' : 'var(--sidebar-bg)' }}
-    >
-      {d === 0 ? 'azi' : `${d} ${countNoun(d, 'zi', 'zile')}`}
-    </span>
-  )
 }
 
 export default async function TacitePage() {
@@ -95,14 +72,11 @@ export default async function TacitePage() {
                     )}
                   </td>
                   <td className="py-3 pr-4 max-w-xl">
-                    <a
-                      href={b.source_url ?? '#'}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-foreground hover:underline"
-                    >
+                    {/* title links to our own detail page (countdown + context);
+                        the official fișa/PDF links stay as secondary sources */}
+                    <Link href={`/tacite/${lawSlug(b.code)}`} className="text-foreground hover:underline">
                       {b.title ?? b.code}
-                    </a>
+                    </Link>
                     <span className="flex flex-wrap items-center gap-x-3 font-mono text-[11px] text-muted mt-0.5">
                       <span>{b.code} · Camera Deputaților</span>
                       {b.source_url && (

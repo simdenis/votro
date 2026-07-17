@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
-import { countNoun, personSlug, todayRo } from '@/lib/utils'
+import { countNoun, lawSlug, personSlug, todayRo } from '@/lib/utils'
 import { RecentVotes } from '@/components/recent-votes'
 import { AbsenceTop } from '@/components/absence-top'
 import { ParliamentBar } from '@/components/parliament-bar'
@@ -39,15 +39,15 @@ export default async function Dashboard() {
     db.from('politicians').select('party_id, parties(abbreviation)', { count: 'exact', head: false }).eq('active', true),
     // Absențe top 5 — lowest presence since mandate start, both chambers.
     // Government members (gov_role) never vote in plen — structural absence.
-    db.from('senator_stats').select('politician_id, name, first_name, party_abbr, party_color, presence_pct, context_note')
+    db.from('senator_stats').select('politician_id, name, first_name, party_abbr, party_color, presence_pct, chamber_votes, context_note')
       .eq('active', true).is('gov_role', null)
       .order('presence_pct', { ascending: true }).limit(15),
-    db.from('deputy_stats').select('politician_id, name, first_name, party_abbr, party_color, presence_pct, context_note')
+    db.from('deputy_stats').select('politician_id, name, first_name, party_abbr, party_color, presence_pct, chamber_votes, context_note')
       .eq('active', true).is('gov_role', null)
       .order('presence_pct', { ascending: true }).limit(15),
     // Legi tacite — soonest upcoming constitutional deadlines (art. 75). The one
     // thing that doesn't stop during recess, so it belongs on the homepage.
-    db.from('pending_bills').select('id, code, title, tacit_deadline, source_url')
+    db.from('pending_bills').select('id, code, title, tacit_deadline')
       .not('tacit_deadline', 'is', null).gte('tacit_deadline', today)
       .order('tacit_deadline', { ascending: true }).limit(5),
   ])
@@ -57,12 +57,12 @@ export default async function Dashboard() {
   const promulgatedCount = r3.count ?? 0
   const respinsCount  = r4.count ?? 0
   const allParties    = r5.data ?? []
-  type LowPresence = { politician_id: string; name: string; first_name: string; party_abbr: string; party_color: string; presence_pct: number; context_note: string | null; href: string }
+  type LowPresence = { politician_id: string; name: string; first_name: string; party_abbr: string; party_color: string; presence_pct: number; chamber_votes: number | null; context_note: string | null; href: string }
   const lowPresence: LowPresence[] = [
     ...((r7.data ?? []) as Omit<LowPresence, 'href'>[]).map(s => ({ ...s, href: `/senatori/${personSlug(s.first_name, s.name)}` })),
     ...((r8.data ?? []) as Omit<LowPresence, 'href'>[]).map(s => ({ ...s, href: `/deputati/${personSlug(s.first_name, s.name)}` })),
   ].sort((a, b) => a.presence_pct - b.presence_pct).slice(0, 15)
-  const tacitBills = (r9.data ?? []) as { id: string; code: string; title: string | null; tacit_deadline: string | null; source_url: string | null }[]
+  const tacitBills = (r9.data ?? []) as { id: string; code: string; title: string | null; tacit_deadline: string | null }[]
 
   const senatorCounts: Record<string, number> = {}
   for (const p of (r6.data ?? []) as any[]) {
@@ -156,11 +156,9 @@ export default async function Dashboard() {
                     ? Math.ceil((new Date(b.tacit_deadline + 'T23:59:59+03:00').getTime() - Date.now()) / 86_400_000)
                     : null
                   return (
-                    <a
+                    <Link
                       key={b.id}
-                      href={b.source_url ?? '/tacite'}
-                      target={b.source_url ? '_blank' : undefined}
-                      rel="noopener noreferrer"
+                      href={`/tacite/${lawSlug(b.code)}`}
                       className="flex items-center justify-between gap-2 bg-surface border border-rim rounded-lg px-3 py-2.5 hover:bg-raised transition-colors"
                     >
                       <span className="min-w-0">
@@ -172,7 +170,7 @@ export default async function Dashboard() {
                           {days} {days === 1 ? 'zi' : 'zile'}
                         </span>
                       )}
-                    </a>
+                    </Link>
                   )
                 })}
               </div>
@@ -201,7 +199,11 @@ export default async function Dashboard() {
                 <h2 className="font-serif text-[16px] font-normal text-foreground border-b-2 border-respins/60 pb-[5px] mb-1">
                   Absențe — clasament
                 </h2>
-                <p className="text-[11px] text-faint mb-3">absențe la voturile din plen · Senat + Cameră · fără membrii Guvernului</p>
+                <p className="text-[11px] text-faint mb-3">
+                  % din voturile de plen ținute în camera sa de la validarea mandatului · Senat + Cameră ·
+                  fără membrii Guvernului (nu votează în plen) ·{' '}
+                  <Link href="/despre#metodologie-absente" className="underline underline-offset-2 hover:text-foreground">metodologie</Link>
+                </p>
                 <AbsenceTop items={lowPresence} />
               </>
             )}

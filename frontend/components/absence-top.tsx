@@ -11,6 +11,8 @@ type Item = {
   party_abbr: string
   party_color: string
   presence_pct: number
+  /** Plenary votes held in the member's chamber — the absence denominator. */
+  chamber_votes: number | null
   context_note: string | null
   href: string
 }
@@ -45,7 +47,15 @@ export function AbsenceTop({ items }: { items: Item[] }) {
                 <span className="text-faint flex-shrink-0" title={s.context_note} aria-label="Există o notă de context pentru absențe">ⓘ</span>
               )}
             </span>
-            <span className="text-[13px] font-bold tabular-nums text-respins flex-shrink-0">{Math.round(100 - s.presence_pct)}%</span>
+            {/* the % alone is attackable — always show the denominator */}
+            <span className="flex flex-col items-end flex-shrink-0">
+              <span className="text-[13px] font-bold tabular-nums text-respins leading-tight">{Math.round(100 - s.presence_pct)}%</span>
+              {s.chamber_votes ? (
+                <span className="text-[9px] text-faint tabular-nums leading-tight">
+                  din {s.chamber_votes} voturi
+                </span>
+              ) : null}
+            </span>
           </Link>
         ))}
       </div>
