@@ -151,6 +151,7 @@ export interface PendingBill {
   term_days: string | null
   tacit_deadline: string | null
   source_url: string | null
+  pdf_url: string | null
   scraped_at: string
 }
 

@@ -70,6 +70,34 @@ def parse_bills(html: str) -> list[dict]:
     return bills
 
 
+def find_pdf(fisa_html: str) -> str | None:
+    """Bill-text PDF on a fișa page. cdep names files by role: pl* = the
+    proposal itself, em* = expunerea de motive — prefer the actual text."""
+    hrefs = [h.replace("&amp;", "&") for h in re.findall(r'href="([^"]+\.pdf)"', fisa_html, re.I)]
+    if not hrefs:
+        return None
+    best = next((h for h in hrefs if re.search(r"/pl\d+[^/]*\.pdf$", h, re.I)), None) \
+        or next((h for h in hrefs if re.search(r"/em\d+[^/]*\.pdf$", h, re.I)), None) \
+        or hrefs[0]
+    return BASE + best if best.startswith("/") else best
+
+
+def attach_pdfs(bills: list[dict], session: requests.Session) -> None:
+    """Fetch each bill's fișa and record the PDF link. Best-effort: a missing
+    or slow fișa never blocks the deadline list itself."""
+    import time
+
+    for b in bills:
+        b["pdf_url"] = None
+        try:
+            r = session.get(b["source_url"], headers=UA, timeout=20)
+            if r.ok:
+                b["pdf_url"] = find_pdf(r.text)
+        except requests.RequestException:
+            pass
+        time.sleep(0.4)  # be polite — this hits ~40 fișa pages per run
+
+
 def main() -> None:
     load_dotenv()
     ap = argparse.ArgumentParser(description="VotRO — tacit-adoption deadline scraper")
@@ -80,13 +108,16 @@ def main() -> None:
     if not url or not key:
         sys.exit("ERROR: SUPABASE_URL and SUPABASE_KEY must be set")
 
-    r = requests.get(LIST_URL, headers=UA, timeout=30)
+    session = requests.Session()
+    r = session.get(LIST_URL, headers=UA, timeout=30)
     r.raise_for_status()
     bills = parse_bills(r.text)
     log.info("parsed %d bills with running terms", len(bills))
+    attach_pdfs(bills, session)
+    log.info("pdfs found: %d/%d", sum(1 for b in bills if b.get("pdf_url")), len(bills))
     if args.dry_run:
         for b in bills[:10]:
-            log.info("%s  %s  %s", b["code"], b["tacit_deadline"], b["title"][:70])
+            log.info("%s  %s  %s  pdf=%s", b["code"], b["tacit_deadline"], b["title"][:70], b.get("pdf_url"))
         return
 
     from supabase import create_client
@@ -95,7 +126,15 @@ def main() -> None:
     # The source list is complete → replace our deputies rows wholesale.
     db.table("pending_bills").delete().eq("chamber", "deputies").execute()
     if bills:
-        db.table("pending_bills").insert(bills).execute()
+        try:
+            db.table("pending_bills").insert(bills).execute()
+        except Exception as e:  # noqa: BLE001 — pdf_url column not migrated yet (035)
+            if "pdf_url" not in str(e):
+                raise
+            log.warning("pdf_url column missing (run migration 035) — inserting without PDFs")
+            db.table("pending_bills").insert(
+                [{k: v for k, v in b.items() if k != "pdf_url"} for b in bills]
+            ).execute()
     log.info("pending_bills refreshed: %d rows", len(bills))
 
 
