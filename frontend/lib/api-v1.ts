@@ -113,6 +113,66 @@ export async function proxy(path: string, req: Request, opts: ProxyOpts = {}): P
   return new Response(body, { status: 200, headers })
 }
 
+/** Server-side PostgREST fetch returning parsed JSON (for endpoints that
+ *  post-process rows instead of proxying the body straight through). */
+export async function sbJson<T = unknown>(path: string, revalidate = 3600): Promise<T> {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` },
+    next: { revalidate },
+  })
+  if (!r.ok) throw new Error(`postgrest ${r.status}`)
+  return r.json()
+}
+
+/** Rows → CSV with RFC-4180 quoting. Headers come from the first row's keys. */
+export function toCsv(rows: Record<string, unknown>[]): string {
+  if (!rows.length) return ''
+  const cols = Object.keys(rows[0])
+  const cell = (v: unknown) => {
+    const s = v == null ? '' : String(v)
+    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
+  }
+  return [cols.join(','), ...rows.map(r => cols.map(c => cell(r[c])).join(','))].join('\n')
+}
+
+const CHOICE_RO: Record<string, string> = {
+  for: 'pentru', against: 'impotriva', abstention: 'abtinere',
+  not_voted: 'nu_a_votat', absent: 'absent',
+}
+
+interface NominalRow {
+  vote_choice: string
+  party_line_deviation: boolean | null
+  politicians: { first_name: string; name: string; parties: { abbreviation: string } | null } | null
+  votes: { vote_date: string; chamber: string; laws: { code: string } | null } | null
+}
+
+/** Per-person (nominal) votes on a law, flattened to Romanian columns —
+ *  shared by /api/v1/votes?nominal=1 and the /api/v1/pachet ZIP. */
+export async function nominalVoteRows(code: string): Promise<Record<string, unknown>[]> {
+  const path = `politician_votes?select=vote_choice,party_line_deviation,`
+    + `politicians!inner(first_name,name,parties(abbreviation)),`
+    + `votes!inner(vote_date,chamber,laws!inner(code))`
+    + `&votes.laws.code=eq.${encodeURIComponent(code)}&limit=10000`
+  const raw = await sbJson<NominalRow[]>(path)
+  return raw
+    .map(r => ({
+      cod: r.votes?.laws?.code ?? code,
+      data_vot: r.votes?.vote_date ?? '',
+      camera: r.votes?.chamber === 'senate' ? 'senat' : 'camera_deputatilor',
+      prenume: r.politicians?.first_name ?? '',
+      nume: r.politicians?.name ?? '',
+      partid: r.politicians?.parties?.abbreviation ?? '',
+      vot: CHOICE_RO[r.vote_choice] ?? r.vote_choice,
+      deviere_de_la_partid: r.party_line_deviation ? 'da' : 'nu',
+    }))
+    .sort((a, b) =>
+      String(a.data_vot).localeCompare(String(b.data_vot))
+      || String(a.camera).localeCompare(String(b.camera))
+      || String(a.nume).localeCompare(String(b.nume), 'ro'),
+    )
+}
+
 export function json(obj: unknown, status = 200): Response {
   return new Response(JSON.stringify(obj), {
     status,
