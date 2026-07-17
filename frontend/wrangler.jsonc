@@ -15,6 +15,12 @@
 		"nodejs_compat",
 		"global_fetch_strictly_public"
 	],
+	// Satori/resvg og-card rendering (hemicycle cards especially) exceeds the
+	// default CPU budget → Cloudflare error 1102 / HTTP 503. Only applies on
+	// Workers Paid; the Free plan is hard-capped at 10ms CPU per request.
+	"limits": {
+		"cpu_ms": 30000
+	},
 	"assets": {
 		"directory": ".open-next/assets",
 		"binding": "ASSETS"
