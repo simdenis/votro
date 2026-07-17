@@ -1,4 +1,7 @@
+'use client'
+
 import Link from 'next/link'
+import { useEffect, useMemo, useState } from 'react'
 import { pct, textOnColor, needsDe , personSlug } from '@/lib/utils'
 import { PartyBadge } from '@/components/party-badge'
 import { trueAbsent, type PoliticianStats } from '@/lib/types'
@@ -7,32 +10,99 @@ interface Props {
   title: string
   basePath: string
   people: PoliticianStats[]
-  sort: string
-  dir: boolean
   /** ids of members who changed party — shown with a ⇄ badge. */
-  switcherIds?: Set<string>
+  switcherIds?: string[]
 }
 
 // Numeric columns start descending — "most absent / most deviant first" is
 // what a first click means; ascending would show a wall of zeros.
 const DESC_FIRST = new Set(['votes', 'absence', 'deviation'])
 
-export function PoliticianList({ title, basePath, people, sort, dir, switcherIds }: Props) {
-  function sortUrl(col: string) {
+const collator = new Intl.Collator('ro')
+
+// nulls always sort last, regardless of direction
+function numCmp(a: number | null | undefined, b: number | null | undefined, desc: boolean) {
+  if (a == null && b == null) return 0
+  if (a == null) return 1
+  if (b == null) return -1
+  return desc ? b - a : a - b
+}
+
+function sortPeople(people: PoliticianStats[], sort: string, dir: boolean): PoliticianStats[] {
+  const arr = [...people]
+  const nameCmp = (a: PoliticianStats, b: PoliticianStats) =>
+    collator.compare(a.name ?? '', b.name ?? '') || collator.compare(a.first_name ?? '', b.first_name ?? '')
+
+  if (sort === 'party') {
+    arr.sort((a, b) => {
+      if (a.party_abbr == null && b.party_abbr == null) return nameCmp(a, b)
+      if (a.party_abbr == null) return 1
+      if (b.party_abbr == null) return -1
+      const c = collator.compare(a.party_abbr, b.party_abbr)
+      return (dir ? -c : c) || nameCmp(a, b)
+    })
+  } else if (sort === 'absence') {
+    // Government members (gov_role) never vote — their "absence" is
+    // structural, so they sort last. absence = 100 − presence, so
+    // descending absence is ascending presence.
+    arr.sort((a, b) =>
+      (a.gov_role ? 1 : 0) - (b.gov_role ? 1 : 0) ||
+      numCmp(a.presence_pct, b.presence_pct, !dir) ||
+      nameCmp(a, b)
+    )
+  } else if (sort === 'votes') {
+    arr.sort((a, b) => numCmp(a.total_votes, b.total_votes, dir) || nameCmp(a, b))
+  } else if (sort === 'deviation') {
+    arr.sort((a, b) => numCmp(a.deviation_pct, b.deviation_pct, dir) || nameCmp(a, b))
+  } else {
+    arr.sort((a, b) => {
+      const c = nameCmp(a, b)
+      return dir ? -c : c
+    })
+  }
+  return arr
+}
+
+export function PoliticianList({ title, basePath, people, switcherIds }: Props) {
+  const [sort, setSort] = useState('name')
+  const [dir, setDir] = useState(false)
+
+  // pick up ?sort=…&dir=… from a shared link (page itself is static)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const s = params.get('sort')
+    if (s) {
+      setSort(s)
+      setDir(params.get('dir') === 'desc')
+    }
+  }, [])
+
+  const sorted = useMemo(() => sortPeople(people, sort, dir), [people, sort, dir])
+  const switchers = useMemo(() => new Set(switcherIds ?? []), [switcherIds])
+
+  function clickSort(col: string) {
     const newDir =
-      sort === col ? (dir ? '' : 'desc')
-      : DESC_FIRST.has(col) ? 'desc'
-      : ''
+      sort === col ? !dir
+      : DESC_FIRST.has(col)
+    setSort(col)
+    setDir(newDir)
+    // keep the URL shareable without re-rendering the page on the server
     const params = new URLSearchParams()
     params.set('sort', col)
-    if (newDir) params.set('dir', newDir)
-    return `${basePath}?${params.toString()}`
+    if (newDir) params.set('dir', 'desc')
+    window.history.replaceState(null, '', `${basePath}?${params.toString()}`)
   }
 
   function sortIcon(col: string) {
     if (sort !== col) return <span className="text-faint">↕</span>
     return dir ? '↓' : '↑'
   }
+
+  const th = (col: string, label: string) => (
+    <button type="button" onClick={() => clickSort(col)} className="hover:text-foreground uppercase tracking-[0.14em] font-medium cursor-pointer">
+      {label} {sortIcon(col)}
+    </button>
+  )
 
   return (
     <div className="space-y-6">
@@ -47,36 +117,16 @@ export function PoliticianList({ title, basePath, people, sort, dir, switcherIds
         <div className="overflow-x-auto">
           <table className="w-full text-[15px]">
             <thead>
-              <tr className="border-b-2 border-sidebar text-[11px] uppercase tracking-[0.14em] text-faint">
-                <th className="text-left py-3 pr-4 font-medium">
-                  <Link href={sortUrl('name')} className="hover:text-foreground">
-                    Nume {sortIcon('name')}
-                  </Link>
-                </th>
-                <th className="text-left py-3 pr-4 font-medium">
-                  <Link href={sortUrl('party')} className="hover:text-foreground">
-                    Partid {sortIcon('party')}
-                  </Link>
-                </th>
-                <th className="text-left py-3 pr-4 font-medium hidden lg:table-cell">
-                  <Link href={sortUrl('votes')} className="hover:text-foreground">
-                    Comportament vot {sortIcon('votes')}
-                  </Link>
-                </th>
-                <th className="text-right py-3 pr-4 font-medium w-[90px]">
-                  <Link href={sortUrl('absence')} className="hover:text-foreground">
-                    Absență {sortIcon('absence')}
-                  </Link>
-                </th>
-                <th className="text-right py-3 font-medium w-[160px]">
-                  <Link href={sortUrl('deviation')} className="hover:text-foreground">
-                    Devieri de la partid {sortIcon('deviation')}
-                  </Link>
-                </th>
+              <tr className="border-b-2 border-sidebar text-[11px] text-faint">
+                <th className="text-left py-3 pr-4 font-medium">{th('name', 'Nume')}</th>
+                <th className="text-left py-3 pr-4 font-medium">{th('party', 'Partid')}</th>
+                <th className="text-left py-3 pr-4 font-medium hidden lg:table-cell">{th('votes', 'Comportament vot')}</th>
+                <th className="text-right py-3 pr-4 font-medium w-[90px]">{th('absence', 'Absență')}</th>
+                <th className="text-right py-3 font-medium w-[160px]">{th('deviation', 'Devieri de la partid')}</th>
               </tr>
             </thead>
             <tbody>
-              {people.map(s => {
+              {sorted.map(s => {
                 const dev  = s.deviation_pct ?? 0
                 const high = dev > 10
                 // Independents / national-minority deputies have no party line to deviate from.
@@ -114,7 +164,7 @@ export function PoliticianList({ title, basePath, people, sort, dir, switcherIds
                             guvern · {s.gov_role}
                           </span>
                         )}
-                        {switcherIds?.has(s.politician_id) && (
+                        {switchers.has(s.politician_id) && (
                           <span
                             className="text-[10px] font-semibold text-deviere bg-deviere/10 rounded-[3px] px-1.5 py-px flex-shrink-0"
                             title="A schimbat partidul în acest mandat"
