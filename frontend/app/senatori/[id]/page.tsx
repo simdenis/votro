@@ -8,7 +8,7 @@ import type { SenatorStats, VoteHistoryRow, PartyHistoryEntry } from '@/lib/type
 
 export const revalidate = 600 // ISR — CDN-cache per senator for 10 min
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://labutoane.vercel.app'
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://la-butoane.ro'
 
 // A senator is addressed by name slug (/senatori/victor-viorel-ponta); UUIDs
 // still resolve (old links). Returns the politician_id or null.

@@ -8,7 +8,7 @@ import type { PoliticianStats, VoteHistoryRow, PartyHistoryEntry } from '@/lib/t
 
 export const revalidate = 3600
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://labutoane.vercel.app'
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://la-butoane.ro'
 
 // A deputy is addressed by name slug (/deputati/ionel-carp); UUIDs still
 // resolve (old links). Returns the politician_id or null.
