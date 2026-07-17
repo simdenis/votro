@@ -29,9 +29,10 @@ export function MobileNav() {
         onClick={() => setOpen(v => !v)}
         aria-label={open ? 'Închide meniul' : 'Deschide meniul'}
         aria-expanded={open}
-        className="text-muted hover:text-foreground p-1 -mr-1 transition-colors"
+        // p-2.5 + 24px icon ≈ 44px tap target (was ~30px)
+        className="text-muted hover:text-foreground p-2.5 -mr-2.5 transition-colors"
       >
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
           {open
             ? <path d="M18 6 6 18M6 6l12 12" />
             : <><path d="M4 7h16" /><path d="M4 12h16" /><path d="M4 17h16" /></>}

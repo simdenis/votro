@@ -86,14 +86,28 @@ export default async function Dashboard() {
 
       {/* ── Header ───────────────────────────────────────── */}
       <header className="mb-9 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6">
-        <div>
+        <div className="max-w-2xl">
           <p className="text-[11px] uppercase tracking-[0.18em] text-faint mb-2.5">
             Parlamentul României · Legislatura 2024–2028
           </p>
           <h1 className="font-serif text-[42px] font-normal tracking-[-0.01em] leading-[1.04] text-foreground">
             Cum votează Parlamentul?
           </h1>
+          {/* Above-the-fold clarity: what the site is, who it's for, why trust it —
+              one neutral sentence, no scroll required. */}
+          <p className="text-[15px] text-muted leading-relaxed mt-3.5">
+            Urmărește cum votează fiecare senator și deputat: legi, prezență la vot și devieri de la
+            linia de partid. Date din surse oficiale (senat.ro, cdep.ro), actualizate zilnic —
+            gratuit și neafiliat politic.
+          </p>
         </div>
+        <Link
+          href="/parlamentarul-tau"
+          className="btn-tactile inline-flex items-center gap-2 rounded-lg px-5 py-3 text-[14px] font-semibold text-white flex-shrink-0 self-start sm:self-auto"
+          style={{ background: 'var(--sidebar-bg)' }}
+        >
+          Caută-ți parlamentarul →
+        </Link>
       </header>
 
       {/* ── Stats row ────────────────────────────────────── */}

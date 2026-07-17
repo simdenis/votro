@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { IBM_Plex_Sans, IBM_Plex_Mono } from 'next/font/google'
 import './globals.css'
 import { Analytics } from '@vercel/analytics/react'
@@ -53,6 +53,12 @@ export const metadata: Metadata = {
     ],
     apple: '/icons/icon-192.png',
   },
+}
+
+// themeColor: mobile browser chrome. Matches manifest.json (#111111) so the
+// address bar is consistent whether the site is browsed or installed as a PWA.
+export const viewport: Viewport = {
+  themeColor: '#111111',
 }
 
 // Sitelinks search box + site identity for Google
