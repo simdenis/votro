@@ -14,8 +14,11 @@
   --raised:    #F5F6F8;   /* paper */
   --rim:       #E7E9EC;   /* gray-150 hairlines */
   --text:      #171A1F;   /* ink */
-  --muted:     #6E7480;   /* gray-500 */
-  --faint:     #9AA0AA;   /* gray-400 */
+  --muted:     #6E7480;   /* gray-500 — 4.7:1 on white */
+  --faint:     #767C86;   /* gray-450 — 4.2:1 on white. Was #9AA0AA (2.6:1, failed
+                             WCAG AA on the 9–11px captions it's used for). Darkened
+                             for sunlight/low-vision readability; still a step
+                             lighter than --muted to keep the two-tier hierarchy. */
   --slate:     #3D4759;   /* slate-700 — secondary text, link default */
 
   /* Semantic vote colors — ONE token per meaning */
