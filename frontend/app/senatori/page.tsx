@@ -14,8 +14,12 @@ export const metadata: Metadata = {
 // Sorting happens client-side in PoliticianList — the page stays static
 // (one cached render) instead of hitting Supabase on every column click.
 export default async function SenatorsPage() {
+  // columns trimmed to what PoliticianList renders — the whole array is
+  // serialized into the client component's props
   const [{ data }, switcherIds] = await Promise.all([
-    getDB().from('senator_stats').select('*').eq('active', true)
+    getDB().from('senator_stats')
+      .select('politician_id, name, first_name, party_abbr, party_color, total_votes, votes_for, votes_against, votes_abstention, votes_absent, votes_not_voted, chamber_votes, presence_pct, deviation_pct, gov_role')
+      .eq('active', true)
       .order('name', { ascending: true }) as unknown as Promise<{ data: PoliticianStats[] | null }>,
     getSwitcherIds(),
   ])

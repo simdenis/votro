@@ -8,6 +8,7 @@ import { VoteFilter } from '@/components/vote-filter'
 import type { VoteWithLaw } from '@/lib/types'
 import { SectionNav, LEGI_SECTIONS } from '@/components/section-nav'
 import { CategoryBadge } from '@/components/category-badge'
+import { CATEGORY_COLORS } from '@/lib/category-colors'
 
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = { title: 'Voturi', description: 'Toate voturile plenului Senatului și Camerei Deputaților României.' }
@@ -23,31 +24,27 @@ export default async function VotesPage({
   const page = Math.max(1, Number(sp.page) || 1)
   const db = getDB()
 
-  const [votesRes, catRes] = await Promise.all([
-    (() => {
-      // inner join only when filtering on a law column — a plain join would
-      // hide the ~100 plenary votes that have no law attached
-      let q = db
-        .from('votes')
-        .select(sp.category ? '*, laws!inner(*)' : '*, laws(*)', { count: 'exact' })
-        .order('vote_date', { ascending: false })
-        .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1)
-      if (sp.outcome)  q = q.eq('outcome', sp.outcome)
-      if (sp.from)     q = q.gte('vote_date', sp.from)
-      if (sp.to)       q = q.lte('vote_date', sp.to)
-      if (sp.category) q = q.eq('laws.law_category', sp.category)
-      return q
-    })(),
-    db.from('laws').select('law_category').not('law_category', 'is', null),
-  ])
+  // inner join only when filtering on a law column — a plain join would
+  // hide the ~100 plenary votes that have no law attached
+  const lawCols = 'laws(code, title, law_category)'
+  let q = db
+    .from('votes')
+    .select(`id, vote_date, chamber, outcome, for_count, against_count, abstention_count, description, ${sp.category ? lawCols.replace('laws(', 'laws!inner(') : lawCols}`, { count: 'exact' })
+    .order('vote_date', { ascending: false })
+    .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1)
+  if (sp.outcome)  q = q.eq('outcome', sp.outcome)
+  if (sp.from)     q = q.gte('vote_date', sp.from)
+  if (sp.to)       q = q.lte('vote_date', sp.to)
+  if (sp.category) q = q.eq('laws.law_category', sp.category)
+  const votesRes = await q
 
-  const votes      = votesRes.data as VoteWithLaw[] | null
+  const votes      = votesRes.data as unknown as VoteWithLaw[] | null
   const count      = votesRes.count
   const totalPages = Math.ceil((count ?? 0) / PAGE_SIZE)
 
-  const categories = [...new Set(
-    (catRes.data ?? []).map(r => r.law_category as string).filter(Boolean)
-  )].sort()
+  // static list — it mirrors the scraper's classifier, same as /legi; fetching
+  // all 1200+ law rows to derive it was a full-table scan per page view
+  const categories = Object.keys(CATEGORY_COLORS).sort((a, b) => a.localeCompare(b, 'ro'))
 
   function pageUrl(p: number) {
     const params = new URLSearchParams()

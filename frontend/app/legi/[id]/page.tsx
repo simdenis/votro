@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import type { Metadata } from 'next'
@@ -17,18 +18,20 @@ export const revalidate = 3600
 
 // A law is addressed by its code slug (/legi/L597-2025); UUIDs still resolve
 // (old shared/indexed links) and get redirected to the canonical slug.
-function lawQuery(db: ReturnType<typeof getDB>, id: string, cols: string) {
-  const q = db.from('law_status').select(cols)
-  return isUuid(id) ? q.eq('law_id', id) : q.eq('code', slugToCode(id))
-}
+// cache(): generateMetadata and the page share one query per render.
+const getLaw = cache(async (id: string): Promise<LawStatus | null> => {
+  const q = getDB().from('law_status').select('*')
+  const { data } = await (isUuid(id) ? q.eq('law_id', id) : q.eq('code', slugToCode(id))).maybeSingle()
+  return data as LawStatus | null
+})
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params
-  const { data } = await lawQuery(getDB(), id, 'code, title').maybeSingle<{ code: string; title: string }>()
-  if (!data) return { title: 'Lege' }
+  const law = await getLaw(id)
+  if (!law) return { title: 'Lege' }
   return {
-    title: `${data.code} — ${(data.title ?? '').slice(0, 60)}`,
-    alternates: { canonical: `/legi/${lawSlug(data.code)}` },
+    title: `${law.code} — ${(law.title ?? '').slice(0, 60)}`,
+    alternates: { canonical: `/legi/${lawSlug(law.code)}` },
   }
 }
 
@@ -36,8 +39,7 @@ export default async function LawDetail({ params }: { params: Promise<{ id: stri
   const { id } = await params
   const db = getDB()
 
-  const { data } = await lawQuery(db, id, '*').maybeSingle()
-  const law = data as LawStatus | null
+  const law = await getLaw(id)
   if (!law) notFound()
   // UUID / wrong-case URLs still serve the page; the canonical tag (in
   // generateMetadata) points search engines at the code-slug URL.

@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
@@ -11,22 +12,21 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://labutoane.vercel.a
 
 // A senator is addressed by name slug (/senatori/victor-viorel-ponta); UUIDs
 // still resolve (old links). Returns the politician_id or null.
-async function resolveId(db: ReturnType<typeof getDB>, param: string): Promise<string | null> {
+// cache(): generateMetadata and the page share one resolve + one stats query.
+const resolveId = cache(async (param: string): Promise<string | null> => {
   if (isUuid(param)) return param
-  const { data } = await db.from('politicians').select('id').eq('slug', param).eq('chamber', 'senate').maybeSingle()
+  const { data } = await getDB().from('politicians').select('id').eq('slug', param).eq('chamber', 'senate').maybeSingle()
   return (data as { id: string } | null)?.id ?? null
-}
+})
+const getStats = cache(async (pid: string): Promise<SenatorStats | null> => {
+  const { data } = await getDB().from('senator_stats').select('*').eq('politician_id', pid).maybeSingle()
+  return data as SenatorStats | null
+})
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params
-  const db = getDB()
-  const pid = await resolveId(db, id)
-  if (!pid) return { title: 'Senator' }
-  const { data } = await db
-    .from('senator_stats')
-    .select('name, first_name, party_abbr, total_votes, deviation_pct')
-    .eq('politician_id', pid)
-    .maybeSingle()
+  const pid = await resolveId(id)
+  const data = pid ? await getStats(pid) : null
   if (!data) return { title: 'Senator' }
 
   const name    = `${data.first_name} ${data.name}`
@@ -45,21 +45,24 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 export default async function SenatorProfile({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const db = getDB()
-  const pid = await resolveId(db, id)
+  const pid = await resolveId(id)
   if (!pid) notFound()
 
-  const [r0, r1, r3, r4] = await Promise.all([
-    db.from('senator_stats').select('*').eq('politician_id', pid).maybeSingle(),
+  // history columns trimmed to what VoteHistory/DeviationList render —
+  // votes!inner(*, laws(*)) dragged every law summary into the client props
+  const HISTORY_COLS = 'id, vote_id, vote_choice, party_line_deviation, votes!inner(vote_date, vote_type, outcome, description, laws(code, title, law_category))'
+  const [stats, r1, r3, r4] = await Promise.all([
+    getStats(pid),
     db
       .from('politician_votes')
-      .select('*, votes!inner(*, laws(*))')
+      .select(HISTORY_COLS)
       .eq('politician_id', pid)
       .order('votes(vote_date)', { ascending: false })
       .limit(100),
     // deviations fetched directly — they may be older than the 100-vote history window
     db
       .from('politician_votes')
-      .select('*, votes!inner(*, laws(*))')
+      .select(HISTORY_COLS)
       .eq('politician_id', pid)
       .eq('party_line_deviation', true)
       .order('votes(vote_date)', { ascending: false })
@@ -70,14 +73,13 @@ export default async function SenatorProfile({ params }: { params: Promise<{ id:
       .order('from_date', { ascending: true }),
   ])
 
-  const stats = r0.data as SenatorStats | null
   if (!stats) notFound()
 
   return (
     <PoliticianProfile
       stats={stats}
-      history={(r1.data as VoteHistoryRow[] | null) ?? []}
-      deviationRows={(r3.data as VoteHistoryRow[] | null) ?? []}
+      history={(r1.data as unknown as VoteHistoryRow[] | null) ?? []}
+      deviationRows={(r3.data as unknown as VoteHistoryRow[] | null) ?? []}
       partyHistory={(r4.data as PartyHistoryEntry[] | null) ?? []}
       basePath="/senatori"
       chamberLabel="Senat"

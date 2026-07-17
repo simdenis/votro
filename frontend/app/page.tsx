@@ -28,7 +28,11 @@ export default async function Dashboard() {
     // substantive votes only — presence checks / agenda changes drown the feed.
     // Fetch a wider window so the feed's sort + category filter + date slider
     // have real data to work over (RecentVotes filters/sorts client-side).
-    db.from('votes').select('*, laws(*)').not('law_id', 'is', null).order('vote_date', { ascending: false }).limit(120),
+    // columns trimmed to what RecentVotes renders — select('*, laws(*)') shipped
+    // every law's em_url/scraped_at/etc into the serialized client props twice
+    db.from('votes')
+      .select('id, vote_date, chamber, outcome, for_count, against_count, abstention_count, description, laws(code, title, law_category, summary, summary_is_ai, interest_score)')
+      .not('law_id', 'is', null).order('vote_date', { ascending: false }).limit(120),
     db.from('law_status').select('*', { count: 'exact', head: true }).eq('presidential_status', 'promulgat'),
     db.from('law_status').select('*', { count: 'exact', head: true }).or('senate_outcome.eq.respins,camera_outcome.eq.respins'),
     db.from('parties').select('abbreviation, color, name'),

@@ -1,9 +1,9 @@
+import { cache } from 'react'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
-import { formatDate, choiceLabel, choiceColor, countNoun, capFirst, lawSlug , personSlug } from '@/lib/utils'
-import { activeSeats } from '@/lib/seats'
+import { formatDate, choiceLabel, choiceColor, countNoun, capFirst, lawSlug , personSlug, CHAMBER_SEATS } from '@/lib/utils'
 import { OutcomeBadge } from '@/components/outcome-badge'
 import { PartyBadge } from '@/components/party-badge'
 import { AiSummary } from '@/components/ai-summary'
@@ -19,15 +19,19 @@ export const revalidate = 600 // ISR — CDN-cache per vote for 10 min (see home
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://labutoane.vercel.app'
 
+// cache(): generateMetadata and the page both need the vote — one query per render
+const getVote = cache(async (id: string): Promise<VoteWithLaw | null> => {
+  const { data } = await getDB().from('votes').select('*, laws(*)').eq('id', id).maybeSingle()
+  return data as VoteWithLaw | null
+})
+
 export async function generateMetadata({
   params,
 }: {
   params: Promise<{ id: string }>
 }): Promise<Metadata> {
   const { id } = await params
-  const db = getDB()
-  const { data } = await db.from('votes').select('*, laws(*)').eq('id', id).maybeSingle()
-  const vote = data as VoteWithLaw | null
+  const vote = await getVote(id)
   if (!vote) return { title: 'Vot' }
 
   const code    = vote.laws?.code ?? 'Vot de plen'
@@ -56,27 +60,37 @@ export default async function VoteDetail({
   const { id } = await params
   const db = getDB()
 
-  const [r0, r1, r2] = await Promise.all([
-    db.from('votes').select('*, laws(*)').eq('id', id).maybeSingle(),
+  const [vote, r1, r2] = await Promise.all([
+    getVote(id),
     db
       .from('politician_votes')
-      .select('*, politicians!inner(*, parties!inner(*))')
+      .select('id, politician_id, vote_choice, party_line_deviation, politicians!inner(first_name, name, parties!inner(abbreviation, color))')
       .eq('vote_id', id)
       .order('vote_choice'),
     db.from('party_vote_breakdown').select('*').eq('vote_id', id),
   ])
 
-  const vote         = r0.data as VoteWithLaw | null
-  const senatorVotes = r1.data as PoliticianVoteWithDetails[] | null
+  const senatorVotes = r1.data as unknown as PoliticianVoteWithDetails[] | null
   const breakdown    = r2.data as PartyVoteBreakdown[] | null
 
   if (!vote) notFound()
+
+  // Active roster of the vote's chamber — one query supplies both the occupied
+  // seat count (tracks vacancies the nominal totals miss) and the names for the
+  // synthetic absents below. Sanity floor: a broken/short roster must not zero
+  // out absentees, so fall back to the nominal seat totals.
+  const { data: rosterData } = await db
+    .from('politicians')
+    .select('id, name, first_name, parties!inner(abbreviation, color)')
+    .eq('chamber', vote.chamber)
+    .eq('active', true)
+  const roster = (rosterData ?? []) as any[]
+  const seats = roster.length > 100 ? roster.length : CHAMBER_SEATS[vote.chamber]
 
   // True absentees: official chamber seats − everyone counted here (distinct
   // from not_voted_count = present but didn't press a button). Joint sessions
   // (Chamber + Senate together) have more participants than one chamber's
   // seats — there the single-chamber absentee framing is meaningless, so hide it.
-  const seats = await activeSeats(vote.chamber)
   const participants = (vote.for_count ?? 0) + (vote.against_count ?? 0)
     + (vote.abstention_count ?? 0) + (vote.not_voted_count ?? 0)
   const jointSession = participants > seats
@@ -89,12 +103,7 @@ export default async function VoteDetail({
   let individualVotes = senatorVotes ?? []
   if (!jointSession && individualVotes.length > 0) {
     const recorded = new Set(individualVotes.map(sv => sv.politician_id))
-    const { data: activeMembers } = await db
-      .from('politicians')
-      .select('id, name, first_name, parties!inner(abbreviation, color)')
-      .eq('chamber', vote.chamber)
-      .eq('active', true)
-    const synthetic = ((activeMembers ?? []) as any[])
+    const synthetic = roster
       .filter(p => !recorded.has(p.id))
       .map(p => ({
         id: `absent-${p.id}`,
