@@ -34,6 +34,8 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import hashlib
+import json
 import os
 import sys
 import time
@@ -43,6 +45,28 @@ from dotenv import load_dotenv
 
 GRAPH = "https://graph.instagram.com"
 _TIMEOUT = 30
+
+# Cards with the seat-arc hemicycle (lawcard/tacitcard/votecard) exceed the
+# Cloudflare Free plan's 10ms CPU cap and 503 when Instagram tries to fetch
+# them. The --static path renders those slides offline (frontend/scripts/
+# render-ig.mjs, no CPU cap) into frontend/public/ig/<name>, deployed as static
+# assets served at {SITE_URL}/ig/<name> — Instagram then fetches a plain file.
+STATIC_SUBDIR = "ig"
+
+
+def _slide_name(suffix: str) -> str:
+    """Deterministic static filename for an og-card suffix. This is the contract
+    shared between the offline renderer (writes public/ig/<name>) and --static
+    posting (fetches {SITE_URL}/ig/<name>) — both derive it from the same suffix."""
+    return "s-" + hashlib.sha1(suffix.encode()).hexdigest()[:16] + ".png"
+
+
+def _slide_url(cfg: "Config", suffix: str, static: bool) -> str:
+    """Map an og-card suffix ('og/lawcard?id=…') to a fetchable URL: the dynamic
+    /api route, or the pre-rendered static file when --static."""
+    if static:
+        return f"{cfg.site_url}/{STATIC_SUBDIR}/{_slide_name(suffix)}"
+    return f"{cfg.site_url}/api/{suffix}"
 
 
 # ── Config ──────────────────────────────────────────────────────────────────
@@ -298,26 +322,28 @@ def _initiator_line(cfg: Config, law_id: str) -> str | None:
     return f"Inițiativă: {n} {de}{noun}" + (f" ({parties})" if parties else "")
 
 
-def post_law(cfg: Config, law_id: str, dry_run: bool = False, hook: str | None = None) -> str | None:
-    """Standard law carousel: summary hook → chambers in chronological order
-    (a missing chamber vote on a passed law = tacit adoption, said in the
-    caption) → deviation slide when someone broke the party line."""
+def _law_slides(cfg: Config, law_id: str, hook: str | None = None) -> tuple[list[str], str]:
+    """Single source of truth for a law carousel: the ordered og-card *suffixes*
+    (summary → tacit → chambers chronologically → deviation) and the caption.
+    Both dynamic and --static posting, plus --emit-slides for the offline
+    renderer, derive everything from here so they can never drift."""
     cfg.require_supabase()
     rows = _sb_get(cfg, "law_status", {"law_id": f"eq.{law_id}", "select": "*", "limit": "1"})
     if not rows:
         sys.exit(f"law {law_id} not found in law_status")
     law = rows[0]
 
-    # &v= cache-buster: og responses are CDN-cached immutable, so any slide URL
-    # fetched before a card redesign would serve the stale image forever. Bump
-    # CARD_V after visual changes.
-    slides = [f"{cfg.site_url}/api/og/summarycard?id={law_id}&v={CARD_V}"]
+    # &v= cache-buster: dynamic og responses are CDN-cached immutable, so a slide
+    # URL fetched before a card redesign would serve the stale image forever. It
+    # also versions the static filename (new v → new suffix → new hash → new
+    # file), so pre-rendered slides can't go stale either. Bump after redesigns.
+    suffixes = [f"og/summarycard?id={law_id}&v={CARD_V}"]
     passed = bool(law.get("presidential_status"))
     # Tacit slide right after the summary: a chamber the law passed without a
     # plenary vote gets the "nimeni nu a votat" card.
     for key, vote_field in (("senate", "senate_vote_id"), ("camera", "camera_vote_id")):
         if passed and not law.get(vote_field):
-            slides.append(f"{cfg.site_url}/api/og/tacitcard?id={law_id}&chamber={key}&v={CARD_V}")
+            suffixes.append(f"og/tacitcard?id={law_id}&chamber={key}&v={CARD_V}")
     chambers = []  # (date, chamber_key, vote_id)
     if law.get("senate_vote_id"):
         chambers.append((law.get("senate_vote_date") or "", "senate", law["senate_vote_id"]))
@@ -325,7 +351,7 @@ def post_law(cfg: Config, law_id: str, dry_run: bool = False, hook: str | None =
         chambers.append((law.get("camera_vote_date") or "", "camera", law["camera_vote_id"]))
     chambers.sort()
     for _, key, _vid in chambers:
-        slides.append(f"{cfg.site_url}/api/og/lawcard?id={law_id}&chamber={key}&v={CARD_V}")
+        suffixes.append(f"og/lawcard?id={law_id}&chamber={key}&v={CARD_V}")
 
     # Deviation slide — only when someone actually broke the party line.
     dev_vote, dev_count = None, 0
@@ -336,10 +362,9 @@ def post_law(cfg: Config, law_id: str, dry_run: bool = False, hook: str | None =
         if n > dev_count:
             dev_vote, dev_count = vid, n
     if dev_vote:
-        slides.append(f"{cfg.site_url}/api/og/deviationcard?vote={dev_vote}&v={CARD_V}")
+        suffixes.append(f"og/deviationcard?vote={dev_vote}&v={CARD_V}")
 
     # Caption
-    passed = bool(law.get("presidential_status"))
     tacit = passed and len(chambers) < 2
     outcome = {
         "promulgat": "PROMULGATĂ ✅", "retrimis": "RETRIMISĂ ÎN PARLAMENT ↩️",
@@ -365,7 +390,20 @@ def post_law(cfg: Config, law_id: str, dry_run: bool = False, hook: str | None =
         )]
     lines += ["", "Voturile individuale, pe site: link în bio.", "",
               "#parlament #transparență #românia #politică #laButoane"]
-    caption = "\n".join(lines)
+    return suffixes, "\n".join(lines)
+
+
+def post_law(cfg: Config, law_id: str, dry_run: bool = False, hook: str | None = None,
+             static: bool = False) -> str | None:
+    """Standard law carousel: summary hook → chambers in chronological order
+    (a missing chamber vote on a passed law = tacit adoption, said in the
+    caption) → deviation slide when someone broke the party line.
+
+    static=True fetches pre-rendered slides from {SITE_URL}/ig/ instead of the
+    /api/og routes — needed on the Cloudflare Free plan, where the hemicycle
+    cards 503. Render them first with frontend/scripts/render-ig.mjs."""
+    suffixes, caption = _law_slides(cfg, law_id, hook)
+    slides = [_slide_url(cfg, s, static) for s in suffixes]
 
     if dry_run:
         print("── DRY RUN ──")
@@ -444,6 +482,12 @@ def main() -> None:
     ap.add_argument("--vote", help="vote id to build and publish a post for")
     ap.add_argument("--law", help="law id — publish the standard law carousel (summary → chambers → deviations)")
     ap.add_argument("--hook", help="editorial first line for the --law caption")
+    ap.add_argument("--static", action="store_true",
+                    help="fetch pre-rendered slides from {SITE_URL}/ig/ instead of /api/og "
+                         "(Cloudflare Free plan: render first with frontend/scripts/render-ig.mjs)")
+    ap.add_argument("--emit-slides", metavar="LAW_ID",
+                    help="print the law carousel's slide manifest as JSON (used by the offline "
+                         "renderer); does not contact Instagram")
     ap.add_argument("--shame", action="store_true", help="publish the shame-corner card (top absentees)")
     ap.add_argument("--carousel", nargs="+", metavar="URL", help="publish a carousel from 2–10 image URLs (with --caption)")
     ap.add_argument("--image-url", help="post an arbitrary image URL (with --caption)")
@@ -464,11 +508,20 @@ def main() -> None:
     if args.verify:
         print(verify_token(cfg))
         return
+    if args.emit_slides:
+        # Manifest for the offline renderer — no Instagram credentials required.
+        suffixes, caption = _law_slides(cfg, args.emit_slides, args.hook)
+        print(json.dumps({
+            "law_id": args.emit_slides,
+            "slides": [{"suffix": s, "name": _slide_name(s)} for s in suffixes],
+            "caption": caption,
+        }))
+        return
     if args.vote:
         post_vote(cfg, args.vote, dry_run=args.dry_run)
         return
     if args.law:
-        post_law(cfg, args.law, dry_run=args.dry_run, hook=args.hook)
+        post_law(cfg, args.law, dry_run=args.dry_run, hook=args.hook, static=args.static)
         return
     if args.shame:
         post_shame(cfg, dry_run=args.dry_run)
