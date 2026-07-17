@@ -11,7 +11,10 @@ export const metadata: Metadata = {
 }
 
 function fmt(d: string) {
-  return new Date(d).toLocaleDateString('ro-RO', { month: 'short', year: 'numeric' })
+  // manual parse, same as lib/utils.formatDate — new Date('YYYY-MM-DD') is UTC
+  // midnight and shifts a day in negative-offset timezones
+  const [y, m, day] = d.split('-').map(Number)
+  return new Date(y, m - 1, day).toLocaleDateString('ro-RO', { month: 'short', year: 'numeric' })
 }
 
 export default async function TraseistiPage() {

@@ -16,8 +16,8 @@ const PRESETS: { id: Preset; label: string }[] = [
 // encode spaces (names) but leave /, ., *, - readable
 const q = (v: string) => v.trim().replace(/ /g, '%20')
 
-// `minimal` (homepage) drops the curl command block and the CSV button —
-// keeps the 4 presets, JSON, and the card image. Full builder lives on /date.
+// `minimal` (homepage) drops the curl command block — keeps the 4 presets and
+// the JSON/CSV downloads. Full builder lives on /date.
 export function ApiBuilder({ siteUrl = '', minimal = false }: { siteUrl?: string; minimal?: boolean }) {
   const [preset, setPreset] = useState<Preset>('law_votes')
   const [code, setCode] = useState('L230/2025')
