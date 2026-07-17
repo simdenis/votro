@@ -25,7 +25,7 @@
   --color-against-dark:    #C25539;
   --color-abstention:      #E3A23C;
   --color-abstention-dark: #B27A24;
-  --color-absent:          #1a1a1a;   /* near-black — absents must be visible in the hemicycle */
+  --color-absent:          #D9DCE1;   /* very light grey — absents fade back; present-but-not-voting uses --muted */
   --color-deviation:       #B27A24;   /* amber-dark: alert family (abstain/tacit) */
   --info:                  #4E86D8;
   --info-dark:             #33639F;
