@@ -6,6 +6,7 @@ import { formatDate, choiceLabel, choiceColor, pct, hasPartyLine , personSlug } 
 import { OutcomeBadge } from '@/components/outcome-badge'
 import { StatsCard } from '@/components/stats-card'
 import { DonutChart } from '@/components/donut-chart'
+import { InfoHint, METRIC_TIPS } from '@/components/info-hint'
 import type { PartyCohesion, PoliticianStats, PartyMajorityVote } from '@/lib/types'
 
 export const revalidate = 3600
@@ -86,16 +87,26 @@ export default async function PartyPage({ params }: { params: Promise<{ abbr: st
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-        {!noLine && <StatsCard value={pct(cohesion.cohesion_pct)} label="Coeziune" accent={cohesion.color} />}
+        {!noLine && (
+          <StatsCard
+            value={pct(cohesion.cohesion_pct)}
+            label={<>Coeziune <InfoHint title="Coeziune" tip={METRIC_TIPS.coeziune} /></>}
+            accent={cohesion.color}
+          />
+        )}
         {!noLine && (
           <StatsCard
             value={cohesion.total_active_votes ? (cohesion.deviation_count / cohesion.total_active_votes * 100).toFixed(1) : '—'}
-            label="Devieri / 100 voturi"
+            label={<>Devieri / 100 voturi <InfoHint title="Devieri / 100 voturi" tip={METRIC_TIPS.devieri} /></>}
             accent="var(--color-deviation)"
           />
         )}
         {absencePct != null && (
-          <StatsCard value={pct(absencePct)} label="Absență medie" accent="var(--color-against)" />
+          <StatsCard
+            value={pct(absencePct)}
+            label={<>Absență medie <InfoHint title="Absență medie" tip={METRIC_TIPS.absenta} /></>}
+            accent="var(--color-against)"
+          />
         )}
       </div>
 
@@ -156,7 +167,7 @@ export default async function PartyPage({ params }: { params: Promise<{ abbr: st
       {!noLine && (
       <div>
         <h2 className="text-xs font-semibold uppercase tracking-widest text-muted mb-4">
-          Poziție partid (ultimele 20 voturi)
+          Poziție partid (ultimele 20 voturi) <InfoHint title="Poziție partid" tip={METRIC_TIPS.pozitie} />
         </h2>
         {!recentVotes?.length ? (
           <p className="text-sm text-muted">Nu există date.</p>

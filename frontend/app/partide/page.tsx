@@ -2,6 +2,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
 import { pct, textOnColor, hasPartyLine } from '@/lib/utils'
+import { InfoHint, METRIC_TIPS } from '@/components/info-hint'
 import type { PartyCohesion, PartyAbsence } from '@/lib/types'
 
 export const revalidate = 3600
@@ -34,9 +35,15 @@ export default async function PartiesPage() {
       <div>
         <h1 className="font-serif text-[30px] sm:text-[40px] font-normal tracking-[-0.01em] leading-[1.05] text-foreground">Partide</h1>
         <p className="text-[12.5px] text-muted mt-1.5">
-          Numărul de membri activi, <strong className="text-foreground">rata de deviere</strong> de la linia de
-          partid și absența medie — pe baza <strong className="text-foreground">afilierii curente</strong> a
-          parlamentarilor.
+          Numărul de membri activi,{' '}
+          <InfoHint title="Devieri / 100 voturi" tip={METRIC_TIPS.devieri}>
+            <span className="font-semibold text-foreground underline decoration-dotted decoration-rim underline-offset-2">rata de deviere</span>
+          </InfoHint>{' '}
+          de la linia de partid și{' '}
+          <InfoHint title="Absență medie" tip={METRIC_TIPS.absenta}>
+            <span className="font-semibold text-foreground underline decoration-dotted decoration-rim underline-offset-2">absența medie</span>
+          </InfoHint>{' '}
+          — pe baza <strong className="text-foreground">afilierii curente</strong> a parlamentarilor.
         </p>
       </div>
       {!parties?.length ? (

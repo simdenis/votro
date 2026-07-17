@@ -5,6 +5,7 @@ import { formatDate, capFirst, lawSlug } from '@/lib/utils'
 import { OutcomeBadge } from '@/components/outcome-badge'
 import { BaseLawBadges } from '@/components/base-law-badge'
 import { CategoryBadge } from '@/components/category-badge'
+import { LawStatusPill } from '@/components/law-status-pill'
 import type { LawStatus, PresidentialStatus } from '@/lib/types'
 import { SectionNav, LEGI_SECTIONS } from '@/components/section-nav'
 
@@ -241,12 +242,15 @@ export default async function LegiPage({
             <tbody>
               {laws.map(law => (
                 <tr key={law.law_id} className="border-b border-rim hover:bg-raised transition-colors">
-                  <td className="py-3 pr-4">
+                  <td className="py-3.5 pr-4 align-top">
                     <Link href={`/legi/${lawSlug(law.code)}`} className="font-mono hover:underline whitespace-nowrap" style={{ color: 'var(--sidebar-bg)' }}>
                       {law.code}
                     </Link>
                   </td>
-                  <td className="py-3 pr-4 max-w-xs">
+                  <td className="py-3.5 pr-4 max-w-xs align-top">
+                    {/* at-a-glance verdict pill so the list is scannable without
+                        reading the three per-stage columns (hidden on mobile) */}
+                    <div className="mb-1"><LawStatusPill law={law} /></div>
                     {/* plain-language summary is the headline where we have one;
                         the official title stays as the small verifiable subtitle */}
                     <Link href={`/legi/${lawSlug(law.code)}`} className="block hover:underline" title={capFirst(law.title)}>
@@ -279,18 +283,18 @@ export default async function LegiPage({
                       )}
                     </div>
                   </td>
-                  <td className="py-3 pr-4 hidden lg:table-cell">
+                  <td className="py-3.5 pr-4 align-top hidden lg:table-cell">
                     {law.law_category && law.summary_is_ai
                       ? <CategoryBadge category={law.law_category} />
                       : <span className="text-faint text-xs">—</span>}
                   </td>
-                  <td className="py-3 pr-4 hidden md:table-cell">
+                  <td className="py-3.5 pr-4 align-top hidden md:table-cell">
                     {outcomeCell(law.senate_outcome, law.senate_vote_id, law.senate_vote_date, !!law.presidential_status)}
                   </td>
-                  <td className="py-3 pr-4 hidden md:table-cell">
+                  <td className="py-3.5 pr-4 align-top hidden md:table-cell">
                     {outcomeCell(law.camera_outcome, law.camera_vote_id, law.camera_vote_date, !!law.presidential_status)}
                   </td>
-                  <td className="py-3 hidden md:table-cell">
+                  <td className="py-3.5 align-top hidden md:table-cell">
                     {presidentCell(law.presidential_status, law.presidential_date)}
                   </td>
                 </tr>
