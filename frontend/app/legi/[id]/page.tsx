@@ -45,6 +45,8 @@ export default async function LawDetail({ params }: { params: Promise<{ id: stri
 
   // Absentees per chamber: official seats − present. Joint sessions (present >
   // one chamber's seats) return null — the single-chamber framing doesn't apply.
+  // notVoted rides along so the seat arc can draw the full chamber exactly like
+  // the vote page: voters → present-not-voting (darker grey) → absent (light).
   async function absentFor(voteId: string | null, chamber: 'senate' | 'deputies') {
     if (!voteId) return null
     const { data } = await db
@@ -56,7 +58,10 @@ export default async function LawDetail({ params }: { params: Promise<{ id: stri
     const seats = await activeSeats(chamber)
     const present = data.present_count
       ?? (data.for_count ?? 0) + (data.against_count ?? 0) + (data.abstention_count ?? 0) + (data.not_voted_count ?? 0)
-    return present > seats ? null : Math.max(0, seats - present)
+    return {
+      absent: present > seats ? null : Math.max(0, seats - present),
+      notVoted: data.not_voted_count ?? 0,
+    }
   }
 
   // Fetch party breakdowns + absentees for both chambers in parallel
@@ -240,7 +245,8 @@ export default async function LawDetail({ params }: { params: Promise<{ id: stri
         againstCount={law.senate_against}
         abstentionCount={law.senate_abstentions}
         breakdown={senateBreakdown}
-        absentCount={senateAbsent}
+        absentCount={senateAbsent?.absent ?? null}
+        notVotedCount={senateAbsent?.notVoted ?? 0}
         passed={!!law.presidential_status}
       />
 
@@ -253,7 +259,8 @@ export default async function LawDetail({ params }: { params: Promise<{ id: stri
         againstCount={law.camera_against}
         abstentionCount={law.camera_abstentions}
         breakdown={cameraBreakdown}
-        absentCount={cameraAbsent}
+        absentCount={cameraAbsent?.absent ?? null}
+        notVotedCount={cameraAbsent?.notVoted ?? 0}
         passed={!!law.presidential_status}
       />
     </div>
@@ -261,7 +268,7 @@ export default async function LawDetail({ params }: { params: Promise<{ id: stri
 }
 
 function ChamberSection({
-  chamber, voteId, date, outcome, forCount, againstCount, abstentionCount, breakdown, passed, absentCount,
+  chamber, voteId, date, outcome, forCount, againstCount, abstentionCount, breakdown, passed, absentCount, notVotedCount,
 }: {
   chamber: string
   voteId: string | null
@@ -273,6 +280,7 @@ function ChamberSection({
   breakdown: PartyVoteBreakdown[] | null
   passed: boolean
   absentCount: number | null
+  notVotedCount: number
 }) {
   const borderColor =
     outcome === 'adoptat' ? 'border-adoptat/30' :
@@ -323,18 +331,27 @@ function ChamberSection({
           {(breakdown?.length ?? 0) > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-[1fr_260px] gap-6 items-start">
               <div className="flex flex-col items-center">
+                {/* full chamber, same as the vote page: voters → present-not-
+                    voting (darker grey) → absents (light grey) */}
                 <SeatArc
                   forCount={forCount ?? 0}
                   againstCount={againstCount ?? 0}
                   abstentionCount={abstentionCount ?? 0}
-                  notVotedCount={0}
+                  notVotedCount={notVotedCount}
+                  absentCount={absentCount ?? 0}
                   outcome={outcome}
                 />
-                <div className="flex gap-5 mt-2">
+                <div className="flex gap-5 mt-2 flex-wrap justify-center">
                   {[
                     { color: 'var(--color-for)', label: 'Pentru',    value: forCount ?? 0 },
                     { color: 'var(--color-against)', label: 'Împotrivă', value: againstCount ?? 0 },
                     { color: 'var(--color-abstention)', label: 'Abțineri',  value: abstentionCount ?? 0 },
+                    ...(notVotedCount > 0
+                      ? [{ color: 'var(--muted)', label: 'Prezenți, nu au votat', value: notVotedCount }]
+                      : []),
+                    ...(absentCount
+                      ? [{ color: 'var(--color-absent)', label: 'Absenți', value: absentCount }]
+                      : []),
                   ].map(({ color, label, value }) => (
                     <span key={label} className="flex items-center gap-1.5 text-xs text-muted">
                       <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
