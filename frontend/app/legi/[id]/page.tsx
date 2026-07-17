@@ -73,10 +73,12 @@ export default async function LawDetail({ params }: { params: Promise<{ id: stri
       : Promise.resolve(null),
     absentFor(law.senate_vote_id, 'senate'),
     absentFor(law.camera_vote_id, 'deputies'),
-    db.from('laws').select('initiator_type').eq('id', id).maybeSingle().then(r => r.data as { initiator_type: string | null } | null),
+    // law.law_id, NOT the route param — the param is usually a code slug
+    // (L99-2026) and uuid columns reject it, silently hiding the initiators.
+    db.from('laws').select('initiator_type').eq('id', law.law_id).maybeSingle().then(r => r.data as { initiator_type: string | null } | null),
     db.from('law_initiators')
       .select('name_raw, party_raw, role_raw, politician_id, politicians(chamber)')
-      .eq('law_id', id)
+      .eq('law_id', law.law_id)
       .order('name_raw')
       .then(r => (r.data ?? []) as unknown as { name_raw: string; party_raw: string | null; role_raw: string | null; politician_id: string | null; politicians: { chamber: string } | null }[]),
   ])
