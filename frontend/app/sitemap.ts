@@ -18,10 +18,10 @@ async function allRows<T>(build: (lo: number, hi: number) => PromiseLike<{ data:
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const base = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://labutoane.vercel.app'
+  const base = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://la-butoane.ro'
   const db = getDB()
 
-  const [votes, senators, deputies, laws, parties] = await Promise.all([
+  const [votes, senators, deputies, laws, parties, tacitBills] = await Promise.all([
     allRows<{ id: string; vote_date: string }>((lo, hi) =>
       db.from('votes').select('id, vote_date').order('vote_date', { ascending: false }).range(lo, hi)),
     db.from('senator_stats').select('politician_id, name, first_name'),
@@ -29,6 +29,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     allRows<{ id: string; code: string }>((lo, hi) =>
       db.from('laws').select('id, code').order('id').range(lo, hi)),
     db.from('party_cohesion').select('abbreviation'),
+    db.from('pending_bills').select('code'),
   ])
 
   const statics: MetadataRoute.Sitemap = [
@@ -78,5 +79,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.5,
   }))
 
-  return [...statics, ...voteUrls, ...lawUrls, ...senatorUrls, ...deputyUrls, ...partyUrls]
+  const tacitUrls: MetadataRoute.Sitemap = (tacitBills.data ?? []).map(b => ({
+    url: `${base}/tacite/${lawSlug(b.code)}`,
+    changeFrequency: 'daily',
+    priority: 0.6,
+  }))
+
+  return [...statics, ...voteUrls, ...lawUrls, ...senatorUrls, ...deputyUrls, ...partyUrls, ...tacitUrls]
 }

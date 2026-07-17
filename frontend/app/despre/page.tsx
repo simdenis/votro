@@ -65,12 +65,14 @@ export default function DesprePage() {
         </p>
       </section>
 
-      <section className="space-y-3">
+      <section id="metodologie-absente" className="space-y-3 scroll-mt-20">
         <h2 className="text-sm font-semibold uppercase tracking-widest text-muted">Cum calculăm prezența și absența</h2>
         <p className="text-foreground leading-relaxed">
           Prezența unui parlamentar = voturile la care apare în listele oficiale, împărțite la
           toate voturile ținute în camera sa de la validarea mandatului. Absența este restul
-          (100% − prezența). Absența medie a unui partid este media absențelor membrilor săi activi.
+          (100% − prezența). Cine e consemnat prezent dar nu apasă butonul („prezent, fără vot")
+          contează ca prezent — îl afișăm separat pe fișă, nu ca absență. Absența medie a unui
+          partid este media absențelor membrilor săi activi.
         </p>
         <p className="text-sm text-muted leading-relaxed">
           Parlamentarii care fac sau au făcut parte din Guvern în această legislatură (premier,
