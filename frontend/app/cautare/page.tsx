@@ -52,7 +52,7 @@ export default async function SearchPage({
       <h1 className="font-serif text-[30px] sm:text-[40px] font-normal tracking-[-0.01em] leading-[1.05] text-foreground">Căutare</h1>
 
       {/* Search form */}
-      <form method="GET" action="/search">
+      <form method="GET" action="/cautare">
         <div className="flex gap-2">
           <input
             name="q"

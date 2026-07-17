@@ -25,7 +25,7 @@ export function Nav() {
           <NavLinks variant="top" />
 
           <div className="ml-auto flex items-center gap-4 shrink-0">
-            <form action="/search" className="relative">
+            <form action="/cautare" className="relative">
               <input
                 name="q"
                 type="search"

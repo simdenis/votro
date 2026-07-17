@@ -19,6 +19,8 @@ const baseConfig: NextConfig = {
       },
       // /saptamana was removed — send its inbound links (newsletter, index) to /voturi
       { source: '/saptamana', destination: '/voturi', permanent: true },
+      // /search was the last English route — renamed to match the RO scheme
+      { source: '/search', destination: '/cautare', permanent: true },
       // :path* matches zero segments too, so these cover /votes and /votes/<id>
       { source: '/votes/:path*',    destination: '/voturi/:path*',   permanent: true },
       { source: '/senators/:path*', destination: '/senatori/:path*', permanent: true },
