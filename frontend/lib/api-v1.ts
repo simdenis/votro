@@ -206,8 +206,8 @@ interface NominalRow {
   votes: { vote_date: string; chamber: string; laws: { code: string } | null } | null
 }
 
-/** Per-person (nominal) votes on a law, flattened to Romanian columns —
- *  shared by /api/v1/votes?nominal=1 and the /api/v1/pachet ZIP. */
+/** Per-person (nominal) votes on a law, flattened to Romanian columns
+ *  (/api/v1/votes?nominal=1). */
 export async function nominalVoteRows(code: string): Promise<Record<string, unknown>[]> {
   const path = `politician_votes?select=vote_choice,party_line_deviation,`
     + `politicians!inner(first_name,name,parties(abbreviation)),`
