@@ -269,7 +269,7 @@ export default async function VoteDetail({
                   { color: 'var(--color-abstention)', label: 'Abțineri',  value: vote.abstention_count ?? 0 },
                   // grey dots in the arc — present but didn't press a button
                   ...((vote.not_voted_count ?? 0) > 0
-                    ? [{ color: 'var(--faint)', label: 'Prezenți, nu au votat', value: vote.not_voted_count }]
+                    ? [{ color: 'var(--muted)', label: 'Prezenți, nu au votat', value: vote.not_voted_count }]
                     : []),
                   ...(absentCount
                     ? [{ color: 'var(--color-absent)', label: 'Absenți', value: absentCount }]

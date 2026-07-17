@@ -5,7 +5,7 @@ interface Props {
   againstCount: number
   abstentionCount: number
   notVotedCount?: number
-  /** True absentees (chamber seats − participants). Drawn as the lightest grey
+  /** True absentees (chamber seats − participants). Drawn as very light grey
    *  dots so the arc represents the FULL chamber, matching the shareable vote
    *  card and this component's own legend. Omit/0 on joint sessions. */
   absentCount?: number
@@ -19,7 +19,7 @@ interface Props {
  * Semicircular parliament seating diagram.
  * Responsive: scales to fill its container via viewBox (no fixed pixel width).
  * Seats arranged in concentric arcs, coloured by vote choice.
- * Order: for (green) → against (red) → abstention (purple) → not_voted (grey)
+ * Order: for (green) → against (red) → abstention (purple) → not_voted (darker grey)
  *        → absent (lightest grey)
  */
 export function SeatArc({
@@ -41,7 +41,7 @@ export function SeatArc({
     ...Array(forCount).fill('var(--color-for)'),
     ...Array(againstCount).fill('var(--color-against)'),
     ...Array(abstentionCount).fill('var(--color-abstention)'),
-    ...Array(notVotedCount).fill('var(--faint)'),
+    ...Array(notVotedCount).fill('var(--muted)'),
     ...Array(Math.max(0, absentCount)).fill('var(--color-absent)'),
   ]
 

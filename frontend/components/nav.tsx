@@ -37,7 +37,7 @@ export function Nav() {
                 <SearchIcon size={14} />
               </button>
             </form>
-            <span className="hidden xl:inline-block font-mono text-[9.5px] tracking-[0.1em] text-muted border border-[var(--color-absent)] rounded-[3px] px-2 py-[3px] select-none whitespace-nowrap">
+            <span className="hidden xl:inline-block font-mono text-[9.5px] tracking-[0.1em] text-muted border border-[var(--ink)] rounded-[3px] px-2 py-[3px] select-none whitespace-nowrap">
               NEAFILIAT POLITIC
             </span>
           </div>
