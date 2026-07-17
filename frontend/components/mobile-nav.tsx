@@ -81,7 +81,7 @@ export function MobileNav() {
               </div>
             )
           })}
-          <Link href="/search" className="px-3 py-3 text-[16px] font-medium text-faint">
+          <Link href="/cautare" className="px-3 py-3 text-[16px] font-medium text-faint">
             Căutare
           </Link>
         </nav>
