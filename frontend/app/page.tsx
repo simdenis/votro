@@ -85,29 +85,74 @@ export default async function Dashboard() {
     <div>
 
       {/* ── Header ───────────────────────────────────────── */}
-      <header className="mb-9 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6">
-        <div className="max-w-2xl">
-          <p className="text-[11px] uppercase tracking-[0.18em] text-faint mb-2.5">
-            Parlamentul României · Legislatura 2024–2028
+      <header className="mb-9">
+        <p className="text-[11px] uppercase tracking-[0.18em] text-faint mb-2.5">
+          Parlamentul României · Legislatura 2024–2028
+        </p>
+        <h1 className="font-serif text-[42px] font-normal tracking-[-0.01em] leading-[1.04] text-foreground">
+          Cum votează Parlamentul?
+        </h1>
+        {/* Above-the-fold clarity: what the site is, who it's for, why trust it —
+            one neutral sentence, no scroll required. */}
+        <p className="text-[15px] text-muted leading-relaxed mt-3.5 max-w-2xl">
+          Urmărește cum votează fiecare senator și deputat: legi, prezență la vot și devieri de la
+          linia de partid. Date din surse oficiale (senat.ro, cdep.ro), actualizate zilnic —
+          gratuit și neafiliat politic.
+        </p>
+
+        {/* Search-anything: many visitors arrive wanting one person or one law.
+            Plain GET form → /cautare (works with no JS). Covers name, party, code. */}
+        <form action="/cautare" method="GET" className="mt-6 max-w-2xl" role="search">
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="absolute left-3.5 top-1/2 -translate-y-1/2 text-faint pointer-events-none">
+                <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
+              </svg>
+              <input
+                name="q"
+                type="search"
+                aria-label="Caută un parlamentar, un partid sau o lege"
+                placeholder="Caută un parlamentar, un partid sau o lege…"
+                className="w-full bg-surface border border-rim rounded-lg pl-10 pr-3 py-3 text-[15px] text-foreground placeholder:text-faint focus:outline-none focus:border-foreground/50 transition-colors"
+              />
+            </div>
+            <button
+              type="submit"
+              className="btn-tactile shrink-0 rounded-lg px-5 py-3 text-[14px] font-semibold text-white"
+              style={{ background: 'var(--sidebar-bg)' }}
+            >
+              Caută
+            </button>
+          </div>
+          <p className="text-[11.5px] text-faint mt-1.5">
+            ex. <span className="text-muted">„Ponta"</span>, <span className="text-muted">„PSD"</span> sau un cod de lege <span className="text-muted">„L230/2025"</span>
           </p>
-          <h1 className="font-serif text-[42px] font-normal tracking-[-0.01em] leading-[1.04] text-foreground">
-            Cum votează Parlamentul?
-          </h1>
-          {/* Above-the-fold clarity: what the site is, who it's for, why trust it —
-              one neutral sentence, no scroll required. */}
-          <p className="text-[15px] text-muted leading-relaxed mt-3.5">
-            Urmărește cum votează fiecare senator și deputat: legi, prezență la vot și devieri de la
-            linia de partid. Date din surse oficiale (senat.ro, cdep.ro), actualizate zilnic —
-            gratuit și neafiliat politic.
-          </p>
+        </form>
+
+        {/* Guided start — one primary path, lighter secondary options beneath, so
+            the homepage isn't equal-weight everywhere. */}
+        <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2.5">
+          <Link
+            href="/deputati"
+            className="btn-tactile inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-[14px] font-semibold text-white"
+            style={{ background: 'var(--sidebar-bg)' }}
+          >
+            Începe de la deputați →
+          </Link>
+          <span className="text-[13px] text-faint">sau explorează</span>
+          <nav className="flex flex-wrap gap-x-4 gap-y-1 text-[13.5px]">
+            {[
+              { href: '/legi', label: 'Legi' },
+              { href: '/voturi', label: 'Voturi recente' },
+              { href: '/parlamentarul-tau', label: 'Parlamentarul tău' },
+              { href: '/analize', label: 'Analize' },
+            ].map(l => (
+              <Link key={l.href} href={l.href} className="text-muted underline decoration-rim underline-offset-2 hover:text-foreground transition-colors">
+                {l.label}
+              </Link>
+            ))}
+          </nav>
         </div>
-        <Link
-          href="/parlamentarul-tau"
-          className="btn-tactile inline-flex items-center gap-2 rounded-lg px-5 py-3 text-[14px] font-semibold text-white flex-shrink-0 self-start sm:self-auto"
-          style={{ background: 'var(--sidebar-bg)' }}
-        >
-          Caută-ți parlamentarul →
-        </Link>
       </header>
 
       {/* ── Stats row ────────────────────────────────────── */}

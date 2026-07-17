@@ -1,7 +1,7 @@
 import { cn } from '@/lib/utils'
 
-export function Skeleton({ className }: { className?: string }) {
-  return <div className={cn('shimmer rounded', className)} />
+export function Skeleton({ className, style }: { className?: string; style?: React.CSSProperties }) {
+  return <div className={cn('shimmer rounded', className)} style={style} />
 }
 
 export function StatsCardSkeleton() {

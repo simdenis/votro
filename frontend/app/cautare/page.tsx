@@ -23,10 +23,13 @@ export default async function SearchPage({
 
   let politicians: any[] = []
   let laws: any[]        = []
+  let parties: any[]     = []
 
   if (q.length >= 2) {
     const db = getDB()
-    const [polRes, lawRes] = await Promise.all([
+    // party term: strip PostgREST-significant chars before interpolating into .or()
+    const pq = q.replace(/[,()%*]/g, ' ').trim()
+    const [polRes, lawRes, partyRes] = await Promise.all([
       db
         .from('politicians')
         .select('id, name, first_name, chamber, parties(abbreviation, color)')
@@ -39,12 +42,20 @@ export default async function SearchPage({
         .ilike('search_text', `%${nq}%`)
         .order('code', { ascending: false })
         .limit(15),
+      pq.length >= 2
+        ? db
+            .from('parties')
+            .select('id, abbreviation, name, color')
+            .or(`abbreviation.ilike.%${pq}%,name.ilike.%${pq}%`)
+            .limit(8)
+        : Promise.resolve({ data: [] as any[] }),
     ])
     politicians = polRes.data ?? []
     laws        = lawRes.data  ?? []
+    parties     = partyRes.data ?? []
   }
 
-  const hasResults = politicians.length > 0 || laws.length > 0
+  const hasResults = politicians.length > 0 || laws.length > 0 || parties.length > 0
   const searched   = q.length >= 2
 
   return (
@@ -113,6 +124,28 @@ export default async function SearchPage({
                 </Link>
               )
             })}
+          </div>
+        </section>
+      )}
+
+      {/* Parties */}
+      {parties.length > 0 && (
+        <section className="space-y-3">
+          <h2 className="text-xs font-semibold uppercase tracking-widest text-muted">
+            Partide ({parties.length})
+          </h2>
+          <div className="bg-surface border border-rim rounded-xl overflow-hidden divide-y divide-rim">
+            {parties.map((p: any) => (
+              <Link
+                key={p.id}
+                href={`/partide/${p.abbreviation}`}
+                className="flex items-center gap-3 px-4 py-3 hover:bg-raised transition-colors"
+              >
+                <PartyBadge abbreviation={p.abbreviation} color={p.color} noLink />
+                <span className="flex-1 text-sm text-foreground font-medium">{p.name}</span>
+                <span className="text-xs text-faint">Partid</span>
+              </Link>
+            ))}
           </div>
         </section>
       )}
