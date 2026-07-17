@@ -47,6 +47,8 @@ export default function DatePage() {
 curl "${SITE}/api/v1/votes?from=2026-01-01&to=2026-06-30&camera=senat"`}</Code>
         <Code>{`# cum s-a votat o lege (toate voturile de plen pe codul ei), CSV
 curl "${SITE}/api/v1/votes?code=L230/2025&format=csv" > voturi-L230.csv`}</Code>
+        <Code>{`# vot nominal: cum a votat fiecare parlamentar pe o lege, CSV
+curl "${SITE}/api/v1/votes?code=L230/2025&nominal=1&format=csv" > vot-nominal-L230.csv`}</Code>
         <Code>{`# drumul unei legi prin Parlament (Senat → Cameră → promulgare)
 curl "${SITE}/api/v1/laws?code=L230/2025"`}</Code>
         <Code>{`# fișa de vot a unui parlamentar

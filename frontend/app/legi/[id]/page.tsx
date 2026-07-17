@@ -10,7 +10,6 @@ import { AiSummary } from '@/components/ai-summary'
 import { SeatArc } from '@/components/seat-arc'
 import { LawTimeline } from '@/components/law-timeline'
 import { BaseLawBadges } from '@/components/base-law-badge'
-import { CardDownload } from '@/components/card-download'
 import { CategoryBadge } from '@/components/category-badge'
 import type { LawStatus, PartyVoteBreakdown } from '@/lib/types'
 
@@ -65,7 +64,7 @@ export default async function LawDetail({ params }: { params: Promise<{ id: stri
   }
 
   // Fetch party breakdowns + absentees for both chambers in parallel
-  const [senateBreakdown, cameraBreakdown, senateAbsent, cameraAbsent, lawRow, initiators, senateDeviations, cameraDeviations] = await Promise.all([
+  const [senateBreakdown, cameraBreakdown, senateAbsent, cameraAbsent, lawRow, initiators] = await Promise.all([
     law.senate_vote_id
       ? db.from('party_vote_breakdown').select('*').eq('vote_id', law.senate_vote_id).then(r => r.data as PartyVoteBreakdown[] | null)
       : Promise.resolve(null),
@@ -80,13 +79,6 @@ export default async function LawDetail({ params }: { params: Promise<{ id: stri
       .eq('law_id', id)
       .order('name_raw')
       .then(r => (r.data ?? []) as unknown as { name_raw: string; party_raw: string | null; role_raw: string | null; politician_id: string | null; politicians: { chamber: string } | null }[]),
-    // deviation counts per chamber vote — gates the "Card devieri" buttons
-    law.senate_vote_id
-      ? db.from('politician_votes').select('id', { count: 'exact', head: true }).eq('vote_id', law.senate_vote_id).eq('party_line_deviation', true).then(r => r.count ?? 0)
-      : Promise.resolve(0),
-    law.camera_vote_id
-      ? db.from('politician_votes').select('id', { count: 'exact', head: true }).eq('vote_id', law.camera_vote_id).eq('party_line_deviation', true).then(r => r.count ?? 0)
-      : Promise.resolve(0),
   ])
   const initiatorType = lawRow?.initiator_type ?? null
 
@@ -174,60 +166,6 @@ export default async function LawDetail({ params }: { params: Promise<{ id: stri
             </div>
           </details>
         )}
-        <div className="mt-4 flex gap-2 flex-wrap">
-          <CardDownload href={`/api/og/lawcard?id=${law.law_id}`} filename={`labutoane-${law.code.replace(/[^\w]+/g, '-')}.png`} />
-          {law.summary && (
-            <CardDownload
-              href={`/api/og/summarycard?id=${law.law_id}`}
-              filename={`labutoane-pescurt-${law.code.replace(/[^\w]+/g, '-')}.png`}
-              label="Card rezumat"
-            />
-          )}
-          {/* One card per chamber that actually voted (IG carousel slides). A
-              chamber the law passed WITHOUT a plenary vote gets the tacit
-              card instead — "nimeni nu a votat". */}
-          {law.senate_vote_id ? (
-            <CardDownload
-              href={`/api/og/lawcard?id=${law.law_id}&chamber=senate`}
-              filename={`labutoane-${law.code.replace(/[^\w]+/g, '-')}-senat.png`}
-              label="Card Senat"
-            />
-          ) : law.presidential_status ? (
-            <CardDownload
-              href={`/api/og/tacitcard?id=${law.law_id}&chamber=senate`}
-              filename={`labutoane-${law.code.replace(/[^\w]+/g, '-')}-tacit-senat.png`}
-              label="Card tacit — Senat"
-            />
-          ) : null}
-          {law.camera_vote_id ? (
-            <CardDownload
-              href={`/api/og/lawcard?id=${law.law_id}&chamber=camera`}
-              filename={`labutoane-${law.code.replace(/[^\w]+/g, '-')}-camera.png`}
-              label="Card Cameră"
-            />
-          ) : law.presidential_status ? (
-            <CardDownload
-              href={`/api/og/tacitcard?id=${law.law_id}&chamber=camera`}
-              filename={`labutoane-${law.code.replace(/[^\w]+/g, '-')}-tacit-camera.png`}
-              label="Card tacit — Cameră"
-            />
-          ) : null}
-          {/* Deviation cards — only for votes where someone broke party line */}
-          {senateDeviations > 0 && law.senate_vote_id && (
-            <CardDownload
-              href={`/api/og/deviationcard?vote=${law.senate_vote_id}`}
-              filename={`labutoane-${law.code.replace(/[^\w]+/g, '-')}-devieri-senat.png`}
-              label={`Card devieri — Senat (${senateDeviations})`}
-            />
-          )}
-          {cameraDeviations > 0 && law.camera_vote_id && (
-            <CardDownload
-              href={`/api/og/deviationcard?vote=${law.camera_vote_id}`}
-              filename={`labutoane-${law.code.replace(/[^\w]+/g, '-')}-devieri-camera.png`}
-              label={`Card devieri — Cameră (${cameraDeviations})`}
-            />
-          )}
-        </div>
       </div>
 
       {/* Timeline */}
