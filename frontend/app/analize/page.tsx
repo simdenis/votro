@@ -60,6 +60,15 @@ export default async function AnalizePage() {
 
   // ── 2. Closest votes ───────────────────────────────────────────────────
   const closest = (closestRes.data ?? []) as ClosestRow[]
+  // the view has no summary column — pull the AI summaries by law code
+  const closestCodes = [...new Set(closest.map(v => v.law_code).filter((c): c is string => !!c))]
+  const summaryOf: Record<string, string> = {}
+  if (closestCodes.length) {
+    const { data: sumRows } = await db.from('laws').select('code, summary').in('code', closestCodes)
+    for (const r of (sumRows ?? []) as { code: string; summary: string | null }[]) {
+      if (r.summary) summaryOf[r.code] = r.summary
+    }
+  }
 
   // ── 3. Attendance trend ────────────────────────────────────────────────
   const attend = (attendRes.data ?? []) as AttendRow[]
@@ -117,6 +126,9 @@ export default async function AnalizePage() {
                   <span>{formatDate(v.vote_date)}</span>
                 </div>
                 <p className="text-[13.5px] text-foreground truncate">{capFirst(v.law_title ?? '') || 'Vot de plen'}</p>
+                {v.law_code && summaryOf[v.law_code] && (
+                  <p className="text-[12px] text-muted mt-0.5 line-clamp-2">{summaryOf[v.law_code]}</p>
+                )}
               </div>
               <span className="text-[12px] tabular-nums flex-shrink-0 font-medium">
                 <span style={{ color: 'var(--color-for)' }}>{v.for_count}</span>
