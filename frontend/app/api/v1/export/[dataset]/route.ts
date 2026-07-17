@@ -1,4 +1,4 @@
-import { proxy, json } from '@/lib/api-v1'
+import { proxyAll, json } from '@/lib/api-v1'
 
 // GET /api/v1/export/<dataset>[?format=csv]
 // Full-dataset bulk dump — the "download the whole thing" file. Cached hard at
@@ -24,5 +24,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ dataset:
   if (!spec) {
     return json({ error: 'Set necunoscut.', disponibile: Object.keys(DATASETS) }, 404)
   }
-  return proxy(spec.path, req, { maxAge: 86_400, swr: 604_800, filename: `labutoane-${spec.label}` })
+  // proxyAll: votes/laws exceed PostgREST's 1000-row cap — a single fetch
+  // silently truncated the "full dataset" download.
+  return proxyAll(spec.path, req, { maxAge: 86_400, swr: 604_800, filename: `labutoane-${spec.label}` })
 }

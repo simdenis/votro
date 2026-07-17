@@ -4,15 +4,30 @@ import { lawSlug, personSlug } from '@/lib/utils'
 
 export const revalidate = 3600
 
+// PostgREST hard-caps every response at 1000 rows; votes/laws are past that,
+// so a single select silently drops the oldest URLs from the sitemap.
+const PAGE = 1000
+async function allRows<T>(build: (lo: number, hi: number) => PromiseLike<{ data: unknown }>): Promise<T[]> {
+  const out: T[] = []
+  for (let lo = 0; ; lo += PAGE) {
+    const { data } = await build(lo, lo + PAGE - 1)
+    const rows = (data ?? []) as T[]
+    out.push(...rows)
+    if (rows.length < PAGE) return out
+  }
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://labutoane.vercel.app'
   const db = getDB()
 
   const [votes, senators, deputies, laws, parties] = await Promise.all([
-    db.from('votes').select('id, vote_date').order('vote_date', { ascending: false }),
+    allRows<{ id: string; vote_date: string }>((lo, hi) =>
+      db.from('votes').select('id, vote_date').order('vote_date', { ascending: false }).range(lo, hi)),
     db.from('senator_stats').select('politician_id, name, first_name'),
     db.from('deputy_stats').select('politician_id, name, first_name'),
-    db.from('laws').select('id, code'),
+    allRows<{ id: string; code: string }>((lo, hi) =>
+      db.from('laws').select('id, code').order('id').range(lo, hi)),
     db.from('party_cohesion').select('abbreviation'),
   ])
 
@@ -32,14 +47,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${base}/contribuie`, changeFrequency: 'monthly', priority: 0.3 },
   ]
 
-  const voteUrls: MetadataRoute.Sitemap = (votes.data ?? []).map(v => ({
+  const voteUrls: MetadataRoute.Sitemap = votes.map(v => ({
     url: `${base}/voturi/${v.id}`,
     lastModified: v.vote_date,
     changeFrequency: 'yearly',
     priority: 0.6,
   }))
 
-  const lawUrls: MetadataRoute.Sitemap = (laws.data ?? []).map(l => ({
+  const lawUrls: MetadataRoute.Sitemap = laws.map(l => ({
     url: `${base}/legi/${lawSlug(l.code)}`,
     changeFrequency: 'weekly',
     priority: 0.6,

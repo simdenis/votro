@@ -113,6 +113,65 @@ export async function proxy(path: string, req: Request, opts: ProxyOpts = {}): P
   return new Response(body, { status: 200, headers })
 }
 
+// PostgREST hard-caps every response at 1000 rows (no limit= param overrides
+// it), so "full dataset" endpoints must page. Distinct offset= URLs keep each
+// page separately CDN/data-cacheable.
+const PG_PAGE = 1000
+const PG_MAX_PAGES = 30 // safety bound (30k rows) — keeps CPU/memory sane
+
+/** Like proxy(), but follows PostgREST's 1000-row cap across pages and returns
+ *  the concatenated result. `path` must not carry its own limit/offset. */
+export async function proxyAll(path: string, req: Request, opts: ProxyOpts = {}): Promise<Response> {
+  const csv = wantsCsv(req)
+  const maxAge = opts.maxAge ?? 3600
+  const swr = opts.swr ?? 86400
+  const sep = path.includes('?') ? '&' : '?'
+  const csvParts: string[] = []
+  const jsonRows: unknown[] = []
+  try {
+    for (let page = 0; page < PG_MAX_PAGES; page++) {
+      const url = `${SUPABASE_URL}/rest/v1/${path}${sep}limit=${PG_PAGE}&offset=${page * PG_PAGE}`
+      const r = await fetch(url, {
+        headers: {
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${SUPABASE_KEY}`,
+          Accept: csv ? 'text/csv' : 'application/json',
+        },
+        next: { revalidate: maxAge },
+      })
+      if (!r.ok) return json({ error: 'Interogare invalidă.' }, r.status === 400 ? 400 : 502)
+      let rows: number
+      if (csv) {
+        // Row count from Content-Range ("0-999/*"), NOT from counting lines —
+        // quoted fields legally contain newlines. Strip only the header line
+        // (line 1, never multi-line) from pages after the first.
+        const text = (await r.text()).replace(/\r?\n$/, '')
+        const m = r.headers.get('content-range')?.match(/^(\d+)-(\d+)/)
+        rows = m ? Number(m[2]) - Number(m[1]) + 1 : 0
+        if (rows > 0) csvParts.push(page === 0 ? text : text.slice(text.indexOf('\n') + 1))
+        else if (page === 0) csvParts.push(text) // header-only empty result
+      } else {
+        const data = (await r.json()) as unknown[]
+        rows = data.length
+        jsonRows.push(...data)
+      }
+      if (rows < PG_PAGE) break
+    }
+  } catch {
+    return json({ error: 'Sursa de date e indisponibilă momentan.' }, 502)
+  }
+  const body = csv
+    ? localizeCsvHeader(csvParts.join('\n'))
+    : JSON.stringify(jsonRows)
+  const headers: Record<string, string> = {
+    'Content-Type': csv ? 'text/csv; charset=utf-8' : 'application/json; charset=utf-8',
+    'Cache-Control': `public, s-maxage=${maxAge}, stale-while-revalidate=${swr}`,
+    'Access-Control-Allow-Origin': '*',
+  }
+  if (csv && opts.filename) headers['Content-Disposition'] = `attachment; filename="${opts.filename}.csv"`
+  return new Response(body, { status: 200, headers })
+}
+
 /** Server-side PostgREST fetch returning parsed JSON (for endpoints that
  *  post-process rows instead of proxying the body straight through). */
 export async function sbJson<T = unknown>(path: string, revalidate = 3600): Promise<T> {
@@ -153,8 +212,14 @@ export async function nominalVoteRows(code: string): Promise<Record<string, unkn
   const path = `politician_votes?select=vote_choice,party_line_deviation,`
     + `politicians!inner(first_name,name,parties(abbreviation)),`
     + `votes!inner(vote_date,chamber,laws!inner(code))`
-    + `&votes.laws.code=eq.${encodeURIComponent(code)}&limit=10000`
-  const raw = await sbJson<NominalRow[]>(path)
+    + `&votes.laws.code=eq.${encodeURIComponent(code)}&order=id`
+  // paged — busy laws (11 plenary votes) exceed PostgREST's 1000-row cap
+  const raw: NominalRow[] = []
+  for (let page = 0; page < PG_MAX_PAGES; page++) {
+    const batch = await sbJson<NominalRow[]>(`${path}&limit=${PG_PAGE}&offset=${page * PG_PAGE}`)
+    raw.push(...batch)
+    if (batch.length < PG_PAGE) break
+  }
   return raw
     .map(r => ({
       cod: r.votes?.laws?.code ?? code,

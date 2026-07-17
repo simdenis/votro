@@ -1,4 +1,4 @@
-import { proxy, json, cleanCode, cleanDate, cleanChamber, nominalVoteRows, toCsv, wantsCsv } from '@/lib/api-v1'
+import { proxy, proxyAll, json, cleanCode, cleanDate, cleanChamber, nominalVoteRows, toCsv, wantsCsv } from '@/lib/api-v1'
 
 // GET /api/v1/votes
 //   ?code=L230/2025           → every plenary vote on that law
@@ -41,8 +41,10 @@ export async function GET(req: Request) {
   const chamber = cleanChamber(p.get('camera') ?? p.get('chamber'))
   const filters = [`vote_date=gte.${from}`, `vote_date=lte.${to}`]
   if (chamber) filters.push(`chamber=eq.${chamber}`)
-  filters.push('order=vote_date.desc', 'limit=2000')
+  filters.push('order=vote_date.desc')
   const path = `votes?select=id,vote_date,chamber,outcome,for_count,against_count,abstention_count,description`
     + `&${filters.join('&')}`
-  return proxy(path, req, { filename: `voturi-${from}_${to}` })
+  // proxyAll: a year of votes is >1000 rows — PostgREST caps single responses
+  // at 1000 (the old limit=2000 was silently ignored).
+  return proxyAll(path, req, { filename: `voturi-${from}_${to}` })
 }
