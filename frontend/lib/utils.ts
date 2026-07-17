@@ -174,6 +174,12 @@ export function lastSessionRange(now: Date = new Date()): { from: string; to: st
   return null
 }
 
+/** Today as YYYY-MM-DD in Romania's timezone — vote/deadline dates are RO-local,
+ *  and the UTC date lags RO by 2-3h after local midnight. */
+export function todayRo(): string {
+  return new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Bucharest' })
+}
+
 export function formatRelativeTime(dateStr: string | null | undefined): string {
   if (!dateStr) return '—'
   const diff = Date.now() - new Date(dateStr).getTime()
