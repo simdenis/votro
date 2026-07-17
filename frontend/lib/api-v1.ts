@@ -43,6 +43,10 @@ export function wantsCsv(req: Request): boolean {
   return (req.headers.get('accept') ?? '').includes('text/csv')
 }
 
+// UTF-8 BOM: without it Excel (Windows) reads CSV as the local ANSI codepage and
+// mangles every diacritic (ț ș ă â î). All other tools handle the BOM fine.
+export const CSV_BOM = String.fromCharCode(0xFEFF)
+
 // CSV comes straight from PostgREST with raw (English) DB column names. Rename
 // the header row to Romanian so downloaded files read in the site's language.
 // Unknown columns pass through unchanged. Only the header line is touched.
@@ -103,7 +107,7 @@ export async function proxy(path: string, req: Request, opts: ProxyOpts = {}): P
   if (!upstream.ok) {
     return json({ error: 'Interogare invalidă.' }, upstream.status === 400 ? 400 : 502)
   }
-  if (csv) body = localizeCsvHeader(body)
+  if (csv) body = CSV_BOM + localizeCsvHeader(body)
   const headers: Record<string, string> = {
     'Content-Type': csv ? 'text/csv; charset=utf-8' : 'application/json; charset=utf-8',
     'Cache-Control': `public, s-maxage=${maxAge}, stale-while-revalidate=${swr}`,
@@ -161,7 +165,7 @@ export async function proxyAll(path: string, req: Request, opts: ProxyOpts = {})
     return json({ error: 'Sursa de date e indisponibilă momentan.' }, 502)
   }
   const body = csv
-    ? localizeCsvHeader(csvParts.join('\n'))
+    ? CSV_BOM + localizeCsvHeader(csvParts.join('\n'))
     : JSON.stringify(jsonRows)
   const headers: Record<string, string> = {
     'Content-Type': csv ? 'text/csv; charset=utf-8' : 'application/json; charset=utf-8',
@@ -236,6 +240,59 @@ export async function nominalVoteRows(code: string): Promise<Record<string, unkn
       || String(a.camera).localeCompare(String(b.camera))
       || String(a.nume).localeCompare(String(b.nume), 'ro'),
     )
+}
+
+interface PolVoteRow {
+  vote_id: string
+  vote_choice: string
+  party_line_deviation: boolean | null
+  votes: { vote_date: string; chamber: string; laws: { code: string; title: string } | null } | null
+}
+
+/** One MP's full plenary voting record — every vote, their choice, and the
+ *  party's majority choice on that same vote — flattened to Romanian columns.
+ *  Powers /api/v1/parlamentari?...&voturi=1 (the "fișă completă" export). */
+export async function politicianVoteRows(politicianId: string): Promise<Record<string, unknown>[]> {
+  const pol = await sbJson<{ party_id: string | null }[]>(
+    `politicians?id=eq.${politicianId}&select=party_id&limit=1`)
+  if (!pol.length) return []
+  const partyId = pol[0].party_id
+
+  // the member's own votes (paged past PostgREST's 1000-row cap — MPs have 1000+)
+  const rows: PolVoteRow[] = []
+  const base = `politician_votes?politician_id=eq.${politicianId}`
+    + `&select=vote_id,vote_choice,party_line_deviation,votes!inner(vote_date,chamber,laws(code,title))`
+    + `&order=vote_id`
+  for (let p = 0; p < PG_MAX_PAGES; p++) {
+    const batch = await sbJson<PolVoteRow[]>(`${base}&limit=${PG_PAGE}&offset=${p * PG_PAGE}`)
+    rows.push(...batch)
+    if (batch.length < PG_PAGE) break
+  }
+
+  // the party's majority stance per vote (so each row shows "cum a votat partidul")
+  const partyChoice: Record<string, string> = {}
+  if (partyId) {
+    const pbase = `party_majority_votes?party_id=eq.${partyId}&select=vote_id,majority_choice&order=vote_id`
+    for (let p = 0; p < PG_MAX_PAGES; p++) {
+      const batch = await sbJson<{ vote_id: string; majority_choice: string }[]>(`${pbase}&limit=${PG_PAGE}&offset=${p * PG_PAGE}`)
+      for (const r of batch) partyChoice[r.vote_id] = r.majority_choice
+      if (batch.length < PG_PAGE) break
+    }
+  }
+
+  return rows
+    .map(r => ({
+      cod: r.votes?.laws?.code ?? '',
+      titlu: r.votes?.laws?.title ?? '',
+      data_vot: r.votes?.vote_date ?? '',
+      camera: r.votes?.chamber === 'senate' ? 'senat' : 'camera_deputatilor',
+      vot: CHOICE_RO[r.vote_choice] ?? r.vote_choice,
+      linia_partidului: partyChoice[r.vote_id]
+        ? (CHOICE_RO[partyChoice[r.vote_id]] ?? partyChoice[r.vote_id]) : '',
+      deviere_de_la_partid: r.party_line_deviation ? 'da' : 'nu',
+    }))
+    .sort((a, b) => String(b.data_vot).localeCompare(String(a.data_vot))
+      || String(a.cod).localeCompare(String(b.cod)))
 }
 
 export function json(obj: unknown, status = 200): Response {

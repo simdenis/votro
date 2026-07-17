@@ -49,10 +49,12 @@ curl "${SITE}/api/v1/votes?from=2026-01-01&to=2026-06-30&camera=senat"`}</Code>
 curl "${SITE}/api/v1/votes?code=L230/2025&format=csv" > voturi-L230.csv`}</Code>
         <Code>{`# vot nominal: cum a votat fiecare parlamentar pe o lege, CSV
 curl "${SITE}/api/v1/votes?code=L230/2025&nominal=1&format=csv" > vot-nominal-L230.csv`}</Code>
+        <Code>{`# toate voturile unui parlamentar: fiecare lege, votul lui și linia de partid, CSV
+curl "${SITE}/api/v1/parlamentari?camera=camera&nume=Ponta&voturi=1&format=csv" > voturi-ponta.csv`}</Code>
+        <Code>{`# statisticile de vot ale unui parlamentar
+curl "${SITE}/api/v1/parlamentari?camera=camera&nume=Ponta"`}</Code>
         <Code>{`# drumul unei legi prin Parlament (Senat → Cameră → promulgare)
 curl "${SITE}/api/v1/laws?code=L230/2025"`}</Code>
-        <Code>{`# fișa de vot a unui parlamentar
-curl "${SITE}/api/v1/parlamentari?camera=camera&nume=Ponta"`}</Code>
         <p className="text-sm text-muted leading-relaxed">
           Lista completă a endpoint-urilor și parametrilor e la{' '}
           <a href={`${SITE}/api/v1`} target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">

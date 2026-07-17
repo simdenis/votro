@@ -125,6 +125,22 @@ export default function DesprePage() {
       </section>
 
       <section className="space-y-3">
+        <h2 className="text-sm font-semibold uppercase tracking-widest text-muted">Scorul de „Interes"</h2>
+        <p className="text-foreground leading-relaxed">
+          Pe pagina principală poți sorta voturile după <strong className="text-foreground">Interes</strong> —
+          un scor de la 1 la 100 <strong>generat automat (AI, model Gemini)</strong> din titlul și
+          rezumatul legii. Estimează cât de mult ar interesa legea un cetățean obișnuit (nu un jurist
+          sau funcționar).
+        </p>
+        <p className="text-sm text-muted leading-relaxed">
+          Factorii luați în calcul: impactul direct asupra vieții de zi cu zi (bani, taxe, pensii,
+          salarii, sănătate, școală, prețuri, amenzi, drepturi) și cât de discutat e subiectul în
+          spațiul public. Legile tehnice sau de rutină (ratificări, reorganizări administrative)
+          primesc scoruri mici. E un ajutor editorial, nu un verdict asupra importanței juridice a legii.
+        </p>
+      </section>
+
+      <section className="space-y-3">
         <h2 className="text-sm font-semibold uppercase tracking-widest text-muted">Limitări ale datelor</h2>
         <ul className="text-foreground leading-relaxed space-y-1.5 list-disc list-inside text-sm">
           <li>Acoperă voturile nominale din plenul Senatului și Camerei Deputaților.</li>

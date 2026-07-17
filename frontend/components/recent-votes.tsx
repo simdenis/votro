@@ -6,6 +6,7 @@ import { formatDate, formatDateShort, capFirst, recessUntil } from '@/lib/utils'
 import { CATEGORY_COLORS } from '@/lib/category-colors'
 import { CategoryBadge } from '@/components/category-badge'
 import { OutcomeBadge } from '@/components/outcome-badge'
+import { InfoHint, METRIC_TIPS } from '@/components/info-hint'
 import type { VoteWithLaw } from '@/lib/types'
 
 type Field = 'recent' | 'hot'
@@ -81,6 +82,7 @@ export function RecentVotes({ votes }: { votes: VoteWithLaw[] }) {
         <span className="text-[11px] text-faint mr-0.5">Sortează:</span>
         <Btn f="recent" label="Recente" />
         <Btn f="hot" label="Interes" />
+        <InfoHint title="Interes (scor AI)" tip={METRIC_TIPS.interes} />
         <button
           onClick={() => setCatOpen(o => !o)}
           className={`text-[11px] px-2 py-1 rounded-md border transition-colors ${selected.length || catOpen ? 'border-sidebar text-foreground font-medium' : 'border-rim text-muted hover:text-foreground'}`}
