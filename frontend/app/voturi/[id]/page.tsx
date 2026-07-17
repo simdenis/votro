@@ -17,7 +17,7 @@ import type { VoteWithLaw, PoliticianVoteWithDetails, PartyVoteBreakdown } from 
 
 export const revalidate = 600 // ISR — CDN-cache per vote for 10 min (see homepage note)
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://labutoane.vercel.app'
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://la-butoane.ro'
 
 // cache(): generateMetadata and the page both need the vote — one query per render
 const getVote = cache(async (id: string): Promise<VoteWithLaw | null> => {
