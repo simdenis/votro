@@ -21,7 +21,6 @@ function MemberTable({ title, members, basePath }: {
 }) {
   return (
     <div>
-      <SectionNav items={PARLAMENTARI_SECTIONS} />
       <h2 className="text-xs font-semibold uppercase tracking-widest text-muted mb-4">
         {title} ({members.length})
       </h2>
@@ -88,6 +87,7 @@ export default async function ParlamentarulTauPage({
   return (
     <div className="space-y-8">
       <div>
+        <SectionNav items={PARLAMENTARI_SECTIONS} />
         <h1 className="font-serif text-[30px] sm:text-[40px] font-normal tracking-[-0.01em] leading-[1.05] text-foreground">
           Parlamentarul tău
         </h1>
