@@ -55,8 +55,16 @@ export default async function TacitePage() {
           unui proiect de lege — 60 pentru coduri și legi complexe. Dacă termenul expiră fără
           vot, proiectul e <strong className="text-foreground">considerat adoptat, fără ca cineva să fi votat</strong>,
           și merge mai departe la camera decizională. Mai jos: proiectele înregistrate la
-          Camera Deputaților ca primă cameră, cu termenul constituțional în curs
-          (sursa: cdep.ro, actualizat zilnic).
+          Camera Deputaților ca primă cameră, cu termenul constituțional în curs (sursa:{' '}
+          <a
+            href="https://www.cdep.ro/ords/pls/proiecte/upl_pck2015.termene_camera1"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-info hover:underline"
+          >
+            cdep.ro — verificare termene legale
+          </a>
+          , actualizat zilnic).
         </p>
       </div>
 
@@ -95,7 +103,19 @@ export default async function TacitePage() {
                     >
                       {b.title ?? b.code}
                     </a>
-                    <span className="block font-mono text-[11px] text-muted mt-0.5">{b.code} · Camera Deputaților</span>
+                    <span className="flex flex-wrap items-center gap-x-3 font-mono text-[11px] text-muted mt-0.5">
+                      <span>{b.code} · Camera Deputaților</span>
+                      {b.source_url && (
+                        <a href={b.source_url} target="_blank" rel="noopener noreferrer" className="text-info hover:underline">
+                          sursa: fișa cdep.ro →
+                        </a>
+                      )}
+                      {b.pdf_url && (
+                        <a href={b.pdf_url} target="_blank" rel="noopener noreferrer" className="text-info hover:underline">
+                          PDF proiect →
+                        </a>
+                      )}
+                    </span>
                   </td>
                   <td className="py-3 pr-4 text-muted text-sm hidden md:table-cell whitespace-nowrap">
                     {b.term_days ?? '—'}
