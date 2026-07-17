@@ -1,4 +1,5 @@
 import { proxy, proxyAll, json, cleanCode, cleanDate, cleanChamber, nominalVoteRows, toCsv, wantsCsv } from '@/lib/api-v1'
+import { todayRo } from '@/lib/utils'
 
 // GET /api/v1/votes
 //   ?code=L230/2025           → every plenary vote on that law
@@ -35,9 +36,10 @@ export async function GET(req: Request) {
     return proxy(path, req, { filename: `voturi-${slug}` })
   }
 
-  // period query — defaults to the current year if unbounded
-  const from = cleanDate(p.get('from')) ?? `${new Date().getFullYear()}-01-01`
-  const to = cleanDate(p.get('to')) ?? new Date().toISOString().slice(0, 10)
+  // period query — defaults to the current year (RO time) if unbounded
+  const today = todayRo()
+  const from = cleanDate(p.get('from')) ?? `${today.slice(0, 4)}-01-01`
+  const to = cleanDate(p.get('to')) ?? today
   const chamber = cleanChamber(p.get('camera') ?? p.get('chamber'))
   const filters = [`vote_date=gte.${from}`, `vote_date=lte.${to}`]
   if (chamber) filters.push(`chamber=eq.${chamber}`)

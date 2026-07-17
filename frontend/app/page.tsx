@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
-import { countNoun, personSlug } from '@/lib/utils'
+import { countNoun, personSlug, todayRo } from '@/lib/utils'
 import { RecentVotes } from '@/components/recent-votes'
 import { AbsenceTop } from '@/components/absence-top'
 import { ParliamentBar } from '@/components/parliament-bar'
@@ -20,7 +20,9 @@ export const metadata: Metadata = { title: { absolute: 'LaButoane — Cum voteaz
 export default async function Dashboard() {
   const db = getDB()
 
-  const today = new Date().toISOString().slice(0, 10)
+  // Romania's date, not UTC — after RO midnight (but before UTC midnight) the
+  // UTC date is yesterday, which would keep just-expired tacit deadlines alive.
+  const today = todayRo()
   const [r0, r2, r3, r4, r5, r6, r7, r8, r9] = await Promise.all([
     db.from('law_status').select('*', { count: 'exact', head: true }),
     // substantive votes only — presence checks / agenda changes drown the feed.
