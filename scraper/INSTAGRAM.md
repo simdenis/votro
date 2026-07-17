@@ -58,10 +58,41 @@ python instagram_poster.py --refresh-token       # extend the token 60 days
 Tokens last 60 days; run `--refresh-token` before expiry (token must be >24h
 old) and put the new value in `.env`. Worth a monthly cron once this is stable.
 
+## Law carousels on the Cloudflare Free plan (`--static`)
+
+The seat-arc hemicycle cards (`lawcard`, `tacitcard`, `votecard`, `senatorcard`)
+exceed the Free plan's 10ms CPU cap and **503** when Instagram fetches
+`/api/og/...`. The light cards (`summarycard`, `deviationcard`, `shamecard`)
+render fine and post dynamically. To post a full law carousel, render the heavy
+slides **offline** (plain Node, no CPU cap) and serve them as static files:
+
+```bash
+# 1. render every slide for the law into frontend/public/ig/
+cd frontend
+node scripts/render-ig.mjs <law_id>            # spawns `next dev`, or pass --base http://localhost:3000
+#    (add --hook "editorial first line" to match the caption)
+
+# 2. deploy so the PNGs are live at https://la-butoane.ro/ig/<name>.png
+npm run deploy
+
+# 3. post from the pre-rendered static slides (dry-run first)
+cd ../scraper
+python instagram_poster.py --law <law_id> --static --dry-run
+python instagram_poster.py --law <law_id> --static
+```
+
+`render-ig.mjs` asks the poster for the slide manifest (`--emit-slides`), so the
+renderer and `--static` posting always agree on the exact slide set and the
+deterministic filenames. Bump `CARD_V` after a card redesign — it re-versions
+both the dynamic URL and the static filename, so nothing serves a stale image.
+
 ## Notes / limits
 
 - Instagram allows **25 published posts per 24h** per account.
-- The image URL must be publicly reachable (Vercel prod, not localhost).
-- Carousels, Reels, and Stories use a different flow — not implemented yet.
-- The caption hashtags and image design are a starting point; tune in
-  `build_vote_caption()` and the `/api/og/votecard` route + `components/cards/vote-card.tsx`.
+- The image URL must be publicly reachable (prod, not localhost) — `--static`
+  satisfies this after a deploy; dynamic light cards satisfy it directly.
+- The absence post is `--shame` (top-5 absentees, `shamecard`) — it renders on
+  Free and posts dynamically today.
+- Reels and Stories use a different flow — not implemented yet.
+- Caption/design starting points: `_law_slides()` / `build_vote_caption()` and
+  the `/api/og/*` routes + `components/cards/*`.
