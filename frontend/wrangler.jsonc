@@ -16,11 +16,10 @@
 		"global_fetch_strictly_public"
 	],
 	// Satori/resvg og-card rendering (hemicycle cards especially) exceeds the
-	// default CPU budget → Cloudflare error 1102 / HTTP 503. Only applies on
-	// Workers Paid; the Free plan is hard-capped at 10ms CPU per request.
-	"limits": {
-		"cpu_ms": 30000
-	},
+	// Free plan's 10ms CPU cap → Cloudflare error 1102 / HTTP 503 on
+	// lawcard/tacitcard. After upgrading to Workers Paid, restore:
+	//   "limits": { "cpu_ms": 30000 },
+	// (setting it on Free makes `wrangler deploy` fail with code 100328).
 	"assets": {
 		"directory": ".open-next/assets",
 		"binding": "ASSETS"
