@@ -12,6 +12,17 @@ export function MobileNav() {
   // collapse the menu whenever navigation happens
   useEffect(() => setOpen(false), [path])
 
+  // collapse the menu when the user scrolls the page down behind it
+  useEffect(() => {
+    if (!open) return
+    const startY = window.scrollY
+    const onScroll = () => {
+      if (window.scrollY > startY + 24) setOpen(false)
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [open])
+
   return (
     <>
       <button

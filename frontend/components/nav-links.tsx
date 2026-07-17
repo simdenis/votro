@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { LEGI_SECTIONS, PARLAMENTARI_SECTIONS, DESPRE_SECTIONS, type SectionItem } from './section-nav'
 
@@ -39,35 +40,66 @@ export function NavLinks({ variant }: { variant?: 'top' }) {
         }
 
         return (
-          <div key={href} className="relative group h-full flex items-center">
-            <Link href={href} className={linkCls}>
-              {label}
-              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="ml-1 opacity-50">
-                <path d="m6 9 6 6 6-6" />
-              </svg>
-            </Link>
-            {/* hover dropdown — top-full keeps it glued to the trigger (no gap) */}
-            <div className="absolute left-0 top-full hidden group-hover:flex group-focus-within:flex flex-col bg-white border border-rim rounded-lg py-1.5 min-w-[190px] z-30 shadow-[0_10px_28px_rgba(23,26,31,0.08)]">
-              {children.map(c => {
-                const childActive = path === c.href || path.startsWith(`${c.href}/`)
-                return (
-                  <Link
-                    key={c.href}
-                    href={c.href}
-                    className={`px-4 py-2 text-[13px] transition-colors ${
-                      childActive
-                        ? 'font-semibold text-foreground'
-                        : 'font-medium text-muted hover:text-foreground hover:bg-raised'
-                    }`}
-                  >
-                    {c.label}
-                  </Link>
-                )
-              })}
-            </div>
-          </div>
+          <NavDropdown key={href} href={href} label={label} linkCls={linkCls} path={path} items={children} />
         )
       })}
     </nav>
+  )
+}
+
+/** Hover dropdown that actually closes after a click: the pointer usually
+    stays over the trigger during client-side navigation, so pure
+    group-hover would keep it open. Clicking suppresses the dropdown until
+    the mouse leaves the trigger area. */
+function NavDropdown({
+  href, label, linkCls, path, items,
+}: {
+  href: string
+  label: string
+  linkCls: string
+  path: string
+  items: SectionItem[]
+}) {
+  const [suppressed, setSuppressed] = useState(false)
+
+  const suppress = (e: React.MouseEvent<HTMLElement>) => {
+    setSuppressed(true)
+    ;(e.currentTarget as HTMLElement).blur()
+  }
+
+  return (
+    <div
+      className="relative group h-full flex items-center"
+      onMouseLeave={() => setSuppressed(false)}
+    >
+      <Link href={href} className={linkCls} onClick={suppress}>
+        {label}
+        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="ml-1 opacity-50">
+          <path d="m6 9 6 6 6-6" />
+        </svg>
+      </Link>
+      {/* hover dropdown — top-full keeps it glued to the trigger (no gap) */}
+      <div className={`absolute left-0 top-full flex-col bg-white border border-rim rounded-lg py-1.5 min-w-[190px] z-30 shadow-[0_10px_28px_rgba(23,26,31,0.08)] ${
+        suppressed ? 'hidden' : 'hidden group-hover:flex group-focus-within:flex'
+      }`}>
+        {items.map(c => {
+          const childActive = path === c.href || path.startsWith(`${c.href}/`)
+          return (
+            <Link
+              key={c.href}
+              href={c.href}
+              onClick={suppress}
+              className={`px-4 py-2 text-[13px] transition-colors ${
+                childActive
+                  ? 'font-semibold text-foreground'
+                  : 'font-medium text-muted hover:text-foreground hover:bg-raised'
+              }`}
+            >
+              {c.label}
+            </Link>
+          )
+        })}
+      </div>
+    </div>
   )
 }
