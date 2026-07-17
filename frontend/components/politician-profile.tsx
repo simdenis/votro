@@ -110,7 +110,7 @@ export function PoliticianProfile({ stats, history, deviationRows, partyHistory,
             title={`A votat la fel ca partidul la ${parts.withParty} din ${parts.expressed} voturi exprimate. Prezența e o metrică separată (vezi „absență").`}
           >
             <LoyaltyMeter loyaltyPct={loyalty} size={112} />
-            <span className="text-[11px] text-faint tabular-nums -mt-1">
+            <span className="text-[11px] text-faint tabular-nums mt-1.5">
               {parts.withParty}/{parts.expressed} exprimate
             </span>
           </div>
