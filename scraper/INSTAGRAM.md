@@ -108,6 +108,31 @@ both the dynamic URL and the static filename, so nothing serves a stale image.
   shamecard route only renders passed data when the signature checks out, so the
   public route can't be used to mint fake branded absence cards. No secret → the
   interval mode is disabled and `--shame` falls back to the all-time card.
+
+  Guardrails baked into the interval ranking: members with a `context_note`
+  (medical leave, delegation) are **excluded**; every entry carries its
+  denominator (`absent/held voturi`) on the card and in the caption; chambers
+  with < 5 plenary votes in the window are skipped; and sanity warnings print
+  to stderr when #1 is at 100% or a monthly rate diverges ≥ 40pp from the
+  member's all-time rate — eyeball those before publishing.
+- Monthly cadence: on the 1st, `deploy/run_daily.sh` emails last month's card +
+  caption + warnings to `$IG_PREVIEW_EMAIL` for **manual approval** (it never
+  auto-publishes; the email contains the exact publish command):
+
+  ```bash
+  python instagram_poster.py --shame --email-preview            # last month → $IG_PREVIEW_EMAIL
+  python instagram_poster.py --shame --luna 2026-06 --email-preview me@x.ro  # explicit
+  ```
+- **Admin curation page:** `{SITE_URL}/admin?key=$ADMIN_KEY` (worker secret; wrong/no
+  key → 404). Shows recent law candidates ranked by interest score (summarycard preview
+  + editable caption + one-image publish; full carousel still goes through the offline
+  render command it displays), the all-time absence card, and a free-form image/carousel
+  publisher. Publishing calls Instagram directly from the worker
+  (`/api/admin/publish`, needs `IG_USER_ID`/`IG_ACCESS_TOKEN` as worker secrets) with a
+  two-tap confirm. The approval email's "Deschide în admin" button prefills the signed
+  monthly card + caption. **After `--refresh-token`, re-upload the token:**
+  `cd frontend && npx wrangler secret put IG_ACCESS_TOKEN` — the worker keeps its own
+  copy and goes stale otherwise.
 - Reels and Stories use a different flow — not implemented yet.
 - Caption/design starting points: `_law_slides()` / `build_vote_caption()` and
   the `/api/og/*` routes + `components/cards/*`.

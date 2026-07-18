@@ -3,8 +3,8 @@ import { ShameCard, type ShameCardData, type ShameEntry } from '@/components/car
 import { getCardFonts } from '@/lib/og-fonts'
 
 // 1080×1350 (4:5) Instagram shame-corner card — top absentees.
-//   /api/og/shamecard                        → all-time (cumulative) ranking, from the stats views
-//   /api/og/shamecard?d=<json>&label=…&sig=…  → interval ranking, precomputed by the poster
+//   /api/og/shamecard                          → all-time (cumulative) ranking, from the stats views
+//   /api/og/shamecard?d=<b64url>&label=…&sig=…  → interval ranking, precomputed by the poster
 //
 // Interval mode renders ONLY passed data (no DB work → stays under the CPU cap),
 // but the payload is HMAC-signed with CARD_SIGN_SECRET so this public route can't
@@ -53,16 +53,25 @@ export async function GET(req: Request) {
   let data: ShameCardData
 
   if (d && await verifySig(d, sp.get('sig'), process.env.CARD_SIGN_SECRET)) {
-    // interval mode: render the poster's precomputed, signed ranking. Coerce/clamp
-    // every field defensively even though the signature already vouches for it.
-    const raw = JSON.parse(d) as { n: string; p: string; c: string; ch: string; a: number }[]
-    const entries: ShameEntry[] = raw.slice(0, 5).map(e => ({
-      name: String(e.n).slice(0, 48),
-      partyAbbr: String(e.p).slice(0, 8),
-      partyColor: /^#[0-9a-fA-F]{6}$/.test(e.c) ? e.c : '#9e9e9e',
-      chamber: e.ch === 'SENAT' ? 'SENAT' : 'CAMERĂ',
-      absencePct: Math.max(0, Math.min(100, Math.round(Number(e.a) || 0))),
-    }))
+    // interval mode: render the poster's precomputed, signed ranking. `d` is
+    // base64url (NOT percent-encoded JSON): URL normalization decodes %23 → '#'
+    // en route, which turns the rest of the query into a fragment and drops
+    // &sig. The HMAC is over the encoded string. Coerce/clamp every field
+    // defensively even though the signature already vouches for it.
+    const raw = JSON.parse(Buffer.from(d, 'base64url').toString('utf8')) as { n: string; p: string; c: string; ch: string; a: number; x?: number; h?: number }[]
+    const entries: ShameEntry[] = raw.slice(0, 5).map(e => {
+      const held = Number.isFinite(e.h) ? Math.max(0, Math.round(Number(e.h))) : undefined
+      const absent = Number.isFinite(e.x) ? Math.max(0, Math.round(Number(e.x))) : undefined
+      return {
+        name: String(e.n).slice(0, 48),
+        partyAbbr: String(e.p).slice(0, 8),
+        partyColor: /^#[0-9a-fA-F]{6}$/.test(e.c) ? e.c : '#9e9e9e',
+        chamber: e.ch === 'SENAT' ? 'SENAT' : 'CAMERĂ',
+        absencePct: Math.max(0, Math.min(100, Math.round(Number(e.a) || 0))),
+        ...(held != null ? { held } : {}),
+        ...(absent != null ? { absent } : {}),
+      }
+    })
     const label = (sp.get('label') ?? '').slice(0, 40)
     data = {
       dateLabel: label.toLowerCase(),

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { textOnColor } from '@/lib/utils'
+import { InfoHint } from '@/components/info-hint'
 
 type Item = {
   politician_id: string
@@ -44,7 +45,14 @@ export function AbsenceTop({ items }: { items: Item[] }) {
               </span>
               <span className="truncate">{s.first_name} {s.name}</span>
               {s.context_note && (
-                <span className="text-faint flex-shrink-0" title={s.context_note} aria-label="Există o notă de context pentru absențe">ⓘ</span>
+                // stop the row Link so tapping ⓘ opens the note (mobile has no hover)
+                <span
+                  className="flex-shrink-0"
+                  onClick={e => { e.preventDefault(); e.stopPropagation() }}
+                  aria-label="Există o notă de context pentru absențe"
+                >
+                  <InfoHint title="Context absențe" tip={s.context_note} />
+                </span>
               )}
             </span>
             {/* the % alone is attackable — always show the denominator */}

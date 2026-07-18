@@ -27,6 +27,8 @@ Usage:
     python instagram_poster.py --vote <vote_id>         # build + publish a vote post
     python instagram_poster.py --law <law_id>           # standard law carousel
     python instagram_poster.py --shame                  # shame-corner card (top absentees)
+    python instagram_poster.py --shame --email-preview  # email last month's card for approval
+                                                        # (to $IG_PREVIEW_EMAIL; never publishes)
     python instagram_poster.py --carousel <url> <url> … --caption "..."  # any carousel
     python instagram_poster.py --vote <vote_id> --dry-run   # print, do not publish
     python instagram_poster.py --image-url <url> --caption "..."   # post anything
@@ -34,8 +36,10 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import base64 as _b64
 import datetime as _dt
 import hashlib
+import html as _html
 import hmac as _hmac
 import json
 import os
@@ -446,20 +450,37 @@ def _sb_rows(cfg: Config, table: str, params: list[tuple[str, str]]) -> list[dic
     return r.json()
 
 
-def _interval_absences(cfg: Config, dfrom: str, dto: str, top: int = 5) -> list[dict]:
+# Below this many plenary votes in the window a per-chamber ranking is noise
+# (a recess month of 3 votes makes "100% absent" meaningless) — skip the chamber.
+_MIN_HELD = 5
+
+
+def _interval_absences(cfg: Config, dfrom: str, dto: str, top: int = 5) -> tuple[list[dict], list[str]]:
     """Top absentees within [dfrom,dto]. Absence = (votes the chamber held in the
     window − the member's participations) / votes held. Active, non-Government
     members who were seated for the whole window (mandate_start ≤ dfrom); members
-    who joined mid-window are dropped (incomplete denominator would fake absence)."""
+    who joined mid-window are dropped (incomplete denominator would fake absence).
+    Members carrying a context_note (medical leave, official delegation, …) are
+    excluded — the static card can't show the ⓘ caveat the site does, and posting
+    "100% absent" against someone on documented leave is the defamation liability
+    the whole context_note flow exists to prevent.
+
+    Returns (ranking, warnings) — warnings are sanity flags for a human to eyeball
+    before publishing (a 100% top entry or a monthly rate that wildly diverges from
+    the member's all-time rate is usually a scraper gap, not a real absentee)."""
     cfg.require_supabase()
     mstart = {row["id"]: (row.get("mandate_start") or "2000-01-01")
               for row in _sb_get(cfg, "politicians", {"active": "is.true", "select": "id,mandate_start", "limit": "1000"})}
     ranked: list[dict] = []
+    warnings: list[str] = []
     for view, chamber_key, label in (("senator_stats", "senate", "SENAT"), ("deputy_stats", "deputies", "CAMERĂ")):
         held = len(_sb_rows(cfg, "votes", [
             ("select", "id"), ("vote_date", f"gte.{dfrom}"), ("vote_date", f"lte.{dto}"),
             ("chamber", f"eq.{chamber_key}"), ("limit", "5000")]))
         if held == 0:
+            continue
+        if held < _MIN_HELD:
+            warnings.append(f"{label}: doar {held} voturi în plen în perioadă — camera exclusă (prea puține pentru un clasament)")
             continue
         present: dict[str, int] = {}
         PAGE = 1000
@@ -472,23 +493,41 @@ def _interval_absences(cfg: Config, dfrom: str, dto: str, top: int = 5) -> list[
                 present[row["politician_id"]] = present.get(row["politician_id"], 0) + 1
             if len(batch) < PAGE:
                 break
+        excluded = 0
         for m in _sb_get(cfg, view, {
-            "select": "politician_id,name,first_name,party_abbr,party_color",
+            "select": "politician_id,name,first_name,party_abbr,party_color,presence_pct,context_note",
             "active": "eq.true", "gov_role": "is.null", "limit": "1000",
         }):
             pid = m["politician_id"]
             if mstart.get(pid, "2000-01-01") > dfrom:
                 continue
+            if m.get("context_note"):
+                excluded += 1
+                continue
             absent = max(0, held - present.get(pid, 0))
             ranked.append({
                 "pct": round(absent / held * 100),
+                "absent": absent,
+                "held": held,
+                # all-time absence, for the divergence sanity check
+                "alltime_pct": round(100 - (m["presence_pct"] or 100)),
                 "name": f"{m['first_name']} {m['name']}",
                 "party": m["party_abbr"] or "IND",
                 "color": m["party_color"] or "#9e9e9e",
                 "chamber": label,
             })
-    ranked.sort(key=lambda e: e["pct"], reverse=True)
-    return ranked[:top]
+        if excluded:
+            warnings.append(f"{label}: {excluded} membri excluși (au notă de context — concediu/delegație)")
+    # exact fraction, not the rounded pct — ties like 126/142 vs 127/142 must order right
+    ranked.sort(key=lambda e: e["absent"] / e["held"], reverse=True)
+    ranked = ranked[:top]
+    # sanity gates on the most sensitive number we publish
+    if ranked and ranked[0]["pct"] == 100:
+        warnings.append(f"#1 e la 100% ({ranked[0]['name']}) — verifică: e mai des o lipsă de scraper decât o absență reală")
+    for e in ranked:
+        if abs(e["pct"] - e["alltime_pct"]) >= 40:
+            warnings.append(f"{e['name']}: {e['pct']}% în perioadă vs {e['alltime_pct']}% istoric — divergență mare, verifică")
+    return ranked, warnings
 
 
 def _sign_card(d: str) -> str:
@@ -501,6 +540,96 @@ def _sign_card(d: str) -> str:
     return _hmac.new(secret.encode(), d.encode(), hashlib.sha256).hexdigest()[:32]
 
 
+def _shame_interval(cfg: Config, dfrom: str, dto: str) -> tuple[str, str, list[str]]:
+    """Build the interval shame post: (signed image URL, caption, sanity warnings).
+    Shared by --shame (publish/dry-run) and --email-preview (approval mail)."""
+    top, warnings = _interval_absences(cfg, dfrom, dto)
+    if not top:
+        sys.exit(f"no rankable plenary votes in {dfrom}..{dto}"
+                 + ("\n" + "\n".join("  ⚠ " + w for w in warnings) if warnings else ""))
+    label = _month_label(dfrom, dto)
+    d = json.dumps(
+        [{"n": e["name"], "p": e["party"], "c": e["color"], "ch": e["chamber"],
+          "a": e["pct"], "x": e["absent"], "h": e["held"]} for e in top],
+        ensure_ascii=False, separators=(",", ":"))
+    # base64url, not percent-encoded JSON: URL normalization between Cloudflare
+    # and the route decodes %23 → '#', turning the tail of the query into a
+    # fragment and silently dropping &sig. b64url survives every decode layer.
+    payload = _b64.urlsafe_b64encode(d.encode()).decode().rstrip("=")
+    image_url = f"{cfg.site_url}/api/og/shamecard?d={payload}&label={_quote(label)}&sig={_sign_card(payload)}"
+    lines = [f"🔴 Absențe — {label}: cei mai absenți parlamentari", "",
+             f"Absențe la voturile din plen în {label}:", ""]
+    lines += [f"{i+1}. {e['name']} ({e['party']}, {e['chamber']}) — {e['pct']}% absențe ({e['absent']}/{e['held']} voturi)"
+              for i, e in enumerate(top)]
+    lines += ["", "Doar parlamentarii activi toată perioada, fără cei cu notă de context (concediu/delegație). "
+              "Membrii Guvernului nu sunt incluși.",
+              "", f"Toată lista: {cfg.site_url}", "",
+              "#parlament #absenteism #laButoane #transparență #românia"]
+    return image_url, "\n".join(lines), warnings
+
+
+def _admin_link_html(cfg: Config, image_url: str, caption: str) -> str:
+    """One-tap 'publish from the browser' button for the approval email — links
+    to /admin with the image + caption prefilled (b64url, same lesson as the
+    card payload: raw URLs/text in query params get mangled). Needs ADMIN_KEY
+    in the env; without it the email keeps only the CLI command."""
+    admin_key = os.environ.get("ADMIN_KEY", "")
+    if not admin_key:
+        return ""
+    b64 = lambda s: _b64.urlsafe_b64encode(s.encode()).decode().rstrip("=")
+    href = f"{cfg.site_url}/admin?key={admin_key}&img={b64(image_url)}&cap={b64(caption)}"
+    return (f'<p style="margin:0 0 12px;"><a href="{_html.escape(href, quote=True)}" '
+            f'style="display:inline-block;background:#171A1F;color:#FFFFFF;text-decoration:none;'
+            f'border-radius:8px;padding:10px 18px;font-weight:600;">Deschide în admin → publică</a></p>'
+            f'<p style="margin:0 0 12px;color:#6E7480;font-size:13px;">sau din terminal:</p>')
+
+
+def email_shame_preview(cfg: Config, to_addr: str, dfrom: str, dto: str) -> None:
+    """Approval email for the monthly absence card: image + caption + sanity
+    warnings, plus the exact command to publish. NEVER publishes anything —
+    a human reads the mail, eyeballs the warnings, and runs the command."""
+    cfg.require_supabase()
+    image_url, caption, warnings = _shame_interval(cfg, dfrom, dto)
+    key = os.environ.get("RESEND_API_KEY")
+    if not key:
+        sys.exit("RESEND_API_KEY must be set to send the preview email")
+    sender = os.environ.get("NEWSLETTER_FROM", "LaButoane <newsletter@resend.dev>")
+    label = _month_label(dfrom, dto)
+    # exact calendar month → the short --luna form; anything else → explicit window
+    publish_cmd = (f"python scraper/instagram_poster.py --shame --luna {dfrom[:7]}"
+                   if "–" not in label else
+                   f"python scraper/instagram_poster.py --shame --from {dfrom} --to {dto}")
+    warn_html = "".join(
+        f'<li style="margin:4px 0;">⚠ {_html.escape(w)}</li>' for w in warnings)
+    warn_block = (
+        f'<div style="background:#FEF3E2;border:1px solid #E3A23C;border-radius:8px;'
+        f'padding:12px 16px;margin:0 0 20px;">'
+        f'<strong>Verifică înainte de publicare:</strong><ul style="margin:8px 0 0;padding-left:18px;">{warn_html}</ul></div>'
+        if warnings else
+        '<div style="color:#2EA871;margin:0 0 20px;">✓ Nicio alertă de sanitate — dar tot aruncă un ochi.</div>')
+    body = f"""<div style="font-family:-apple-system,Segoe UI,sans-serif;max-width:600px;margin:0 auto;color:#171A1F;">
+  <h2 style="margin:24px 0 4px;">Absențe — {_html.escape(label)}: card IG de aprobat</h2>
+  <p style="color:#6E7480;margin:0 0 20px;">Generat automat pe 1 ale lunii. Nu se publică nimic fără tine.</p>
+  {warn_block}
+  <a href="{_html.escape(image_url, quote=True)}"><img src="{_html.escape(image_url, quote=True)}" alt="Card absențe {_html.escape(label)}" width="540" style="width:100%;max-width:540px;border:1px solid #E7E9EC;border-radius:8px;" /></a>
+  <h3 style="margin:24px 0 8px;">Caption</h3>
+  <pre style="background:#F6F7F8;border:1px solid #E7E9EC;border-radius:8px;padding:14px;white-space:pre-wrap;font-size:13px;line-height:1.5;">{_html.escape(caption)}</pre>
+  <h3 style="margin:24px 0 8px;">Publicare (după verificare)</h3>
+  {_admin_link_html(cfg, image_url, caption)}
+  <pre style="background:#171A1F;color:#F6F7F8;border-radius:8px;padding:14px;font-size:13px;">cd /opt/votro &amp;&amp; {_html.escape(publish_cmd)}</pre>
+</div>"""
+    r = requests.post("https://api.resend.com/emails",
+                      headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
+                      json={"from": sender, "to": [to_addr],
+                            "subject": f"[LaButoane] Aprobare card absențe — {label}"
+                                       + (f" ({len(warnings)} alerte)" if warnings else ""),
+                            "html": body},
+                      timeout=30)
+    if not r.ok:
+        sys.exit(f"preview email failed ({r.status_code}): {r.text[:300]}")
+    print(f"Preview email sent to {to_addr}. id={r.json().get('id')}")
+
+
 def post_shame(cfg: Config, dry_run: bool = False,
                dfrom: str | None = None, dto: str | None = None) -> str | None:
     """Shame-corner post: top absentees. All-time by default; with a [dfrom,dto]
@@ -508,22 +637,9 @@ def post_shame(cfg: Config, dry_run: bool = False,
     from a signed payload so the card stays light and can't be spoofed."""
     cfg.require_supabase()
     if dfrom and dto:
-        top = _interval_absences(cfg, dfrom, dto)
-        if not top:
-            sys.exit(f"no plenary votes found in {dfrom}..{dto}")
-        label = _month_label(dfrom, dto)
-        d = json.dumps(
-            [{"n": e["name"], "p": e["party"], "c": e["color"], "ch": e["chamber"], "a": e["pct"]} for e in top],
-            ensure_ascii=False, separators=(",", ":"))
-        image_url = f"{cfg.site_url}/api/og/shamecard?d={_quote(d)}&label={_quote(label)}&sig={_sign_card(d)}"
-        lines = [f"🔴 Absențe — {label}: cei mai absenți parlamentari", "",
-                 f"Absențe la voturile din plen în {label}:", ""]
-        lines += [f"{i+1}. {e['name']} ({e['party']}, {e['chamber']}) — {e['pct']}% absențe"
-                  for i, e in enumerate(top)]
-        lines += ["", "Doar parlamentarii activi toată perioada. Membrii Guvernului nu sunt incluși.",
-                  "", f"Toată lista: {cfg.site_url}", "",
-                  "#parlament #absenteism #laButoane #transparență #românia"]
-        caption = "\n".join(lines)
+        image_url, caption, warnings = _shame_interval(cfg, dfrom, dto)
+        for w in warnings:
+            print(f"⚠ {w}", file=sys.stderr)
     else:
         entries = []
         for view, chamber in (("senator_stats", "Senat"), ("deputy_stats", "Cameră")):
@@ -597,6 +713,10 @@ def main() -> None:
     ap.add_argument("--from", dest="dfrom", metavar="YYYY-MM-DD", help="--shame: window start (needs --to)")
     ap.add_argument("--to", dest="dto", metavar="YYYY-MM-DD", help="--shame: window end")
     ap.add_argument("--luna", metavar="YYYY-MM", help="--shame shortcut: absences for one calendar month")
+    ap.add_argument("--email-preview", nargs="?", const="", metavar="ADDR",
+                    help="--shame: DON'T publish — email the interval card + caption + sanity "
+                         "warnings to ADDR (or $IG_PREVIEW_EMAIL) for manual approval. "
+                         "Without a window, defaults to last calendar month (cron on the 1st).")
     ap.add_argument("--carousel", nargs="+", metavar="URL", help="publish a carousel from 2–10 image URLs (with --caption)")
     ap.add_argument("--image-url", help="post an arbitrary image URL (with --caption)")
     ap.add_argument("--caption", help="caption for --image-url / --carousel")
@@ -638,6 +758,16 @@ def main() -> None:
             first = _dt.date(y, m, 1)
             last = (first.replace(day=28) + _dt.timedelta(days=4)).replace(day=1) - _dt.timedelta(days=1)
             dfrom, dto = first.isoformat(), last.isoformat()
+        if args.email_preview is not None:
+            to_addr = args.email_preview or os.environ.get("IG_PREVIEW_EMAIL", "")
+            if not to_addr:
+                sys.exit("--email-preview needs an address (argument or IG_PREVIEW_EMAIL in .env)")
+            if not (dfrom and dto):
+                # cron on the 1st: previous calendar month
+                last_prev = _dt.date.today().replace(day=1) - _dt.timedelta(days=1)
+                dfrom, dto = last_prev.replace(day=1).isoformat(), last_prev.isoformat()
+            email_shame_preview(cfg, to_addr, dfrom, dto)
+            return
         post_shame(cfg, dry_run=args.dry_run, dfrom=dfrom, dto=dto)
         return
     if args.carousel:
