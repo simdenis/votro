@@ -7,6 +7,9 @@ export interface ShameEntry {
   partyColor: string
   chamber: 'SENAT' | 'CAMERĂ'
   absencePct: number
+  /** Interval mode: absent / held, so a bare "100%" can't hide a 0-of-few. */
+  absent?: number
+  held?: number
 }
 
 export interface ShameCardData {
@@ -62,7 +65,9 @@ export function ShameCard({ data }: { data: ShameCardData }) {
               <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
                 <div style={{ display: 'flex', fontSize: 32, fontWeight: 700 }}>{e.name}</div>
                 <div style={{ display: 'flex', fontSize: 18, opacity: 0.5, marginTop: 3 }}>
-                  {`${e.partyAbbr} · ${e.chamber}`}
+                  {e.held != null && e.absent != null
+                    ? `${e.partyAbbr} · ${e.chamber} · ${e.absent}/${e.held} voturi`
+                    : `${e.partyAbbr} · ${e.chamber}`}
                 </div>
               </div>
               <div style={{ display: 'flex', alignItems: 'baseline' }}>

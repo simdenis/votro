@@ -122,6 +122,15 @@ if [ "$(date -u +%u)" = "6" ]; then
   "$PY" scraper/newsletter.py --send >>"$LOG" 2>&1 || log "WARN: newsletter send failed"
 fi
 
+# 1st of the month: email last month's IG absence-card preview (image + caption
+# + sanity warnings) for manual approval — it NEVER publishes to Instagram.
+# Needs IG_PREVIEW_EMAIL, RESEND_API_KEY, CARD_SIGN_SECRET in scraper/.env.
+# Like the newsletter, email trouble must not flip the heartbeat.
+if [ "$(date -u +%d)" = "01" ]; then
+  log "=== Monthly IG absence preview (approval email) ==="
+  "$PY" scraper/instagram_poster.py --shame --email-preview >>"$LOG" 2>&1 || log "WARN: IG preview email failed"
+fi
+
 # Heartbeat — lets the site footer tell "parliament idle" from "pipeline broken".
 "$PY" scraper/heartbeat.py "$rc" >>"$LOG" 2>&1 || log "WARN: heartbeat write failed"
 
