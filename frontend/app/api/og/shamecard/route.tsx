@@ -2,9 +2,14 @@ import { ImageResponse } from 'next/og'
 import { ShameCard, type ShameCardData, type ShameEntry } from '@/components/cards/shame-card'
 import { getCardFonts } from '@/lib/og-fonts'
 
-// 1080×1350 (4:5) Instagram shame-corner card — top absentees, both chambers.
-// Public URL the Instagram poster fetches: /api/og/shamecard
-
+// 1080×1350 (4:5) Instagram shame-corner card — top absentees.
+//   /api/og/shamecard                        → all-time (cumulative) ranking, from the stats views
+//   /api/og/shamecard?d=<json>&label=…&sig=…  → interval ranking, precomputed by the poster
+//
+// Interval mode renders ONLY passed data (no DB work → stays under the CPU cap),
+// but the payload is HMAC-signed with CARD_SIGN_SECRET so this public route can't
+// be used to mint arbitrary "X% absent" cards under the brand. No secret set →
+// interval mode is disabled and it falls back to the all-time card.
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -12,6 +17,19 @@ const SB = { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
 
 const MONTHS = ['ianuarie', 'februarie', 'martie', 'aprilie', 'mai', 'iunie',
                 'iulie', 'august', 'septembrie', 'octombrie', 'noiembrie', 'decembrie']
+
+async function verifySig(d: string, sig: string | null, secret: string | undefined): Promise<boolean> {
+  if (!secret || !sig) return false
+  const key = await crypto.subtle.importKey(
+    'raw', new TextEncoder().encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
+  const mac = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(d))
+  const hex = Array.from(new Uint8Array(mac)).map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 32)
+  // length-equal compare (sig is 32 hex chars); avoid early-exit timing leak
+  if (sig.length !== hex.length) return false
+  let diff = 0
+  for (let i = 0; i < hex.length; i++) diff |= hex.charCodeAt(i) ^ sig.charCodeAt(i)
+  return diff === 0
+}
 
 async function fetchWorst(view: string, chamber: ShameEntry['chamber']): Promise<ShameEntry[]> {
   const r = await fetch(
@@ -29,15 +47,38 @@ async function fetchWorst(view: string, chamber: ShameEntry['chamber']): Promise
   }))
 }
 
-export async function GET() {
-  const [senators, deputies] = await Promise.all([
-    fetchWorst('senator_stats', 'SENAT'),
-    fetchWorst('deputy_stats', 'CAMERĂ'),
-  ])
-  const now = new Date()
-  const data: ShameCardData = {
-    dateLabel: `${MONTHS[now.getMonth()]} ${now.getFullYear()}`,
-    entries: [...senators, ...deputies].sort((a, b) => b.absencePct - a.absencePct).slice(0, 5),
+export async function GET(req: Request) {
+  const sp = new URL(req.url).searchParams
+  const d = sp.get('d')
+  let data: ShameCardData
+
+  if (d && await verifySig(d, sp.get('sig'), process.env.CARD_SIGN_SECRET)) {
+    // interval mode: render the poster's precomputed, signed ranking. Coerce/clamp
+    // every field defensively even though the signature already vouches for it.
+    const raw = JSON.parse(d) as { n: string; p: string; c: string; ch: string; a: number }[]
+    const entries: ShameEntry[] = raw.slice(0, 5).map(e => ({
+      name: String(e.n).slice(0, 48),
+      partyAbbr: String(e.p).slice(0, 8),
+      partyColor: /^#[0-9a-fA-F]{6}$/.test(e.c) ? e.c : '#9e9e9e',
+      chamber: e.ch === 'SENAT' ? 'SENAT' : 'CAMERĂ',
+      absencePct: Math.max(0, Math.min(100, Math.round(Number(e.a) || 0))),
+    }))
+    const label = (sp.get('label') ?? '').slice(0, 40)
+    data = {
+      dateLabel: label.toLowerCase(),
+      subtitle: `absențe la voturile din plen · ${label} · Senat + Cameră`,
+      entries,
+    }
+  } else {
+    const [senators, deputies] = await Promise.all([
+      fetchWorst('senator_stats', 'SENAT'),
+      fetchWorst('deputy_stats', 'CAMERĂ'),
+    ])
+    const now = new Date()
+    data = {
+      dateLabel: `${MONTHS[now.getMonth()]} ${now.getFullYear()}`,
+      entries: [...senators, ...deputies].sort((a, b) => b.absencePct - a.absencePct).slice(0, 5),
+    }
   }
 
   const fonts = await getCardFonts()

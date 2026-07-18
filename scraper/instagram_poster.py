@@ -34,14 +34,20 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import datetime as _dt
 import hashlib
+import hmac as _hmac
 import json
 import os
 import sys
 import time
+from urllib.parse import quote as _quote
 
 import requests
 from dotenv import load_dotenv
+
+RO_MONTHS = ["ianuarie", "februarie", "martie", "aprilie", "mai", "iunie",
+             "iulie", "august", "septembrie", "octombrie", "noiembrie", "decembrie"]
 
 GRAPH = "https://graph.instagram.com"
 _TIMEOUT = 30
@@ -416,30 +422,129 @@ def post_law(cfg: Config, law_id: str, dry_run: bool = False, hook: str | None =
     return media_id
 
 
-def post_shame(cfg: Config, dry_run: bool = False) -> str | None:
-    """Shame-corner post: top absentees across both chambers."""
-    cfg.require_supabase()
-    entries = []
-    for view, chamber in (("senator_stats", "Senat"), ("deputy_stats", "Cameră")):
-        for s in _sb_get(cfg, view, {
-            "select": "name,first_name,party_abbr,presence_pct",
-            "active": "eq.true", "gov_role": "is.null",
-            "order": "presence_pct.asc", "limit": "5",
-        }):
-            entries.append((round(100 - (s["presence_pct"] or 100)),
-                            f"{s['first_name']} {s['name']}", s["party_abbr"], chamber))
-    entries.sort(reverse=True)
-    top = entries[:5]
+def _month_label(dfrom: str, dto: str) -> str:
+    """'iunie 2026' when [dfrom,dto] is exactly one calendar month, else 'from – to'."""
+    try:
+        a, b = _dt.date.fromisoformat(dfrom), _dt.date.fromisoformat(dto)
+    except ValueError:
+        return f"{dfrom} – {dto}"
+    last = (a.replace(day=28) + _dt.timedelta(days=4)).replace(day=1) - _dt.timedelta(days=1)
+    if a.day == 1 and (a.year, a.month) == (b.year, b.month) and b == last:
+        return f"{RO_MONTHS[a.month - 1]} {a.year}"
+    return f"{dfrom} – {dto}"
 
-    lines = ["🔴 Absențe — top 5: cei mai absenți parlamentari", "",
-             "Absențe la voturile din plen, de la începutul legislaturii (20 decembrie 2024):", ""]
-    lines += [f"{i+1}. {name} ({party}, {chamber}) — {pct}% absențe"
-              for i, (pct, name, party, chamber) in enumerate(top)]
-    lines += ["", "Membrii Guvernului nu sunt incluși — ei nu votează în plen.",
-              "", f"Toată lista: {cfg.site_url}", "",
-              "#parlament #absenteism #laButoane #transparență #românia"]
-    caption = "\n".join(lines)
-    image_url = f"{cfg.site_url}/api/og/shamecard"
+
+def _sb_rows(cfg: Config, table: str, params: list[tuple[str, str]]) -> list[dict]:
+    """GET with list-of-tuples params so a column can be filtered twice (vote_date
+    gte AND lte)."""
+    r = requests.get(
+        f"{cfg.supabase_url}/rest/v1/{table}", params=params,
+        headers={"apikey": cfg.supabase_key, "Authorization": f"Bearer {cfg.supabase_key}"},
+        timeout=_TIMEOUT,
+    )
+    r.raise_for_status()
+    return r.json()
+
+
+def _interval_absences(cfg: Config, dfrom: str, dto: str, top: int = 5) -> list[dict]:
+    """Top absentees within [dfrom,dto]. Absence = (votes the chamber held in the
+    window − the member's participations) / votes held. Active, non-Government
+    members who were seated for the whole window (mandate_start ≤ dfrom); members
+    who joined mid-window are dropped (incomplete denominator would fake absence)."""
+    cfg.require_supabase()
+    mstart = {row["id"]: (row.get("mandate_start") or "2000-01-01")
+              for row in _sb_get(cfg, "politicians", {"active": "is.true", "select": "id,mandate_start", "limit": "1000"})}
+    ranked: list[dict] = []
+    for view, chamber_key, label in (("senator_stats", "senate", "SENAT"), ("deputy_stats", "deputies", "CAMERĂ")):
+        held = len(_sb_rows(cfg, "votes", [
+            ("select", "id"), ("vote_date", f"gte.{dfrom}"), ("vote_date", f"lte.{dto}"),
+            ("chamber", f"eq.{chamber_key}"), ("limit", "5000")]))
+        if held == 0:
+            continue
+        present: dict[str, int] = {}
+        PAGE = 1000
+        for off in range(0, 200000, PAGE):
+            batch = _sb_rows(cfg, "politician_votes", [
+                ("select", "politician_id,votes!inner(vote_date,chamber)"),
+                ("votes.vote_date", f"gte.{dfrom}"), ("votes.vote_date", f"lte.{dto}"),
+                ("votes.chamber", f"eq.{chamber_key}"), ("limit", str(PAGE)), ("offset", str(off))])
+            for row in batch:
+                present[row["politician_id"]] = present.get(row["politician_id"], 0) + 1
+            if len(batch) < PAGE:
+                break
+        for m in _sb_get(cfg, view, {
+            "select": "politician_id,name,first_name,party_abbr,party_color",
+            "active": "eq.true", "gov_role": "is.null", "limit": "1000",
+        }):
+            pid = m["politician_id"]
+            if mstart.get(pid, "2000-01-01") > dfrom:
+                continue
+            absent = max(0, held - present.get(pid, 0))
+            ranked.append({
+                "pct": round(absent / held * 100),
+                "name": f"{m['first_name']} {m['name']}",
+                "party": m["party_abbr"] or "IND",
+                "color": m["party_color"] or "#9e9e9e",
+                "chamber": label,
+            })
+    ranked.sort(key=lambda e: e["pct"], reverse=True)
+    return ranked[:top]
+
+
+def _sign_card(d: str) -> str:
+    """HMAC signature the shamecard route verifies before rendering passed data —
+    keeps the public route from minting arbitrary branded absence cards."""
+    secret = os.environ.get("CARD_SIGN_SECRET", "")
+    if not secret:
+        sys.exit("ERROR: CARD_SIGN_SECRET must be set (same value in the frontend env) "
+                 "to post interval absence cards.")
+    return _hmac.new(secret.encode(), d.encode(), hashlib.sha256).hexdigest()[:32]
+
+
+def post_shame(cfg: Config, dry_run: bool = False,
+               dfrom: str | None = None, dto: str | None = None) -> str | None:
+    """Shame-corner post: top absentees. All-time by default; with a [dfrom,dto]
+    window it's "absențe pe perioadă" (e.g. a month), computed live and rendered
+    from a signed payload so the card stays light and can't be spoofed."""
+    cfg.require_supabase()
+    if dfrom and dto:
+        top = _interval_absences(cfg, dfrom, dto)
+        if not top:
+            sys.exit(f"no plenary votes found in {dfrom}..{dto}")
+        label = _month_label(dfrom, dto)
+        d = json.dumps(
+            [{"n": e["name"], "p": e["party"], "c": e["color"], "ch": e["chamber"], "a": e["pct"]} for e in top],
+            ensure_ascii=False, separators=(",", ":"))
+        image_url = f"{cfg.site_url}/api/og/shamecard?d={_quote(d)}&label={_quote(label)}&sig={_sign_card(d)}"
+        lines = [f"🔴 Absențe — {label}: cei mai absenți parlamentari", "",
+                 f"Absențe la voturile din plen în {label}:", ""]
+        lines += [f"{i+1}. {e['name']} ({e['party']}, {e['chamber']}) — {e['pct']}% absențe"
+                  for i, e in enumerate(top)]
+        lines += ["", "Doar parlamentarii activi toată perioada. Membrii Guvernului nu sunt incluși.",
+                  "", f"Toată lista: {cfg.site_url}", "",
+                  "#parlament #absenteism #laButoane #transparență #românia"]
+        caption = "\n".join(lines)
+    else:
+        entries = []
+        for view, chamber in (("senator_stats", "Senat"), ("deputy_stats", "Cameră")):
+            for s in _sb_get(cfg, view, {
+                "select": "name,first_name,party_abbr,presence_pct",
+                "active": "eq.true", "gov_role": "is.null",
+                "order": "presence_pct.asc", "limit": "5",
+            }):
+                entries.append((round(100 - (s["presence_pct"] or 100)),
+                                f"{s['first_name']} {s['name']}", s["party_abbr"], chamber))
+        entries.sort(reverse=True)
+        top = entries[:5]
+        lines = ["🔴 Absențe — top 5: cei mai absenți parlamentari", "",
+                 "Absențe la voturile din plen, de la începutul legislaturii (20 decembrie 2024):", ""]
+        lines += [f"{i+1}. {name} ({party}, {chamber}) — {pct}% absențe"
+                  for i, (pct, name, party, chamber) in enumerate(top)]
+        lines += ["", "Membrii Guvernului nu sunt incluși — ei nu votează în plen.",
+                  "", f"Toată lista: {cfg.site_url}", "",
+                  "#parlament #absenteism #laButoane #transparență #românia"]
+        caption = "\n".join(lines)
+        image_url = f"{cfg.site_url}/api/og/shamecard"
 
     if dry_run:
         print("── DRY RUN ──")
@@ -489,6 +594,9 @@ def main() -> None:
                     help="print the law carousel's slide manifest as JSON (used by the offline "
                          "renderer); does not contact Instagram")
     ap.add_argument("--shame", action="store_true", help="publish the shame-corner card (top absentees)")
+    ap.add_argument("--from", dest="dfrom", metavar="YYYY-MM-DD", help="--shame: window start (needs --to)")
+    ap.add_argument("--to", dest="dto", metavar="YYYY-MM-DD", help="--shame: window end")
+    ap.add_argument("--luna", metavar="YYYY-MM", help="--shame shortcut: absences for one calendar month")
     ap.add_argument("--carousel", nargs="+", metavar="URL", help="publish a carousel from 2–10 image URLs (with --caption)")
     ap.add_argument("--image-url", help="post an arbitrary image URL (with --caption)")
     ap.add_argument("--caption", help="caption for --image-url / --carousel")
@@ -524,7 +632,13 @@ def main() -> None:
         post_law(cfg, args.law, dry_run=args.dry_run, hook=args.hook, static=args.static)
         return
     if args.shame:
-        post_shame(cfg, dry_run=args.dry_run)
+        dfrom, dto = args.dfrom, args.dto
+        if args.luna:
+            y, m = map(int, args.luna.split("-"))
+            first = _dt.date(y, m, 1)
+            last = (first.replace(day=28) + _dt.timedelta(days=4)).replace(day=1) - _dt.timedelta(days=1)
+            dfrom, dto = first.isoformat(), last.isoformat()
+        post_shame(cfg, dry_run=args.dry_run, dfrom=dfrom, dto=dto)
         return
     if args.carousel:
         if args.dry_run:
