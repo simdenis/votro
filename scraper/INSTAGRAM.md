@@ -92,7 +92,22 @@ both the dynamic URL and the static filename, so nothing serves a stale image.
 - The image URL must be publicly reachable (prod, not localhost) — `--static`
   satisfies this after a deploy; dynamic light cards satisfy it directly.
 - The absence post is `--shame` (top-5 absentees, `shamecard`) — it renders on
-  Free and posts dynamically today.
+  Free and posts dynamically today. All-time by default; for a window:
+
+  ```bash
+  python instagram_poster.py --shame --luna 2026-06 --dry-run      # a calendar month
+  python instagram_poster.py --shame --from 2026-02-01 --to 2026-06-30   # any range
+  ```
+
+  Absence in a window = (plenary votes the chamber held in the window − the
+  member's participations) ÷ votes held; only members seated the whole window,
+  Government excluded. The ranking is computed once in Python (so the card and
+  the caption always show the same numbers) and the card is rendered from a
+  **signed** payload. Set `CARD_SIGN_SECRET` to the same value in **both**
+  `scraper/.env` and the frontend (`wrangler secret put CARD_SIGN_SECRET`) — the
+  shamecard route only renders passed data when the signature checks out, so the
+  public route can't be used to mint fake branded absence cards. No secret → the
+  interval mode is disabled and `--shame` falls back to the all-time card.
 - Reels and Stories use a different flow — not implemented yet.
 - Caption/design starting points: `_law_slides()` / `build_vote_caption()` and
   the `/api/og/*` routes + `components/cards/*`.

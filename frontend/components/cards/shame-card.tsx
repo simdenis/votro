@@ -11,8 +11,12 @@ export interface ShameEntry {
 
 export interface ShameCardData {
   dateLabel: string // "iulie 2026"
+  /** Line under the title. Defaults to the all-time (cumulative) wording. */
+  subtitle?: string
   entries: ShameEntry[]
 }
+
+const DEFAULT_SUBTITLE = 'absențe la voturile din plen, de la începutul legislaturii (dec. 2024) · Senat + Cameră'
 
 const C = {
   bg: '#FFFFFF',
@@ -38,7 +42,7 @@ export function ShameCard({ data }: { data: ShameCardData }) {
       <div style={{ display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'center', padding: '20px 64px' }}>
         <div style={{ fontFamily: SERIF, fontSize: 64, lineHeight: 1.05, color: C.against }}>Absențe — top 5</div>
         <div style={{ display: 'flex', fontSize: 21, opacity: 0.55, marginTop: 10, marginBottom: 40 }}>
-          absențe la voturile din plen, de la începutul legislaturii (dec. 2024) · Senat + Cameră
+          {data.subtitle ?? DEFAULT_SUBTITLE}
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column' }}>
