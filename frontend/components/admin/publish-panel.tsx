@@ -4,7 +4,7 @@
 // instead of window.confirm, and a preview <img> with a manual reload since the
 // og routes 503 intermittently on the Free CPU cap.
 
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 type PubState =
   | { phase: 'idle' }
@@ -81,44 +81,71 @@ function PublishButton({ state, setState, onConfirm }: {
   )
 }
 
-function CardPreview({ src, alt }: { src: string; alt: string }) {
+const MAX_AUTO_RETRIES = 4
+
+function CardPreview({ src, alt, stagger = 0 }: { src: string; alt: string; stagger?: number }) {
+  // The og render dies on the CPU cap ~1 in 3 tries until the edge cache has a
+  // copy — so stagger the initial loads (9 at once guarantees casualties) and
+  // auto-retry by remounting the <img> (same URL: error responses aren't
+  // browser-cached, and a retry can hit the cache another attempt just filled).
+  const [attempt, setAttempt] = useState(0)
+  const [phase, setPhase] = useState<'waiting' | 'loading' | 'ok' | 'failed'>(stagger ? 'waiting' : 'loading')
   const [bust, setBust] = useState(0)
-  const [failed, setFailed] = useState(false)
+
+  useEffect(() => {
+    if (phase !== 'waiting') return
+    const t = setTimeout(() => setPhase('loading'), stagger)
+    return () => clearTimeout(t)
+  }, [phase, stagger])
+
+  useEffect(() => {
+    if (phase !== 'failed' || attempt >= MAX_AUTO_RETRIES) return
+    const t = setTimeout(() => { setAttempt(a => a + 1); setPhase('loading') }, 1200 + attempt * 800)
+    return () => clearTimeout(t)
+  }, [phase, attempt])
+
   const url = bust ? `${src}${src.includes('?') ? '&' : '?'}r=${bust}` : src
+  const givenUp = phase === 'failed' && attempt >= MAX_AUTO_RETRIES
   return (
     <div className="w-full sm:w-[220px] flex-shrink-0">
-      {failed ? (
-        <div className="aspect-[4/5] flex items-center justify-center bg-surface border border-rim rounded-lg text-[12px] text-faint px-3 text-center">
-          randarea a eșuat (503?)
-        </div>
-      ) : (
+      {phase === 'loading' || phase === 'ok' ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={url} alt={alt} loading="lazy" className="w-full rounded-lg border border-rim"
-             onError={() => setFailed(true)} />
+        <img key={`${attempt}-${bust}`} src={url} alt={alt} loading="lazy"
+             className="w-full rounded-lg border border-rim"
+             onLoad={() => setPhase('ok')}
+             onError={() => setPhase('failed')} />
+      ) : (
+        <div className="aspect-[4/5] flex items-center justify-center bg-surface border border-rim rounded-lg text-[12px] text-faint px-3 text-center">
+          {givenUp ? 'randarea a eșuat de mai multe ori' : 'se randează…'}
+        </div>
       )}
-      <button
-        onClick={() => { setFailed(false); setBust(b => b + 1) }}
-        className="mt-1 text-[11px] text-faint underline underline-offset-2"
-      >
-        reîncarcă previzualizarea
-      </button>
+      {(givenUp || phase === 'ok') && (
+        <button
+          onClick={() => { setAttempt(0); setBust(b => b + 1); setPhase('loading') }}
+          className="mt-1 text-[11px] text-faint underline underline-offset-2"
+        >
+          reîncarcă previzualizarea
+        </button>
+      )}
     </div>
   )
 }
 
 /** One candidate: preview + editable caption + publish (+ optional CLI command). */
-export function PublishCard({ adminKey, image, initialCaption, command }: {
+export function PublishCard({ adminKey, image, initialCaption, command, stagger }: {
   adminKey: string
   image: string
   initialCaption: string
   command?: string
+  /** ms to wait before first preview load — page-level load staggering. */
+  stagger?: number
 }) {
   const { state, setState, publish } = usePublish(adminKey)
   const [caption, setCaption] = useState(initialCaption)
   const [copied, setCopied] = useState(false)
   return (
     <div className="flex flex-col sm:flex-row gap-4">
-      <CardPreview src={image} alt="Previzualizare card" />
+      <CardPreview src={image} alt="Previzualizare card" stagger={stagger} />
       <div className="flex-1 min-w-0 flex flex-col gap-2">
         <textarea
           value={caption}
@@ -159,7 +186,7 @@ export function ManualPublish({ adminKey, initialImages = '', initialCaption = '
     <div className="flex flex-col gap-2">
       {urls.length > 0 && (
         <div ref={previewRef} className="flex gap-3 overflow-x-auto">
-          {urls.map((u, i) => <div key={i} className="w-[180px] flex-shrink-0"><CardPreview src={u} alt={`slide ${i + 1}`} /></div>)}
+          {urls.map((u, i) => <div key={i} className="w-[180px] flex-shrink-0"><CardPreview src={u} alt={`slide ${i + 1}`} stagger={i * 700} /></div>)}
         </div>
       )}
       <textarea

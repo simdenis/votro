@@ -4,6 +4,7 @@ import { mapLawToCard } from '@/lib/votecard'
 import { getCardFonts } from '@/lib/og-fonts'
 import { isUuid } from '@/lib/utils'
 import type { LawStatus } from '@/lib/types'
+import { withEdgeCache } from '@/lib/og-edge-cache'
 
 // 1080×1350 (4:5) "Pe scurt" card — /api/og/summarycard?id=<law_id>
 // The plain-language AI summary as the hero; IG post format.
@@ -50,6 +51,10 @@ async function initiatorLine(lawId: string): Promise<string | null> {
 }
 
 export async function GET(request: Request) {
+  return withEdgeCache(request, () => renderCard(request))
+}
+
+async function renderCard(request: Request): Promise<Response> {
   const idParam = new URL(request.url).searchParams.get('id')
   const id = isUuid(idParam) ? idParam : null
 
