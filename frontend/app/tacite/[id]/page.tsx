@@ -71,6 +71,17 @@ export default async function TacitBillPage({ params }: { params: Promise<{ id: 
         </h1>
       </div>
 
+      {/* AI summary (pending_bills_scorer, migration 037) */}
+      {bill.summary && (
+        <div className="bg-surface border border-rim rounded-xl p-5">
+          <p className="text-[11px] uppercase tracking-widest text-muted font-semibold mb-2">Pe scurt</p>
+          <p className="text-[14px] text-foreground leading-relaxed">{bill.summary}</p>
+          <p className="text-[11px] text-faint mt-3">
+            Rezumat generat automat (AI) din expunerea de motive — nu e text oficial.
+          </p>
+        </div>
+      )}
+
       {/* Deadline card */}
       {bill.tacit_deadline && (
         <div

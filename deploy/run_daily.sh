@@ -106,6 +106,12 @@ log "=== Law initiators (senat.ro fisa) ==="
 log "=== Tacit deadlines ==="
 "$PY" scraper/tacit_scraper.py >>"$LOG" 2>&1 || { rc=1; log "Tacit scrape FAILED"; }
 
+# AI summary + interest score for pending bills (Gemini reads the expunere
+# PDF). Incremental (ai_checked_at IS NULL), skips without key. Ranks the
+# weekly "pe cale să treacă tacit" post by hotness instead of deadline alone.
+log "=== Pending-bill AI scores (Gemini) ==="
+"$PY" scraper/pending_bills_scorer.py >>"$LOG" 2>&1 || { rc=1; log "Pending-bill scorer FAILED"; }
+
 # Data-integrity gate: deterministic invariants over everything produced above
 # (no law promulgated-yet-respins, presence in range, participations ≤ chamber
 # votes, no inverted party-history intervals, no orphan parties, …). A FAIL
