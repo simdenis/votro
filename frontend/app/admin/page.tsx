@@ -165,9 +165,11 @@ async function fetchTacit() {
   const today = new Date().toISOString().slice(0, 10)
   const limit = new Date(Date.now() + 7 * 86400_000).toISOString().slice(0, 10)
   const { data } = await getDB().from('pending_bills')
-    .select('code, title, chamber, tacit_deadline')
+    .select('code, title, chamber, tacit_deadline, interest_score, interest_reason')
     .gte('tacit_deadline', today).lte('tacit_deadline', limit)
-    .order('tacit_deadline', { ascending: true }).limit(10)
+    .order('interest_score', { ascending: false, nullsFirst: false })
+    .order('tacit_deadline', { ascending: true })
+    .limit(10)
   return data ?? []
 }
 
@@ -320,7 +322,8 @@ export default async function AdminPage({ searchParams }: {
   const tacitCaption = tacit.length ? [
     '⏳ Legi pe cale să treacă TACIT — fără niciun vot', '',
     'Dacă termenul constituțional expiră fără vot, proiectul e considerat adoptat automat (art. 75). Termene care expiră în următoarele 7 zile:', '',
-    ...tacit.map((b, i) => `${i + 1}. ${b.code} (${b.chamber === 'senate' ? 'Senat' : 'Cameră'}) — ${roDate(b.tacit_deadline)}`),
+    ...tacit.map((b, i) => `${i + 1}. ${b.code} (${b.chamber === 'senate' ? 'Senat' : 'Cameră'}) — ${roDate(b.tacit_deadline)}`
+      + (b.interest_reason ? ` · ${b.interest_reason}` : '')),
     '', `Lista completă: ${SITE}/tacite`, '', HASHTAGS,
   ].join('\n') : ''
 
@@ -400,7 +403,7 @@ export default async function AdminPage({ searchParams }: {
       )}
 
       <Section title="Pe cale să treacă tacit (≤ 7 zile)" cadence="săptămânal"
-               hint="Termene constituționale care expiră în 7 zile — sortate după urgență (scorul de interes pentru proiectele fără vot e pe lista de făcut).">
+               hint="Termene constituționale care expiră în 7 zile — cele mai fierbinți primele (scor AI din expunerea de motive), la egalitate cel mai apropiat termen.">
         {tacit.length === 0 ? (
           <p className="text-[13px] text-faint">Niciun termen tacit în următoarele 7 zile.</p>
         ) : (

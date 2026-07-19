@@ -77,6 +77,11 @@ export default async function TacitePage() {
                     <Link href={`/tacite/${lawSlug(b.code)}`} className="text-foreground hover:underline">
                       {b.title ?? b.code}
                     </Link>
+                    {b.summary && (
+                      <span className="block text-[12.5px] text-muted mt-1 leading-snug">
+                        {b.summary.length > 180 ? b.summary.slice(0, 177).trimEnd() + '…' : b.summary}
+                      </span>
+                    )}
                     <span className="flex flex-wrap items-center gap-x-3 font-mono text-[11px] text-muted mt-0.5">
                       <span>{b.code} · Camera Deputaților</span>
                       {b.source_url && (

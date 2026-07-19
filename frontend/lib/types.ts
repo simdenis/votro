@@ -153,6 +153,10 @@ export interface PendingBill {
   source_url: string | null
   pdf_url: string | null
   scraped_at: string
+  /** AI fields (migration 037, pending_bills_scorer.py) */
+  summary?: string | null
+  interest_score?: number | null
+  interest_reason?: string | null
 }
 
 export type SenatorStats = PoliticianStats
