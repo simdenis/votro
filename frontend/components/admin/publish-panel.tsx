@@ -13,14 +13,15 @@ type PubState =
   | { phase: 'done'; mediaId: string; permalink: string | null }
   | { phase: 'error'; message: string }
 
-function usePublish(adminKey: string) {
+function usePublish() {
   const [state, setState] = useState<PubState>({ phase: 'idle' })
   async function publish(images: string[], caption: string, story = false) {
     setState({ phase: 'busy' })
     try {
+      // auth via the httpOnly admin cookie (same-origin) — no key in JS
       const r = await fetch('/api/admin/publish', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Admin-Key': adminKey },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ images, caption, story }),
       })
       const body = await r.json().catch(() => ({}))
@@ -41,10 +42,23 @@ function PublishButton({ state, setState, onConfirm, label = 'Publică' }: {
 }) {
   if (state.phase === 'done') {
     return (
-      <span className="text-[13px] text-adoptat font-medium">
-        ✓ Publicat{state.permalink && (
-          <> — <a href={state.permalink} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">vezi postarea</a></>
+      <span className="flex flex-col gap-0.5 text-[13px]">
+        <span className="text-adoptat font-medium">
+          ✓ Publicat{state.permalink && (
+            <> — <a href={state.permalink} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">vezi postarea</a></>
+          )}
+        </span>
+        {/* IG's API can't delete — deep-link to the post so you can remove it
+            manually in the app (⋯ → Șterge). */}
+        {state.permalink && (
+          <a href={state.permalink} target="_blank" rel="noopener noreferrer"
+             className="text-[11px] text-respins underline underline-offset-2">
+            greșit? șterge-l în aplicația Instagram →
+          </a>
         )}
+        <button onClick={() => setState({ phase: 'idle' })} className="text-[11px] text-faint underline underline-offset-2 self-start">
+          publică din nou
+        </button>
       </span>
     )
   }
@@ -86,15 +100,14 @@ const MAX_AUTO_RETRIES = 4
 
 /** The post/story button pair — independent state machines so publishing one
  *  doesn't hide the other (a good card can be both a feed post and a story). */
-function PublishActions({ adminKey, images, caption, storyImage }: {
-  adminKey: string
+function PublishActions({ images, caption, storyImage }: {
   images: string[]
   caption: string
   /** Single image to push as a story; omit to hide the story button. */
   storyImage?: string
 }) {
-  const post = usePublish(adminKey)
-  const story = usePublish(adminKey)
+  const post = usePublish()
+  const story = usePublish()
   return (
     <>
       <PublishButton state={post.state} setState={post.setState}
@@ -157,8 +170,7 @@ function CardPreview({ src, alt, stagger = 0 }: { src: string; alt: string; stag
 }
 
 /** One candidate: preview + editable caption + publish (+ optional CLI command). */
-export function PublishCard({ adminKey, image, initialCaption, command, stagger }: {
-  adminKey: string
+export function PublishCard({ image, initialCaption, command, stagger }: {
   image: string
   initialCaption: string
   command?: string
@@ -179,7 +191,7 @@ export function PublishCard({ adminKey, image, initialCaption, command, stagger 
         />
         <p className="text-[11px] text-faint">Caption-ul e doar pentru post — story-ul merge fără text și dispare în 24h.</p>
         <div className="flex items-center gap-3 flex-wrap">
-          <PublishActions adminKey={adminKey} images={[image]} caption={caption} storyImage={image} />
+          <PublishActions images={[image]} caption={caption} storyImage={image} />
           {command && (
             <button
               onClick={() => { navigator.clipboard.writeText(command); setCopied(true); setTimeout(() => setCopied(false), 1500) }}
@@ -221,8 +233,7 @@ function SlideThumb({ slide, onStatus }: { slide: DeckSlide; onStatus: (ok: bool
 /** Law candidate: the full carousel deck (pre-rendered static slides) with
  *  per-slide status. Complete deck → one-tap carousel publish; incomplete →
  *  fall back to publishing just the (dynamic, edge-cached) summary card. */
-export function CarouselPublishCard({ adminKey, slides, fallbackImage, initialCaption, command }: {
-  adminKey: string
+export function CarouselPublishCard({ slides, fallbackImage, initialCaption, command }: {
   slides: DeckSlide[]
   /** Dynamic summarycard URL — publishable even when the deck isn't rendered. */
   fallbackImage: string
@@ -253,10 +264,10 @@ export function CarouselPublishCard({ adminKey, slides, fallbackImage, initialCa
       />
       <div className="flex items-center gap-3 flex-wrap">
         {complete ? (
-          <PublishActions adminKey={adminKey} images={slides.map(s => s.url)} caption={caption} storyImage={storyImage} />
+          <PublishActions images={slides.map(s => s.url)} caption={caption} storyImage={storyImage} />
         ) : (
           <>
-            <PublishActions adminKey={adminKey} images={[fallbackImage]} caption={caption} storyImage={storyImage} />
+            <PublishActions images={[fallbackImage]} caption={caption} storyImage={storyImage} />
             <span className="text-[11px] text-faint">
               {settled
                 ? `doar rezumatul — ${slides.length - ready} slide-uri nerandate; pentru carusel rulează comanda ↓`
@@ -281,8 +292,7 @@ export function CarouselPublishCard({ adminKey, slides, fallbackImage, initialCa
 
 /** Free-form: image URLs (one per line, 2+ = carousel) + caption. Prefillable
  *  from the monthly approval email (?img=&cap= b64url). */
-export function ManualPublish({ adminKey, initialImages = '', initialCaption = '' }: {
-  adminKey: string
+export function ManualPublish({ initialImages = '', initialCaption = '' }: {
   initialImages?: string
   initialCaption?: string
 }) {
@@ -312,7 +322,7 @@ export function ManualPublish({ adminKey, initialImages = '', initialCaption = '
         className="w-full text-[12.5px] leading-relaxed bg-surface border border-rim rounded-lg p-2.5 font-mono resize-y"
       />
       <div className="flex items-center gap-3 flex-wrap">
-        <PublishActions adminKey={adminKey} images={urls} caption={caption}
+        <PublishActions images={urls} caption={caption}
                         storyImage={urls.length === 1 ? urls[0] : undefined} />
         {urls.length > 1 && <span className="text-[11px] text-faint">story = doar cu o singură imagine</span>}
       </div>
