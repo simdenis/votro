@@ -6,13 +6,16 @@
 // FINISHED → media_publish. All IG calls are IO, not CPU, so the Free-plan
 // 10ms CPU cap is not a problem here (unlike the satori og routes).
 //
-// Auth: ADMIN_KEY must be set as a worker secret and match the header, else 404
-// (don't advertise the endpoint). Needs IG_USER_ID + IG_ACCESS_TOKEN secrets —
+// Auth: the httpOnly admin cookie (set via /api/admin/login), or the
+// X-Admin-Key header as a fallback; neither → 404 (don't advertise the
+// endpoint). Needs IG_USER_ID + IG_ACCESS_TOKEN secrets —
 // NB: the 60-day token refreshed via `--refresh-token` must be re-uploaded with
 // `wrangler secret put IG_ACCESS_TOKEN` or this route's copy goes stale.
 //
 // Images are restricted to our own origin so a leaked key can't turn the
 // account into an open relay for arbitrary pictures.
+
+import { isAdmin, keyMatches } from '@/lib/admin-auth'
 
 const GRAPH = 'https://graph.instagram.com'
 const V = process.env.GRAPH_API_VERSION || 'v21.0'
@@ -50,8 +53,8 @@ async function waitReady(ids: string[], token: string): Promise<void> {
 }
 
 export async function POST(req: Request) {
-  const adminKey = process.env.ADMIN_KEY
-  if (!adminKey || req.headers.get('x-admin-key') !== adminKey) {
+  // cookie (normal path) OR X-Admin-Key header (legacy/scripts)
+  if (!(await isAdmin()) && !keyMatches(req.headers.get('x-admin-key'))) {
     return new Response('Not found', { status: 404 })
   }
   const userId = process.env.IG_USER_ID

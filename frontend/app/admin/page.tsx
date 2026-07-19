@@ -1,18 +1,21 @@
-import { notFound } from 'next/navigation'
 import { createHmac } from 'node:crypto'
 import { getDB } from '@/lib/supabase'
 import { PublishCard, CarouselPublishCard, ManualPublish } from '@/components/admin/publish-panel'
+import { AdminLogin, LogoutButton } from '@/components/admin/admin-login'
+import { isAdmin } from '@/lib/admin-auth'
 import { lawSlides, lawCarouselCaption, initiatorLineFromRows, CARD_V, type Slide } from '@/lib/ig-carousel'
 import { getSwitchers, type Switcher } from '@/lib/switchers'
 import type { LawStatus } from '@/lib/types'
 
 // Curation dashboard: every posting cadence as a section — see the cards,
-// pick, publish to Instagram. Gated by ?key=<ADMIN_KEY> (worker secret) —
-// anything else 404s. The key is embedded in the served HTML for the publish
-// calls, which is fine: only the key holder ever gets this HTML.
+// pick, publish to Instagram. Auth via an httpOnly cookie (set by
+// /api/admin/login) — no admin key in the URL or the page HTML; unauthenticated
+// visitors get the login form instead. Publish calls carry the cookie
+// automatically (same-origin).
 //
 // ?img=<b64url>&cap=<b64url> prefill the manual form — the monthly absence
-// approval email links here with the signed shamecard URL + caption.
+// approval email links here (via the login exchange) with the signed
+// shamecard URL + caption.
 
 export const dynamic = 'force-dynamic'
 export const metadata = {
@@ -239,7 +242,7 @@ function Section({ title, cadence, hint, children }: {
   )
 }
 
-function CandidateBlock({ l, i, adminKey }: { l: Candidate; i: number; adminKey: string }) {
+function CandidateBlock({ l, i }: { l: Candidate; i: number }) {
   return (
     <div className="border border-rim rounded-xl p-4">
       <div className="flex items-baseline gap-2 flex-wrap mb-3">
@@ -252,14 +255,14 @@ function CandidateBlock({ l, i, adminKey }: { l: Candidate; i: number; adminKey:
       <p className="text-[12.5px] text-muted mb-3">{l.title.length > 160 ? l.title.slice(0, 157) + '…' : l.title}</p>
       {l.slides.length > 0 ? (
         <CarouselPublishCard
-          adminKey={adminKey}
+         
           slides={l.slides.map(s => ({ url: `${SITE}${s.static}`, label: s.label }))}
           fallbackImage={`${SITE}/api/og/${l.slides[0].suffix}`}
           initialCaption={l.carouselCaption ?? lawCaption(l)}
           command={`cd frontend && node scripts/render-ig.mjs ${l.id} && npm run deploy`}
         />
       ) : (
-        <PublishCard adminKey={adminKey} image={`${SITE}/api/og/summarycard?id=${l.id}`}
+        <PublishCard image={`${SITE}/api/og/summarycard?id=${l.id}`}
                      initialCaption={lawCaption(l)} stagger={i * 900} />
       )}
     </div>
@@ -267,11 +270,11 @@ function CandidateBlock({ l, i, adminKey }: { l: Candidate; i: number; adminKey:
 }
 
 export default async function AdminPage({ searchParams }: {
-  searchParams: Promise<{ key?: string; img?: string; cap?: string }>
+  searchParams: Promise<{ img?: string; cap?: string }>
 }) {
+  // Auth via httpOnly cookie (set by /api/admin/login) — no key in the URL.
+  if (!(await isAdmin())) return <AdminLogin />
   const sp = await searchParams
-  const adminKey = process.env.ADMIN_KEY
-  if (!adminKey || sp.key !== adminKey) notFound()
 
   const today = new Date().toISOString().slice(0, 10)
   const thisMonth = today.slice(0, 7)
@@ -344,7 +347,10 @@ export default async function AdminPage({ searchParams }: {
 
   return (
     <div className="max-w-[860px]">
-      <h1 className="text-xl font-bold">Postări — alege și publică</h1>
+      <div className="flex items-start justify-between gap-4">
+        <h1 className="text-xl font-bold">Postări — alege și publică</h1>
+        <LogoutButton />
+      </div>
       <p className="text-[13px] text-muted mt-1">
         Publicarea merge direct pe @vot.romania — butonul cere o a doua apăsare de confirmare.
         Nimic nu se postează singur.
@@ -352,7 +358,7 @@ export default async function AdminPage({ searchParams }: {
 
       {(prefillImg || prefillCap) && (
         <Section title="Din emailul de aprobare" cadence="email">
-          <ManualPublish adminKey={adminKey} initialImages={prefillImg} initialCaption={prefillCap} />
+          <ManualPublish initialImages={prefillImg} initialCaption={prefillCap} />
         </Section>
       )}
 
@@ -365,14 +371,14 @@ export default async function AdminPage({ searchParams }: {
                 <p className="text-[12.5px] font-medium mb-2">
                   {v.laws?.code} — vot final {v.chamber === 'senate' ? 'Senat' : 'Cameră'} ({v.outcome})
                 </p>
-                <PublishCard adminKey={adminKey} image={`${SITE}/api/og/summarycard?id=${v.law_id}&v=${CARD_V}`}
+                <PublishCard image={`${SITE}/api/og/summarycard?id=${v.law_id}&v=${CARD_V}`}
                              initialCaption={`${v.laws?.code} — vot final azi în ${v.chamber === 'senate' ? 'Senat' : 'Camera Deputaților'} (${v.outcome}).\n\nDetalii: ${SITE}/legi/${v.law_id} (link în bio)\n\n${'#parlament #transparență #românia #laButoane'}`} />
               </div>
             ))}
             {todaySwitchers.length > 0 && (
               <div className="border border-rim rounded-xl p-4">
                 <p className="text-[12.5px] font-medium mb-2">Schimbare de partid azi: {todaySwitchers.map(s => `${s.first_name} ${s.name}`).join(', ')}</p>
-                <PublishCard adminKey={adminKey} image={`${SITE}/api/og/switchcard?month=${thisMonth}`} initialCaption={switchCaption} />
+                <PublishCard image={`${SITE}/api/og/switchcard?month=${thisMonth}`} initialCaption={switchCaption} />
               </div>
             )}
           </div>
@@ -383,7 +389,7 @@ export default async function AdminPage({ searchParams }: {
                hint={`Legi promulgate în ultimele ${CANDIDATE_DAYS} zile, sortate după interes. Carusel complet = publicabil direct; „nerandat" = rulează comanda de randare.`}>
         <div className="flex flex-col gap-6">
           {promulgated.length === 0 && <p className="text-[13px] text-faint">Nicio promulgare recentă.</p>}
-          {promulgated.map((l, i) => <CandidateBlock key={l.id} l={l} i={i} adminKey={adminKey} />)}
+          {promulgated.map((l, i) => <CandidateBlock key={l.id} l={l} i={i} />)}
         </div>
       </Section>
 
@@ -391,14 +397,14 @@ export default async function AdminPage({ searchParams }: {
                hint="Legi retrimise în Parlament sau trimise la CCR — de obicei cele mai controversate.">
         <div className="flex flex-col gap-6">
           {returned.length === 0 && <p className="text-[13px] text-faint">Nimic retrimis sau contestat recent.</p>}
-          {returned.map((l, i) => <CandidateBlock key={l.id} l={l} i={i} adminKey={adminKey} />)}
+          {returned.map((l, i) => <CandidateBlock key={l.id} l={l} i={i} />)}
         </div>
       </Section>
 
       {voteOnly.length > 0 && (
         <Section title="Vot final recent (încă la Președinte)" cadence="săptămânal">
           <div className="flex flex-col gap-6">
-            {voteOnly.map((l, i) => <CandidateBlock key={l.id} l={l} i={i} adminKey={adminKey} />)}
+            {voteOnly.map((l, i) => <CandidateBlock key={l.id} l={l} i={i} />)}
           </div>
         </Section>
       )}
@@ -409,7 +415,7 @@ export default async function AdminPage({ searchParams }: {
           <p className="text-[13px] text-faint">Niciun termen tacit în următoarele 7 zile.</p>
         ) : (
           <div className="border border-rim rounded-xl p-4">
-            <PublishCard adminKey={adminKey} image={`${SITE}/api/og/tacitlist?d=${today}`} initialCaption={tacitCaption} />
+            <PublishCard image={`${SITE}/api/og/tacitlist?d=${today}`} initialCaption={tacitCaption} />
           </div>
         )}
       </Section>
@@ -422,7 +428,7 @@ export default async function AdminPage({ searchParams }: {
           <p className="text-[13px] text-faint">Nicio lună completă cu date suficiente (sau CARD_SIGN_SECRET lipsă).</p>
         ) : (
           <div className="border border-rim rounded-xl p-4">
-            <PublishCard adminKey={adminKey} image={absImage} initialCaption={absCaption} />
+            <PublishCard image={absImage} initialCaption={absCaption} />
           </div>
         )}
       </Section>
@@ -433,7 +439,7 @@ export default async function AdminPage({ searchParams }: {
           <p className="text-[13px] text-faint">0 traseiști luna asta — nimic de postat. ✓</p>
         ) : (
           <div className="border border-rim rounded-xl p-4">
-            <PublishCard adminKey={adminKey} image={`${SITE}/api/og/switchcard?month=${thisMonth}`} initialCaption={switchCaption} />
+            <PublishCard image={`${SITE}/api/og/switchcard?month=${thisMonth}`} initialCaption={switchCaption} />
           </div>
         )}
       </Section>
@@ -441,14 +447,14 @@ export default async function AdminPage({ searchParams }: {
       <Section title={`Matricea partidelor — ${quarter.label}`} cadence="trimestrial"
                hint="Cine votează cu cine, pe voturile disputate din trimestrul încheiat.">
         <div className="border border-rim rounded-xl p-4">
-          <PublishCard adminKey={adminKey} image={`${SITE}/api/og/matrix?from=${quarter.from}&to=${quarter.to}`} initialCaption={matrixCaption} />
+          <PublishCard image={`${SITE}/api/og/matrix?from=${quarter.from}&to=${quarter.to}`} initialCaption={matrixCaption} />
         </div>
       </Section>
 
       <Section title="Postare manuală" cadence="oricând"
                hint={`Orice URL de card de pe ${SITE} — un URL pe linie, 2+ = carusel.`}>
         <div className="border border-rim rounded-xl p-4">
-          <ManualPublish adminKey={adminKey} />
+          <ManualPublish />
         </div>
       </Section>
       <div className="mb-8" />
