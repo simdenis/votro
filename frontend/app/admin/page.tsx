@@ -357,21 +357,22 @@ export default async function AdminPage({ searchParams }: {
       )}
 
       {(todayVotes ?? []).length + todaySwitchers.length > 0 && (
-        <Section title="Astăzi — stories" cadence="zilnic"
-                 hint="Voturi finale de azi și schimbări de partid de azi — de pus la story (fără caption, 24h).">
+        <Section title="Astăzi" cadence="zilnic"
+                 hint="Voturi finale de azi și schimbări de partid de azi — de regulă story (fără caption, 24h), dar ai și butonul de post.">
           <div className="flex flex-col gap-6">
             {(todayVotes ?? []).map((v: any) => (
               <div key={v.law_id} className="border border-rim rounded-xl p-4">
                 <p className="text-[12.5px] font-medium mb-2">
                   {v.laws?.code} — vot final {v.chamber === 'senate' ? 'Senat' : 'Cameră'} ({v.outcome})
                 </p>
-                <PublishCard adminKey={adminKey} story image={`${SITE}/api/og/summarycard?id=${v.law_id}&v=${CARD_V}`} initialCaption="" />
+                <PublishCard adminKey={adminKey} image={`${SITE}/api/og/summarycard?id=${v.law_id}&v=${CARD_V}`}
+                             initialCaption={`${v.laws?.code} — vot final azi în ${v.chamber === 'senate' ? 'Senat' : 'Camera Deputaților'} (${v.outcome}).\n\nDetalii: ${SITE}/legi/${v.law_id} (link în bio)\n\n${'#parlament #transparență #românia #laButoane'}`} />
               </div>
             ))}
             {todaySwitchers.length > 0 && (
               <div className="border border-rim rounded-xl p-4">
                 <p className="text-[12.5px] font-medium mb-2">Schimbare de partid azi: {todaySwitchers.map(s => `${s.first_name} ${s.name}`).join(', ')}</p>
-                <PublishCard adminKey={adminKey} story image={`${SITE}/api/og/switchcard?month=${thisMonth}`} initialCaption="" />
+                <PublishCard adminKey={adminKey} image={`${SITE}/api/og/switchcard?month=${thisMonth}`} initialCaption={switchCaption} />
               </div>
             )}
           </div>

@@ -84,6 +84,30 @@ function PublishButton({ state, setState, onConfirm, label = 'Publică' }: {
 
 const MAX_AUTO_RETRIES = 4
 
+/** The post/story button pair — independent state machines so publishing one
+ *  doesn't hide the other (a good card can be both a feed post and a story). */
+function PublishActions({ adminKey, images, caption, storyImage }: {
+  adminKey: string
+  images: string[]
+  caption: string
+  /** Single image to push as a story; omit to hide the story button. */
+  storyImage?: string
+}) {
+  const post = usePublish(adminKey)
+  const story = usePublish(adminKey)
+  return (
+    <>
+      <PublishButton state={post.state} setState={post.setState}
+                     label={images.length > 1 ? `Publică post (${images.length} slide-uri)` : 'Publică post'}
+                     onConfirm={() => post.publish(images, caption)} />
+      {storyImage && (
+        <PublishButton state={story.state} setState={story.setState} label="Publică story"
+                       onConfirm={() => story.publish([storyImage], '', true)} />
+      )}
+    </>
+  )
+}
+
 function CardPreview({ src, alt, stagger = 0 }: { src: string; alt: string; stagger?: number }) {
   // The og render dies on the CPU cap ~1 in 3 tries until the edge cache has a
   // copy — so stagger the initial loads (9 at once guarantees casualties) and
@@ -133,36 +157,29 @@ function CardPreview({ src, alt, stagger = 0 }: { src: string; alt: string; stag
 }
 
 /** One candidate: preview + editable caption + publish (+ optional CLI command). */
-export function PublishCard({ adminKey, image, initialCaption, command, stagger, story = false }: {
+export function PublishCard({ adminKey, image, initialCaption, command, stagger }: {
   adminKey: string
   image: string
   initialCaption: string
   command?: string
   /** ms to wait before first preview load — page-level load staggering. */
   stagger?: number
-  /** Publish as an Instagram story (no caption, 24h). */
-  story?: boolean
 }) {
-  const { state, setState, publish } = usePublish(adminKey)
   const [caption, setCaption] = useState(initialCaption)
   const [copied, setCopied] = useState(false)
   return (
     <div className="flex flex-col sm:flex-row gap-4">
       <CardPreview src={image} alt="Previzualizare card" stagger={stagger} />
       <div className="flex-1 min-w-0 flex flex-col gap-2">
-        {story ? (
-          <p className="text-[12px] text-faint">Story: fără caption, dispare în 24h.</p>
-        ) : (
-          <textarea
-            value={caption}
-            onChange={e => setCaption(e.target.value)}
-            rows={9}
-            className="w-full text-[12.5px] leading-relaxed bg-surface border border-rim rounded-lg p-2.5 font-mono resize-y"
-          />
-        )}
+        <textarea
+          value={caption}
+          onChange={e => setCaption(e.target.value)}
+          rows={9}
+          className="w-full text-[12.5px] leading-relaxed bg-surface border border-rim rounded-lg p-2.5 font-mono resize-y"
+        />
+        <p className="text-[11px] text-faint">Caption-ul e doar pentru post — story-ul merge fără text și dispare în 24h.</p>
         <div className="flex items-center gap-3 flex-wrap">
-          <PublishButton state={state} setState={setState} label={story ? 'Publică story' : 'Publică'}
-                         onConfirm={() => publish([image], caption, story)} />
+          <PublishActions adminKey={adminKey} images={[image]} caption={caption} storyImage={image} />
           {command && (
             <button
               onClick={() => { navigator.clipboard.writeText(command); setCopied(true); setTimeout(() => setCopied(false), 1500) }}
@@ -212,13 +229,14 @@ export function CarouselPublishCard({ adminKey, slides, fallbackImage, initialCa
   initialCaption: string
   command: string
 }) {
-  const { state, setState, publish } = usePublish(adminKey)
   const [caption, setCaption] = useState(initialCaption)
   const [copied, setCopied] = useState(false)
   const [status, setStatus] = useState<Record<string, boolean>>({})
   const ready = slides.filter(s => status[s.url] === true).length
   const settled = Object.keys(status).length === slides.length
   const complete = settled && ready === slides.length
+  // story = always the first slide (summary card) — static when rendered, else dynamic
+  const storyImage = complete ? slides[0].url : fallbackImage
   return (
     <div className="flex flex-col gap-3">
       <div className="flex gap-2.5 overflow-x-auto pb-1">
@@ -235,12 +253,10 @@ export function CarouselPublishCard({ adminKey, slides, fallbackImage, initialCa
       />
       <div className="flex items-center gap-3 flex-wrap">
         {complete ? (
-          <PublishButton state={state} setState={setState}
-                         onConfirm={() => publish(slides.map(s => s.url), caption)} />
+          <PublishActions adminKey={adminKey} images={slides.map(s => s.url)} caption={caption} storyImage={storyImage} />
         ) : (
           <>
-            <PublishButton state={state} setState={setState}
-                           onConfirm={() => publish([fallbackImage], caption)} />
+            <PublishActions adminKey={adminKey} images={[fallbackImage]} caption={caption} storyImage={storyImage} />
             <span className="text-[11px] text-faint">
               {settled
                 ? `doar rezumatul — ${slides.length - ready} slide-uri nerandate; pentru carusel rulează comanda ↓`
@@ -270,7 +286,6 @@ export function ManualPublish({ adminKey, initialImages = '', initialCaption = '
   initialImages?: string
   initialCaption?: string
 }) {
-  const { state, setState, publish } = usePublish(adminKey)
   const [images, setImages] = useState(initialImages)
   const [caption, setCaption] = useState(initialCaption)
   const urls = images.split('\n').map(s => s.trim()).filter(Boolean)
@@ -296,8 +311,10 @@ export function ManualPublish({ adminKey, initialImages = '', initialCaption = '
         placeholder="Caption…"
         className="w-full text-[12.5px] leading-relaxed bg-surface border border-rim rounded-lg p-2.5 font-mono resize-y"
       />
-      <div>
-        <PublishButton state={state} setState={setState} onConfirm={() => publish(urls, caption)} />
+      <div className="flex items-center gap-3 flex-wrap">
+        <PublishActions adminKey={adminKey} images={urls} caption={caption}
+                        storyImage={urls.length === 1 ? urls[0] : undefined} />
+        {urls.length > 1 && <span className="text-[11px] text-faint">story = doar cu o singură imagine</span>}
       </div>
     </div>
   )
