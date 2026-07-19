@@ -15,13 +15,13 @@ type PubState =
 
 function usePublish(adminKey: string) {
   const [state, setState] = useState<PubState>({ phase: 'idle' })
-  async function publish(images: string[], caption: string) {
+  async function publish(images: string[], caption: string, story = false) {
     setState({ phase: 'busy' })
     try {
       const r = await fetch('/api/admin/publish', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-Admin-Key': adminKey },
-        body: JSON.stringify({ images, caption }),
+        body: JSON.stringify({ images, caption, story }),
       })
       const body = await r.json().catch(() => ({}))
       if (!r.ok) throw new Error(body.error || `HTTP ${r.status}`)
@@ -33,10 +33,11 @@ function usePublish(adminKey: string) {
   return { state, setState, publish }
 }
 
-function PublishButton({ state, setState, onConfirm }: {
+function PublishButton({ state, setState, onConfirm, label = 'Publică' }: {
   state: PubState
   setState: (s: PubState) => void
   onConfirm: () => void
+  label?: string
 }) {
   if (state.phase === 'done') {
     return (
@@ -62,8 +63,8 @@ function PublishButton({ state, setState, onConfirm }: {
         }`}
       >
         {state.phase === 'busy' ? 'Se publică…'
-          : state.phase === 'armed' ? 'Sigur? Publică pe Instagram'
-          : 'Publică'}
+          : state.phase === 'armed' ? `Sigur? ${label} pe Instagram`
+          : label}
       </button>
       {state.phase === 'armed' && (
         <button onClick={() => setState({ phase: 'idle' })} className="text-[12px] text-faint underline underline-offset-2">
@@ -132,13 +133,15 @@ function CardPreview({ src, alt, stagger = 0 }: { src: string; alt: string; stag
 }
 
 /** One candidate: preview + editable caption + publish (+ optional CLI command). */
-export function PublishCard({ adminKey, image, initialCaption, command, stagger }: {
+export function PublishCard({ adminKey, image, initialCaption, command, stagger, story = false }: {
   adminKey: string
   image: string
   initialCaption: string
   command?: string
   /** ms to wait before first preview load — page-level load staggering. */
   stagger?: number
+  /** Publish as an Instagram story (no caption, 24h). */
+  story?: boolean
 }) {
   const { state, setState, publish } = usePublish(adminKey)
   const [caption, setCaption] = useState(initialCaption)
@@ -147,14 +150,19 @@ export function PublishCard({ adminKey, image, initialCaption, command, stagger 
     <div className="flex flex-col sm:flex-row gap-4">
       <CardPreview src={image} alt="Previzualizare card" stagger={stagger} />
       <div className="flex-1 min-w-0 flex flex-col gap-2">
-        <textarea
-          value={caption}
-          onChange={e => setCaption(e.target.value)}
-          rows={9}
-          className="w-full text-[12.5px] leading-relaxed bg-surface border border-rim rounded-lg p-2.5 font-mono resize-y"
-        />
+        {story ? (
+          <p className="text-[12px] text-faint">Story: fără caption, dispare în 24h.</p>
+        ) : (
+          <textarea
+            value={caption}
+            onChange={e => setCaption(e.target.value)}
+            rows={9}
+            className="w-full text-[12.5px] leading-relaxed bg-surface border border-rim rounded-lg p-2.5 font-mono resize-y"
+          />
+        )}
         <div className="flex items-center gap-3 flex-wrap">
-          <PublishButton state={state} setState={setState} onConfirm={() => publish([image], caption)} />
+          <PublishButton state={state} setState={setState} label={story ? 'Publică story' : 'Publică'}
+                         onConfirm={() => publish([image], caption, story)} />
           {command && (
             <button
               onClick={() => { navigator.clipboard.writeText(command); setCopied(true); setTimeout(() => setCopied(false), 1500) }}
