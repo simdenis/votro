@@ -15,7 +15,15 @@ export async function withEdgeCache(req: Request, render: () => Promise<Response
   }
   const res = await render()
   if (cache && res.status === 200) {
-    try { await cache.put(req.url, res.clone()) } catch { /* cache full/opaque — serve anyway */ }
+    try {
+      // Bound the EDGE copy: ImageResponse ships max-age=31536000 immutable,
+      // fine for browsers/IG (the ?v bump discipline), but the all-time cards
+      // (no version param) change as votes land — cap the edge copy at 6h so
+      // they refresh. Client-facing headers stay untouched.
+      const copy = new Response(res.clone().body, res)
+      copy.headers.set('cache-control', 'public, max-age=21600')
+      await cache.put(req.url, copy)
+    } catch { /* cache full/opaque — serve anyway */ }
   }
   return res
 }

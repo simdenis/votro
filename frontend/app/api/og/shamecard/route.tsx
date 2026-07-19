@@ -64,7 +64,7 @@ async function renderCard(req: Request): Promise<Response> {
     // &sig. The HMAC is over the encoded string. Coerce/clamp every field
     // defensively even though the signature already vouches for it.
     const raw = JSON.parse(Buffer.from(d, 'base64url').toString('utf8')) as { n: string; p: string; c: string; ch: string; a: number; x?: number; h?: number }[]
-    const entries: ShameEntry[] = raw.slice(0, 5).map(e => {
+    const entries: ShameEntry[] = raw.slice(0, 10).map(e => {
       const held = Number.isFinite(e.h) ? Math.max(0, Math.round(Number(e.h))) : undefined
       const absent = Number.isFinite(e.x) ? Math.max(0, Math.round(Number(e.x))) : undefined
       return {

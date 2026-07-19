@@ -22,14 +22,23 @@ def main() -> None:
     key = os.environ.get("SUPABASE_KEY", "")
     if not (url and key):
         sys.exit("SUPABASE_URL and SUPABASE_KEY must be set")
-    r = requests.post(
-        f"{url}/rest/v1/rpc/refresh_party_agreement",
-        headers={"apikey": key, "Authorization": f"Bearer {key}"},
-        timeout=200,
-    )
-    if not r.ok:
-        sys.exit(f"refresh failed ({r.status_code}): {r.text[:200]}")
-    print("party_agreement refreshed")
+    rc = 0
+    # monthly_absences (036) may not exist until the migration is run — that
+    # RPC 404s harmlessly; report and keep going so party_agreement still runs.
+    for rpc in ("refresh_party_agreement", "refresh_monthly_absences"):
+        r = requests.post(
+            f"{url}/rest/v1/rpc/{rpc}",
+            headers={"apikey": key, "Authorization": f"Bearer {key}"},
+            timeout=200,
+        )
+        if r.ok:
+            print(f"{rpc} ok")
+        elif r.status_code == 404:
+            print(f"{rpc} missing (migration not run yet) — skipped")
+        else:
+            rc = 1
+            print(f"{rpc} failed ({r.status_code}): {r.text[:200]}", file=sys.stderr)
+    sys.exit(rc)
 
 
 if __name__ == "__main__":

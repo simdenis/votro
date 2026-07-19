@@ -60,13 +60,17 @@ export async function POST(req: Request) {
     return Response.json({ error: 'IG_USER_ID / IG_ACCESS_TOKEN nu sunt setate pe worker' }, { status: 500 })
   }
 
-  let images: string[], caption: string
+  let images: string[], caption: string, story: boolean
   try {
     const body = await req.json()
     images = (body.images as string[]).map(u => String(u).trim()).filter(Boolean)
     caption = String(body.caption ?? '')
+    story = Boolean(body.story)
   } catch {
     return Response.json({ error: 'body invalid' }, { status: 400 })
+  }
+  if (story && images.length !== 1) {
+    return Response.json({ error: 'un story = exact o imagine' }, { status: 400 })
   }
   const origin = new URL(req.url).origin
   const site = (process.env.NEXT_PUBLIC_SITE_URL || origin).replace(/\/$/, '')
@@ -79,7 +83,12 @@ export async function POST(req: Request) {
 
   try {
     let creationId: string
-    if (images.length === 1) {
+    if (story) {
+      // stories: no caption, 24h lifetime; IG letterboxes the 4:5 card on 9:16
+      creationId = (await igPost(`${userId}/media`,
+        { media_type: 'STORIES', image_url: images[0], access_token: token })).id
+      await waitReady([creationId], token)
+    } else if (images.length === 1) {
       creationId = (await igPost(`${userId}/media`,
         { image_url: images[0], caption, access_token: token })).id
       await waitReady([creationId], token)

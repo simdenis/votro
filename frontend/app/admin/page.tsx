@@ -1,13 +1,15 @@
 import { notFound } from 'next/navigation'
+import { createHmac } from 'node:crypto'
 import { getDB } from '@/lib/supabase'
 import { PublishCard, CarouselPublishCard, ManualPublish } from '@/components/admin/publish-panel'
-import { lawSlides, lawCarouselCaption, initiatorLineFromRows, type Slide } from '@/lib/ig-carousel'
+import { lawSlides, lawCarouselCaption, initiatorLineFromRows, CARD_V, type Slide } from '@/lib/ig-carousel'
+import { getSwitchers, type Switcher } from '@/lib/switchers'
 import type { LawStatus } from '@/lib/types'
 
-// Curation dashboard: see the candidate cards, pick, publish to Instagram.
-// Gated by ?key=<ADMIN_KEY> (worker secret) — anything else 404s, so the page
-// doesn't exist for the public. The key is embedded in the served HTML for the
-// publish calls, which is fine: only the key holder ever gets this HTML.
+// Curation dashboard: every posting cadence as a section — see the cards,
+// pick, publish to Instagram. Gated by ?key=<ADMIN_KEY> (worker secret) —
+// anything else 404s. The key is embedded in the served HTML for the publish
+// calls, which is fine: only the key holder ever gets this HTML.
 //
 // ?img=<b64url>&cap=<b64url> prefill the manual form — the monthly absence
 // approval email links here with the signed shamecard URL + caption.
@@ -20,6 +22,11 @@ export const metadata = {
 
 const SITE = (process.env.NEXT_PUBLIC_SITE_URL || 'https://la-butoane.ro').replace(/\/$/, '')
 const CANDIDATE_DAYS = 14
+const HASHTAGS = '#parlament #transparență #românia #politică #laButoane'
+
+const RO_MONTHS = ['ianuarie', 'februarie', 'martie', 'aprilie', 'mai', 'iunie',
+                   'iulie', 'august', 'septembrie', 'octombrie', 'noiembrie', 'decembrie']
+const RO_MONTHS_S = ['ian', 'feb', 'mar', 'apr', 'mai', 'iun', 'iul', 'aug', 'sep', 'oct', 'noi', 'dec']
 
 const STATUS_LINE: Record<string, string> = {
   promulgat: 'Promulgată — urmează publicarea în Monitorul Oficial.',
@@ -29,12 +36,31 @@ const STATUS_LINE: Record<string, string> = {
 
 function b64urlDecode(s: string | undefined): string {
   if (!s) return ''
-  try {
-    return Buffer.from(s, 'base64url').toString('utf8')
-  } catch {
-    return ''
-  }
+  try { return Buffer.from(s, 'base64url').toString('utf8') } catch { return '' }
 }
+
+function b64url(s: string): string {
+  return Buffer.from(s, 'utf8').toString('base64url')
+}
+
+/** Mirror of the poster's _sign_card — HMAC the b64url payload. */
+function signCard(d: string): string | null {
+  const secret = process.env.CARD_SIGN_SECRET
+  if (!secret) return null
+  return createHmac('sha256', secret).update(d).digest('hex').slice(0, 32)
+}
+
+function roDate(iso: string | null | undefined): string {
+  if (!iso) return ''
+  const [y, m, d] = iso.split('-').map(Number)
+  return `${d} ${RO_MONTHS_S[m - 1]} ${y}`
+}
+
+const EVENT_LABEL: Record<string, string> = {
+  promulgat: 'promulgată', retrimis: 'retrimisă de Președinte', sesizat_ccr: 'sesizare CCR',
+}
+
+// ── candidates (weekly: promulgated / returned / final votes) ────────────────
 
 type FinalVote = {
   law_id: string; chamber: string; vote_date: string | null
@@ -65,7 +91,7 @@ async function fetchCandidates() {
     .in('id', ids)
   const top = (laws ?? [])
     .sort((a, b) => (b.interest_score ?? -1) - (a.interest_score ?? -1))
-    .slice(0, 8)
+    .slice(0, 10)
     .map(l => {
       const last = (votesByLaw.get(l.id) ?? [])
         .sort((a, b) => (b.vote_date ?? '').localeCompare(a.vote_date ?? ''))[0]
@@ -105,20 +131,24 @@ async function fetchCandidates() {
   })
 }
 
-const RO_MONTHS = ['ian', 'feb', 'mar', 'apr', 'mai', 'iun', 'iul', 'aug', 'sep', 'oct', 'noi', 'dec']
+type Candidate = Awaited<ReturnType<typeof fetchCandidates>>[number]
 
-function roDate(iso: string | null | undefined): string {
-  if (!iso) return ''
-  const [y, m, d] = iso.split('-').map(Number)
-  return `${d} ${RO_MONTHS[m - 1]} ${y}`
-}
-
-const EVENT_LABEL: Record<string, string> = {
-  promulgat: 'promulgată', retrimis: 'retrimisă de Președinte', sesizat_ccr: 'sesizare CCR',
+function lawCaption(l: Candidate): string {
+  const lines = [`📋 ${l.code} — pe scurt`, '']
+  if (l.summary) lines.push(l.summary.length > 500 ? l.summary.slice(0, 497).trimEnd() + '…' : l.summary, '')
+  if (l.presidential_status && STATUS_LINE[l.presidential_status]) {
+    lines.push(STATUS_LINE[l.presidential_status], '')
+  } else if (l.lastVote) {
+    const ch = l.lastVote.chamber === 'senate' ? 'Senat' : 'Camera Deputaților'
+    const oc = l.lastVote.outcome === 'respins' ? 'Respinsă' : 'Adoptată'
+    lines.push(`${oc} în ${ch}: ${l.lastVote.for_count ?? 0} pentru, ${l.lastVote.against_count ?? 0} împotrivă.`, '')
+  }
+  lines.push(`Cum a votat fiecare parlamentar: ${SITE}/legi/${l.id} (link în bio)`, '', HASHTAGS)
+  return lines.join('\n')
 }
 
 /** The recent decisive event that put this law on the candidates list. */
-function qualifyingEvent(l: Awaited<ReturnType<typeof fetchCandidates>>[number]): string {
+function qualifyingEvent(l: Candidate): string {
   if (l.presidential_status && l.presidential_date) {
     return `${EVENT_LABEL[l.presidential_status] ?? l.presidential_status} · ${roDate(l.presidential_date)}`
   }
@@ -129,44 +159,109 @@ function qualifyingEvent(l: Awaited<ReturnType<typeof fetchCandidates>>[number])
   return ''
 }
 
-function lawCaption(l: Awaited<ReturnType<typeof fetchCandidates>>[number]): string {
-  const lines = [`📋 ${l.code} — pe scurt`, '']
-  if (l.summary) lines.push(l.summary.length > 500 ? l.summary.slice(0, 497).trimEnd() + '…' : l.summary, '')
-  if (l.presidential_status && STATUS_LINE[l.presidential_status]) {
-    lines.push(STATUS_LINE[l.presidential_status], '')
-  } else if (l.lastVote) {
-    const ch = l.lastVote.chamber === 'senate' ? 'Senat' : 'Camera Deputaților'
-    const oc = l.lastVote.outcome === 'respins' ? 'Respinsă' : 'Adoptată'
-    lines.push(`${oc} în ${ch}: ${l.lastVote.for_count ?? 0} pentru, ${l.lastVote.against_count ?? 0} împotrivă.`, '')
-  }
-  lines.push(`Cum a votat fiecare parlamentar: ${SITE}/legi/${l.id} (link în bio)`, '',
-             '#parlament #legi #laButoane #transparență #românia')
-  return lines.join('\n')
+// ── weekly: tacit deadlines ──────────────────────────────────────────────────
+
+async function fetchTacit() {
+  const today = new Date().toISOString().slice(0, 10)
+  const limit = new Date(Date.now() + 7 * 86400_000).toISOString().slice(0, 10)
+  const { data } = await getDB().from('pending_bills')
+    .select('code, title, chamber, tacit_deadline')
+    .gte('tacit_deadline', today).lte('tacit_deadline', limit)
+    .order('tacit_deadline', { ascending: true }).limit(10)
+  return data ?? []
 }
 
-async function fetchShameCaption(): Promise<string> {
-  const db = getDB()
-  const [{ data: sen }, { data: dep }] = await Promise.all([
-    db.from('senator_stats').select('name, first_name, party_abbr, presence_pct')
-      .eq('active', true).is('gov_role', null).order('presence_pct', { ascending: true }).limit(5),
-    db.from('deputy_stats').select('name, first_name, party_abbr, presence_pct')
-      .eq('active', true).is('gov_role', null).order('presence_pct', { ascending: true }).limit(5),
-  ])
-  const entries = [
-    ...(sen ?? []).map(s => ({ ...s, chamber: 'Senat' })),
-    ...(dep ?? []).map(s => ({ ...s, chamber: 'Cameră' })),
-  ]
-    .map(s => ({ pct: Math.round(100 - (s.presence_pct ?? 100)), name: `${s.first_name} ${s.name}`, party: s.party_abbr, chamber: s.chamber }))
-    .sort((a, b) => b.pct - a.pct)
-    .slice(0, 5)
-  return [
-    '🔴 Absențe — top 5: cei mai absenți parlamentari', '',
-    'Absențe la voturile din plen, de la începutul legislaturii (20 decembrie 2024):', '',
-    ...entries.map((e, i) => `${i + 1}. ${e.name} (${e.party}, ${e.chamber}) — ${e.pct}% absențe`),
-    '', 'Membrii Guvernului nu sunt incluși — ei nu votează în plen.',
-    '', `Toată lista: ${SITE}`, '',
-    '#parlament #absenteism #laButoane #transparență #românia',
-  ].join('\n')
+// ── monthly: last-month top-10 absents (matview from migration 036) ──────────
+
+type MonthlyAbsRow = {
+  politician_id: string; name: string; first_name: string; chamber: string
+  party_abbr: string | null; party_color: string | null
+  gov_role: string | null; context_note: string | null; mandate_start: string | null
+  month: string; held: number; present: number; absent: number; absence_pct: number
+}
+
+async function fetchMonthlyAbsents() {
+  const now = new Date()
+  const prev = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+  const month = `${prev.getFullYear()}-${String(prev.getMonth() + 1).padStart(2, '0')}`
+  const label = `${RO_MONTHS[prev.getMonth()]} ${prev.getFullYear()}`
+  const monthStart = `${month}-01`
+  const { data, error } = await getDB().from('politician_monthly_absences')
+    .select('*').eq('month', month).eq('active', true)
+  if (error) return { month, label, missing: true as const, entries: [] }
+  const rows = (data ?? []) as MonthlyAbsRow[]
+  // same guardrails as the poster: gov excluded, context_note excluded, seated
+  // the whole month, chambers with <5 votes dropped
+  const heldByChamber = new Map<string, number>()
+  for (const r of rows) heldByChamber.set(r.chamber, r.held)
+  const entries = rows
+    .filter(r => !r.gov_role && !r.context_note
+      && (r.mandate_start ?? '2000-01-01') <= monthStart
+      && (heldByChamber.get(r.chamber) ?? 0) >= 5)
+    .sort((a, b) => (b.absent / b.held) - (a.absent / a.held))
+    .slice(0, 10)
+    .map(r => ({
+      n: `${r.first_name} ${r.name}`, p: r.party_abbr ?? 'IND', c: r.party_color ?? '#9e9e9e',
+      ch: r.chamber === 'senate' ? 'SENAT' : 'CAMERĂ',
+      a: Math.round(r.absent / r.held * 100), x: r.absent, h: r.held,
+    }))
+  return { month, label, missing: false as const, entries }
+}
+
+// ── quarterly matrix window ──────────────────────────────────────────────────
+
+function lastQuarter(): { from: string; to: string; label: string } {
+  const now = new Date()
+  const q = Math.floor(now.getMonth() / 3) // current quarter 0-3
+  const y = q === 0 ? now.getFullYear() - 1 : now.getFullYear()
+  const prevQ = q === 0 ? 3 : q - 1
+  const m0 = prevQ * 3
+  const pad = (m: number) => String(m + 1).padStart(2, '0')
+  return { from: `${y}-${pad(m0)}`, to: `${y}-${pad(m0 + 2)}`, label: `T${prevQ + 1} ${y}` }
+}
+
+// ── page ─────────────────────────────────────────────────────────────────────
+
+function Section({ title, cadence, hint, children }: {
+  title: string; cadence: string; hint?: string; children: React.ReactNode
+}) {
+  return (
+    <section className="mt-10">
+      <div className="flex items-baseline gap-2 flex-wrap">
+        <h2 className="text-[15px] font-bold">{title}</h2>
+        <span className="text-[10px] uppercase tracking-wider font-semibold text-faint border border-rim rounded px-1.5 py-px">{cadence}</span>
+      </div>
+      {hint && <p className="text-[12px] text-faint mt-0.5">{hint}</p>}
+      <div className="mt-3">{children}</div>
+    </section>
+  )
+}
+
+function CandidateBlock({ l, i, adminKey }: { l: Candidate; i: number; adminKey: string }) {
+  return (
+    <div className="border border-rim rounded-xl p-4">
+      <div className="flex items-baseline gap-2 flex-wrap mb-3">
+        <span className="text-[13px] font-bold">{l.code}</span>
+        <span className="text-[11px] font-medium text-adoptat">{qualifyingEvent(l)}</span>
+        {l.interest_score != null && (
+          <span className="text-[11px] text-faint">interes {l.interest_score}/100{l.interest_reason ? ` — ${l.interest_reason}` : ''}</span>
+        )}
+      </div>
+      <p className="text-[12.5px] text-muted mb-3">{l.title.length > 160 ? l.title.slice(0, 157) + '…' : l.title}</p>
+      {l.slides.length > 0 ? (
+        <CarouselPublishCard
+          adminKey={adminKey}
+          slides={l.slides.map(s => ({ url: `${SITE}${s.static}`, label: s.label }))}
+          fallbackImage={`${SITE}/api/og/${l.slides[0].suffix}`}
+          initialCaption={l.carouselCaption ?? lawCaption(l)}
+          command={`cd frontend && node scripts/render-ig.mjs ${l.id} && npm run deploy`}
+        />
+      ) : (
+        <PublishCard adminKey={adminKey} image={`${SITE}/api/og/summarycard?id=${l.id}`}
+                     initialCaption={lawCaption(l)} stagger={i * 900} />
+      )}
+    </div>
+  )
 }
 
 export default async function AdminPage({ searchParams }: {
@@ -176,86 +271,183 @@ export default async function AdminPage({ searchParams }: {
   const adminKey = process.env.ADMIN_KEY
   if (!adminKey || sp.key !== adminKey) notFound()
 
-  const [candidates, shameCaption] = await Promise.all([fetchCandidates(), fetchShameCaption()])
+  const today = new Date().toISOString().slice(0, 10)
+  const thisMonth = today.slice(0, 7)
+  const db = getDB()
+
+  const [candidates, tacit, monthlyAbs, allSwitchers, { data: todayVotes }] = await Promise.all([
+    fetchCandidates(),
+    fetchTacit(),
+    fetchMonthlyAbsents(),
+    getSwitchers(),
+    db.from('votes').select('law_id, chamber, outcome, laws(id, code, title)')
+      .eq('vote_type', 'vot final').eq('vote_date', today).not('law_id', 'is', null),
+  ])
+
+  const promulgated = candidates.filter(l => l.presidential_status === 'promulgat')
+  const returned = candidates.filter(l => l.presidential_status === 'retrimis' || l.presidential_status === 'sesizat_ccr')
+  const voteOnly = candidates.filter(l => !l.presidential_status)
+
+  const monthSwitchers = allSwitchers.filter((s: Switcher) => {
+    const last = s.segments[s.segments.length - 1]
+    return last && (last.from_date ?? '').startsWith(thisMonth)
+  })
+  const todaySwitchers = allSwitchers.filter((s: Switcher) => {
+    const last = s.segments[s.segments.length - 1]
+    return last && last.from_date === today
+  })
+
+  const quarter = lastQuarter()
   const prefillImg = b64urlDecode(sp.img)
   const prefillCap = b64urlDecode(sp.cap)
+
+  // signed shamecard URL for last month's top-10 (same contract as the poster)
+  let absImage: string | null = null, absCaption = ''
+  if (!monthlyAbs.missing && monthlyAbs.entries.length) {
+    const d = b64url(JSON.stringify(monthlyAbs.entries))
+    const sig = signCard(d)
+    if (sig) {
+      absImage = `${SITE}/api/og/shamecard?d=${d}&label=${encodeURIComponent(monthlyAbs.label)}&sig=${sig}`
+      absCaption = [
+        `🔴 Absențe — ${monthlyAbs.label}: top ${monthlyAbs.entries.length} cei mai absenți parlamentari`, '',
+        ...monthlyAbs.entries.map((e, i) => `${i + 1}. ${e.n} (${e.p}, ${e.ch}) — ${e.a}% absențe (${e.x}/${e.h} voturi)`),
+        '', 'Doar parlamentarii activi toată perioada, fără cei cu notă de context (concediu/delegație). Membrii Guvernului nu sunt incluși.',
+        '', `Toată lista: ${SITE}`, '', '#parlament #absenteism #laButoane #transparență #românia',
+      ].join('\n')
+    }
+  }
+
+  const tacitCaption = tacit.length ? [
+    '⏳ Legi pe cale să treacă TACIT — fără niciun vot', '',
+    'Dacă termenul constituțional expiră fără vot, proiectul e considerat adoptat automat (art. 75). Termene care expiră în următoarele 7 zile:', '',
+    ...tacit.map((b, i) => `${i + 1}. ${b.code} (${b.chamber === 'senate' ? 'Senat' : 'Cameră'}) — ${roDate(b.tacit_deadline)}`),
+    '', `Lista completă: ${SITE}/tacite`, '', HASHTAGS,
+  ].join('\n') : ''
+
+  const switchCaption = monthSwitchers.length ? [
+    `🔄 Traseism — ${RO_MONTHS[new Date().getMonth()]} ${new Date().getFullYear()}`, '',
+    ...monthSwitchers.map(s => {
+      const from = s.segments[s.segments.length - 2], to = s.segments[s.segments.length - 1]
+      return `• ${s.first_name} ${s.name} (${s.chamber === 'senate' ? 'Senat' : 'Cameră'}): ${from?.abbreviation ?? '?'} → ${to?.abbreviation ?? '?'}`
+    }),
+    '', `Parcursul fiecăruia: ${SITE}/traseisti`, '', HASHTAGS,
+  ].join('\n') : ''
+
+  const matrixCaption = [
+    `🤝 Cine votează cu cine — ${quarter.label}`, '',
+    'Procentul de voturi disputate în care partidele au votat la fel, două câte două. Voturile aproape unanime sunt excluse — doar cele care chiar despart plenul.', '',
+    `Explorează matricea interactivă: ${SITE}/analize`, '', HASHTAGS,
+  ].join('\n')
 
   return (
     <div className="max-w-[860px]">
       <h1 className="text-xl font-bold">Postări — alege și publică</h1>
       <p className="text-[13px] text-muted mt-1">
         Publicarea merge direct pe @vot.romania — butonul cere o a doua apăsare de confirmare.
-        Previzualizările pot da 503 (limita CPU pe planul Free) — reîncarcă.
+        Nimic nu se postează singur.
       </p>
 
       {(prefillImg || prefillCap) && (
-        <section className="mt-8">
-          <h2 className="text-[15px] font-bold text-respins">Din emailul de aprobare</h2>
-          <div className="mt-3">
-            <ManualPublish adminKey={adminKey} initialImages={prefillImg} initialCaption={prefillCap} />
-          </div>
-        </section>
+        <Section title="Din emailul de aprobare" cadence="email">
+          <ManualPublish adminKey={adminKey} initialImages={prefillImg} initialCaption={prefillCap} />
+        </Section>
       )}
 
-      <section className="mt-8">
-        <h2 className="text-[15px] font-bold">Candidați — legi cu vot final / promulgare în ultimele {CANDIDATE_DAYS} zile</h2>
-        <p className="text-[12px] text-faint mt-0.5">
-          Sortate după scorul de interes. Se afișează tot caruselul (rezumat → camere → devieri);
-          slide-urile cu hemiciclu se randează offline — cele marcate „nerandat" apar după
-          comanda de randare + deploy. Carusel complet = publicabil dintr-o apăsare.
-        </p>
-        <div className="mt-4 flex flex-col gap-8">
-          {candidates.length === 0 && <p className="text-[13px] text-faint">Nicio lege cu activitate decisivă recentă.</p>}
-          {candidates.map((l, i) => (
-            <div key={l.id} className="border border-rim rounded-xl p-4">
-              <div className="flex items-baseline gap-2 flex-wrap mb-3">
-                <span className="text-[13px] font-bold">{l.code}</span>
-                {/* why it's on the list — old registration codes (L…/2021) are
-                    normal: bills crawl for years, the EVENT is what's recent */}
-                <span className="text-[11px] font-medium text-adoptat">
-                  {qualifyingEvent(l)}
-                </span>
-                {l.interest_score != null && (
-                  <span className="text-[11px] text-faint">interes {l.interest_score}/100{l.interest_reason ? ` — ${l.interest_reason}` : ''}</span>
-                )}
+      {(todayVotes ?? []).length + todaySwitchers.length > 0 && (
+        <Section title="Astăzi — stories" cadence="zilnic"
+                 hint="Voturi finale de azi și schimbări de partid de azi — de pus la story (fără caption, 24h).">
+          <div className="flex flex-col gap-6">
+            {(todayVotes ?? []).map((v: any) => (
+              <div key={v.law_id} className="border border-rim rounded-xl p-4">
+                <p className="text-[12.5px] font-medium mb-2">
+                  {v.laws?.code} — vot final {v.chamber === 'senate' ? 'Senat' : 'Cameră'} ({v.outcome})
+                </p>
+                <PublishCard adminKey={adminKey} story image={`${SITE}/api/og/summarycard?id=${v.law_id}&v=${CARD_V}`} initialCaption="" />
               </div>
-              <p className="text-[12.5px] text-muted mb-3">{l.title.length > 160 ? l.title.slice(0, 157) + '…' : l.title}</p>
-              {l.slides.length > 0 ? (
-                <CarouselPublishCard
-                  adminKey={adminKey}
-                  slides={l.slides.map(s => ({ url: `${SITE}${s.static}`, label: s.label }))}
-                  fallbackImage={`${SITE}/api/og/${l.slides[0].suffix}`}
-                  initialCaption={l.carouselCaption ?? lawCaption(l)}
-                  command={`cd frontend && node scripts/render-ig.mjs ${l.id} && npm run deploy`}
-                />
-              ) : (
-                <PublishCard
-                  adminKey={adminKey}
-                  image={`${SITE}/api/og/summarycard?id=${l.id}`}
-                  initialCaption={lawCaption(l)}
-                  stagger={i * 900}
-                />
-              )}
-            </div>
-          ))}
-        </div>
-      </section>
+            ))}
+            {todaySwitchers.length > 0 && (
+              <div className="border border-rim rounded-xl p-4">
+                <p className="text-[12.5px] font-medium mb-2">Schimbare de partid azi: {todaySwitchers.map(s => `${s.first_name} ${s.name}`).join(', ')}</p>
+                <PublishCard adminKey={adminKey} story image={`${SITE}/api/og/switchcard?month=${thisMonth}`} initialCaption="" />
+              </div>
+            )}
+          </div>
+        </Section>
+      )}
 
-      <section className="mt-10">
-        <h2 className="text-[15px] font-bold">Absențe — top 5 (tot mandatul)</h2>
-        <p className="text-[12px] text-faint mt-0.5">Varianta lunară vine pe email pe 1 ale lunii, cu verificările de context.</p>
-        <div className="mt-3 border border-rim rounded-xl p-4">
-          <PublishCard adminKey={adminKey} image={`${SITE}/api/og/shamecard`} initialCaption={shameCaption} stagger={candidates.length * 900} />
+      <Section title="Promulgate de Președinte" cadence="săptămânal"
+               hint={`Legi promulgate în ultimele ${CANDIDATE_DAYS} zile, sortate după interes. Carusel complet = publicabil direct; „nerandat" = rulează comanda de randare.`}>
+        <div className="flex flex-col gap-6">
+          {promulgated.length === 0 && <p className="text-[13px] text-faint">Nicio promulgare recentă.</p>}
+          {promulgated.map((l, i) => <CandidateBlock key={l.id} l={l} i={i} adminKey={adminKey} />)}
         </div>
-      </section>
+      </Section>
 
-      <section className="mt-10 mb-8">
-        <h2 className="text-[15px] font-bold">Postare manuală</h2>
-        <p className="text-[12px] text-faint mt-0.5">Orice URL de card de pe {SITE} — un URL pe linie, 2+ = carusel.</p>
-        <div className="mt-3 border border-rim rounded-xl p-4">
+      <Section title="Retrimise / contestate de Președinte" cadence="săptămânal"
+               hint="Legi retrimise în Parlament sau trimise la CCR — de obicei cele mai controversate.">
+        <div className="flex flex-col gap-6">
+          {returned.length === 0 && <p className="text-[13px] text-faint">Nimic retrimis sau contestat recent.</p>}
+          {returned.map((l, i) => <CandidateBlock key={l.id} l={l} i={i} adminKey={adminKey} />)}
+        </div>
+      </Section>
+
+      {voteOnly.length > 0 && (
+        <Section title="Vot final recent (încă la Președinte)" cadence="săptămânal">
+          <div className="flex flex-col gap-6">
+            {voteOnly.map((l, i) => <CandidateBlock key={l.id} l={l} i={i} adminKey={adminKey} />)}
+          </div>
+        </Section>
+      )}
+
+      <Section title="Pe cale să treacă tacit (≤ 7 zile)" cadence="săptămânal"
+               hint="Termene constituționale care expiră în 7 zile — sortate după urgență (scorul de interes pentru proiectele fără vot e pe lista de făcut).">
+        {tacit.length === 0 ? (
+          <p className="text-[13px] text-faint">Niciun termen tacit în următoarele 7 zile.</p>
+        ) : (
+          <div className="border border-rim rounded-xl p-4">
+            <PublishCard adminKey={adminKey} image={`${SITE}/api/og/tacitlist?d=${today}`} initialCaption={tacitCaption} />
+          </div>
+        )}
+      </Section>
+
+      <Section title={`Absenți — ${monthlyAbs.label}, top 10`} cadence="lunar"
+               hint="Aceleași reguli ca postarea lunară: fără membri ai Guvernului, fără cei cu notă de context, doar mandate întregi.">
+        {monthlyAbs.missing ? (
+          <p className="text-[13px] text-respins">Tabelul „politician_monthly_absences" lipsește — rulează migrația 036 în Supabase SQL editor, apoi refresh-ul rulează zilnic de pe VPS.</p>
+        ) : !absImage ? (
+          <p className="text-[13px] text-faint">Nicio lună completă cu date suficiente (sau CARD_SIGN_SECRET lipsă).</p>
+        ) : (
+          <div className="border border-rim rounded-xl p-4">
+            <PublishCard adminKey={adminKey} image={absImage} initialCaption={absCaption} />
+          </div>
+        )}
+      </Section>
+
+      <Section title="Traseiști luna aceasta" cadence="lunar"
+               hint="Se sare peste lună dacă nimeni nu a schimbat partidul.">
+        {monthSwitchers.length === 0 ? (
+          <p className="text-[13px] text-faint">0 traseiști luna asta — nimic de postat. ✓</p>
+        ) : (
+          <div className="border border-rim rounded-xl p-4">
+            <PublishCard adminKey={adminKey} image={`${SITE}/api/og/switchcard?month=${thisMonth}`} initialCaption={switchCaption} />
+          </div>
+        )}
+      </Section>
+
+      <Section title={`Matricea partidelor — ${quarter.label}`} cadence="trimestrial"
+               hint="Cine votează cu cine, pe voturile disputate din trimestrul încheiat.">
+        <div className="border border-rim rounded-xl p-4">
+          <PublishCard adminKey={adminKey} image={`${SITE}/api/og/matrix?from=${quarter.from}&to=${quarter.to}`} initialCaption={matrixCaption} />
+        </div>
+      </Section>
+
+      <Section title="Postare manuală" cadence="oricând"
+               hint={`Orice URL de card de pe ${SITE} — un URL pe linie, 2+ = carusel.`}>
+        <div className="border border-rim rounded-xl p-4">
           <ManualPublish adminKey={adminKey} />
         </div>
-      </section>
+      </Section>
+      <div className="mb-8" />
     </div>
   )
 }
