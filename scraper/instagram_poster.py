@@ -284,6 +284,8 @@ def post_carousel(cfg: Config, image_urls: list[str], caption: str) -> str:
 
 
 # Bump after card design changes — og images are CDN-cached immutable per URL.
+# KEEP IN SYNC with frontend/lib/ig-carousel.ts (admin page derives the same
+# slide manifest + static hashes from it).
 CARD_V = "11"
 
 
