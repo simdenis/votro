@@ -1,6 +1,7 @@
 import { ImageResponse } from 'next/og'
 import { ShameCard, type ShameCardData, type ShameEntry } from '@/components/cards/shame-card'
 import { getCardFonts } from '@/lib/og-fonts'
+import { withEdgeCache } from '@/lib/og-edge-cache'
 
 // 1080×1350 (4:5) Instagram shame-corner card — top absentees.
 //   /api/og/shamecard                          → all-time (cumulative) ranking, from the stats views
@@ -48,6 +49,10 @@ async function fetchWorst(view: string, chamber: ShameEntry['chamber']): Promise
 }
 
 export async function GET(req: Request) {
+  return withEdgeCache(req, () => renderCard(req))
+}
+
+async function renderCard(req: Request): Promise<Response> {
   const sp = new URL(req.url).searchParams
   const d = sp.get('d')
   let data: ShameCardData

@@ -147,7 +147,7 @@ export default async function AdminPage({ searchParams }: {
         </p>
         <div className="mt-4 flex flex-col gap-8">
           {candidates.length === 0 && <p className="text-[13px] text-faint">Nicio lege cu activitate decisivă recentă.</p>}
-          {candidates.map(l => (
+          {candidates.map((l, i) => (
             <div key={l.id} className="border border-rim rounded-xl p-4">
               <div className="flex items-baseline gap-2 flex-wrap mb-3">
                 <span className="text-[13px] font-bold">{l.code}</span>
@@ -161,6 +161,7 @@ export default async function AdminPage({ searchParams }: {
                 image={`${SITE}/api/og/summarycard?id=${l.id}`}
                 initialCaption={lawCaption(l)}
                 command={`node scripts/render-ig.mjs ${l.id} && npm run deploy && cd ../scraper && .venv/bin/python instagram_poster.py --law ${l.id} --static`}
+                stagger={i * 900}
               />
             </div>
           ))}
@@ -171,7 +172,7 @@ export default async function AdminPage({ searchParams }: {
         <h2 className="text-[15px] font-bold">Absențe — top 5 (tot mandatul)</h2>
         <p className="text-[12px] text-faint mt-0.5">Varianta lunară vine pe email pe 1 ale lunii, cu verificările de context.</p>
         <div className="mt-3 border border-rim rounded-xl p-4">
-          <PublishCard adminKey={adminKey} image={`${SITE}/api/og/shamecard`} initialCaption={shameCaption} />
+          <PublishCard adminKey={adminKey} image={`${SITE}/api/og/shamecard`} initialCaption={shameCaption} stagger={candidates.length * 900} />
         </div>
       </section>
 
