@@ -59,7 +59,7 @@ async function fetchCandidates() {
 
   const { data: laws } = await getDB()
     .from('laws')
-    .select('id, code, title, summary, presidential_status, interest_score, interest_reason')
+    .select('id, code, title, summary, presidential_status, presidential_date, interest_score, interest_reason')
     .in('id', ids)
   return (laws ?? [])
     .sort((a, b) => (b.interest_score ?? -1) - (a.interest_score ?? -1))
@@ -69,6 +69,30 @@ async function fetchCandidates() {
         .sort((a, b) => (b.vote_date ?? '').localeCompare(a.vote_date ?? ''))[0]
       return { ...l, lastVote: last ?? null }
     })
+}
+
+const RO_MONTHS = ['ian', 'feb', 'mar', 'apr', 'mai', 'iun', 'iul', 'aug', 'sep', 'oct', 'noi', 'dec']
+
+function roDate(iso: string | null | undefined): string {
+  if (!iso) return ''
+  const [y, m, d] = iso.split('-').map(Number)
+  return `${d} ${RO_MONTHS[m - 1]} ${y}`
+}
+
+const EVENT_LABEL: Record<string, string> = {
+  promulgat: 'promulgată', retrimis: 'retrimisă de Președinte', sesizat_ccr: 'sesizare CCR',
+}
+
+/** The recent decisive event that put this law on the candidates list. */
+function qualifyingEvent(l: Awaited<ReturnType<typeof fetchCandidates>>[number]): string {
+  if (l.presidential_status && l.presidential_date) {
+    return `${EVENT_LABEL[l.presidential_status] ?? l.presidential_status} · ${roDate(l.presidential_date)}`
+  }
+  if (l.lastVote) {
+    const ch = l.lastVote.chamber === 'senate' ? 'Senat' : 'Cameră'
+    return `vot final ${ch} (${l.lastVote.outcome ?? '—'}) · ${roDate(l.lastVote.vote_date)}`
+  }
+  return ''
 }
 
 function lawCaption(l: Awaited<ReturnType<typeof fetchCandidates>>[number]): string {
@@ -151,6 +175,11 @@ export default async function AdminPage({ searchParams }: {
             <div key={l.id} className="border border-rim rounded-xl p-4">
               <div className="flex items-baseline gap-2 flex-wrap mb-3">
                 <span className="text-[13px] font-bold">{l.code}</span>
+                {/* why it's on the list — old registration codes (L…/2021) are
+                    normal: bills crawl for years, the EVENT is what's recent */}
+                <span className="text-[11px] font-medium text-adoptat">
+                  {qualifyingEvent(l)}
+                </span>
                 {l.interest_score != null && (
                   <span className="text-[11px] text-faint">interes {l.interest_score}/100{l.interest_reason ? ` — ${l.interest_reason}` : ''}</span>
                 )}
