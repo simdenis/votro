@@ -124,8 +124,16 @@ function PublishActions({ images, caption, storyImage }: {
                      label={images.length > 1 ? `Publică post (${images.length} slide-uri)` : 'Publică post'}
                      onConfirm={() => post.publish(images, caption)} />
       {storyImage && (
-        <PublishButton state={story.state} setState={story.setState} label="Publică story"
-                       onConfirm={() => story.publish([toStoryUrl(storyImage)], '', true)} />
+        <>
+          <PublishButton state={story.state} setState={story.setState} label="Publică story"
+                         onConfirm={() => story.publish([toStoryUrl(storyImage)], '', true)} />
+          {/* IG's Stories API rejects our PNG (feed is fine) — reliable fallback:
+              open the 9:16 image, save it, upload as a story from the app */}
+          <a href={toStoryUrl(storyImage)} target="_blank" rel="noopener noreferrer"
+             className="text-[11px] text-muted underline underline-offset-2">
+            ⬇ descarcă story (pt. app)
+          </a>
+        </>
       )}
     </>
   )
