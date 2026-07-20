@@ -46,10 +46,22 @@ export function HookCard({ data }: { data: HookCardData }) {
         </div>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 20, padding: '0 72px 20px' }}>
-        <div style={{ display: 'flex', fontFamily: MONO, fontSize: 17, fontWeight: 500, color: C.navy, letterSpacing: 2 }}>{data.lawCode}</div>
-        <div style={{ display: 'flex', background: data.statusColor, color: '#fff', fontSize: 15, fontWeight: 600, letterSpacing: 3, textTransform: 'uppercase', padding: '8px 20px', borderRadius: 3 }}>
-          {data.statusLabel}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 72px 22px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+          <div style={{ display: 'flex', fontFamily: MONO, fontSize: 17, fontWeight: 500, color: C.navy, letterSpacing: 2 }}>{data.lawCode}</div>
+          <div style={{ display: 'flex', background: data.statusColor, color: '#fff', fontSize: 15, fontWeight: 600, letterSpacing: 3, textTransform: 'uppercase', padding: '8px 20px', borderRadius: 3 }}>
+            {data.statusLabel}
+          </div>
+        </div>
+        {/* swipe affordance — the eye-catch that says "there's more" */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: accent, borderRadius: 999, padding: '11px 24px' }}>
+          <div style={{ display: 'flex', fontSize: 20, fontWeight: 700, color: '#fff', letterSpacing: 1 }}>Glisează</div>
+          {/* three chevrons — "→" isn't in the Plex subset; SVG reads as motion */}
+          <svg width="46" height="22" viewBox="0 0 46 22" fill="none">
+            <path d="M4 4l7 7-7 7" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" opacity="0.45" />
+            <path d="M18 4l7 7-7 7" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" opacity="0.75" />
+            <path d="M32 4l7 7-7 7" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
         </div>
       </div>
 
