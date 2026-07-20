@@ -52,12 +52,52 @@ export async function GET(req: Request) {
   return withEdgeCache(req, () => renderCard(req))
 }
 
+// Monthly ranking computed server-side from the matview (migration 036) — a
+// short ?month=YYYY-MM URL, no giant signed payload (IG truncated the long
+// signed URL and fell back to all-time). Same guardrails as the poster.
+async function monthEntries(month: string): Promise<ShameEntry[]> {
+  const r = await fetch(
+    `${SUPABASE_URL}/rest/v1/politician_monthly_absences` +
+      `?select=name,first_name,chamber,party_abbr,party_color,gov_role,context_note,mandate_start,held,absent` +
+      `&month=eq.${month}&active=eq.true`,
+    { headers: SB })
+  const rows: any[] = (await r.json()) ?? []
+  const heldByChamber = new Map<string, number>()
+  for (const x of rows) heldByChamber.set(x.chamber, x.held)
+  return rows
+    .filter(x => !x.gov_role && !x.context_note
+      && (x.mandate_start ?? '2000-01-01') <= `${month}-01`
+      && (heldByChamber.get(x.chamber) ?? 0) >= 5)
+    .sort((a, b) => (b.absent / b.held) - (a.absent / a.held))
+    .slice(0, 10)
+    .map(x => ({
+      name: `${x.first_name} ${x.name}`,
+      partyAbbr: x.party_abbr || 'IND',
+      partyColor: x.party_color || '#9e9e9e',
+      chamber: (x.chamber === 'senate' ? 'SENAT' : 'CAMERĂ') as ShameEntry['chamber'],
+      absencePct: Math.round(x.absent / x.held * 100),
+      absent: x.absent, held: x.held,
+    }))
+}
+
+const RO_MONTHS = ['ianuarie', 'februarie', 'martie', 'aprilie', 'mai', 'iunie',
+                   'iulie', 'august', 'septembrie', 'octombrie', 'noiembrie', 'decembrie']
+
 async function renderCard(req: Request): Promise<Response> {
   const sp = new URL(req.url).searchParams
   const d = sp.get('d')
+  const month = sp.get('month')
   let data: ShameCardData
 
-  if (d && await verifySig(d, sp.get('sig'), process.env.CARD_SIGN_SECRET)) {
+  if (month && /^\d{4}-\d{2}$/.test(month)) {
+    const [y, m] = month.split('-').map(Number)
+    const label = `${RO_MONTHS[m - 1]} ${y}`
+    data = {
+      dateLabel: label,
+      subtitle: `absențe la voturile din plen · ${label} · Senat + Cameră`,
+      entries: await monthEntries(month),
+    }
+  } else if (d && await verifySig(d, sp.get('sig'), process.env.CARD_SIGN_SECRET)) {
     // interval mode: render the poster's precomputed, signed ranking. `d` is
     // base64url (NOT percent-encoded JSON): URL normalization decodes %23 → '#'
     // en route, which turns the rest of the query into a fragment and drops
