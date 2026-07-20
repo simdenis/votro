@@ -294,9 +294,9 @@ function CandidateBlock({ l, i }: { l: Candidate; i: number }) {
       </div>
       <p className="text-[12.5px] text-muted mb-3">{l.title.length > 160 ? l.title.slice(0, 157) + '…' : l.title}</p>
       {l.slides.length > 0 ? (
-        // dynamic /api/og URLs — render live on Paid, no pre-render needed
+        // dynamic URLs — suffix already starts with "og/" → /api/<suffix>
         <CarouselPublishCard
-          slides={l.slides.map(s => ({ url: `${SITE}/api/og/${s.suffix}`, label: s.label }))}
+          slides={l.slides.map(s => ({ url: `${SITE}/api/${s.suffix}`, label: s.label }))}
           initialCaption={l.carouselCaption ?? lawCaption(l)}
         />
       ) : (
