@@ -169,19 +169,25 @@ function CardPreview({ src, alt, stagger = 0 }: { src: string; alt: string; stag
   )
 }
 
-/** One candidate: preview + editable caption + publish (+ optional CLI command). */
-export function PublishCard({ image, initialCaption, command, stagger }: {
+/** One card: preview (on demand) + editable caption + publish. */
+export function PublishCard({ image, initialCaption, command }: {
   image: string
   initialCaption: string
   command?: string
-  /** ms to wait before first preview load — page-level load staggering. */
-  stagger?: number
 }) {
   const [caption, setCaption] = useState(initialCaption)
   const [copied, setCopied] = useState(false)
+  const [showPreview, setShowPreview] = useState(false)
   return (
     <div className="flex flex-col sm:flex-row gap-4">
-      <CardPreview src={image} alt="Previzualizare card" stagger={stagger} />
+      {showPreview ? (
+        <CardPreview src={image} alt="Previzualizare card" />
+      ) : (
+        <button onClick={() => setShowPreview(true)}
+                className="self-start sm:self-auto text-[12px] text-muted underline underline-offset-2 whitespace-nowrap">
+          👁 Vezi cardul
+        </button>
+      )}
       <div className="flex-1 min-w-0 flex flex-col gap-2">
         <textarea
           value={caption}
@@ -210,24 +216,33 @@ export function PublishCard({ image, initialCaption, command, stagger }: {
 type DeckSlide = { url: string; label: string }
 
 /** Law candidate: the full carousel deck. On Workers Paid the slides render
- *  live (dynamic /api/og URLs), so the deck is always publishable — no
- *  pre-render, no "nerandat". Previews use CardPreview (auto-retry) since a
- *  live render can still momentarily hiccup. */
+ *  live (dynamic /api/og URLs) and are always publishable. Previews are
+ *  hidden by default and load on demand — rendering all decks' slides at once
+ *  is a thundering herd (~60 cold renders on page load); you only need to see
+ *  a deck when you're about to post it. */
 export function CarouselPublishCard({ slides, initialCaption }: {
   slides: DeckSlide[]
   initialCaption: string
 }) {
   const [caption, setCaption] = useState(initialCaption)
+  const [showPreview, setShowPreview] = useState(false)
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex gap-2.5 overflow-x-auto pb-1">
-        {slides.map((s, i) => (
-          <div key={s.url} className="w-[130px] flex-shrink-0">
-            <CardPreview src={s.url} alt={s.label} stagger={i * 500} />
-            <div className="text-[10px] text-faint text-center mt-0.5">{s.label}</div>
-          </div>
-        ))}
-      </div>
+      {showPreview ? (
+        <div className="flex gap-2.5 overflow-x-auto pb-1">
+          {slides.map((s, i) => (
+            <div key={s.url} className="w-[130px] flex-shrink-0">
+              <CardPreview src={s.url} alt={s.label} stagger={i * 500} />
+              <div className="text-[10px] text-faint text-center mt-0.5">{s.label}</div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <button onClick={() => setShowPreview(true)}
+                className="self-start text-[12px] text-muted underline underline-offset-2">
+          👁 Vezi cardurile ({slides.length})
+        </button>
+      )}
       <textarea
         value={caption}
         onChange={e => setCaption(e.target.value)}
