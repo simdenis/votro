@@ -363,7 +363,7 @@ export function ManualPublish({ initialImages = '', initialCaption = '' }: {
 
 const segBtn = (active: boolean) =>
   `text-[12px] px-2.5 py-1 rounded-md border transition-colors ${
-    active ? 'bg-foreground text-background border-foreground' : 'border-rim text-muted hover:bg-raised'}`
+    active ? 'bg-foreground text-page border-foreground' : 'border-rim text-muted hover:bg-raised'}`
 
 /** Absence / matrix card with a period toggle: whole mandate vs a chosen month. */
 export function PeriodCard({ site, kind, months, bust }: {
@@ -431,7 +431,11 @@ export function WeekSelectionCard({ site, laws }: {
   const [showPreview, setShowPreview] = useState(false)
   const [edited, setEdited] = useState<string | null>(null)
   const chosen = laws.filter(l => sel.has(l.id))
-  const images = chosen.slice(0, 10).map(l => `${site}/api/og/summarycard?id=${l.id}`)
+  // slide 1 = the "look what passed this week" cover, then a card per law
+  const images = chosen.length
+    ? [`${site}/api/og/weekcover?n=${Math.min(chosen.length, 10)}`,
+       ...chosen.slice(0, 9).map(l => `${site}/api/og/summarycard?id=${l.id}`)]
+    : []
   const autoCaption = [
     '📋 Legile promulgate săptămâna aceasta', '',
     ...chosen.map(l => `• ${l.code} — ${l.title.length > 70 ? l.title.slice(0, 67) + '…' : l.title}`),

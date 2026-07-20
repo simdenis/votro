@@ -48,7 +48,7 @@ export function AdminLogin() {
           className="w-full text-[13px] bg-surface border border-rim rounded-lg px-3 py-2"
         />
         <button type="submit" disabled={busy || !key}
-                className="text-[13px] font-medium px-3 py-2 rounded-lg bg-foreground text-background disabled:opacity-50">
+                className="text-[13px] font-medium px-3 py-2 rounded-lg bg-foreground text-page disabled:opacity-50">
           {busy ? 'Se verifică…' : 'Intră'}
         </button>
         {err && <span className="text-[12px] text-respins">{err}</span>}
