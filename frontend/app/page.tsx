@@ -1,12 +1,10 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
-import { countNoun, lawSlug, personSlug, todayRo } from '@/lib/utils'
-import { RecentVotes } from '@/components/recent-votes'
+import { countNoun, lawSlug, personSlug, todayRo, formatDate } from '@/lib/utils'
 import { AbsenceTop } from '@/components/absence-top'
 import { ParliamentBar } from '@/components/parliament-bar'
 import { CountyMap } from '@/components/county-map'
-import type { VoteWithLaw } from '@/lib/types'
 import { NewsletterForm } from '@/components/newsletter-form'
 import { ApiBuilder } from '@/components/api-builder'
 
@@ -30,9 +28,12 @@ export default async function Dashboard() {
     // have real data to work over (RecentVotes filters/sorts client-side).
     // columns trimmed to what RecentVotes renders — select('*, laws(*)') shipped
     // every law's em_url/scraped_at/etc into the serialized client props twice
-    db.from('votes')
-      .select('id, vote_date, chamber, outcome, for_count, against_count, abstention_count, description, laws(code, title, law_category, summary, summary_is_ai, interest_score)')
-      .not('law_id', 'is', null).order('vote_date', { ascending: false }).limit(120),
+    // Recently promulgated laws — the "finished, now it's law" feed. More alive
+    // than raw votes (which stop during recess) and reads in plain language.
+    db.from('law_status')
+      .select('law_id, code, title, summary, law_category, presidential_date')
+      .eq('presidential_status', 'promulgat').not('presidential_date', 'is', null)
+      .order('presidential_date', { ascending: false }).limit(12),
     db.from('law_status').select('*', { count: 'exact', head: true }).eq('presidential_status', 'promulgat'),
     db.from('law_status').select('*', { count: 'exact', head: true }).or('senate_outcome.eq.respins,camera_outcome.eq.respins'),
     db.from('parties').select('abbreviation, color, name'),
@@ -47,13 +48,14 @@ export default async function Dashboard() {
       .order('presence_pct', { ascending: true }).limit(15),
     // Legi tacite — soonest upcoming constitutional deadlines (art. 75). The one
     // thing that doesn't stop during recess, so it belongs on the homepage.
-    db.from('pending_bills').select('id, code, title, tacit_deadline')
+    db.from('pending_bills').select('id, code, title, summary, tacit_deadline')
       .not('tacit_deadline', 'is', null).gte('tacit_deadline', today)
       .order('tacit_deadline', { ascending: true }).limit(5),
   ])
 
   const totalLaws     = r0.count ?? 0
-  const recentVotes   = (r2.data as VoteWithLaw[] | null) ?? []
+  type PromLaw = { law_id: string; code: string; title: string; summary: string | null; law_category: string | null; presidential_date: string | null }
+  const promLaws      = (r2.data as PromLaw[] | null) ?? []
   const promulgatedCount = r3.count ?? 0
   const respinsCount  = r4.count ?? 0
   const allParties    = r5.data ?? []
@@ -62,7 +64,7 @@ export default async function Dashboard() {
     ...((r7.data ?? []) as Omit<LowPresence, 'href'>[]).map(s => ({ ...s, href: `/senatori/${personSlug(s.first_name, s.name)}` })),
     ...((r8.data ?? []) as Omit<LowPresence, 'href'>[]).map(s => ({ ...s, href: `/deputati/${personSlug(s.first_name, s.name)}` })),
   ].sort((a, b) => a.presence_pct - b.presence_pct).slice(0, 15)
-  const tacitBills = (r9.data ?? []) as { id: string; code: string; title: string | null; tacit_deadline: string | null }[]
+  const tacitBills = (r9.data ?? []) as { id: string; code: string; title: string | null; summary: string | null; tacit_deadline: string | null }[]
 
   const senatorCounts: Record<string, number> = {}
   for (const p of (r6.data ?? []) as any[]) {
@@ -185,19 +187,32 @@ export default async function Dashboard() {
       {/* ── Vote list + cohesion sidebar ─────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-x-12 gap-y-10 items-start">
 
-        {/* Recent votes — min-w-0: grid items default to min-width auto, so the
-            nowrap official-title line would blow the column out to full title
-            width and force horizontal scrolling on the whole page */}
+        {/* Recently promulgated laws — the "it's now law" feed, in plain language */}
         <section className="min-w-0">
           <h2 className="font-serif text-[20px] font-normal text-foreground border-b-2 border-sidebar pb-[5px] mb-2">
-            Voturi recente
+            Legi promulgate recent
           </h2>
-          <RecentVotes votes={recentVotes} />
-          {recentVotes.length >= 8 && (
-            <Link href="/voturi" className="inline-block mt-5 text-[13px] text-muted hover:text-foreground transition-colors">
-              Toate voturile →
-            </Link>
-          )}
+          <div className="space-y-2">
+            {promLaws.map(l => (
+              <Link
+                key={l.law_id}
+                href={`/legi/${l.law_id}`}
+                className="block bg-surface border border-rim rounded-lg px-3 py-2.5 hover:bg-raised transition-colors"
+              >
+                {/* plain-language summary is the headline; official title/code below */}
+                <span className="block text-[13.5px] font-medium text-foreground leading-snug line-clamp-2">
+                  {l.summary || l.title}
+                </span>
+                <span className="flex items-center gap-2 mt-1 font-mono text-[10px] text-muted">
+                  <span>{l.code}</span>
+                  <span className="text-adoptat font-semibold">Promulgată{l.presidential_date ? ` · ${formatDate(l.presidential_date)}` : ''}</span>
+                </span>
+              </Link>
+            ))}
+          </div>
+          <Link href="/legi?status=promulgat" className="inline-block mt-5 text-[13px] text-muted hover:text-foreground transition-colors">
+            Toate legile →
+          </Link>
 
           {/* Legi tacite — soonest deadlines. Nobody else tracks tacit adoption,
               and the deadlines keep running during recess. Under the feed (not
@@ -221,8 +236,8 @@ export default async function Dashboard() {
                       className="flex items-center justify-between gap-2 bg-surface border border-rim rounded-lg px-3 py-2.5 hover:bg-raised transition-colors"
                     >
                       <span className="min-w-0">
-                        <span className="block text-[13px] font-medium text-foreground truncate">{b.title ?? b.code}</span>
-                        <span className="block font-mono text-[10px] text-muted">{b.code}</span>
+                        <span className="block text-[13px] font-medium text-foreground line-clamp-2 leading-snug">{b.summary || b.title || b.code}</span>
+                        <span className="block font-mono text-[10px] text-muted mt-0.5">{b.code}</span>
                       </span>
                       {days != null && (
                         <span className={`text-[12px] font-bold tabular-nums flex-shrink-0 ${days <= 7 ? 'text-respins' : days <= 30 ? 'text-deviere' : 'text-muted'}`}>

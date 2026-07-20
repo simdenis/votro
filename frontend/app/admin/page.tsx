@@ -92,12 +92,11 @@ async function fetchCandidates() {
     .from('laws')
     .select('id, code, title, summary, headline, presidential_status, presidential_date, interest_score, interest_reason, initiator_type')
     .in('id', ids)
-  // cap at 6 fully-processed decks — each is heavy JSX (slides + captions) and
-  // the whole admin render must fit the Free plan's 10ms CPU cap. Everything
-  // else is reachable via the "Legile săptămânii" list.
+  // top 12 by interest (Workers Paid → 30s CPU, no longer the Free 10ms squeeze);
+  // the rest are in the "Legile săptămânii" list.
   const top = (laws ?? [])
     .sort((a, b) => (b.interest_score ?? -1) - (a.interest_score ?? -1))
-    .slice(0, 6)
+    .slice(0, 12)
     .map(l => {
       const last = (votesByLaw.get(l.id) ?? [])
         .sort((a, b) => (b.vote_date ?? '').localeCompare(a.vote_date ?? ''))[0]
