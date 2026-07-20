@@ -15,11 +15,10 @@
 		"nodejs_compat",
 		"global_fetch_strictly_public"
 	],
-	// Satori/resvg og-card rendering (hemicycle cards especially) exceeds the
-	// Free plan's 10ms CPU cap → Cloudflare error 1102 / HTTP 503 on
-	// lawcard/tacitcard. After upgrading to Workers Paid, restore:
-	//   "limits": { "cpu_ms": 30000 },
-	// (setting it on Free makes `wrangler deploy` fail with code 100328).
+	// Workers Paid (since 2026-07-20): 30s CPU cap. This is what lets the
+	// satori/resvg hemicycle cards (lawcard/tacitcard/deviationcard) render live
+	// — no more Free-plan 10ms 1102/503, no more offline pre-render dance.
+	"limits": { "cpu_ms": 30000 },
 	"assets": {
 		"directory": ".open-next/assets",
 		"binding": "ASSETS"
