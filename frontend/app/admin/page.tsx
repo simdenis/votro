@@ -1,5 +1,5 @@
 import { getDB } from '@/lib/supabase'
-import { PublishCard, CarouselPublishCard, ManualPublish } from '@/components/admin/publish-panel'
+import { PublishCard, CarouselPublishCard, ManualPublish, PeriodCard, WeekSelectionCard } from '@/components/admin/publish-panel'
 import { AdminLogin, LogoutButton } from '@/components/admin/admin-login'
 import { isAdmin } from '@/lib/admin-auth'
 import { lawSlides, lawCarouselCaption, initiatorLineFromRows, CARD_V, type Slide } from '@/lib/ig-carousel'
@@ -242,16 +242,20 @@ async function fetchMonthlyAbsents() {
   return { month, label, missing: false as const, entries }
 }
 
-// ── quarterly matrix window ──────────────────────────────────────────────────
-
-function lastQuarter(): { from: string; to: string; label: string } {
+// ── month options for the period pickers ─────────────────────────────────────
+// dec 2024 (mandate start) → last complete month, newest first.
+function monthOptions(): { value: string; label: string }[] {
   const now = new Date()
-  const q = Math.floor(now.getMonth() / 3) // current quarter 0-3
-  const y = q === 0 ? now.getFullYear() - 1 : now.getFullYear()
-  const prevQ = q === 0 ? 3 : q - 1
-  const m0 = prevQ * 3
-  const pad = (m: number) => String(m + 1).padStart(2, '0')
-  return { from: `${y}-${pad(m0)}`, to: `${y}-${pad(m0 + 2)}`, label: `T${prevQ + 1} ${y}` }
+  const out: { value: string; label: string }[] = []
+  // start from last complete month, walk back to 2024-12
+  let y = now.getFullYear(), m = now.getMonth() - 1 // 0-indexed, prev month
+  if (m < 0) { m = 11; y -= 1 }
+  while (y > 2024 || (y === 2024 && m >= 11)) {
+    out.push({ value: `${y}-${String(m + 1).padStart(2, '0')}`, label: `${RO_MONTHS[m]} ${y}` })
+    m -= 1
+    if (m < 0) { m = 11; y -= 1 }
+  }
+  return out
 }
 
 // ── page ─────────────────────────────────────────────────────────────────────
@@ -330,23 +334,15 @@ export default async function AdminPage({ searchParams }: {
     return last && last.from_date === today
   })
 
-  const quarter = lastQuarter()
   const prefillImg = b64urlDecode(sp.img)
   const prefillCap = b64urlDecode(sp.cap)
 
-  // short ?month=YYYY-MM URL — the route computes the ranking server-side from
-  // the matview. (The old signed-payload URL was ~1300 chars; IG truncated it
-  // and the card fell back to all-time.)
-  let absImage: string | null = null, absCaption = ''
-  if (!monthlyAbs.missing && monthlyAbs.entries.length) {
-    absImage = `${SITE}/api/og/shamecard?month=${monthlyAbs.month}`
-    absCaption = [
-      `🔴 Absențe — ${monthlyAbs.label}: top ${monthlyAbs.entries.length} cei mai absenți parlamentari`, '',
-      ...monthlyAbs.entries.map((e, i) => `${i + 1}. ${e.n} (${e.p}, ${e.ch}) — ${e.a}% absențe (${e.x}/${e.h} voturi)`),
-      '', 'Doar parlamentarii activi toată perioada, fără cei cu notă de context (concediu/delegație). Membrii Guvernului nu sunt incluși.',
-      '', `Toată lista: ${SITE}`, '', '#parlament #absenteism #laButoane #transparență #românia',
-    ].join('\n')
-  }
+  // month options for the period pickers: dec 2024 → last complete month, newest first
+  const recentMonths = monthOptions()
+  // this week's promulgated laws → the select-and-post carousel
+  const weekPromulgated = weekLaws
+    .filter(l => l.presidential_status === 'promulgat')
+    .map(l => ({ id: l.id, code: l.code, title: l.headline || l.title }))
 
   const tacitCaption = tacit.length ? [
     '⏳ Legi pe cale să treacă TACIT — fără niciun vot', '',
@@ -363,12 +359,6 @@ export default async function AdminPage({ searchParams }: {
     }),
     '', `Parcursul fiecăruia: ${SITE}/traseisti`, '', HASHTAGS,
   ].join('\n') : ''
-
-  const matrixCaption = [
-    `🤝 Cine votează cu cine — ${quarter.label}`, '',
-    'Procentul de voturi disputate în care partidele au votat la fel, două câte două. Voturile aproape unanime sunt excluse — doar cele care chiar despart plenul.', '',
-    `Explorează matricea interactivă: ${SITE}/analize`, '', HASHTAGS,
-  ].join('\n')
 
   return (
     <div className="max-w-[860px]">
@@ -468,15 +458,13 @@ export default async function AdminPage({ searchParams }: {
         )}
       </Section>
 
-      <Section title={`Absenți — ${monthlyAbs.label}, top 10`} cadence="lunar"
-               hint="Aceleași reguli ca postarea lunară: fără membri ai Guvernului, fără cei cu notă de context, doar mandate întregi.">
+      <Section title="Absențe — clasament" cadence="lunar / mandat"
+               hint="Alege perioada: tot mandatul sau o lună anume. Fără membri ai Guvernului, fără cei cu notă de context, doar mandate întregi.">
         {monthlyAbs.missing ? (
-          <p className="text-[13px] text-respins">Tabelul „politician_monthly_absences" lipsește — rulează migrația 036 în Supabase SQL editor, apoi refresh-ul rulează zilnic de pe VPS.</p>
-        ) : !absImage ? (
-          <p className="text-[13px] text-faint">Nicio lună completă cu date suficiente.</p>
+          <p className="text-[13px] text-respins">Tabelul „politician_monthly_absences" lipsește — rulează migrația 036 în Supabase SQL editor.</p>
         ) : (
           <div className="border border-rim rounded-xl p-4">
-            <PublishCard image={absImage} initialCaption={absCaption} />
+            <PeriodCard site={SITE} kind="absente" months={recentMonths} bust={today} />
           </div>
         )}
       </Section>
@@ -492,10 +480,17 @@ export default async function AdminPage({ searchParams }: {
         )}
       </Section>
 
-      <Section title={`Matricea partidelor — ${quarter.label}`} cadence="trimestrial"
-               hint="Cine votează cu cine, pe voturile disputate din trimestrul încheiat.">
+      <Section title="Matricea partidelor" cadence="lunar / mandat"
+               hint="Cine votează cu cine, pe voturile disputate. Alege perioada: tot mandatul sau o lună anume.">
         <div className="border border-rim rounded-xl p-4">
-          <PublishCard image={`${SITE}/api/og/matrix?from=${quarter.from}&to=${quarter.to}`} initialCaption={matrixCaption} />
+          <PeriodCard site={SITE} kind="matrice" months={recentMonths} bust={today} />
+        </div>
+      </Section>
+
+      <Section title="Legi promulgate săptămâna aceasta" cadence="săptămânal"
+               hint="Bifează ce vrei să incluzi → se postează ca un carusel (un slide per lege).">
+        <div className="border border-rim rounded-xl p-4">
+          <WeekSelectionCard site={SITE} laws={weekPromulgated} />
         </div>
       </Section>
 
