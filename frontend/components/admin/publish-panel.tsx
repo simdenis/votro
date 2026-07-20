@@ -360,3 +360,113 @@ export function ManualPublish({ initialImages = '', initialCaption = '' }: {
     </div>
   )
 }
+
+const segBtn = (active: boolean) =>
+  `text-[12px] px-2.5 py-1 rounded-md border transition-colors ${
+    active ? 'bg-foreground text-background border-foreground' : 'border-rim text-muted hover:bg-raised'}`
+
+/** Absence / matrix card with a period toggle: whole mandate vs a chosen month. */
+export function PeriodCard({ site, kind, months, bust }: {
+  site: string
+  kind: 'absente' | 'matrice'
+  /** recent months, newest first: { value: '2026-06', label: 'iunie 2026' } */
+  months: { value: string; label: string }[]
+  /** daily stamp appended to bust the edge cache once a day (fresh data) */
+  bust?: string
+}) {
+  const [mode, setMode] = useState<'all' | 'month'>(kind === 'absente' ? 'month' : 'all')
+  const [month, setMonth] = useState(months[0]?.value ?? '')
+  const [showPreview, setShowPreview] = useState(false)
+  const label = mode === 'all' ? 'tot mandatul' : (months.find(m => m.value === month)?.label ?? month)
+
+  const q = kind === 'absente'
+    ? (mode === 'all' ? '' : `?month=${month}`)
+    : (mode === 'all' ? '' : `?from=${month}&to=${month}`)
+  const path = kind === 'absente' ? 'shamecard' : 'matrix'
+  const image = `${site}/api/og/${path}${q}${bust ? `${q ? '&' : '?'}r=${bust}` : ''}`
+
+  const HT = '#parlament #transparență #românia #laButoane'
+  const defaultCaption = kind === 'absente'
+    ? [`🔴 Absențe — ${mode === 'all' ? 'clasament (tot mandatul)' : label}: cei mai absenți parlamentari`, '',
+       mode === 'all' ? 'Absențe la voturile din plen, de la validarea mandatului (dec. 2024).' : `Absențe la voturile din plen în ${label}.`, '',
+       'Doar parlamentari activi; fără membrii Guvernului și fără cei cu notă de context.', '',
+       `Toată lista: ${site}`, '', `#absenteism ${HT}`].join('\n')
+    : [`🤝 Cine votează cu cine — ${label}`, '',
+       'Procentul de voturi disputate în care partidele au votat la fel, două câte două. Voturile aproape unanime sunt excluse.', '',
+       `Matricea interactivă: ${site}/analize`, '', `#politică ${HT}`].join('\n')
+
+  const [caption, setCaption] = useState(defaultCaption)
+  // reset caption + preview when the period changes (new content)
+  useEffect(() => { setCaption(defaultCaption); setShowPreview(false) }, [mode, month]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex items-center gap-2 flex-wrap">
+        <button onClick={() => setMode('all')} className={segBtn(mode === 'all')}>Tot mandatul</button>
+        <button onClick={() => setMode('month')} className={segBtn(mode === 'month')}>Pe lună</button>
+        {mode === 'month' && (
+          <select value={month} onChange={e => setMonth(e.target.value)}
+                  className="text-[12px] bg-surface border border-rim rounded-md px-2 py-1">
+            {months.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+          </select>
+        )}
+      </div>
+      {showPreview
+        ? <CardPreview src={image} alt="card" />
+        : <button onClick={() => setShowPreview(true)} className="self-start text-[12px] text-muted underline underline-offset-2">👁 Vezi cardul</button>}
+      <textarea value={caption} onChange={e => setCaption(e.target.value)} rows={8}
+                className="w-full text-[12.5px] leading-relaxed bg-surface border border-rim rounded-lg p-2.5 font-mono resize-y" />
+      <PublishActions images={[image]} caption={caption} storyImage={image} />
+    </div>
+  )
+}
+
+/** Pick this week's promulgated laws → post them as one carousel (a slide per
+ *  law's summary card). Button + checkboxes. */
+export function WeekSelectionCard({ site, laws }: {
+  site: string
+  laws: { id: string; code: string; title: string }[]
+}) {
+  const [sel, setSel] = useState<Set<string>>(new Set())
+  const [showPreview, setShowPreview] = useState(false)
+  const [edited, setEdited] = useState<string | null>(null)
+  const chosen = laws.filter(l => sel.has(l.id))
+  const images = chosen.slice(0, 10).map(l => `${site}/api/og/summarycard?id=${l.id}`)
+  const autoCaption = [
+    '📋 Legile promulgate săptămâna aceasta', '',
+    ...chosen.map(l => `• ${l.code} — ${l.title.length > 70 ? l.title.slice(0, 67) + '…' : l.title}`),
+    '', `Fiecare, explicată pe ${site} (link în bio)`, '',
+    '#parlament #legi #laButoane #transparență #românia',
+  ].join('\n')
+  const caption = edited ?? autoCaption
+
+  const toggle = (id: string) =>
+    setSel(p => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); setEdited(null); return n })
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-1.5">
+        {laws.length === 0 && <p className="text-[12px] text-faint">Nicio lege promulgată în ultimele 7 zile.</p>}
+        {laws.map(l => (
+          <label key={l.id} className="flex items-start gap-2 text-[12.5px] cursor-pointer">
+            <input type="checkbox" checked={sel.has(l.id)} onChange={() => toggle(l.id)} className="mt-1" />
+            <span><span className="font-mono font-semibold">{l.code}</span> — <span className="text-muted">{l.title.length > 90 ? l.title.slice(0, 87) + '…' : l.title}</span></span>
+          </label>
+        ))}
+      </div>
+      {chosen.length > 0 && (
+        <>
+          {showPreview
+            ? <div className="flex gap-2.5 overflow-x-auto pb-1">{images.map((u, i) => <div key={u} className="w-[130px] flex-shrink-0"><CardPreview src={u} alt={`slide ${i + 1}`} stagger={i * 500} /></div>)}</div>
+            : <button onClick={() => setShowPreview(true)} className="self-start text-[12px] text-muted underline underline-offset-2">👁 Vezi cardurile ({images.length})</button>}
+          <textarea value={caption} onChange={e => setEdited(e.target.value)} rows={7}
+                    className="w-full text-[12.5px] leading-relaxed bg-surface border border-rim rounded-lg p-2.5 font-mono resize-y" />
+          <div className="flex items-center gap-3 flex-wrap">
+            <PublishActions images={images} caption={caption} storyImage={images.length === 1 ? images[0] : undefined} />
+            <span className="text-[11px] text-adoptat">{images.length} slide-uri{images.length > 10 ? ' (max 10)' : ''}</span>
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
