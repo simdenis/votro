@@ -4,7 +4,7 @@
 // instead of window.confirm, and a preview <img> with a manual reload since the
 // og routes 503 intermittently on the Free CPU cap.
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 
 type PubState =
   | { phase: 'idle' }
@@ -259,26 +259,49 @@ export function CarouselPublishCard({ slides, initialCaption }: {
 
 /** Free-form: image URLs (one per line, 2+ = carousel) + caption. Prefillable
  *  from the monthly approval email (?img=&cap= b64url). */
+/** Accept a pasted PAGE link and turn it into a card image URL, so you can
+ *  drop a /legi/<id> (or /voturi, /deputati, /senatori) link straight in.
+ *  A real /api/og/… URL passes through unchanged. */
+function toCardUrl(u: string): string {
+  try {
+    const url = new URL(u)
+    if (url.pathname.startsWith('/api/og/')) return u
+    const legi = url.pathname.match(/\/legi\/([0-9a-f-]{36})/)
+    if (legi) return `${url.origin}/api/og/summarycard?id=${legi[1]}`
+    const vot = url.pathname.match(/\/voturi\/([0-9a-f-]{36})/)
+    if (vot) return `${url.origin}/api/og/votecard?vote=${vot[1]}`
+    return u
+  } catch { return u }
+}
+
 export function ManualPublish({ initialImages = '', initialCaption = '' }: {
   initialImages?: string
   initialCaption?: string
 }) {
   const [images, setImages] = useState(initialImages)
   const [caption, setCaption] = useState(initialCaption)
-  const urls = images.split('\n').map(s => s.trim()).filter(Boolean)
-  const previewRef = useRef<HTMLDivElement>(null)
+  const [showPreview, setShowPreview] = useState(false)
+  const urls = images.split('\n').map(s => s.trim()).filter(Boolean).map(toCardUrl)
+  const converted = images.split('\n').map(s => s.trim()).filter(Boolean).some(u => toCardUrl(u) !== u)
   return (
     <div className="flex flex-col gap-2">
       {urls.length > 0 && (
-        <div ref={previewRef} className="flex gap-3 overflow-x-auto">
-          {urls.map((u, i) => <div key={i} className="w-[180px] flex-shrink-0"><CardPreview src={u} alt={`slide ${i + 1}`} stagger={i * 700} /></div>)}
-        </div>
+        showPreview ? (
+          <div className="flex gap-3 overflow-x-auto">
+            {urls.map((u, i) => <div key={i} className="w-[180px] flex-shrink-0"><CardPreview src={u} alt={`slide ${i + 1}`} stagger={i * 500} /></div>)}
+          </div>
+        ) : (
+          <button onClick={() => setShowPreview(true)} className="self-start text-[12px] text-muted underline underline-offset-2">
+            👁 Vezi {urls.length > 1 ? `cardurile (${urls.length})` : 'cardul'}
+          </button>
+        )
       )}
+      {converted && <p className="text-[11px] text-adoptat">✓ link de pagină → card automat</p>}
       <textarea
         value={images}
         onChange={e => setImages(e.target.value)}
         rows={3}
-        placeholder={'URL imagine (unul pe linie; 2+ linii = carusel)'}
+        placeholder={'Lipește un link de lege (/legi/…) sau un URL de card — unul pe linie; 2+ = carusel'}
         className="w-full text-[12px] bg-surface border border-rim rounded-lg p-2.5 font-mono resize-y"
       />
       <textarea
