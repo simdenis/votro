@@ -35,6 +35,8 @@ from bs4 import BeautifulSoup, Tag
 from dotenv import load_dotenv
 from supabase import create_client, Client
 
+from name_utils import titlecase_name
+
 # ──────────────────────────────────────────────────────────────
 # Logging  (shares file with senat_scraper when both run)
 # ──────────────────────────────────────────────────────────────
@@ -742,6 +744,9 @@ class CameraScraper:
     def _upsert_politician(self, last_name: str, first_name: str, party_id: Optional[str]) -> Optional[str]:
         if not last_name:
             return None
+        # cdep is already Title Case; normalize anyway so both chambers agree
+        last_name = titlecase_name(last_name)
+        first_name = titlecase_name(first_name)
         key = f"{last_name}|{first_name}"
         if key in self._pol_id_cache:           # in-memory hit — no DB round-trip
             return self._pol_id_cache[key]
