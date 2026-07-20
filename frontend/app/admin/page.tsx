@@ -294,12 +294,10 @@ function CandidateBlock({ l, i }: { l: Candidate; i: number }) {
       </div>
       <p className="text-[12.5px] text-muted mb-3">{l.title.length > 160 ? l.title.slice(0, 157) + '…' : l.title}</p>
       {l.slides.length > 0 ? (
+        // dynamic /api/og URLs — render live on Paid, no pre-render needed
         <CarouselPublishCard
-         
-          slides={l.slides.map(s => ({ url: `${SITE}${s.static}`, label: s.label }))}
-          fallbackImage={`${SITE}/api/og/${l.slides[0].suffix}`}
+          slides={l.slides.map(s => ({ url: `${SITE}/api/og/${s.suffix}`, label: s.label }))}
           initialCaption={l.carouselCaption ?? lawCaption(l)}
-          command={`cd frontend && node scripts/render-ig.mjs ${l.id} && npm run deploy`}
         />
       ) : (
         <PublishCard image={`${SITE}/api/og/summarycard?id=${l.id}`}
@@ -428,8 +426,8 @@ export default async function AdminPage({ searchParams }: {
           ))}
         </div>
         <p className="px-4 py-2 text-[11px] text-faint border-t border-rim">
-          Cele cu scor mare apar deja ca postări gata mai jos. Ca să pregătești oricare (chiar și una cu scor mic),
-          spune-mi codul și îți randez caruselul.
+          Cele cu scor mare apar deja ca postări gata mai jos. Pentru oricare alta, cere-mi să o adaug —
+          slide-urile se randează live, fără pre-render.
         </p>
       </details>
 
@@ -463,7 +461,7 @@ export default async function AdminPage({ searchParams }: {
       )}
 
       <Section title="Promulgate de Președinte" cadence="săptămânal"
-               hint={`Legi promulgate în ultimele ${CANDIDATE_DAYS} zile, sortate după interes. Carusel complet = publicabil direct; „nerandat" = rulează comanda de randare.`}>
+               hint={`Legi promulgate în ultimele ${CANDIDATE_DAYS} zile, sortate după interes. Fiecare carusel e gata de publicat — slide-urile se randează live.`}>
         <div className="flex flex-col gap-6">
           {promulgated.length === 0 && <p className="text-[13px] text-faint">Nicio promulgare recentă.</p>}
           {promulgated.map((l, i) => <CandidateBlock key={l.id} l={l} i={i} />)}

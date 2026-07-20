@@ -209,51 +209,23 @@ export function PublishCard({ image, initialCaption, command, stagger }: {
 
 type DeckSlide = { url: string; label: string }
 
-/** Static slide thumb: loads instantly or 404s (no CPU cap on assets) —
- *  a 404 means "not rendered yet", no retry needed. */
-function SlideThumb({ slide, onStatus }: { slide: DeckSlide; onStatus: (ok: boolean) => void }) {
-  const [failed, setFailed] = useState(false)
-  return (
-    <div className="w-[130px] flex-shrink-0">
-      {failed ? (
-        <div className="aspect-[4/5] flex flex-col items-center justify-center gap-1 bg-surface border border-dashed border-rim rounded-lg text-[10px] text-faint px-2 text-center">
-          <span>nerandat</span>
-        </div>
-      ) : (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={slide.url} alt={slide.label} loading="lazy" className="w-full rounded-lg border border-rim"
-             onLoad={() => onStatus(true)}
-             onError={() => { setFailed(true); onStatus(false) }} />
-      )}
-      <div className="text-[10px] text-faint text-center mt-0.5">{slide.label}</div>
-    </div>
-  )
-}
-
-/** Law candidate: the full carousel deck (pre-rendered static slides) with
- *  per-slide status. Complete deck → one-tap carousel publish; incomplete →
- *  fall back to publishing just the (dynamic, edge-cached) summary card. */
-export function CarouselPublishCard({ slides, fallbackImage, initialCaption, command }: {
+/** Law candidate: the full carousel deck. On Workers Paid the slides render
+ *  live (dynamic /api/og URLs), so the deck is always publishable — no
+ *  pre-render, no "nerandat". Previews use CardPreview (auto-retry) since a
+ *  live render can still momentarily hiccup. */
+export function CarouselPublishCard({ slides, initialCaption }: {
   slides: DeckSlide[]
-  /** Dynamic summarycard URL — publishable even when the deck isn't rendered. */
-  fallbackImage: string
   initialCaption: string
-  command: string
 }) {
   const [caption, setCaption] = useState(initialCaption)
-  const [copied, setCopied] = useState(false)
-  const [status, setStatus] = useState<Record<string, boolean>>({})
-  const ready = slides.filter(s => status[s.url] === true).length
-  const settled = Object.keys(status).length === slides.length
-  const complete = settled && ready === slides.length
-  // story = always the first slide (summary card) — static when rendered, else dynamic
-  const storyImage = complete ? slides[0].url : fallbackImage
   return (
     <div className="flex flex-col gap-3">
       <div className="flex gap-2.5 overflow-x-auto pb-1">
-        {slides.map(s => (
-          <SlideThumb key={s.url} slide={s}
-                      onStatus={ok => setStatus(prev => ({ ...prev, [s.url]: ok }))} />
+        {slides.map((s, i) => (
+          <div key={s.url} className="w-[130px] flex-shrink-0">
+            <CardPreview src={s.url} alt={s.label} stagger={i * 500} />
+            <div className="text-[10px] text-faint text-center mt-0.5">{s.label}</div>
+          </div>
         ))}
       </div>
       <textarea
@@ -263,28 +235,8 @@ export function CarouselPublishCard({ slides, fallbackImage, initialCaption, com
         className="w-full text-[12.5px] leading-relaxed bg-surface border border-rim rounded-lg p-2.5 font-mono resize-y"
       />
       <div className="flex items-center gap-3 flex-wrap">
-        {complete ? (
-          <PublishActions images={slides.map(s => s.url)} caption={caption} storyImage={storyImage} />
-        ) : (
-          <>
-            <PublishActions images={[fallbackImage]} caption={caption} storyImage={storyImage} />
-            <span className="text-[11px] text-faint">
-              {settled
-                ? `doar rezumatul — ${slides.length - ready} slide-uri nerandate; pentru carusel rulează comanda ↓`
-                : 'se verifică slide-urile…'}
-            </span>
-          </>
-        )}
-        <button
-          onClick={() => { navigator.clipboard.writeText(command); setCopied(true); setTimeout(() => setCopied(false), 1500) }}
-          className="text-[12px] text-muted underline underline-offset-2"
-          title={command}
-        >
-          {copied ? 'copiat ✓' : 'copiază comanda de randare'}
-        </button>
-        {complete && (
-          <span className="text-[11px] text-adoptat">carusel complet — {slides.length} slide-uri ✓</span>
-        )}
+        <PublishActions images={slides.map(s => s.url)} caption={caption} storyImage={slides[0]?.url} />
+        <span className="text-[11px] text-adoptat">carusel · {slides.length} slide-uri</span>
       </div>
     </div>
   )
