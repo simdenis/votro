@@ -37,8 +37,11 @@ export async function GET(request: Request) {
 }
 
 async function renderCard(request: Request): Promise<Response> {
-  const idParam = new URL(request.url).searchParams.get('id')
+  const sp = new URL(request.url).searchParams
+  const idParam = sp.get('id')
   const id = isUuid(idParam) ? idParam : null
+  // nohl=1 → don't repeat the headline (a hook cover slide already carries it)
+  const noHeadline = sp.get('nohl') === '1'
 
   const law = id
     ? ((await (await fetch(`${U}/rest/v1/law_status?law_id=eq.${id}&select=*&limit=1`, { headers: SB })).json())?.[0] as LawStatus | undefined)
@@ -59,7 +62,7 @@ async function renderCard(request: Request): Promise<Response> {
       category: law.law_category,
       year: mapped.year,
       summary: law.summary,
-      headline: headlineRow,
+      headline: noHeadline ? null : headlineRow,
       statusLabel: mapped.statusLabel,
       statusColor: mapped.statusColor,
       dateLine: mapped.dateLine,

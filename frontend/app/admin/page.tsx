@@ -128,7 +128,7 @@ async function fetchCandidates() {
       (initiators ?? []).filter(r => r.law_id === l.id))
     return {
       ...l,
-      slides: status ? lawSlides(status, devVote) : ([] as Slide[]),
+      slides: status ? lawSlides(status, devVote, Boolean(l.headline)) : ([] as Slide[]),
       carouselCaption: status ? lawCarouselCaption(status, { initiator, devCount, headline: l.headline }) : null,
     }
   })

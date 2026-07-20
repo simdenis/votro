@@ -17,14 +17,21 @@ export function slideName(suffix: string): string {
 
 export type Slide = { suffix: string; static: string; label: string }
 
-/** Ordered slides for a law carousel: summary → tacit → chambers chronologically
- *  → deviation (when someone broke the party line). devVote = the chamber vote
- *  with the most deviations, or null. */
-export function lawSlides(law: LawStatus, devVote: string | null): Slide[] {
+/** Ordered slides for a law carousel: [hook cover] → summary → tacit → chambers
+ *  chronologically → deviation (when someone broke the party line).
+ *  devVote = the chamber vote with the most deviations, or null.
+ *  hasHeadline → prepend the catchy cover slide and drop the headline from the
+ *  summary card (nohl) so the phrase isn't repeated. */
+export function lawSlides(law: LawStatus, devVote: string | null, hasHeadline = false): Slide[] {
   const v = `&v=${CARD_V}`
-  const slides: Slide[] = [
-    { suffix: `og/summarycard?id=${law.law_id}${v}`, static: '', label: 'rezumat' },
-  ]
+  const slides: Slide[] = []
+  if (hasHeadline) {
+    slides.push({ suffix: `og/hookcard?id=${law.law_id}${v}`, static: '', label: 'cover' })
+  }
+  slides.push({
+    suffix: `og/summarycard?id=${law.law_id}${hasHeadline ? '&nohl=1' : ''}${v}`,
+    static: '', label: 'rezumat',
+  })
   const passed = Boolean(law.presidential_status)
   for (const [key, voteField] of [['senate', 'senate_vote_id'], ['camera', 'camera_vote_id']] as const) {
     if (passed && !law[voteField]) {

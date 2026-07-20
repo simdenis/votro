@@ -349,7 +349,17 @@ def _law_slides(cfg: Config, law_id: str, hook: str | None = None) -> tuple[list
     # URL fetched before a card redesign would serve the stale image forever. It
     # also versions the static filename (new v → new suffix → new hash → new
     # file), so pre-rendered slides can't go stale either. Bump after redesigns.
-    suffixes = [f"og/summarycard?id={law_id}&v={CARD_V}"]
+    #
+    # A catchy headline (laws.headline) → a hook COVER slide first, and the
+    # summary card drops the headline (nohl) so it isn't repeated. Must match
+    # frontend/lib/ig-carousel.ts lawSlides() suffix-for-suffix (shared hashes).
+    has_headline = bool(_sb_get(cfg, "laws", {
+        "id": f"eq.{law_id}", "select": "headline", "limit": "1"})[0].get("headline"))
+    suffixes = []
+    if has_headline:
+        suffixes.append(f"og/hookcard?id={law_id}&v={CARD_V}")
+    suffixes.append(f"og/summarycard?id={law_id}"
+                    + ("&nohl=1" if has_headline else "") + f"&v={CARD_V}")
     passed = bool(law.get("presidential_status"))
     # Tacit slide right after the summary: a chamber the law passed without a
     # plenary vote gets the "nimeni nu a votat" card.
