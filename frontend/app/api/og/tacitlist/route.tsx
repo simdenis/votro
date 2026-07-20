@@ -19,16 +19,17 @@ export async function GET() {
   const iso = today.toISOString().slice(0, 10)
   const limitDate = new Date(today.getTime() + 7 * 86400_000).toISOString().slice(0, 10)
   // hottest first (Gemini score via pending_bills_scorer), deadline as tiebreak
-  const rows: { code: string; title: string | null; chamber: string; tacit_deadline: string; interest_score: number | null }[] =
+  const rows: { code: string; title: string | null; summary: string | null; chamber: string; tacit_deadline: string; interest_score: number | null }[] =
     (await (await fetch(
-      `${U}/rest/v1/pending_bills?select=code,title,chamber,tacit_deadline,interest_score` +
+      `${U}/rest/v1/pending_bills?select=code,title,summary,chamber,tacit_deadline,interest_score` +
       `&tacit_deadline=gte.${iso}&tacit_deadline=lte.${limitDate}` +
       `&order=interest_score.desc.nullslast,tacit_deadline.asc&limit=10`,
       { headers: SB })).json()) ?? []
 
   const entries: TacitEntry[] = rows.map(r => ({
     code: r.code,
-    title: r.title ?? '',
+    // the plain-language summary IS the title — the official title is jargon
+    title: r.summary || r.title || '',
     chamber: r.chamber === 'senate' ? 'SENAT' : 'CAMERĂ',
     daysLeft: Math.max(0, Math.round((new Date(r.tacit_deadline).getTime() - today.getTime()) / 86400_000)),
     interest: r.interest_score,

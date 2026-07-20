@@ -46,17 +46,24 @@ async function renderCard(request: Request): Promise<Response> {
 
   let data = SAMPLE
   if (law?.summary) {
-    const mapped = mapLawToCard(law, [], null)
+    // headline lives on laws, not the law_status view — fetch it alongside
+    const [mapped, initiator, headlineRow] = await Promise.all([
+      Promise.resolve(mapLawToCard(law, [], null)),
+      initiatorLine(law.law_id),
+      fetch(`${U}/rest/v1/laws?id=eq.${law.law_id}&select=headline`, { headers: SB })
+        .then(r => r.json()).then(rows => rows?.[0]?.headline as string | null).catch(() => null),
+    ])
     data = {
       lawCode: mapped.lawCode,
       lawTitle: law.title,
       category: law.law_category,
       year: mapped.year,
       summary: law.summary,
+      headline: headlineRow,
       statusLabel: mapped.statusLabel,
       statusColor: mapped.statusColor,
       dateLine: mapped.dateLine,
-      initiatorLine: await initiatorLine(law.law_id),
+      initiatorLine: initiator,
     }
   }
 

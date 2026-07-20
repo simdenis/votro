@@ -74,7 +74,7 @@ export function initiatorLineFromRows(
 /** Port of the --law caption (minus the optional --hook first line). */
 export function lawCarouselCaption(
   law: LawStatus,
-  { initiator, devCount }: { initiator: string | null; devCount: number },
+  { initiator, devCount, headline }: { initiator: string | null; devCount: number; headline?: string | null },
 ): string {
   const outcome = ({
     promulgat: 'PROMULGATĂ ✅', retrimis: 'RETRIMISĂ ÎN PARLAMENT ↩️', sesizat_ccr: 'TRIMISĂ LA CCR ⚖️',
@@ -82,7 +82,10 @@ export function lawCarouselCaption(
   const passed = Boolean(law.presidential_status)
   const voted = [law.senate_vote_id, law.camera_vote_id].filter(Boolean).length
   const tacit = passed && voted < 2
-  const lines = [`${law.code} · ${(law.title ?? '').trim()}`]
+  // lead with the catchy headline (hook); official code · title on the next line
+  const lines = headline?.trim()
+    ? [headline.trim(), '', `${law.code} · ${(law.title ?? '').trim()}`]
+    : [`${law.code} · ${(law.title ?? '').trim()}`]
   if (law.summary) lines.push('', law.summary.trim())
   if (initiator) lines.push('', initiator)
   if (outcome) lines.push('', outcome)

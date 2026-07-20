@@ -90,7 +90,7 @@ async function fetchCandidates() {
 
   const { data: laws } = await getDB()
     .from('laws')
-    .select('id, code, title, summary, presidential_status, presidential_date, interest_score, interest_reason, initiator_type')
+    .select('id, code, title, summary, headline, presidential_status, presidential_date, interest_score, interest_reason, initiator_type')
     .in('id', ids)
   const top = (laws ?? [])
     .sort((a, b) => (b.interest_score ?? -1) - (a.interest_score ?? -1))
@@ -129,7 +129,7 @@ async function fetchCandidates() {
     return {
       ...l,
       slides: status ? lawSlides(status, devVote) : ([] as Slide[]),
-      carouselCaption: status ? lawCarouselCaption(status, { initiator, devCount }) : null,
+      carouselCaption: status ? lawCarouselCaption(status, { initiator, devCount, headline: l.headline }) : null,
     }
   })
 }
@@ -137,7 +137,8 @@ async function fetchCandidates() {
 type Candidate = Awaited<ReturnType<typeof fetchCandidates>>[number]
 
 function lawCaption(l: Candidate): string {
-  const lines = [`📋 ${l.code} — pe scurt`, '']
+  // lead with the catchy AI headline when present — the hook people read
+  const lines = [l.headline ? `📋 ${l.headline}` : `📋 ${l.code} — pe scurt`, '']
   if (l.summary) lines.push(l.summary.length > 500 ? l.summary.slice(0, 497).trimEnd() + '…' : l.summary, '')
   if (l.presidential_status && STATUS_LINE[l.presidential_status]) {
     lines.push(STATUS_LINE[l.presidential_status], '')
@@ -168,7 +169,7 @@ async function fetchTacit() {
   const today = new Date().toISOString().slice(0, 10)
   const limit = new Date(Date.now() + 7 * 86400_000).toISOString().slice(0, 10)
   const { data } = await getDB().from('pending_bills')
-    .select('code, title, chamber, tacit_deadline, interest_score, interest_reason')
+    .select('code, title, summary, chamber, tacit_deadline, interest_score, interest_reason')
     .gte('tacit_deadline', today).lte('tacit_deadline', limit)
     .order('interest_score', { ascending: false, nullsFirst: false })
     .order('tacit_deadline', { ascending: true })
@@ -325,8 +326,7 @@ export default async function AdminPage({ searchParams }: {
   const tacitCaption = tacit.length ? [
     '⏳ Legi pe cale să treacă TACIT — fără niciun vot', '',
     'Dacă termenul constituțional expiră fără vot, proiectul e considerat adoptat automat (art. 75). Termene care expiră în următoarele 7 zile:', '',
-    ...tacit.map((b, i) => `${i + 1}. ${b.code} (${b.chamber === 'senate' ? 'Senat' : 'Cameră'}) — ${roDate(b.tacit_deadline)}`
-      + (b.interest_reason ? ` · ${b.interest_reason}` : '')),
+    ...tacit.map((b, i) => `${i + 1}. ${b.summary || b.title || b.code} (${b.code}, ${b.chamber === 'senate' ? 'Senat' : 'Cameră'}) — termen ${roDate(b.tacit_deadline)}`),
     '', `Lista completă: ${SITE}/tacite`, '', HASHTAGS,
   ].join('\n') : ''
 

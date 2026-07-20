@@ -27,7 +27,8 @@ export default async function AnalizePage() {
   const [bucketRes, attendRes, closestRes, partiesRes, contestedRes] = await Promise.all([
     db.from('party_agreement_monthly').select('party_a, party_b, month, shared, agreed'),
     db.from('monthly_attendance').select('month, chamber, attendance_pct'),
-    db.from('closest_votes').select('*').order('margin', { ascending: true }).limit(12),
+    // over-fetch: we keep only votes whose law has a plain-language summary
+    db.from('closest_votes').select('*').order('margin', { ascending: true }).limit(60),
     db.from('parties').select('abbreviation, color'),
     // contested-vote counts per chamber per month (migration 034 — resilient:
     // if the view isn't applied yet, .data is null and the footer just omits counts)
@@ -59,9 +60,9 @@ export default async function AnalizePage() {
   })
 
   // ── 2. Closest votes ───────────────────────────────────────────────────
-  const closest = (closestRes.data ?? []) as ClosestRow[]
+  const closestAll = (closestRes.data ?? []) as ClosestRow[]
   // the view has no summary column — pull the AI summaries by law code
-  const closestCodes = [...new Set(closest.map(v => v.law_code).filter((c): c is string => !!c))]
+  const closestCodes = [...new Set(closestAll.map(v => v.law_code).filter((c): c is string => !!c))]
   const summaryOf: Record<string, string> = {}
   if (closestCodes.length) {
     const { data: sumRows } = await db.from('laws').select('code, summary').in('code', closestCodes)
@@ -69,6 +70,8 @@ export default async function AnalizePage() {
       if (r.summary) summaryOf[r.code] = r.summary
     }
   }
+  // only votes that have a plain-language summary (skip bare titles), top 12
+  const closest = closestAll.filter(v => v.law_code && summaryOf[v.law_code]).slice(0, 12)
 
   // ── 3. Attendance trend ────────────────────────────────────────────────
   const attend = (attendRes.data ?? []) as AttendRow[]
@@ -125,9 +128,12 @@ export default async function AnalizePage() {
                   <span className="uppercase font-semibold">{v.chamber === 'deputies' ? 'Cameră' : 'Senat'}</span>
                   <span>{formatDate(v.vote_date)}</span>
                 </div>
-                <p className="text-[13.5px] text-foreground truncate">{capFirst(v.law_title ?? '') || 'Vot de plen'}</p>
-                {v.law_code && summaryOf[v.law_code] && (
-                  <p className="text-[12px] text-muted mt-0.5 line-clamp-2">{summaryOf[v.law_code]}</p>
+                {/* plain-language summary is the headline; official title below */}
+                <p className="text-[13.5px] text-foreground line-clamp-2">
+                  {v.law_code ? summaryOf[v.law_code] : capFirst(v.law_title ?? '') || 'Vot de plen'}
+                </p>
+                {v.law_title && (
+                  <p className="text-[11.5px] text-faint mt-0.5 truncate">{capFirst(v.law_title)}</p>
                 )}
               </div>
               <span className="text-[12px] tabular-nums flex-shrink-0 font-medium">

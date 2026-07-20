@@ -37,18 +37,22 @@ _DELAY = 6.5  # stay under the ~10 requests/min free-tier limit
 
 PROMPT = (
     "Ești editor la o publicație românească de transparență parlamentară, pe "
-    "Instagram, pentru public larg. Pentru fiecare lege de mai jos, dă un scor "
-    "de interes public de la 1 la 100: cât de mult i-ar păsa unui cetățean "
-    "obișnuit (nu jurist, nu funcționar) de această lege.\n"
-    "Repere:\n"
-    "- 80-100: lovește direct viața multor oameni (bani, taxe, pensii, salarii, "
-    "sănătate, școală, prețuri, amenzi, drepturi, animale de companie) sau e "
-    "subiect fierbinte în spațiul public\n"
-    "- 50-79: afectează grupuri mari sau are potențial real de discuție\n"
-    "- 20-49: tehnic-administrativă, efect indirect asupra oamenilor\n"
-    "- 1-19: ratificări de rutină, reorganizări birocratice interne\n"
+    "Instagram, pentru public larg. Pentru fiecare lege de mai jos dă:\n"
+    "1) score: scor de interes public 1-100 — cât de mult i-ar păsa unui "
+    "cetățean obișnuit (nu jurist, nu funcționar).\n"
+    "   Repere: 80-100 lovește direct viața multor oameni (bani, taxe, pensii, "
+    "salarii, sănătate, școală, prețuri, amenzi, drepturi, animale de companie) "
+    "sau e subiect fierbinte; 50-79 afectează grupuri mari; 20-49 "
+    "tehnic-administrativă; 1-19 rutină birocratică.\n"
+    "2) reason: max 15 cuvinte, în română, de ce scorul.\n"
+    "3) headline: un titlu SCURT și cârlig (max 10 cuvinte), în română simplă, "
+    "care face omul să se oprească din scroll — spune pe limba omului DESPRE CE "
+    "e legea, nu jargonul oficial. Fără cod de lege, fără ghilimele. Corect "
+    "factual, fără exagerări sau senzaționalism. Exemple: Legea împotriva "
+    "uciderii femeilor / Pensii mai mari pentru cei cu venituri mici / "
+    "Fumatul interzis în mai multe spații.\n"
     "Răspunde STRICT cu JSON: o listă de obiecte "
-    '{"code": "...", "score": N, "reason": "max 15 cuvinte, în română"}. '
+    '{"code": "...", "score": N, "reason": "...", "headline": "..."}. '
     "Un obiect pentru fiecare lege, în ordinea dată, fără alt text.\n\n"
     "Legile:\n"
 )
@@ -98,6 +102,7 @@ def gemini_scores(api_key: str, laws: list[dict]) -> dict[str, dict]:
         out[code.strip()] = {
             "score": max(1, min(100, int(score))),
             "reason": (it.get("reason") or "").strip()[:200] or None,
+            "headline": (it.get("headline") or "").strip()[:120] or None,
         }
     return out
 
@@ -108,20 +113,23 @@ class Store:
         self.h = {"apikey": key, "Authorization": f"Bearer {key}"}
 
     def laws_to_process(self, limit: int, only: str | None) -> list[dict]:
-        params = {"select": "id,code,title,summary,law_category", "order": "code.desc", "limit": str(limit)}
+        sel = "id,code,title,summary,law_category"
+        params = {"select": sel, "order": "code.desc", "limit": str(limit)}
         if only:
-            params = {"select": "id,code,title,summary,law_category", "code": f"eq.{only}", "limit": "1"}
+            params = {"select": sel, "code": f"eq.{only}", "limit": "1"}
         else:
-            params["interest_score"] = "is.null"
-            params["interest_checked_at"] = "is.null"
+            # anything missing a score OR a headline (added by migration 039) —
+            # so the headline backfills onto already-scored laws too
+            params["or"] = "(interest_score.is.null,headline.is.null)"
         r = requests.get(f"{self.url}/rest/v1/laws", params=params, headers=self.h, timeout=30)
         r.raise_for_status()
         return r.json()
 
-    def save(self, law_id: str, score: int | None, reason: str | None) -> None:
+    def save(self, law_id: str, hit: dict | None) -> None:
         payload = {
-            "interest_score": score,
-            "interest_reason": reason,
+            "interest_score": hit["score"] if hit else None,
+            "interest_reason": hit["reason"] if hit else None,
+            "headline": hit["headline"] if hit else None,
             "interest_checked_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
         }
         r = requests.patch(f"{self.url}/rest/v1/laws", params={"id": f"eq.{law_id}"},
@@ -171,9 +179,9 @@ def main() -> None:
         for l in batch:
             hit = scores.get(l["code"])
             if args.dry_run:
-                print(f"{l['code']}: {hit['score'] if hit else '—'}  {hit['reason'] if hit else '(no score)'}  | {l['title'][:80]}")
+                print(f"{l['code']}: {hit['score'] if hit else '—'}  ⟨{hit['headline'] if hit else '—'}⟩  {hit['reason'] if hit else '(no score)'}")
                 continue
-            store.save(l["id"], hit["score"] if hit else None, hit["reason"] if hit else None)
+            store.save(l["id"], hit)
             scored += 1 if hit else 0
             failed += 0 if hit else 1
         time.sleep(_DELAY)

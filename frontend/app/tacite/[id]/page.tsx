@@ -66,21 +66,21 @@ export default async function TacitBillPage({ params }: { params: Promise<{ id: 
           <span className="font-mono text-sm font-bold text-muted">{bill.code}</span>
           <span className="text-[11px] uppercase tracking-wide text-faint">Camera Deputaților · primă cameră sesizată</span>
         </div>
+        {/* plain-language summary is the headline; official title below it */}
         <h1 className="font-serif text-[26px] sm:text-[32px] font-normal text-foreground leading-[1.15] tracking-[-0.01em]">
-          {bill.title ?? bill.code}
+          {bill.summary || bill.title || bill.code}
         </h1>
-      </div>
-
-      {/* AI summary (pending_bills_scorer, migration 037) */}
-      {bill.summary && (
-        <div className="bg-surface border border-rim rounded-xl p-5">
-          <p className="text-[11px] uppercase tracking-widest text-muted font-semibold mb-2">Pe scurt</p>
-          <p className="text-[14px] text-foreground leading-relaxed">{bill.summary}</p>
-          <p className="text-[11px] text-faint mt-3">
+        {bill.summary && bill.title && (
+          <p className="text-[13px] text-muted mt-3 leading-relaxed">
+            <span className="text-faint">Titlul oficial:</span> {bill.title}
+          </p>
+        )}
+        {bill.summary && (
+          <p className="text-[11px] text-faint mt-2">
             Rezumat generat automat (AI) din expunerea de motive — nu e text oficial.
           </p>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Deadline card */}
       {bill.tacit_deadline && (
