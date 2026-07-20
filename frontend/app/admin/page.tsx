@@ -339,6 +339,20 @@ export default async function AdminPage({ searchParams }: {
     '', `Parcursul fiecăruia: ${SITE}/traseisti`, '', HASHTAGS,
   ].join('\n') : ''
 
+  const introCaption = [
+    '👋 Ce e LaButoane?', '',
+    'Un site independent care adună toate voturile din Parlamentul României — Senat și Cameră — și le explică pe înțelesul tuturor.', '',
+    'Ce găsești:',
+    '• Cum a votat fiecare senator și deputat',
+    '• Absențele reale de la voturile din plen',
+    '• Cine deviază de la linia de partid',
+    '• Legile adoptate tacit (fără niciun vot)',
+    '• Cine și-a schimbat partidul',
+    '• Fiecare lege, explicată simplu', '',
+    'Surse oficiale: senat.ro · cdep.ro. Gratuit, neafiliat.', '',
+    'Tot pe site: link în bio.', '', HASHTAGS,
+  ].join('\n')
+
   const matrixCaption = [
     `🤝 Cine votează cu cine — ${quarter.label}`, '',
     'Procentul de voturi disputate în care partidele au votat la fel, două câte două. Voturile aproape unanime sunt excluse — doar cele care chiar despart plenul.', '',
@@ -448,6 +462,16 @@ export default async function AdminPage({ searchParams }: {
                hint="Cine votează cu cine, pe voturile disputate din trimestrul încheiat.">
         <div className="border border-rim rounded-xl p-4">
           <PublishCard image={`${SITE}/api/og/matrix?from=${quarter.from}&to=${quarter.to}`} initialCaption={matrixCaption} />
+        </div>
+      </Section>
+
+      <Section title="Cum funcționează LaButoane (explicativ)" cadence="evergreen"
+               hint="Carusel de 4 slide-uri — ce e site-ul și ce găsești. Se poate reposta oricând; slide-urile se randează direct (fără pre-render).">
+        <div className="border border-rim rounded-xl p-4">
+          <ManualPublish
+            initialImages={[1, 2, 3, 4].map(n => `${SITE}/api/og/intro?slide=${n}`).join('\n')}
+            initialCaption={introCaption}
+          />
         </div>
       </Section>
 
