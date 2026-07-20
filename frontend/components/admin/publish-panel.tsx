@@ -274,6 +274,14 @@ function toCardUrl(u: string): string {
   } catch { return u }
 }
 
+/** A single /legi/<id> link → the law's uuid, else null. */
+function lawIdFromInput(images: string): string | null {
+  const lines = images.split('\n').map(s => s.trim()).filter(Boolean)
+  if (lines.length !== 1) return null
+  const m = lines[0].match(/\/legi\/([0-9a-f-]{36})/)
+  return m ? m[1] : null
+}
+
 export function ManualPublish({ initialImages = '', initialCaption = '' }: {
   initialImages?: string
   initialCaption?: string
@@ -281,10 +289,33 @@ export function ManualPublish({ initialImages = '', initialCaption = '' }: {
   const [images, setImages] = useState(initialImages)
   const [caption, setCaption] = useState(initialCaption)
   const [showPreview, setShowPreview] = useState(false)
+  const [expanding, setExpanding] = useState(false)
   const urls = images.split('\n').map(s => s.trim()).filter(Boolean).map(toCardUrl)
   const converted = images.split('\n').map(s => s.trim()).filter(Boolean).some(u => toCardUrl(u) !== u)
+  const expandableLawId = lawIdFromInput(images)
+
+  async function expandToDeck() {
+    if (!expandableLawId) return
+    setExpanding(true)
+    try {
+      const r = await fetch(`/api/admin/deck?id=${expandableLawId}`)
+      const body = await r.json()
+      if (r.ok && body.slides?.length) {
+        setImages(body.slides.map((s: { url: string }) => s.url).join('\n'))
+        if (body.caption) setCaption(body.caption)
+        setShowPreview(false)
+      }
+    } finally { setExpanding(false) }
+  }
+
   return (
     <div className="flex flex-col gap-2">
+      {expandableLawId && (
+        <button onClick={expandToDeck} disabled={expanding}
+                className="self-start text-[12px] font-medium text-info underline underline-offset-2 disabled:opacity-50">
+          {expanding ? 'se încarcă…' : '🎠 Extinde în carusel complet (hook + rezumat + camere + devieri)'}
+        </button>
+      )}
       {urls.length > 0 && (
         showPreview ? (
           <div className="flex gap-3 overflow-x-auto">
