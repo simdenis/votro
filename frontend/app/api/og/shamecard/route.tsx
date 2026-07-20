@@ -36,7 +36,7 @@ async function fetchWorst(view: string, chamber: ShameEntry['chamber']): Promise
   const r = await fetch(
     `${SUPABASE_URL}/rest/v1/${view}?select=name,first_name,party_abbr,party_color,presence_pct` +
       `&active=eq.true&gov_role=is.null&order=presence_pct.asc&limit=5`,
-    { headers: SB },
+    { headers: SB, cache: 'no-store' },
   )
   const rows: any[] = (await r.json()) ?? []
   return rows.map(s => ({
@@ -60,7 +60,7 @@ async function monthEntries(month: string): Promise<ShameEntry[]> {
     `${SUPABASE_URL}/rest/v1/politician_monthly_absences` +
       `?select=name,first_name,chamber,party_abbr,party_color,gov_role,context_note,mandate_start,held,absent` +
       `&month=eq.${month}&active=eq.true`,
-    { headers: SB })
+    { headers: SB, cache: 'no-store' })
   const rows: any[] = (await r.json()) ?? []
   const heldByChamber = new Map<string, number>()
   for (const x of rows) heldByChamber.set(x.chamber, x.held)

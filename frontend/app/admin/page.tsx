@@ -309,6 +309,9 @@ export default async function AdminPage({ searchParams }: {
 
   const today = new Date().toISOString().slice(0, 10)
   const thisMonth = today.slice(0, 7)
+  // hourly cache-bust for the period cards: the matview can be refreshed
+  // mid-day, so a date-only bust could serve stale (all-caps) names all day
+  const cardBust = new Date().toISOString().slice(0, 13).replace(/[-:T]/g, '')
   const db = getDB()
 
   const [candidates, weekLaws, tacit, monthlyAbs, allSwitchers, { data: todayVotes }] = await Promise.all([
@@ -464,7 +467,7 @@ export default async function AdminPage({ searchParams }: {
           <p className="text-[13px] text-respins">Tabelul „politician_monthly_absences" lipsește — rulează migrația 036 în Supabase SQL editor.</p>
         ) : (
           <div className="border border-rim rounded-xl p-4">
-            <PeriodCard site={SITE} kind="absente" months={recentMonths} bust={today} />
+            <PeriodCard site={SITE} kind="absente" months={recentMonths} bust={cardBust} />
           </div>
         )}
       </Section>
@@ -483,7 +486,7 @@ export default async function AdminPage({ searchParams }: {
       <Section title="Matricea partidelor" cadence="lunar / mandat"
                hint="Cine votează cu cine, pe voturile disputate. Alege perioada: tot mandatul sau o lună anume.">
         <div className="border border-rim rounded-xl p-4">
-          <PeriodCard site={SITE} kind="matrice" months={recentMonths} bust={today} />
+          <PeriodCard site={SITE} kind="matrice" months={recentMonths} bust={cardBust} />
         </div>
       </Section>
 

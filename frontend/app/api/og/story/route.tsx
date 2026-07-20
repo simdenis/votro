@@ -1,6 +1,5 @@
 import { ImageResponse } from 'next/og'
 import { getCardFonts } from '@/lib/og-fonts'
-import { withEdgeCache } from '@/lib/og-edge-cache'
 
 // 1080×1920 (9:16) STORY frame for any card. Instead of redesigning every card
 // for stories, this wraps an existing 4:5 card image (rendered by its own
@@ -13,8 +12,13 @@ const SITE = (process.env.NEXT_PUBLIC_SITE_URL || 'https://la-butoane.ro').repla
 const MONO = 'IBM Plex Mono'
 const SANS = 'IBM Plex Sans'
 
+// NOT edge-cached and the embedded card is fetched fresh: the story is a
+// download-only artifact (IG's Stories API rejects our PNG), fetched rarely on
+// demand, so it must always reflect current data. Caching bit us — satori's
+// card fetch (from the worker's colo) served a stale per-colo copy with the old
+// all-caps names even after the data was fixed.
 export async function GET(req: Request) {
-  return withEdgeCache(req, () => render(req))
+  return render(req)
 }
 
 async function render(req: Request): Promise<Response> {
@@ -24,6 +28,8 @@ async function render(req: Request): Promise<Response> {
   try { card = new URL(src) } catch { return new Response('bad src', { status: 400 }) }
   const ok = (card.origin === SITE || card.origin === new URL(req.url).origin) && card.pathname.startsWith('/api/og/')
   if (!ok) return new Response('src must be an own /api/og card', { status: 400 })
+  // force a fresh card render (bypass its per-colo edge cache) so names/data are current
+  const embedSrc = `${src}${src.includes('?') ? '&' : '?'}_=${Date.now()}`
 
   // Render at 1× (1080×1920). Stories display ~1080px wide, and embedding +
   // rescaling the full-res card PNG onto a 2× canvas blew the CPU cap (1102).
@@ -44,7 +50,7 @@ async function render(req: Request): Promise<Response> {
 
         {/* the card, centered, soft shadow so it reads as a card */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={src} width={1000} height={1250} alt=""
+        <img src={embedSrc} width={1000} height={1250} alt=""
              style={{ borderRadius: 22, boxShadow: '0 18px 50px rgba(23,26,31,0.18)' }} />
 
         {/* prompt bottom */}
