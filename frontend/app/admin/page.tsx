@@ -163,6 +163,43 @@ function qualifyingEvent(l: Candidate): string {
   return ''
 }
 
+// ── "laws of the week": everything with activity in the last 7 days ──────────
+// The candidate sections cap at top-10 by interest; this is the full list so a
+// low-interest but noteworthy law (e.g. "Anul Americii") never gets missed.
+
+type WeekLaw = {
+  id: string; code: string; title: string; headline: string | null
+  presidential_status: string | null; interest_score: number | null
+  event: string; eventDate: string
+}
+
+async function fetchWeekLaws(): Promise<WeekLaw[]> {
+  const db = getDB()
+  const cut = new Date(Date.now() - 7 * 86400_000).toISOString().slice(0, 10)
+  const [{ data: votes }, { data: presLaws }] = await Promise.all([
+    db.from('votes').select('law_id, vote_date, outcome, chamber')
+      .eq('vote_type', 'vot final').not('law_id', 'is', null).gte('vote_date', cut),
+    db.from('laws').select('id').gte('presidential_date', cut),
+  ])
+  const voteByLaw = new Map<string, { date: string; chamber: string; outcome: string | null }>()
+  for (const v of (votes ?? []) as { law_id: string; vote_date: string; chamber: string; outcome: string | null }[]) {
+    const cur = voteByLaw.get(v.law_id)
+    if (!cur || (v.vote_date ?? '') > cur.date) voteByLaw.set(v.law_id, { date: v.vote_date, chamber: v.chamber, outcome: v.outcome })
+  }
+  const ids = [...new Set([...voteByLaw.keys(), ...(presLaws ?? []).map(l => l.id)])]
+  if (!ids.length) return []
+  const { data: laws } = await db.from('laws')
+    .select('id, code, title, headline, presidential_status, presidential_date, interest_score').in('id', ids)
+  return (laws ?? []).map(l => {
+    const v = voteByLaw.get(l.id)
+    const event = l.presidential_status && l.presidential_date
+      ? `${EVENT_LABEL[l.presidential_status] ?? l.presidential_status} · ${roDate(l.presidential_date)}`
+      : v ? `vot final ${v.chamber === 'senate' ? 'Senat' : 'Cameră'} (${v.outcome ?? '—'}) · ${roDate(v.date)}` : ''
+    const eventDate = (l.presidential_date && l.presidential_status ? l.presidential_date : v?.date) ?? ''
+    return { ...l, event, eventDate }
+  }).sort((a, b) => b.eventDate.localeCompare(a.eventDate))
+}
+
 // ── weekly: tacit deadlines ──────────────────────────────────────────────────
 
 async function fetchTacit() {
@@ -281,8 +318,9 @@ export default async function AdminPage({ searchParams }: {
   const thisMonth = today.slice(0, 7)
   const db = getDB()
 
-  const [candidates, tacit, monthlyAbs, allSwitchers, { data: todayVotes }] = await Promise.all([
+  const [candidates, weekLaws, tacit, monthlyAbs, allSwitchers, { data: todayVotes }] = await Promise.all([
     fetchCandidates(),
+    fetchWeekLaws(),
     fetchTacit(),
     fetchMonthlyAbsents(),
     getSwitchers(),
@@ -369,6 +407,29 @@ export default async function AdminPage({ searchParams }: {
         Publicarea merge direct pe @vot.romania — butonul cere o a doua apăsare de confirmare.
         Nimic nu se postează singur.
       </p>
+
+      {/* the "laws of the week" button — full list, nothing capped/missed */}
+      <details className="mt-5 border border-rim rounded-xl overflow-hidden">
+        <summary className="cursor-pointer select-none px-4 py-3 text-[13px] font-semibold bg-surface hover:bg-raised transition-colors">
+          📋 Legile săptămânii — tot ce a mișcat în ultimele 7 zile ({weekLaws.length})
+        </summary>
+        <div className="divide-y divide-rim border-t border-rim">
+          {weekLaws.length === 0 && <p className="px-4 py-3 text-[12px] text-faint">Nimic în ultimele 7 zile (recess).</p>}
+          {weekLaws.map(l => (
+            <a key={l.id} href={`${SITE}/legi/${l.id}`} target="_blank" rel="noopener noreferrer"
+               className="flex items-baseline gap-2 px-4 py-2 hover:bg-raised transition-colors">
+              <span className="text-[12px] font-bold font-mono flex-shrink-0 w-24">{l.code}</span>
+              <span className="text-[11px] text-adoptat flex-shrink-0 w-40 truncate">{l.event}</span>
+              <span className="text-[12px] text-muted truncate flex-1">{l.headline || l.title}</span>
+              {l.interest_score != null && <span className="text-[11px] text-faint flex-shrink-0">interes {l.interest_score}</span>}
+            </a>
+          ))}
+        </div>
+        <p className="px-4 py-2 text-[11px] text-faint border-t border-rim">
+          Cele cu scor mare apar deja ca postări gata mai jos. Ca să pregătești oricare (chiar și una cu scor mic),
+          spune-mi codul și îți randez caruselul.
+        </p>
+      </details>
 
       {(prefillImg || prefillCap) && (
         <Section title="Din emailul de aprobare" cadence="email">
