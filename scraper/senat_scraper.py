@@ -40,6 +40,8 @@ from typing import Optional
 import requests
 from bs4 import BeautifulSoup, Tag
 from dotenv import load_dotenv
+
+from name_utils import titlecase_name
 from supabase import create_client, Client
 
 # ──────────────────────────────────────────────────────────────
@@ -602,6 +604,10 @@ class SenatScraper:
         first_name: str,
         party_id: Optional[str],
     ) -> Optional[str]:
+        # senat.ro surnames arrive ALL CAPS — store Title Case so display matches
+        # the deputies (and the backfilled rows, so on_conflict still matches).
+        last_name = titlecase_name(last_name)
+        first_name = titlecase_name(first_name)
         key = f"{last_name}|{first_name}"
         if key in self._seen_politicians:
             res = (

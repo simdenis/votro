@@ -33,6 +33,8 @@ from typing import Optional
 import requests
 from dotenv import load_dotenv
 
+from name_utils import titlecase_name
+
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 log = logging.getLogger("roster")
 
@@ -269,9 +271,10 @@ class Roster:
             return None
         label = mem.group
         if chamber == "senate":
-            # senat.ro displays "SURNAME First-Names"; group only on the profile
+            # senat.ro displays "SURNAME First-Names"; the ALL-CAPS run IS the
+            # surname signal — detect it, THEN title-case for storage.
             caps = [t for t in parts if t == t.upper()]
-            name = " ".join(caps) or parts[-1]
+            name = titlecase_name(" ".join(caps) or parts[-1])
             first = " ".join(t for t in parts if t not in caps) or parts[0]
             if not label:
                 try:
