@@ -84,10 +84,22 @@ export async function POST(req: Request) {
     return Response.json({ error: 'doar imagini de pe domeniul propriu' }, { status: 400 })
   }
 
+  // Pre-warm every image URL into the edge cache before IG fetches it. A cold
+  // satori render (esp. the story wrapper) can 503, and IG then rejects the
+  // container with "Only photo or video can be accepted" (subcode 2207052).
+  // Warming twice (concurrent renders can race) makes IG's fetch a cache HIT.
+  async function warm(url: string) {
+    for (let i = 0; i < 3; i++) {
+      try { const r = await fetch(url, { cache: 'no-store' }); if (r.ok) return } catch { /* retry */ }
+      await sleep(1500)
+    }
+  }
+  await Promise.all(images.map(warm))
+
   try {
     let creationId: string
     if (story) {
-      // stories: no caption, 24h lifetime; IG letterboxes the 4:5 card on 9:16
+      // stories: no caption, 24h lifetime; image is already the 9:16 story frame
       creationId = (await igPost(`${userId}/media`,
         { media_type: 'STORIES', image_url: images[0], access_token: token })).id
       await waitReady([creationId], token)
