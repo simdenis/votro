@@ -98,6 +98,16 @@ function PublishButton({ state, setState, onConfirm, label = 'Publică' }: {
 
 const MAX_AUTO_RETRIES = 4
 
+/** Wrap a 4:5 card into the 9:16 story frame so a story posts native, not
+ *  letterboxed. Feed posts use the card as-is. */
+function toStoryUrl(u: string): string {
+  try {
+    const url = new URL(u)
+    if (url.pathname === '/api/og/story') return u
+    return `${url.origin}/api/og/story?src=${encodeURIComponent(u)}`
+  } catch { return u }
+}
+
 /** The post/story button pair — independent state machines so publishing one
  *  doesn't hide the other (a good card can be both a feed post and a story). */
 function PublishActions({ images, caption, storyImage }: {
@@ -115,7 +125,7 @@ function PublishActions({ images, caption, storyImage }: {
                      onConfirm={() => post.publish(images, caption)} />
       {storyImage && (
         <PublishButton state={story.state} setState={story.setState} label="Publică story"
-                       onConfirm={() => story.publish([storyImage], '', true)} />
+                       onConfirm={() => story.publish([toStoryUrl(storyImage)], '', true)} />
       )}
     </>
   )
