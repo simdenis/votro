@@ -88,9 +88,10 @@ async function renderCard(req: Request): Promise<Response> {
       fetchWorst('senator_stats', 'SENAT'),
       fetchWorst('deputy_stats', 'CAMERĂ'),
     ])
-    const now = new Date()
+    // cumulative since mandate start — NOT the current month (that read as
+    // "this month's absences" when it's the whole mandate)
     data = {
-      dateLabel: `${MONTHS[now.getMonth()]} ${now.getFullYear()}`,
+      dateLabel: 'dec. 2024 – prezent',
       entries: [...senators, ...deputies].sort((a, b) => b.absencePct - a.absencePct).slice(0, 5),
     }
   }
