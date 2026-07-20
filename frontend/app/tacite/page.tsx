@@ -74,12 +74,14 @@ export default async function TacitePage() {
                   <td className="py-3 pr-4 max-w-xl">
                     {/* title links to our own detail page (countdown + context);
                         the official fișa/PDF links stay as secondary sources */}
-                    <Link href={`/tacite/${lawSlug(b.code)}`} className="text-foreground hover:underline">
-                      {b.title ?? b.code}
+                    {/* the plain-language summary is the headline; official
+                        title drops to a secondary line */}
+                    <Link href={`/tacite/${lawSlug(b.code)}`} className="text-foreground hover:underline font-medium">
+                      {b.summary || b.title || b.code}
                     </Link>
-                    {b.summary && (
-                      <span className="block text-[12.5px] text-muted mt-1 leading-snug">
-                        {b.summary.length > 180 ? b.summary.slice(0, 177).trimEnd() + '…' : b.summary}
+                    {b.summary && b.title && (
+                      <span className="block text-[11.5px] text-faint mt-1 leading-snug">
+                        {b.title.length > 140 ? b.title.slice(0, 137).trimEnd() + '…' : b.title}
                       </span>
                     )}
                     <span className="flex flex-wrap items-center gap-x-3 font-mono text-[11px] text-muted mt-0.5">

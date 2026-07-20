@@ -46,11 +46,13 @@ export function TacitListCard({ data }: { data: TacitListCardData }) {
               ...(i < data.entries.length - 1 ? { borderBottom: `1px solid ${C.hair}` } : {}),
             }}>
               <div style={{ display: 'flex', flexDirection: 'column', flex: 1, marginRight: 20 }}>
-                <div style={{ display: 'flex', fontSize: compact ? 21 : 24, fontWeight: 700 }}>
+                {/* kicker: code · chamber · score — small */}
+                <div style={{ display: 'flex', fontFamily: MONO, fontSize: compact ? 13 : 14, color: C.faint, letterSpacing: 0.5, marginBottom: 3 }}>
                   {e.interest != null ? `${e.code} · ${e.chamber} · interes ${e.interest}/100` : `${e.code} · ${e.chamber}`}
                 </div>
-                <div style={{ display: 'flex', fontSize: compact ? 16 : 18, opacity: 0.6, marginTop: 2, lineHeight: 1.3 }}>
-                  {e.title.length > 92 ? e.title.slice(0, 89).trimEnd() + '…' : e.title}
+                {/* the plain-language summary IS the headline */}
+                <div style={{ display: 'flex', fontSize: compact ? 20 : 23, fontWeight: 700, lineHeight: 1.25 }}>
+                  {e.title.length > 150 ? e.title.slice(0, 147).trimEnd() + '…' : e.title}
                 </div>
               </div>
               <div style={{ display: 'flex', alignItems: 'baseline', flexShrink: 0 }}>

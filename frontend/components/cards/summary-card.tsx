@@ -9,6 +9,8 @@ export interface SummaryCardData {
   category: string | null
   year: number
   summary: string
+  /** Catchy AI headline (laws.headline) — the eye-catching hero when present. */
+  headline?: string | null
   statusLabel: string
   statusColor: string
   dateLine: string | null
@@ -35,18 +37,19 @@ function summaryFont(len: number): number {
   return 30
 }
 
-/** Full title, sized down as it grows so it always fits — never truncated. */
-function titleFont(len: number): number {
-  if (len <= 90) return 34
-  if (len <= 150) return 29
-  if (len <= 230) return 25
-  if (len <= 340) return 22
-  return 19
+/** Catchy headline hero — the biggest thing on the card, sized to fit. */
+function headlineFont(len: number): number {
+  if (len <= 32) return 76
+  if (len <= 50) return 64
+  if (len <= 72) return 54
+  if (len <= 100) return 46
+  return 40
 }
 
 export function SummaryCard({ data }: { data: SummaryCardData }) {
   const title = data.lawTitle
   const catColor = categoryColor(data.category) ?? C.navy
+  const headline = data.headline?.trim() || null
 
   return (
     <div style={{ width: 1080, height: 1350, display: 'flex', flexDirection: 'column', background: C.bg, color: C.text, fontFamily: SANS }}>
@@ -57,15 +60,23 @@ export function SummaryCard({ data }: { data: SummaryCardData }) {
       <div style={{ display: 'flex', height: 1, margin: '0 64px', background: C.hair }} />
 
       <div style={{ display: 'flex', flexDirection: 'column', flex: 1, padding: '42px 64px 0' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: headline ? 22 : 12 }}>
           <div style={{ display: 'flex', fontSize: 15, fontWeight: 500, color: C.navy, letterSpacing: 4, textTransform: 'uppercase' }}>{data.lawCode}</div>
           {data.category && (
             <div style={{ display: 'flex', fontSize: 14, fontWeight: 600, color: catColor, textTransform: 'uppercase', letterSpacing: 1.5 }}>{data.category}</div>
           )}
         </div>
 
-        {/* Full official title, quiet — the summary is the hero */}
-        <div style={{ display: 'flex', fontSize: titleFont(title.length), lineHeight: 1.35, color: C.text, opacity: 0.72 }}>{title}</div>
+        {headline ? (
+          <>
+            {/* Catchy headline = the hero; official title tiny below it */}
+            <div style={{ display: 'flex', fontFamily: SERIF, fontSize: headlineFont(headline.length), lineHeight: 1.08, color: C.text }}>{headline}</div>
+            <div style={{ display: 'flex', fontSize: 17, lineHeight: 1.3, color: C.text, opacity: 0.5, marginTop: 16 }}>{title}</div>
+          </>
+        ) : (
+          /* fallback (no AI headline yet): official title quiet, summary is hero */
+          <div style={{ display: 'flex', fontSize: title.length <= 150 ? 29 : 22, lineHeight: 1.35, color: C.text, opacity: 0.72 }}>{title}</div>
+        )}
 
         {/* The plain-language summary, slightly above vertical center */}
         <div style={{ display: 'flex', flexGrow: 1, minHeight: 24 }} />

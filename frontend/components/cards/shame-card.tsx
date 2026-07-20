@@ -19,7 +19,7 @@ export interface ShameCardData {
   entries: ShameEntry[]
 }
 
-const DEFAULT_SUBTITLE = 'absențe la voturile din plen, de la începutul legislaturii (dec. 2024) · Senat + Cameră'
+const DEFAULT_SUBTITLE = '% din voturile de plen ținute în camera sa de la validarea mandatului · Senat + Cameră · fără membrii Guvernului (nu votează în plen)'
 
 const C = {
   bg: '#FFFFFF',
@@ -36,7 +36,6 @@ const MONO = 'IBM Plex Mono'
 export function ShameCard({ data }: { data: ShameCardData }) {
   // Top-10 rankings reuse the layout with tighter rows (same 1080×1350 canvas).
   const compact = data.entries.length > 6
-  const n = data.entries.length
   return (
     <div style={{ width: 1080, height: 1350, display: 'flex', flexDirection: 'column', background: C.bg, color: C.text, fontFamily: SANS }}>
 
@@ -46,7 +45,7 @@ export function ShameCard({ data }: { data: ShameCardData }) {
       <div style={{ display: 'flex', height: 1, margin: '0 64px', background: C.hair }} />
 
       <div style={{ display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'center', padding: '20px 64px' }}>
-        <div style={{ fontFamily: SERIF, fontSize: compact ? 54 : 64, lineHeight: 1.05, color: C.against }}>{`Absențe — top ${n}`}</div>
+        <div style={{ fontFamily: SERIF, fontSize: compact ? 54 : 64, lineHeight: 1.05, color: C.against }}>Absențe — clasament</div>
         <div style={{ display: 'flex', fontSize: compact ? 19 : 21, opacity: 0.55, marginTop: 10, marginBottom: compact ? 20 : 40 }}>
           {data.subtitle ?? DEFAULT_SUBTITLE}
         </div>
