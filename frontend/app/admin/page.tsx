@@ -1,4 +1,3 @@
-import { createHmac } from 'node:crypto'
 import { getDB } from '@/lib/supabase'
 import { PublishCard, CarouselPublishCard, ManualPublish } from '@/components/admin/publish-panel'
 import { AdminLogin, LogoutButton } from '@/components/admin/admin-login'
@@ -42,16 +41,6 @@ function b64urlDecode(s: string | undefined): string {
   try { return Buffer.from(s, 'base64url').toString('utf8') } catch { return '' }
 }
 
-function b64url(s: string): string {
-  return Buffer.from(s, 'utf8').toString('base64url')
-}
-
-/** Mirror of the poster's _sign_card — HMAC the b64url payload. */
-function signCard(d: string): string | null {
-  const secret = process.env.CARD_SIGN_SECRET
-  if (!secret) return null
-  return createHmac('sha256', secret).update(d).digest('hex').slice(0, 32)
-}
 
 function roDate(iso: string | null | undefined): string {
   if (!iso) return ''
@@ -345,20 +334,18 @@ export default async function AdminPage({ searchParams }: {
   const prefillImg = b64urlDecode(sp.img)
   const prefillCap = b64urlDecode(sp.cap)
 
-  // signed shamecard URL for last month's top-10 (same contract as the poster)
+  // short ?month=YYYY-MM URL — the route computes the ranking server-side from
+  // the matview. (The old signed-payload URL was ~1300 chars; IG truncated it
+  // and the card fell back to all-time.)
   let absImage: string | null = null, absCaption = ''
   if (!monthlyAbs.missing && monthlyAbs.entries.length) {
-    const d = b64url(JSON.stringify(monthlyAbs.entries))
-    const sig = signCard(d)
-    if (sig) {
-      absImage = `${SITE}/api/og/shamecard?d=${d}&label=${encodeURIComponent(monthlyAbs.label)}&sig=${sig}`
-      absCaption = [
-        `🔴 Absențe — ${monthlyAbs.label}: top ${monthlyAbs.entries.length} cei mai absenți parlamentari`, '',
-        ...monthlyAbs.entries.map((e, i) => `${i + 1}. ${e.n} (${e.p}, ${e.ch}) — ${e.a}% absențe (${e.x}/${e.h} voturi)`),
-        '', 'Doar parlamentarii activi toată perioada, fără cei cu notă de context (concediu/delegație). Membrii Guvernului nu sunt incluși.',
-        '', `Toată lista: ${SITE}`, '', '#parlament #absenteism #laButoane #transparență #românia',
-      ].join('\n')
-    }
+    absImage = `${SITE}/api/og/shamecard?month=${monthlyAbs.month}`
+    absCaption = [
+      `🔴 Absențe — ${monthlyAbs.label}: top ${monthlyAbs.entries.length} cei mai absenți parlamentari`, '',
+      ...monthlyAbs.entries.map((e, i) => `${i + 1}. ${e.n} (${e.p}, ${e.ch}) — ${e.a}% absențe (${e.x}/${e.h} voturi)`),
+      '', 'Doar parlamentarii activi toată perioada, fără cei cu notă de context (concediu/delegație). Membrii Guvernului nu sunt incluși.',
+      '', `Toată lista: ${SITE}`, '', '#parlament #absenteism #laButoane #transparență #românia',
+    ].join('\n')
   }
 
   const tacitCaption = tacit.length ? [
@@ -486,7 +473,7 @@ export default async function AdminPage({ searchParams }: {
         {monthlyAbs.missing ? (
           <p className="text-[13px] text-respins">Tabelul „politician_monthly_absences" lipsește — rulează migrația 036 în Supabase SQL editor, apoi refresh-ul rulează zilnic de pe VPS.</p>
         ) : !absImage ? (
-          <p className="text-[13px] text-faint">Nicio lună completă cu date suficiente (sau CARD_SIGN_SECRET lipsă).</p>
+          <p className="text-[13px] text-faint">Nicio lună completă cu date suficiente.</p>
         ) : (
           <div className="border border-rim rounded-xl p-4">
             <PublishCard image={absImage} initialCaption={absCaption} />
