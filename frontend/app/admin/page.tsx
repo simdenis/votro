@@ -301,7 +301,7 @@ function CandidateBlock({ l, i }: { l: Candidate; i: number }) {
         />
       ) : (
         <PublishCard image={`${SITE}/api/og/summarycard?id=${l.id}`}
-                     initialCaption={lawCaption(l)} stagger={i * 900} />
+                     initialCaption={lawCaption(l)} />
       )}
     </div>
   )
