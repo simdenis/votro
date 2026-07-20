@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { getDB } from '@/lib/supabase'
 import { formatRelativeTime, recessUntil } from '@/lib/utils'
+import { ReportMistake } from '@/components/report-mistake'
 
 async function LastUpdated() {
   // Two different freshness facts: when the pipeline last ran successfully
@@ -50,6 +51,8 @@ export function Footer() {
           <Link href="/date" className="hover:text-foreground">Date deschise</Link>
           <span className="text-faint">·</span>
           <Link href="/contribuie" className="hover:text-foreground">Contribuie</Link>
+          <span className="text-faint">·</span>
+          <ReportMistake />
           <span className="text-faint">·</span>
           <span>Neafiliat politic</span>
         </span>

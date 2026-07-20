@@ -4,6 +4,7 @@ import { LoyaltyMeter } from '@/components/loyalty-meter'
 import { ShareButtons } from '@/components/share-buttons'
 import { CardDownload } from '@/components/card-download'
 import { PartyHistory } from '@/components/party-history'
+import { ReportMistake } from '@/components/report-mistake'
 import { VoteHistory } from '@/components/vote-history'
 import { DeviationList } from '@/components/deviation-list'
 import { trueAbsent, type PoliticianStats, type VoteHistoryRow, type PartyHistoryEntry } from '@/lib/types'
@@ -135,6 +136,8 @@ export function PoliticianProfile({ stats, history, deviationRows, partyHistory,
           </p>
         </div>
       )}
+      {/* always offer the contest path — a figure looks wrong? report it */}
+      <ReportMistake context={{ parlamentar: `${stats.first_name} ${stats.name}`, pagina: personLd.url }} />
 
       {/* Share row */}
       <div className="flex items-center gap-3 flex-wrap">
