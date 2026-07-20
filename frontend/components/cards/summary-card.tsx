@@ -68,11 +68,16 @@ export function SummaryCard({ data }: { data: SummaryCardData }) {
         </div>
 
         {headline ? (
-          <>
-            {/* Catchy headline = the hero; official title tiny below it */}
-            <div style={{ display: 'flex', fontFamily: SERIF, fontSize: headlineFont(headline.length), lineHeight: 1.08, color: C.text }}>{headline}</div>
-            <div style={{ display: 'flex', fontSize: 17, lineHeight: 1.3, color: C.text, opacity: 0.5, marginTop: 16 }}>{title}</div>
-          </>
+          // flexShrink:0 so the tall headline block isn't compressed by the
+          // column's flexGrow spacers below (that collapse overlapped the title)
+          <div style={{ display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
+            {/* Catchy headline = the hero; official title tiny below it.
+                Leaf text divs are block-flow (no display:flex): a flex leaf with
+                large wrapping text collapses to ~0 height in satori and the next
+                line overlaps it. */}
+            <div style={{ fontFamily: SERIF, fontSize: headlineFont(headline.length), lineHeight: 1.12, color: C.text }}>{headline}</div>
+            <div style={{ fontSize: 17, lineHeight: 1.3, color: C.text, opacity: 0.5, marginTop: 16 }}>{title}</div>
+          </div>
         ) : (
           /* fallback (no AI headline yet): official title quiet, summary is hero */
           <div style={{ display: 'flex', fontSize: title.length <= 150 ? 29 : 22, lineHeight: 1.35, color: C.text, opacity: 0.72 }}>{title}</div>
@@ -80,7 +85,7 @@ export function SummaryCard({ data }: { data: SummaryCardData }) {
 
         {/* The plain-language summary, slightly above vertical center */}
         <div style={{ display: 'flex', flexGrow: 1, minHeight: 24 }} />
-        <div style={{ display: 'flex' }}>
+        <div style={{ display: 'flex', flexShrink: 0 }}>
           <div style={{ display: 'flex', width: 5, borderRadius: 3, background: catColor, marginRight: 30, flexShrink: 0 }} />
           <div style={{ display: 'flex', fontFamily: SERIF, fontSize: summaryFont(data.summary.length), lineHeight: 1.24, color: C.text }}>
             {data.summary}
