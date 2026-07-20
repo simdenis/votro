@@ -1,5 +1,6 @@
 import { ImageResponse } from 'next/og'
 import { getCardFonts } from '@/lib/og-fonts'
+import { withEdgeCache } from '@/lib/og-edge-cache'
 
 // 1080×1920 (9:16) STORY frame for any card. Instead of redesigning every card
 // for stories, this wraps an existing 4:5 card image (rendered by its own
@@ -13,6 +14,10 @@ const MONO = 'IBM Plex Mono'
 const SANS = 'IBM Plex Sans'
 
 export async function GET(req: Request) {
+  return withEdgeCache(req, () => render(req))
+}
+
+async function render(req: Request): Promise<Response> {
   const src = new URL(req.url).searchParams.get('src') ?? ''
   // only frame our own og cards (never an arbitrary remote image)
   let card: URL
