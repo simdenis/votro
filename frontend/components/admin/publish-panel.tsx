@@ -433,7 +433,8 @@ export function PeriodCard({ site, kind, months, bust }: {
  *  law's summary card). Button + checkboxes. */
 export function WeekSelectionCard({ site, laws }: {
   site: string
-  laws: { id: string; code: string; title: string }[]
+  /** desc = plain-language summary shown for picking; title = caption line */
+  laws: { id: string; code: string; title: string; desc?: string }[]
 }) {
   const [sel, setSel] = useState<Set<string>>(new Set())
   const [showPreview, setShowPreview] = useState(false)
@@ -459,12 +460,18 @@ export function WeekSelectionCard({ site, laws }: {
     <div className="flex flex-col gap-3">
       <div className="flex flex-col gap-1.5">
         {laws.length === 0 && <p className="text-[12px] text-faint">Nicio lege promulgată în ultimele 7 zile.</p>}
-        {laws.map(l => (
-          <label key={l.id} className="flex items-start gap-2 text-[12.5px] cursor-pointer">
-            <input type="checkbox" checked={sel.has(l.id)} onChange={() => toggle(l.id)} className="mt-1" />
-            <span><span className="font-mono font-semibold">{l.code}</span> — <span className="text-muted">{l.title.length > 90 ? l.title.slice(0, 87) + '…' : l.title}</span></span>
-          </label>
-        ))}
+        {laws.map(l => {
+          const desc = l.desc || l.title
+          return (
+            <label key={l.id} className="flex items-start gap-2 text-[12.5px] cursor-pointer py-1">
+              <input type="checkbox" checked={sel.has(l.id)} onChange={() => toggle(l.id)} className="mt-1 flex-shrink-0" />
+              <span className="min-w-0">
+                <span className="font-mono font-semibold text-[11px] text-faint">{l.code}</span>
+                <span className="block text-foreground leading-snug">{desc.length > 160 ? desc.slice(0, 157) + '…' : desc}</span>
+              </span>
+            </label>
+          )
+        })}
       </div>
       {chosen.length > 0 && (
         <>

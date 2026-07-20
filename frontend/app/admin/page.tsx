@@ -159,7 +159,7 @@ function qualifyingEvent(l: Candidate): string {
 // low-interest but noteworthy law (e.g. "Anul Americii") never gets missed.
 
 type WeekLaw = {
-  id: string; code: string; title: string; headline: string | null
+  id: string; code: string; title: string; headline: string | null; summary: string | null
   presidential_status: string | null; interest_score: number | null
   event: string; eventDate: string
 }
@@ -180,7 +180,7 @@ async function fetchWeekLaws(): Promise<WeekLaw[]> {
   const ids = [...new Set([...voteByLaw.keys(), ...(presLaws ?? []).map(l => l.id)])]
   if (!ids.length) return []
   const { data: laws } = await db.from('laws')
-    .select('id, code, title, headline, presidential_status, presidential_date, interest_score').in('id', ids)
+    .select('id, code, title, headline, summary, presidential_status, presidential_date, interest_score').in('id', ids)
   return (laws ?? []).map(l => {
     const v = voteByLaw.get(l.id)
     const event = l.presidential_status && l.presidential_date
@@ -342,10 +342,12 @@ export default async function AdminPage({ searchParams }: {
 
   // month options for the period pickers: dec 2024 → last complete month, newest first
   const recentMonths = monthOptions()
-  // this week's promulgated laws → the select-and-post carousel
+  // this week's promulgated laws → the select-and-post carousel. `desc` (the
+  // plain-language summary) is shown for picking; `title` (headline/official)
+  // is the shorter caption line.
   const weekPromulgated = weekLaws
     .filter(l => l.presidential_status === 'promulgat')
-    .map(l => ({ id: l.id, code: l.code, title: l.headline || l.title }))
+    .map(l => ({ id: l.id, code: l.code, title: l.headline || l.title, desc: l.summary || l.headline || l.title }))
 
   const tacitCaption = tacit.length ? [
     '⏳ Legi pe cale să treacă TACIT — fără niciun vot', '',
