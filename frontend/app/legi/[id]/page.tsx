@@ -30,9 +30,19 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const { id } = await params
   const law = await getLaw(id)
   if (!law) return { title: 'Lege' }
+  // plain-language summary as the description (unique per law — was the generic
+  // site description on all 1200+ law pages); law-specific 1200×630 OG card
+  const desc = (law.summary
+    ? law.summary
+    : `${law.code}: ${(law.title ?? '').trim()}`).slice(0, 300)
+  const og = `${process.env.NEXT_PUBLIC_SITE_URL ?? ''}/api/og/lawlink?id=${law.law_id}`
+  const title = `${law.code} — ${(law.title ?? '').slice(0, 60)}`
   return {
-    title: `${law.code} — ${(law.title ?? '').slice(0, 60)}`,
+    title,
+    description: desc,
     alternates: { canonical: `/legi/${lawSlug(law.code)}` },
+    openGraph: { title, description: desc, images: [{ url: og, width: 1200, height: 630 }] },
+    twitter: { card: 'summary_large_image', title, description: desc, images: [og] },
   }
 }
 
