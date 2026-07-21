@@ -447,7 +447,8 @@ export function WeekSelectionCard({ site, laws }: {
     : []
   const autoCaption = [
     '📋 Legile promulgate săptămâna aceasta', '',
-    ...chosen.map(l => `• ${l.code} — ${l.title.length > 70 ? l.title.slice(0, 67) + '…' : l.title}`),
+    // full plain-language summary per law (blank line between for readability)
+    ...chosen.flatMap(l => [`${l.code} — ${l.desc || l.title}`, '']).slice(0, -1),
     '', `Fiecare, explicată pe ${site} (link în bio)`, '',
     '#parlament #legi #laButoane #transparență #românia',
   ].join('\n')
