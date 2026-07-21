@@ -439,11 +439,15 @@ export function WeekSelectionCard({ site, laws }: {
   const [sel, setSel] = useState<Set<string>>(new Set())
   const [showPreview, setShowPreview] = useState(false)
   const [edited, setEdited] = useState<string | null>(null)
-  const chosen = laws.filter(l => sel.has(l.id))
+  // IG carousels hold 10 slides; slide 1 is the cover → max 9 law cards
+  const MAX_LAWS = 9
+  const chosenAll = laws.filter(l => sel.has(l.id))
+  const chosen = chosenAll.slice(0, MAX_LAWS)
+  const overLimit = chosenAll.length > MAX_LAWS
   // slide 1 = the "look what passed this week" cover, then a card per law
   const images = chosen.length
-    ? [`${site}/api/og/weekcover?n=${Math.min(chosen.length, 10)}`,
-       ...chosen.slice(0, 9).map(l => `${site}/api/og/summarycard?id=${l.id}`)]
+    ? [`${site}/api/og/weekcover?n=${chosen.length}`,
+       ...chosen.map(l => `${site}/api/og/summarycard?id=${l.id}`)]
     : []
   const autoCaption = [
     '📋 Legile promulgate săptămâna aceasta', '',
@@ -483,7 +487,8 @@ export function WeekSelectionCard({ site, laws }: {
                     className="w-full text-[12.5px] leading-relaxed bg-surface border border-rim rounded-lg p-2.5 font-mono resize-y" />
           <div className="flex items-center gap-3 flex-wrap">
             <PublishActions images={images} caption={caption} storyImage={images.length === 1 ? images[0] : undefined} />
-            <span className="text-[11px] text-adoptat">{images.length} slide-uri{images.length > 10 ? ' (max 10)' : ''}</span>
+            <span className="text-[11px] text-adoptat">{images.length} slide-uri (coperta + {chosen.length} legi)</span>
+            {overLimit && <span className="text-[11px] text-respins">ai bifat {chosenAll.length} — se postează primele {MAX_LAWS}</span>}
           </div>
         </>
       )}
