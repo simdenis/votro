@@ -467,7 +467,7 @@ export function WeekSelectionCard({ site, laws }: {
               <input type="checkbox" checked={sel.has(l.id)} onChange={() => toggle(l.id)} className="mt-1 flex-shrink-0" />
               <span className="min-w-0">
                 <span className="font-mono font-semibold text-[11px] text-faint">{l.code}</span>
-                <span className="block text-foreground leading-snug">{desc.length > 160 ? desc.slice(0, 157) + '…' : desc}</span>
+                <span className="block text-foreground leading-snug">{desc}</span>
               </span>
             </label>
           )
