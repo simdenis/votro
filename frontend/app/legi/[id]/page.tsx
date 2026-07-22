@@ -13,6 +13,7 @@ import { LawTimeline } from '@/components/law-timeline'
 import { BaseLawBadges } from '@/components/base-law-badge'
 import { CategoryBadge } from '@/components/category-badge'
 import { ReportMistake } from '@/components/report-mistake'
+import { FollowButton } from '@/components/follow-button'
 import type { LawStatus, PartyVoteBreakdown } from '@/lib/types'
 
 export const revalidate = 3600
@@ -112,13 +113,16 @@ export default async function LawDetail({ params }: { params: Promise<{ id: stri
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(lawLd) }} />
 
       {/* Breadcrumb */}
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-1.5 text-xs text-muted">
           <Link href="/legi" className="hover:text-foreground transition-colors">Legi</Link>
           <span className="text-faint">›</span>
           <span className="font-semibold text-foreground font-mono">{law.code}</span>
         </div>
-        <ReportMistake context={{ lege: law.code, pagina: '/legi/' + law.law_id }} />
+        <div className="flex items-center gap-3 flex-wrap">
+          <FollowButton targetType="law" targetId={law.law_id} what="această lege" />
+          <ReportMistake context={{ lege: law.code, pagina: '/legi/' + law.law_id }} />
+        </div>
       </div>
 
       {/* Header */}

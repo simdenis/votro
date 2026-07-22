@@ -137,6 +137,12 @@ if [ "$(date -u +%d)" = "01" ]; then
   "$PY" scraper/instagram_poster.py --shame --email-preview >>"$LOG" 2>&1 || log "WARN: IG preview email failed"
 fi
 
+# Email alerts for followed laws/MPs (migration 040). New vote/promulgation →
+# email the confirmed followers. Skips without RESEND_API_KEY. Email trouble
+# must not flip the heartbeat.
+log "=== Alerts (followed laws/MPs) ==="
+"$PY" scraper/send_alerts.py >>"$LOG" 2>&1 || log "WARN: alerts send failed"
+
 # Heartbeat — lets the site footer tell "parliament idle" from "pipeline broken".
 "$PY" scraper/heartbeat.py "$rc" >>"$LOG" 2>&1 || log "WARN: heartbeat write failed"
 
