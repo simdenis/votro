@@ -1,7 +1,8 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
-import { countNoun, lawSlug, personSlug, todayRo, formatDate } from '@/lib/utils'
+import { countNoun, lawSlug, personSlug, todayRo, formatDate, recessUntil } from '@/lib/utils'
+import { OutcomeBadge } from '@/components/outcome-badge'
 import { AbsenceTop } from '@/components/absence-top'
 import { ParliamentBar } from '@/components/parliament-bar'
 import { CountyMap } from '@/components/county-map'
@@ -21,7 +22,7 @@ export default async function Dashboard() {
   // Romania's date, not UTC — after RO midnight (but before UTC midnight) the
   // UTC date is yesterday, which would keep just-expired tacit deadlines alive.
   const today = todayRo()
-  const [r0, r2, r3, r4, r5, r6, r7, r8, r9] = await Promise.all([
+  const [r0, r2, r3, r4, r5, r6, r7, r8, r9, r10] = await Promise.all([
     db.from('law_status').select('*', { count: 'exact', head: true }),
     // substantive votes only — presence checks / agenda changes drown the feed.
     // Fetch a wider window so the feed's sort + category filter + date slider
@@ -51,6 +52,13 @@ export default async function Dashboard() {
     db.from('pending_bills').select('id, code, title, summary, tacit_deadline')
       .not('tacit_deadline', 'is', null).gte('tacit_deadline', today)
       .order('tacit_deadline', { ascending: true }).limit(5),
+    // Voturi recente — final votes on a law, the raw "what parliament did" feed.
+    // Goes quiet during recess (unlike promulgations), which is why the recess
+    // banner sits above it.
+    db.from('votes')
+      .select('id, vote_date, chamber, outcome, description, laws(code, title, law_category)')
+      .eq('vote_type', 'vot final').not('law_id', 'is', null)
+      .order('vote_date', { ascending: false }).limit(8),
   ])
 
   const totalLaws     = r0.count ?? 0
@@ -65,6 +73,13 @@ export default async function Dashboard() {
     ...((r8.data ?? []) as Omit<LowPresence, 'href'>[]).map(s => ({ ...s, href: `/deputati/${personSlug(s.first_name, s.name)}` })),
   ].sort((a, b) => a.presence_pct - b.presence_pct).slice(0, 15)
   const tacitBills = (r9.data ?? []) as { id: string; code: string; title: string | null; summary: string | null; tacit_deadline: string | null }[]
+  type RecentVote = { id: string; vote_date: string; chamber: string; outcome: 'adoptat' | 'respins' | null; description: string | null; laws: { code: string; title: string; law_category: string | null } | null }
+  const recentVotes = (r10.data as unknown as RecentVote[] | null) ?? []
+  // Recess banner (art. 66: parliament breaks Jul–Aug and Jan). Show it only
+  // when there's genuinely no recent activity — extraordinary sessions happen.
+  const lastVoteDate = recentVotes[0]?.vote_date
+  const quiet  = lastVoteDate ? Date.now() - new Date(lastVoteDate).getTime() > 7 * 86_400_000 : true
+  const recess = quiet ? recessUntil() : null
 
   const senatorCounts: Record<string, number> = {}
   for (const p of (r6.data ?? []) as any[]) {
@@ -98,7 +113,7 @@ export default async function Dashboard() {
             one neutral sentence, no scroll required. */}
         <p className="text-[15px] text-muted leading-relaxed mt-3.5 max-w-2xl">
           Urmărește cum votează fiecare senator și deputat: legi, prezență la vot și devieri de la
-          linia de partid. Date din surse oficiale (senat.ro, cdep.ro), actualizate zilnic —
+          linia de partid. Date din surse oficiale (senat.ro, cdep.ro), actualizate zilnic,
           gratuit și neafiliat politic.
         </p>
 
@@ -189,6 +204,17 @@ export default async function Dashboard() {
 
         {/* Recently promulgated laws — the "it's now law" feed, in plain language */}
         <section className="min-w-0">
+          {recess && (
+            <div className="mb-6 rounded-lg border border-rim bg-raised/60 px-4 py-3">
+              <p className="text-[13.5px] text-foreground font-medium">Parlamentul e în vacanță</p>
+              <p className="text-[12px] text-muted mt-0.5 leading-relaxed">
+                Sesiunea ordinară se reia pe {recess}, așa că nu se dau voturi noi
+                {lastVoteDate ? `; ultimul a fost pe ${formatDate(lastVoteDate)}` : ''}. Termenele legilor
+                tacite curg în continuare.
+              </p>
+            </div>
+          )}
+
           <h2 className="font-serif text-[20px] font-normal text-foreground border-b-2 border-sidebar pb-[5px] mb-2">
             Legi promulgate recent
           </h2>
@@ -213,6 +239,39 @@ export default async function Dashboard() {
           <Link href="/legi?status=promulgat" className="inline-block mt-5 text-[13px] text-muted hover:text-foreground transition-colors">
             Toate legile →
           </Link>
+
+          {/* Voturi recente — the raw vote feed, alongside the "now it's law"
+              feed above. Quiet during recess, hence the empty-state note. */}
+          <div className="mt-10">
+            <div className="flex items-baseline justify-between border-b-2 border-sidebar pb-[5px] mb-2">
+              <h2 className="font-serif text-[20px] font-normal text-foreground">Voturi recente</h2>
+              <Link href="/voturi" className="text-[11px] text-muted hover:text-foreground transition-colors">Toate →</Link>
+            </div>
+            {recentVotes.length === 0 ? (
+              <p className="text-[13px] text-muted">
+                Niciun vot final recent{recess ? `. Parlamentul e în vacanță până pe ${recess}.` : '.'}
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {recentVotes.map(v => (
+                  <Link
+                    key={v.id}
+                    href={`/voturi/${v.id}`}
+                    className="block bg-surface border border-rim rounded-lg px-3 py-2.5 hover:bg-raised transition-colors"
+                  >
+                    <span className="block text-[13.5px] font-medium text-foreground leading-snug line-clamp-2">
+                      {v.laws?.title || v.description || v.laws?.code}
+                    </span>
+                    <span className="flex items-center gap-2 mt-1 font-mono text-[10px] text-muted">
+                      {v.laws?.code && <span>{v.laws.code}</span>}
+                      <OutcomeBadge outcome={v.outcome} />
+                      <span>{formatDate(v.vote_date)}</span>
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
 
           {/* Legi tacite — soonest deadlines. Nobody else tracks tacit adoption,
               and the deadlines keep running during recess. Under the feed (not

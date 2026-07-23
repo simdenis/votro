@@ -28,7 +28,7 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
       <p className="font-serif text-[48px] leading-none text-foreground">Ceva n-a mers</p>
       <h1 className="font-serif text-[22px] font-normal text-foreground">A apărut o eroare la afișarea paginii</h1>
       <p className="text-sm text-muted max-w-md mx-auto">
-        Nu e vina ta. Încearcă din nou — de obicei se rezolvă. Dacă persistă, spune-ne printr-un raport de eroare.
+        Nu e vina ta. Încearcă din nou, de obicei se rezolvă. Dacă persistă, spune-ne printr-un raport de eroare.
       </p>
       <div className="flex items-center justify-center gap-4 text-sm pt-2">
         <button onClick={reset} className="underline underline-offset-2 hover:text-foreground">Reîncearcă</button>

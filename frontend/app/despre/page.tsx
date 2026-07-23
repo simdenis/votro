@@ -43,25 +43,24 @@ export default function DesprePage() {
           a votat altfel decât majoritatea colegilor săi de partid în acel vot specific.
         </p>
         <p className="text-sm text-muted leading-relaxed">
-          Nota: absenții și cei care nu au votat nu sunt considerați în calculul devierilor — doar voturile
-          exprimate (pentru / împotrivă / abținere) contează. Parlamentarii neafiliați și grupul
-          minorităților naționale nu au o linie de partid, deci nu calculăm devieri sau coeziune pentru ei.
+          Nota: absenții și cei care nu au votat nu intră în calculul devierilor. Contează doar voturile
+          exprimate (pentru, împotrivă sau abținere). Parlamentarii neafiliați și grupul minorităților
+          naționale nu au o linie de partid, așa că nu le calculăm devieri sau coeziune.
         </p>
         <p className="text-sm text-muted leading-relaxed">
-          <strong className="text-foreground">Loialitatea</strong> și <strong className="text-foreground">prezența</strong> sunt
-          două lucruri diferite și le arătăm separat, cu numitori expliciți — a le contopi
-          într-o singură cifră face ca un absent să pară un rebel. <strong className="text-foreground">Loialitate</strong> =
-          voturile aliniate cu partidul / voturile <em>exprimate</em> (ex. 397/415 = 96%).{' '}
-          <strong className="text-foreground">Prezență</strong> = voturile exprimate / toate voturile de plen
-          ținute în camera sa (ex. 415/958 = 43%). Un parlamentar poate fi 96% loial și, în același timp,
-          prezent la doar 43% din voturi.
+          Loialitatea și prezența sunt două lucruri diferite, așa că le arătăm separat, cu numitori
+          expliciți. Dacă le pui într-o singură cifră, un absent ajunge să pară un rebel. Loialitatea e
+          raportul dintre voturile aliniate cu partidul și voturile exprimate (de exemplu 397/415 = 96%).
+          Prezența e raportul dintre voturile exprimate și toate voturile de plen ținute în camera sa
+          (de exemplu 415/958 = 43%). Un parlamentar poate fi 96% loial și, în același timp, prezent la
+          doar 43% din voturi.
         </p>
         <p className="text-sm text-muted leading-relaxed">
-          Coeziunea unui partid se calculează <strong className="text-foreground">doar pe voturile
-          disputate</strong> — cele în care tabăra minoritară (pentru vs. împotrivă + abțineri) a strâns
-          cel puțin 20% din voturile exprimate. Majoritatea voturilor din plen sunt procedurale sau
-          aproape unanime; incluse în calcul, ar împinge toate partidele la 90%+ și cifra n-ar mai
-          spune nimic. Pe voturile disputate se vede diferența reală dintre partide.
+          Coeziunea unui partid se calculează doar pe voturile disputate, adică cele în care tabăra
+          minoritară (pentru față de împotrivă plus abțineri) a strâns cel puțin 20% din voturile
+          exprimate. Cele mai multe voturi din plen sunt procedurale sau aproape unanime; dacă le-am
+          include, toate partidele ar ajunge la peste 90% și cifra n-ar mai spune nimic. Pe voturile
+          disputate se vede diferența reală dintre partide.
         </p>
       </section>
 
@@ -70,26 +69,25 @@ export default function DesprePage() {
         <p className="text-foreground leading-relaxed">
           Prezența unui parlamentar = voturile la care apare în listele oficiale, împărțite la
           toate voturile ținute în camera sa de la validarea mandatului. Absența este restul
-          (100% − prezența). Cine e consemnat prezent dar nu apasă butonul („prezent, fără vot")
-          contează ca prezent — îl afișăm separat pe fișă, nu ca absență. Absența medie a unui
+          (100% minus prezența). Cine e consemnat prezent dar nu apasă butonul („prezent, fără vot")
+          contează ca prezent; îl afișăm separat pe fișă, nu ca absență. Absența medie a unui
           partid este media absențelor membrilor săi activi.
         </p>
         <p className="text-sm text-muted leading-relaxed">
           Parlamentarii care fac sau au făcut parte din Guvern în această legislatură (premier,
-          vicepremieri, miniștri) nu votează în plen cât sunt în funcție — sunt marcați cu o
+          vicepremieri, miniștri) nu votează în plen cât sunt în funcție. Îi marcăm cu o
           etichetă distinctă, nu apar în topul absențelor și nu intră în media de absență a
           partidului, pentru că absența lor e structurală, nu o alegere. Eticheta rămâne și după
-          plecarea din Guvern: absențele acumulate în mandatul de ministru nu devin retroactiv
+          plecarea din Guvern: absențele adunate în mandatul de ministru nu devin retroactiv
           „chiul".
         </p>
         <p className="text-sm text-muted leading-relaxed">
-          Sursele oficiale nu spun <em>de ce</em> lipsește cineva: o delegație parlamentară în
+          Sursele oficiale nu spun de ce lipsește cineva: o delegație parlamentară în
           străinătate sau un concediu medical arată în date la fel ca o absență nemotivată. Afișăm
-          cifrele brute — interpretarea rămâne a cititorului. Când avem o justificare documentată
-          (concediu medical, delegație oficială), o adăugăm ca <strong className="text-foreground">notă
-          de context</strong> pe fișa parlamentarului, iar în topul absențelor numele apare marcat cu
-          „ⓘ". Orice parlamentar sau cetățean poate <strong className="text-foreground">contesta</strong> o
-          cifră prin butonul de pe fiecare fișă; verificăm și, dacă e cazul, adăugăm nota.
+          cifrele brute, iar interpretarea rămâne a cititorului. Când avem o justificare documentată
+          (concediu medical, delegație oficială), o adăugăm ca notă de context pe fișa parlamentarului,
+          iar în topul absențelor numele apare marcat cu „ⓘ". Orice parlamentar sau cetățean poate
+          contesta o cifră prin butonul de pe fiecare fișă; verificăm și, dacă e cazul, adăugăm nota.
         </p>
       </section>
 
@@ -99,15 +97,15 @@ export default function DesprePage() {
           O lege trece prin ambele camere: prima cameră sesizată, apoi camera decizională, apoi
           merge la Președinte pentru promulgare (care o poate retrimite Parlamentului sau sesiza
           Curtea Constituțională). Constituția (art. 75) dă primei camere 45 de zile să se
-          pronunțe — 60 pentru coduri și legi complexe. Dacă termenul expiră fără vot, proiectul
-          e <strong>considerat adoptat fără ca cineva să fi votat</strong> („adoptare tacită") și
-          merge mai departe. Pagina „Termene tacite" arată proiectele cu termenul în curs, cu
-          datele oficiale publicate de Camera Deputaților.
+          pronunțe (60 pentru coduri și legi complexe). Dacă termenul expiră fără vot, proiectul
+          e considerat adoptat fără ca cineva să fi votat („adoptare tacită") și merge mai departe.
+          Pagina „Termene tacite" arată proiectele cu termenul în curs, cu datele oficiale publicate
+          de Camera Deputaților.
         </p>
         <p className="text-sm text-muted leading-relaxed">
           De aceea unele legi promulgate apar la noi fără votul uneia dintre camere: au fost
           adoptate tacit (nu există un vot de consemnat) sau votul a avut loc înainte de
-          20 decembrie 2024, începutul actualei legislaturi — data de la care baza noastră de date acoperă voturile plenului.
+          20 decembrie 2024, începutul actualei legislaturi, data de la care baza noastră de date acoperă voturile plenului.
           Le marcăm cu „Adoptată*".
         </p>
       </section>

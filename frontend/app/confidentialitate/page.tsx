@@ -18,12 +18,12 @@ export default function ConfidentialitatePage() {
       <section className="space-y-3">
         <h2 className="text-sm font-semibold uppercase tracking-widest text-muted">Ce date colectăm</h2>
         <p className="text-foreground leading-relaxed">
-          Ca să vizitezi site-ul <strong>nu îți cerem nimic</strong> — fără cont, fără date personale.
-          Singurul moment în care ne dai o informație e când te abonezi voluntar:
+          Ca să vizitezi site-ul nu îți cerem nimic: fără cont, fără date personale. Singurul moment
+          în care ne dai o informație e când te abonezi voluntar:
         </p>
         <ul className="list-disc pl-5 space-y-1.5 text-foreground leading-relaxed">
-          <li><strong>Newsletter</strong> — adresa ta de email, ca să-ți trimitem rezumatul săptămânal.</li>
-          <li><strong>Alerte</strong> — adresa ta de email și legea/parlamentarul pe care alegi să-l urmărești, ca să te anunțăm la un vot nou sau o promulgare.</li>
+          <li>Newsletter: adresa ta de email, ca să-ți trimitem rezumatul săptămânal.</li>
+          <li>Alerte: adresa ta de email și legea sau parlamentarul pe care alegi să-l urmărești, ca să te anunțăm la un vot nou sau o promulgare.</li>
         </ul>
       </section>
 
@@ -49,7 +49,7 @@ export default function ConfidentialitatePage() {
       <section className="space-y-3">
         <h2 className="text-sm font-semibold uppercase tracking-widest text-muted">Drepturile tale</h2>
         <p className="text-foreground leading-relaxed">
-          Te poți <strong>dezabona instant</strong> din linkul aflat în fiecare email. Vrei să-ți ștergem
+          Te poți dezabona instant din linkul aflat în fiecare email. Vrei să-ți ștergem
           complet adresa sau vrei să știi ce date avem despre tine? Scrie-ne la{' '}
           <a href={`mailto:${CONTACT}`} className="underline hover:text-muted">{CONTACT}</a> și rezolvăm.
         </p>
@@ -62,7 +62,7 @@ export default function ConfidentialitatePage() {
           (<a href="https://senat.ro" target="_blank" rel="noopener noreferrer" className="underline hover:text-muted">senat.ro</a>,{' '}
           <a href="https://cdep.ro" target="_blank" rel="noopener noreferrer" className="underline hover:text-muted">cdep.ro</a>) și
           privesc activitatea publică a aleșilor. Dacă vezi o eroare, folosește butonul{' '}
-          <strong>„Raportează o greșeală"</strong> de pe pagina respectivă.
+          „Raportează o greșeală" de pe pagina respectivă.
         </p>
       </section>
 
