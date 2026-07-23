@@ -17,6 +17,11 @@ import { FollowButton } from '@/components/follow-button'
 import type { LawStatus, PartyVoteBreakdown } from '@/lib/types'
 
 export const revalidate = 3600
+// Enable on-demand ISR for this dynamic segment: without generateStaticParams,
+// OpenNext serves `[id]` pages no-store (dynamic) despite `revalidate`, so every
+// shared law link hit Supabase. Empty list = pre-render none, cache on first hit.
+export const dynamicParams = true
+export async function generateStaticParams() { return [] }
 
 // A law is addressed by its code slug (/legi/L597-2025); UUIDs still resolve
 // (old shared/indexed links) and get redirected to the canonical slug.
