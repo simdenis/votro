@@ -7,6 +7,8 @@ import { PoliticianProfile } from '@/components/politician-profile'
 import type { PoliticianStats, VoteHistoryRow, PartyHistoryEntry } from '@/lib/types'
 
 export const revalidate = 3600
+export const dynamicParams = true
+export async function generateStaticParams() { return [] }
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://la-butoane.ro'
 

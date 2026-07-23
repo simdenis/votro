@@ -16,6 +16,8 @@ import { voteSourceUrl } from '@/lib/types'
 import type { VoteWithLaw, PoliticianVoteWithDetails, PartyVoteBreakdown } from '@/lib/types'
 
 export const revalidate = 600 // ISR — CDN-cache per vote for 10 min (see homepage note)
+export const dynamicParams = true
+export async function generateStaticParams() { return [] }
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://la-butoane.ro'
 
