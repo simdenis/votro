@@ -46,6 +46,11 @@ export const metadata: Metadata = {
     images: ['/api/og'],
   },
   manifest: '/manifest.json',
+  // Google Search Console: set NEXT_PUBLIC_GSC_VERIFICATION to the token from
+  // the "HTML tag" verification method → renders <meta name="google-site-verification">
+  ...(process.env.NEXT_PUBLIC_GSC_VERIFICATION
+    ? { verification: { google: process.env.NEXT_PUBLIC_GSC_VERIFICATION } }
+    : {}),
   icons: {
     icon: [
       { url: '/glyph.svg', type: 'image/svg+xml' },
@@ -88,7 +93,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Nav />
         <main className="flex-1 max-w-[1280px] w-full mx-auto px-4 sm:px-8 lg:px-14 pt-6 sm:pt-8 pb-16">{children}</main>
         <Footer />
+        {/* Vercel Analytics only reports on the *.vercel.app mirror. Production
+            (la-butoane.ro) is served by Cloudflare, so it gets Cloudflare Web
+            Analytics instead — privacy-first, no cookies, no consent banner.
+            Set NEXT_PUBLIC_CF_BEACON_TOKEN to the token from the CF dashboard. */}
         <Analytics />
+        {process.env.NEXT_PUBLIC_CF_BEACON_TOKEN ? (
+          <script
+            defer
+            src="https://static.cloudflareinsights.com/beacon.min.js"
+            data-cf-beacon={JSON.stringify({ token: process.env.NEXT_PUBLIC_CF_BEACON_TOKEN })}
+          />
+        ) : null}
       </body>
     </html>
   )
