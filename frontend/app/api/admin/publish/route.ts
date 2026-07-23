@@ -19,8 +19,10 @@ import { isAdmin, keyMatches } from '@/lib/admin-auth'
 
 const GRAPH = 'https://graph.instagram.com'
 const V = process.env.GRAPH_API_VERSION || 'v21.0'
-// Free plan allows 50 subrequests/request — 6 slides worst-case stays under it.
-const MAX_IMAGES = 6
+// IG carousels hold up to 10 slides. (On Workers Paid the 1000-subrequest
+// budget easily covers 10 × warm+container+poll; the old cap of 6 was for the
+// Free plan's 50-subrequest limit.)
+const MAX_IMAGES = 10
 const POLL_ROUNDS = 5
 const POLL_DELAY_MS = 2500
 
