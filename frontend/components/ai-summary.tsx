@@ -35,8 +35,12 @@ export function AiSummary({
       <p className="text-[15px] text-foreground leading-relaxed">{summary}</p>
       {isAi && (
         // frames time-relative statements ("amână până la 1 ian 2026") as the
-        // proposal's intent, so an old summary doesn't read as a current claim
-        <p className="text-[11px] text-faint mt-1.5 italic">Rezumă ce își propunea proiectul, așa cum a fost depus.</p>
+        // proposal's original intent, so an old summary doesn't read as a
+        // current claim about the promulgated law
+        <p className="text-[11px] text-faint mt-1.5 italic">
+          Rezumă forma inițială a proiectului, nu neapărat legea promulgată. Datele și cifrele
+          menționate pot fi depășite; textul oficial e în PDF.
+        </p>
       )}
       <div className="mt-3.5 pt-3 border-t border-rim flex items-center justify-between gap-x-4 gap-y-1.5 flex-wrap text-[11px] text-faint">
         <div className="flex items-center gap-3 flex-wrap">
