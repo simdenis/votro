@@ -176,7 +176,7 @@ def render(data: dict, site: str) -> tuple[str, str]:
       <div style="font-size:11px;color:{GRAY};padding-top:8px;">Absențe la voturile de plen din această săptămână. Membrii Guvernului nu sunt incluși.</div>
     </td></tr>""" if absents_rows else ""
 
-    body = f"""<!doctype html><html lang="ro"><body style="margin:0;padding:0;background:{PAPER};">
+    body = f"""<!doctype html><html lang="ro"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head><body style="margin:0;padding:0;background:{PAPER};">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:{PAPER};padding:24px 12px;">
 <tr><td align="center">
 <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:12px;padding:32px;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
