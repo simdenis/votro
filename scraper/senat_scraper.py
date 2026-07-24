@@ -769,10 +769,19 @@ class SenatScraper:
     def _update_party_history(
         self, politician_id: str, party_id: str, vote_date: datetime.date
     ) -> None:
-        """Open a new party history entry if the politician's party has changed."""
+        """Open a new party history entry if the politician's party has changed.
+
+        Also keeps politicians.party_id in sync with the latest group. That
+        column is otherwise set once, from the first vote seen per run, and cached
+        (_upsert_politician), so a mid-mandate switch never propagates to it —
+        which hid a whole Senate group (PACE) and zeroed the Senate "traseiști"
+        count until migration 042. Syncing here, at the moment a switch is
+        detected, fixes it going forward. Guarded to only move party_id FORWARD
+        in time, so re-scraping an older vote can't clobber the current party.
+        """
         res = (
             self.db.table("politician_party_history")
-            .select("id, party_id")
+            .select("id, party_id, from_date")
             .eq("politician_id", politician_id)
             .is_("to_date", "null")
             .execute()
@@ -784,6 +793,12 @@ class SenatScraper:
             self.db.table("politician_party_history").update(
                 {"to_date": (vote_date - datetime.timedelta(days=1)).isoformat()}
             ).eq("id", current["id"]).execute()
+
+            # The switch is real and forward in time → this is the current party.
+            if vote_date.isoformat() >= (current.get("from_date") or ""):
+                self.db.table("politicians").update(
+                    {"party_id": party_id}
+                ).eq("id", politician_id).execute()
 
         self.db.table("politician_party_history").insert(
             {"politician_id": politician_id, "party_id": party_id, "from_date": vote_date.isoformat()}
