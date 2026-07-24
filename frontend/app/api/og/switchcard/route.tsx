@@ -27,14 +27,29 @@ function Pill({ abbr, color }: { abbr: string; color: string | null }) {
 
 export async function GET(req: Request) {
   const sp = new URL(req.url).searchParams
+  const all = sp.get('all') === '1'  // cumulative "since the elections", not one month
   const monthParam = sp.get('month')
   const month = /^\d{4}-\d{2}$/.test(monthParam ?? '') ? monthParam! : new Date().toISOString().slice(0, 7)
   const [y, m] = month.split('-').map(Number)
 
-  const switchers = (await getSwitchers()).filter(s => {
-    const last = s.segments[s.segments.length - 1]
-    return last && (last.from_date ?? '').startsWith(month)
-  }).slice(0, 8)
+  const everyone = await getSwitchers()
+  const total = everyone.length
+  const senateCount = everyone.filter(s => s.chamber === 'senate').length
+  const chamberNoun = senateCount === 0 ? 'deputați' : 'parlamentari'
+
+  // all-mode paginates (8/slide) so a carousel can cover everyone; sorted by
+  // number of hops so the juiciest journeys lead.
+  const PER = 8
+  const page = Math.max(0, parseInt(sp.get('page') ?? '0', 10) || 0)
+  const pages = Math.max(1, Math.ceil(total / PER))
+  const from0 = page * PER
+  const switchers = all
+    ? [...everyone].sort((a, b) => b.segments.length - a.segments.length).slice(from0, from0 + PER)
+    : everyone.filter(s => {
+        const last = s.segments[s.segments.length - 1]
+        return last && (last.from_date ?? '').startsWith(month)
+      }).slice(0, 8)
+  const isLastPage = page >= pages - 1
 
   const fonts = await getCardFonts()
   return new ImageResponse(
@@ -43,15 +58,19 @@ export async function GET(req: Request) {
         <div style={{ width: 1080, height: 1350, display: 'flex', flexDirection: 'column', background: C.bg, color: C.text, fontFamily: SANS }}>
           <div style={{ display: 'flex', alignItems: 'center', padding: '36px 64px 22px' }}>
             <div style={{ display: 'flex', fontFamily: MONO, fontSize: 16, letterSpacing: 2.5, textTransform: 'uppercase', color: C.faint }}>
-              {`${RO_MONTHS[m - 1]} ${y}`}
+              {all ? 'LEGISLATURA 2024–2028' : `${RO_MONTHS[m - 1]} ${y}`}
             </div>
           </div>
           <div style={{ display: 'flex', height: 1, margin: '0 64px', background: C.hair }} />
 
           <div style={{ display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'center', padding: '20px 64px' }}>
-            <div style={{ fontFamily: SERIF, fontSize: 58, lineHeight: 1.05, color: C.accent }}>Traseism — cine a schimbat partidul</div>
+            <div style={{ fontFamily: SERIF, fontSize: 58, lineHeight: 1.05, color: C.accent }}>
+              {all ? `${total} ${chamberNoun} și-au schimbat partidul` : 'Traseism — cine a schimbat partidul'}
+            </div>
             <div style={{ display: 'flex', fontSize: 20, opacity: 0.55, marginTop: 10, marginBottom: 34 }}>
-              {`parlamentari care au trecut la alt partid în ${RO_MONTHS[m - 1]} ${y}`}
+              {all
+                ? (pages > 1 ? `de la alegeri · ${from0 + 1}–${from0 + switchers.length} din ${total} (origine → partid actual)` : 'de la alegeri, în această legislatură (origine → partid actual)')
+                : `parlamentari care au trecut la alt partid în ${RO_MONTHS[m - 1]} ${y}`}
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -59,7 +78,9 @@ export async function GET(req: Request) {
                 <div style={{ display: 'flex', fontSize: 26, opacity: 0.6 }}>Niciun traseist luna aceasta.</div>
               )}
               {switchers.map((s, i) => {
-                const from = s.segments[s.segments.length - 2]
+                // all-time: show the full journey endpoints (origin → current);
+                // monthly: show just the latest hop
+                const from = all ? s.segments[0] : s.segments[s.segments.length - 2]
                 const to = s.segments[s.segments.length - 1]
                 return (
                   <div key={s.politician_id} style={{
@@ -82,6 +103,12 @@ export async function GET(req: Request) {
                 )
               })}
             </div>
+
+            {all && (
+              <div style={{ display: 'flex', fontSize: 24, fontWeight: 700, color: C.accent, marginTop: 18 }}>
+                {isLastPage ? 'Parcursul fiecăruia pe la-butoane.ro/traseisti' : `…continuă (${total - (from0 + switchers.length)} rămași)`}
+              </div>
+            )}
 
             <div style={{ display: 'flex', fontSize: 16, opacity: 0.7, marginTop: 30 }}>
               Doar schimbări confirmate de listele oficiale de membri — nu grupări de o zi din erori de vot.
