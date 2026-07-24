@@ -4,7 +4,7 @@ import { getDB } from '@/lib/supabase'
 import { countNoun, lawSlug, personSlug, todayRo, formatDate, recessUntil } from '@/lib/utils'
 import { OutcomeBadge } from '@/components/outcome-badge'
 import { AbsenceTop } from '@/components/absence-top'
-import { ParliamentBar } from '@/components/parliament-bar'
+import { ParliamentDonut } from '@/components/parliament-donut'
 import { CountyMap } from '@/components/county-map'
 import { NewsletterForm } from '@/components/newsletter-form'
 import { ApiBuilder } from '@/components/api-builder'
@@ -107,6 +107,8 @@ export default async function Dashboard() {
 
       {/* ── Header ───────────────────────────────────────── */}
       <header className="mb-9">
+       <div className="flex flex-col lg:flex-row lg:items-start lg:gap-10">
+        <div className="min-w-0 flex-1">
         <p className="text-[11px] uppercase tracking-[0.18em] text-faint mb-2.5">
           Parlamentul României · Legislatura 2024–2028
         </p>
@@ -174,6 +176,14 @@ export default async function Dashboard() {
             ))}
           </nav>
         </div>
+        </div>
+
+        {parliamentParties.length > 0 && (
+          <div className="lg:w-[290px] lg:flex-shrink-0 mt-8 lg:mt-9">
+            <ParliamentDonut parties={parliamentParties} total={totalSenators} />
+          </div>
+        )}
+       </div>
       </header>
 
       {/* ── Stats row ────────────────────────────────────── */}
@@ -335,8 +345,9 @@ export default async function Dashboard() {
                   <Link href="/despre#metodologie-absente" className="underline underline-offset-2 hover:text-foreground">metodologie</Link>
                 </p>
                 <p className="text-[11px] text-muted mb-3">
-                  Absența nu înseamnă absenteism: poate fi concediu medical, delegație oficială sau
-                  alt mandat. Cifra e brută; unde avem o justificare, apare marcată cu „ⓘ".
+                  O absență nu înseamnă automat chiul: în spate poate fi un concediu medical, o
+                  delegație oficială sau un alt mandat. Arătăm cifra brută, iar unde știm motivul îl
+                  marcăm cu „ⓘ".
                 </p>
                 <AbsenceTop senators={absSenators} deputies={absDeputies} />
               </>
@@ -353,18 +364,6 @@ export default async function Dashboard() {
             </div>
           </aside>
       </div>
-
-      {/* ── Parliament composition — reference, not news: the bar barely
-          changes, so it sits below the feeds instead of leading the page. */}
-      {parliamentParties.length > 0 && (
-        <section className="mt-14 border-t-2 border-sidebar pt-8">
-          <div className="flex items-baseline justify-between mb-3.5">
-            <h2 className="font-serif text-[20px] font-normal text-foreground">Componența Parlamentului</h2>
-            <span className="text-[12.5px] text-muted">{totalSenators} <span className="font-semibold">{countNoun(totalSenators, 'parlamentar', 'parlamentari')}</span></span>
-          </div>
-          <ParliamentBar parties={parliamentParties} total={totalSenators} />
-        </section>
-      )}
 
       {/* ── Newsletter ───────────────────────────────────── */}
       <section className="mt-14 border-t-2 border-sidebar pt-8">
