@@ -365,6 +365,18 @@ export default async function AdminPage({ searchParams }: {
     '', `Parcursul fiecăruia: ${SITE}/traseisti`, '', HASHTAGS,
   ].join('\n') : ''
 
+  // Cumulative "de la alegeri" — the launch stat (origin → current party).
+  const switchNoun = allSwitchers.some((s: Switcher) => s.chamber === 'senate') ? 'parlamentari' : 'deputați'
+  const switchAllCaption = allSwitchers.length ? [
+    `🔄 ${allSwitchers.length} ${switchNoun} și-au schimbat partidul de la alegeri`, '',
+    ...allSwitchers.slice(0, 12).map(s => {
+      const from = s.segments[0], to = s.segments[s.segments.length - 1]
+      return `• ${s.first_name} ${s.name}: ${from?.abbreviation ?? '?'} → ${to?.abbreviation ?? '?'}`
+    }),
+    ...(allSwitchers.length > 12 ? ['…și alții.'] : []),
+    '', `Parcursul fiecăruia: ${SITE}/traseisti`, '', HASHTAGS,
+  ].join('\n') : ''
+
   return (
     <div className="max-w-[860px]">
       <div className="flex items-start justify-between gap-4">
@@ -470,6 +482,27 @@ export default async function AdminPage({ searchParams }: {
         ) : (
           <div className="border border-rim rounded-xl p-4">
             <PeriodCard site={SITE} kind="absente" months={recentMonths} bust={cardBust} />
+          </div>
+        )}
+      </Section>
+
+      <Section title={`Traseiști — de la alegeri (${allSwitchers.length}) · pt. lansare`} cadence="cumulativ"
+               hint="Statul cumulativ de la începutul mandatului (origine→partid actual). Un card sau carusel (8 nume/slide) care acoperă pe toți. Bun de lead la lansare.">
+        {allSwitchers.length === 0 ? (
+          <p className="text-[13px] text-faint">Niciun traseist confirmat încă.</p>
+        ) : allSwitchers.length <= 8 ? (
+          <div className="border border-rim rounded-xl p-4">
+            <PublishCard image={`${SITE}/api/og/switchcard?all=1`} initialCaption={switchAllCaption} />
+          </div>
+        ) : (
+          <div className="border border-rim rounded-xl p-4">
+            <CarouselPublishCard
+              slides={Array.from({ length: Math.ceil(allSwitchers.length / 8) }, (_, i) => ({
+                url: `${SITE}/api/og/switchcard?all=1&page=${i}`,
+                label: `Slide ${i + 1}`,
+              }))}
+              initialCaption={switchAllCaption}
+            />
           </div>
         )}
       </Section>
