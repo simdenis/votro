@@ -24,7 +24,9 @@ const PAGE = 5
  *  comparable within a list and a senator isn't ranked against a deputy. Paged
  *  5 at a time. */
 export function AbsenceTop({ senators, deputies }: { senators: Item[]; deputies: Item[] }) {
-  const [chamber, setChamber] = useState<'senate' | 'deputies'>('senate')
+  // default to whichever chamber actually has data, so the first tab is never
+  // blank if one list came back empty
+  const [chamber, setChamber] = useState<'senate' | 'deputies'>(senators.length ? 'senate' : 'deputies')
   const [page, setPage] = useState(0)
 
   const items = chamber === 'senate' ? senators : deputies

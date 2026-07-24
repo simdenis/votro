@@ -370,7 +370,7 @@ export default async function Dashboard() {
         <h2 className="font-serif text-[20px] font-normal text-foreground mb-1.5">Parlamentul, pe email</h2>
         <p className="text-[13px] text-muted mb-4 max-w-2xl">
           Un rezumat scurt al voturilor, direct în inbox.{' '}
-          <a href="/newsletter-exemplu.html" target="_blank" rel="noopener" className="underline decoration-rim underline-offset-2 hover:text-foreground">
+          <a href="/newsletter-exemplu" target="_blank" rel="noopener" className="underline decoration-rim underline-offset-2 hover:text-foreground">
             Vezi un exemplu →
           </a>
         </p>
