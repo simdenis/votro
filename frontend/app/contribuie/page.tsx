@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { SectionNav, DESPRE_SECTIONS } from '@/components/section-nav'
+import { Feedback } from '@/components/feedback'
 
 export const metadata: Metadata = {
   title: 'Contribuie — LaButoane',
@@ -22,14 +23,9 @@ export default function ContribuiePage() {
       <section className="space-y-3">
         <h2 className="text-sm font-semibold uppercase tracking-widest text-muted">Propune funcționalități</h2>
         <p className="text-foreground leading-relaxed text-sm">
-          Ai o idee? Trimite-o prin email — cele mai cerute ajung în roadmap.
+          Ai o idee sau un feedback? Spune-ne. Cele mai cerute ajung în roadmap.
         </p>
-        <a
-          href="mailto:siminiucdenis@gmail.com?subject=Sugestie%20LaButoane"
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-md border border-rim text-foreground text-sm font-medium hover:bg-surface transition-colors"
-        >
-          Trimite sugestie
-        </a>
+        <Feedback variant="button" label="Trimite o sugestie" />
       </section>
 
       <section className="space-y-3 border-t border-rim pt-6">

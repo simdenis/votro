@@ -126,7 +126,7 @@ export default async function LawDetail({ params }: { params: Promise<{ id: stri
         </div>
         <div className="flex items-center gap-3 flex-wrap">
           <FollowButton targetType="law" targetId={law.law_id} what="această lege" />
-          <ReportMistake context={{ lege: law.code, pagina: '/legi/' + law.law_id }} />
+          <ReportMistake context={{ lege: law.code, pagina: '/legi/' + law.law_id }} variant="button" />
         </div>
       </div>
 

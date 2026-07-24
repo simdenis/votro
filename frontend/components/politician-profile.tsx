@@ -140,7 +140,7 @@ export function PoliticianProfile({ stats, history, deviationRows, partyHistory,
       {/* follow + always offer the contest path */}
       <div className="flex items-center gap-3 flex-wrap">
         <FollowButton targetType="politician" targetId={stats.politician_id} what="acest parlamentar" />
-        <ReportMistake context={{ parlamentar: `${stats.first_name} ${stats.name}`, pagina: personLd.url }} />
+        <ReportMistake context={{ parlamentar: `${stats.first_name} ${stats.name}`, pagina: personLd.url }} variant="button" />
       </div>
 
       {/* Share row */}
