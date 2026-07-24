@@ -20,14 +20,37 @@ type Item = {
 
 const PAGE = 5
 
-/** Absence ranking, paged 5 at a time — the homepage used to cap at a flat 5. */
-export function AbsenceTop({ items }: { items: Item[] }) {
+/** Absence ranking, split by chamber (Senat / Cameră) so the denominators are
+ *  comparable within a list and a senator isn't ranked against a deputy. Paged
+ *  5 at a time. */
+export function AbsenceTop({ senators, deputies }: { senators: Item[]; deputies: Item[] }) {
+  const [chamber, setChamber] = useState<'senate' | 'deputies'>('senate')
   const [page, setPage] = useState(0)
+
+  const items = chamber === 'senate' ? senators : deputies
   const pages = Math.ceil(items.length / PAGE)
   const slice = items.slice(page * PAGE, page * PAGE + PAGE)
 
+  const tab = (c: 'senate' | 'deputies', label: string) => (
+    <button
+      onClick={() => { setChamber(c); setPage(0) }}
+      className={`text-[11px] px-2.5 py-1 rounded-md border transition-colors ${
+        chamber === c
+          ? 'border-foreground/30 text-foreground font-semibold bg-raised'
+          : 'border-rim text-muted hover:text-foreground'
+      }`}
+    >
+      {label}
+    </button>
+  )
+
   return (
     <>
+      <div className="flex items-center gap-1.5 mb-2.5">
+        {tab('senate', 'Senat')}
+        {tab('deputies', 'Cameră')}
+      </div>
+
       <div className="space-y-2">
         {slice.map((s, i) => (
           <Link

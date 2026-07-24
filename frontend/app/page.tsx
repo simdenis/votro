@@ -68,10 +68,14 @@ export default async function Dashboard() {
   const respinsCount  = r4.count ?? 0
   const allParties    = r5.data ?? []
   type LowPresence = { politician_id: string; name: string; first_name: string; party_abbr: string; party_color: string; presence_pct: number; chamber_votes: number | null; context_note: string | null; href: string }
-  const lowPresence: LowPresence[] = [
-    ...((r7.data ?? []) as Omit<LowPresence, 'href'>[]).map(s => ({ ...s, href: `/senatori/${personSlug(s.first_name, s.name)}` })),
-    ...((r8.data ?? []) as Omit<LowPresence, 'href'>[]).map(s => ({ ...s, href: `/deputati/${personSlug(s.first_name, s.name)}` })),
-  ].sort((a, b) => a.presence_pct - b.presence_pct).slice(0, 15)
+  // Split by chamber: a senator and a deputy have different denominators, so
+  // ranking them in one list mixes incomparable numbers.
+  const absSenators: LowPresence[] = ((r7.data ?? []) as Omit<LowPresence, 'href'>[])
+    .map(s => ({ ...s, href: `/senatori/${personSlug(s.first_name, s.name)}` }))
+    .sort((a, b) => a.presence_pct - b.presence_pct)
+  const absDeputies: LowPresence[] = ((r8.data ?? []) as Omit<LowPresence, 'href'>[])
+    .map(s => ({ ...s, href: `/deputati/${personSlug(s.first_name, s.name)}` }))
+    .sort((a, b) => a.presence_pct - b.presence_pct)
   const tacitBills = (r9.data ?? []) as { id: string; code: string; title: string | null; summary: string | null; tacit_deadline: string | null }[]
   type RecentVote = { id: string; vote_date: string; chamber: string; outcome: 'adoptat' | 'respins' | null; description: string | null; laws: { code: string; title: string; law_category: string | null } | null }
   const recentVotes = (r10.data as unknown as RecentVote[] | null) ?? []
@@ -319,14 +323,14 @@ export default async function Dashboard() {
               <CountyMap />
             </div>
 
-            {/* Absențe — top 5: lowest plenary presence, both chambers */}
-            {lowPresence.length > 0 && (
+            {/* Absențe — lowest plenary presence, split Senat / Cameră */}
+            {(absSenators.length > 0 || absDeputies.length > 0) && (
               <>
                 <h2 className="font-serif text-[16px] font-normal text-foreground border-b-2 border-respins/60 pb-[5px] mb-1">
                   Absențe — clasament
                 </h2>
                 <p className="text-[11px] text-faint mb-2">
-                  % din voturile de plen ținute în camera sa de la validarea mandatului · Senat + Cameră ·
+                  % din voturile de plen ținute în camera sa de la validarea mandatului ·
                   fără membrii Guvernului (nu votează în plen) ·{' '}
                   <Link href="/despre#metodologie-absente" className="underline underline-offset-2 hover:text-foreground">metodologie</Link>
                 </p>
@@ -334,7 +338,7 @@ export default async function Dashboard() {
                   Absența nu înseamnă absenteism: poate fi concediu medical, delegație oficială sau
                   alt mandat. Cifra e brută; unde avem o justificare, apare marcată cu „ⓘ".
                 </p>
-                <AbsenceTop items={lowPresence} />
+                <AbsenceTop senators={absSenators} deputies={absDeputies} />
               </>
             )}
 
