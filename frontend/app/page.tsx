@@ -34,7 +34,7 @@ export default async function Dashboard() {
     db.from('law_status')
       .select('law_id, code, title, summary, law_category, presidential_date')
       .eq('presidential_status', 'promulgat').not('presidential_date', 'is', null)
-      .order('presidential_date', { ascending: false }).limit(12),
+      .order('presidential_date', { ascending: false }).limit(5),
     db.from('law_status').select('*', { count: 'exact', head: true }).eq('presidential_status', 'promulgat'),
     db.from('law_status').select('*', { count: 'exact', head: true }).or('senate_outcome.eq.respins,camera_outcome.eq.respins'),
     db.from('parties').select('abbreviation, color, name'),
@@ -142,7 +142,7 @@ export default async function Dashboard() {
             </button>
           </div>
           <p className="text-[11.5px] text-faint mt-1.5">
-            ex. <span className="text-muted">„Ponta"</span>, <span className="text-muted">„PSD"</span> sau un cod de lege <span className="text-muted">„L230/2025"</span>
+            caută după nume, după partid <span className="text-muted">(ex. „PSD")</span> sau după codul legii <span className="text-muted">(ex. „L230/2025")</span>
           </p>
         </form>
 
@@ -188,17 +188,6 @@ export default async function Dashboard() {
         ))}
       </section>
 
-      {/* ── Parliament composition ───────────────────────── */}
-      {parliamentParties.length > 0 && (
-        <section className="mb-12">
-          <div className="flex items-baseline justify-between mb-3.5">
-            <h2 className="font-serif text-[20px] font-normal text-foreground">Componența Parlamentului</h2>
-            <span className="text-[12.5px] text-muted">{totalSenators} <span className="font-semibold">{countNoun(totalSenators, 'parlamentar', 'parlamentari')}</span></span>
-          </div>
-          <ParliamentBar parties={parliamentParties} total={totalSenators} />
-        </section>
-      )}
-
       {/* ── Vote list + cohesion sidebar ─────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-x-12 gap-y-10 items-start">
 
@@ -212,6 +201,46 @@ export default async function Dashboard() {
                 {lastVoteDate ? `; ultimul a fost pe ${formatDate(lastVoteDate)}` : ''}. Termenele legilor
                 tacite curg în continuare.
               </p>
+            </div>
+          )}
+
+          {/* Legi tacite — the hero. Nobody else tracks tacit adoption, and the
+              deadlines keep running during recess, so this is the live story
+              when the plenary is quiet. Kept above the promulgated/vote feeds. */}
+          {tacitBills.length > 0 && (
+            <div className="mb-10">
+              <div className="flex items-baseline justify-between border-b-2 border-respins/60 pb-[5px] mb-1">
+                <h2 className="font-serif text-[20px] font-normal text-foreground">Legi care pot trece fără vot</h2>
+                <Link href="/tacite" className="text-[11px] text-muted hover:text-foreground transition-colors">Toate →</Link>
+              </div>
+              <p className="text-[11.5px] text-muted mb-3 leading-relaxed">
+                Dacă prima cameră nu le dezbate în termenul din Constituție (art. 75), se consideră
+                adoptate automat, fără ca cineva să voteze{recess ? '. Termenele curg și în vacanță' : ''}.
+              </p>
+              <div className="space-y-2">
+                {tacitBills.map(b => {
+                  const days = b.tacit_deadline
+                    ? Math.ceil((new Date(b.tacit_deadline + 'T23:59:59+03:00').getTime() - Date.now()) / 86_400_000)
+                    : null
+                  return (
+                    <Link
+                      key={b.id}
+                      href={`/tacite/${lawSlug(b.code)}`}
+                      className="flex items-center justify-between gap-2 bg-surface border border-rim rounded-lg px-3 py-2.5 hover:bg-raised transition-colors"
+                    >
+                      <span className="min-w-0">
+                        <span className="block text-[13px] font-medium text-foreground line-clamp-2 leading-snug">{b.summary || b.title || b.code}</span>
+                        <span className="block font-mono text-[10px] text-muted mt-0.5">{b.code}</span>
+                      </span>
+                      {days != null && (
+                        <span className={`text-[12px] font-bold tabular-nums flex-shrink-0 ${days <= 7 ? 'text-respins' : days <= 30 ? 'text-deviere' : 'text-muted'}`}>
+                          {days} {days === 1 ? 'zi' : 'zile'}
+                        </span>
+                      )}
+                    </Link>
+                  )
+                })}
+              </div>
             </div>
           )}
 
@@ -273,42 +302,6 @@ export default async function Dashboard() {
             )}
           </div>
 
-          {/* Legi tacite — soonest deadlines. Nobody else tracks tacit adoption,
-              and the deadlines keep running during recess. Under the feed (not
-              the sidebar) so it reads as primary content. */}
-          {tacitBills.length > 0 && (
-            <div className="mt-10">
-              <div className="flex items-baseline justify-between border-b-2 border-sidebar pb-[5px] mb-1">
-                <h2 className="font-serif text-[20px] font-normal text-foreground">Legi tacite — termene apropiate</h2>
-                <Link href="/tacite" className="text-[11px] text-muted hover:text-foreground transition-colors">Toate →</Link>
-              </div>
-              <p className="text-[11px] text-faint mb-3">Proiecte adoptate <strong className="font-semibold">fără vot</strong> dacă nu sunt dezbătute la timp (art. 75).</p>
-              <div className="space-y-2">
-                {tacitBills.map(b => {
-                  const days = b.tacit_deadline
-                    ? Math.ceil((new Date(b.tacit_deadline + 'T23:59:59+03:00').getTime() - Date.now()) / 86_400_000)
-                    : null
-                  return (
-                    <Link
-                      key={b.id}
-                      href={`/tacite/${lawSlug(b.code)}`}
-                      className="flex items-center justify-between gap-2 bg-surface border border-rim rounded-lg px-3 py-2.5 hover:bg-raised transition-colors"
-                    >
-                      <span className="min-w-0">
-                        <span className="block text-[13px] font-medium text-foreground line-clamp-2 leading-snug">{b.summary || b.title || b.code}</span>
-                        <span className="block font-mono text-[10px] text-muted mt-0.5">{b.code}</span>
-                      </span>
-                      {days != null && (
-                        <span className={`text-[12px] font-bold tabular-nums flex-shrink-0 ${days <= 7 ? 'text-respins' : days <= 30 ? 'text-deviere' : 'text-muted'}`}>
-                          {days} {days === 1 ? 'zi' : 'zile'}
-                        </span>
-                      )}
-                    </Link>
-                  )
-                })}
-              </div>
-            </div>
-          )}
         </section>
 
         {/* Sidebar: find-your-MP map · top absences · open data · newsletter */}
@@ -332,10 +325,14 @@ export default async function Dashboard() {
                 <h2 className="font-serif text-[16px] font-normal text-foreground border-b-2 border-respins/60 pb-[5px] mb-1">
                   Absențe — clasament
                 </h2>
-                <p className="text-[11px] text-faint mb-3">
+                <p className="text-[11px] text-faint mb-2">
                   % din voturile de plen ținute în camera sa de la validarea mandatului · Senat + Cameră ·
                   fără membrii Guvernului (nu votează în plen) ·{' '}
                   <Link href="/despre#metodologie-absente" className="underline underline-offset-2 hover:text-foreground">metodologie</Link>
+                </p>
+                <p className="text-[11px] text-muted mb-3">
+                  Absența nu înseamnă absenteism: poate fi concediu medical, delegație oficială sau
+                  alt mandat. Cifra e brută; unde avem o justificare, apare marcată cu „ⓘ".
                 </p>
                 <AbsenceTop items={lowPresence} />
               </>
@@ -352,6 +349,18 @@ export default async function Dashboard() {
             </div>
           </aside>
       </div>
+
+      {/* ── Parliament composition — reference, not news: the bar barely
+          changes, so it sits below the feeds instead of leading the page. */}
+      {parliamentParties.length > 0 && (
+        <section className="mt-14 border-t-2 border-sidebar pt-8">
+          <div className="flex items-baseline justify-between mb-3.5">
+            <h2 className="font-serif text-[20px] font-normal text-foreground">Componența Parlamentului</h2>
+            <span className="text-[12.5px] text-muted">{totalSenators} <span className="font-semibold">{countNoun(totalSenators, 'parlamentar', 'parlamentari')}</span></span>
+          </div>
+          <ParliamentBar parties={parliamentParties} total={totalSenators} />
+        </section>
+      )}
 
       {/* ── Newsletter ───────────────────────────────────── */}
       <section className="mt-14 border-t-2 border-sidebar pt-8">

@@ -28,7 +28,11 @@ async function LastUpdated() {
       {recess
         ? `Sesiune închisă până la ${recess}${lastVote ? ` · ultimul vot ${formatRelativeTime(lastVote)}` : ''}`
         : `${lastVote ? `Ultimul vot: ${formatRelativeTime(lastVote)} · ` : ''}Verificat ${formatRelativeTime(checkedAt)}`}
-      {stale ? ' ⚠' : ''}
+      {stale ? (
+        <span title="Actualizarea automată pare întârziată — verificăm sursele. Nu e o eroare a datelor afișate." aria-label="actualizare automată întârziată">
+          {' '}⚠
+        </span>
+      ) : null}
     </span>
   )
 }
