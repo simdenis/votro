@@ -13,11 +13,13 @@ export function ReportMistake({
   context = {},
   variant = 'inline',
   className = '',
+  label = 'Raportează o greșeală',
 }: {
   /** Tally URL pre-fill params, e.g. { parlamentar: 'Felix Stroe', pagina: '…' } */
   context?: Record<string, string>
   variant?: 'inline' | 'button'
   className?: string
+  label?: string
 }) {
   if (!FORM) return null
   const qs = new URLSearchParams(
@@ -31,7 +33,7 @@ export function ReportMistake({
 
   return (
     <a href={href} target="_blank" rel="noopener noreferrer" className={`${base} ${className}`}>
-      <span aria-hidden>⚠</span> Raportează o greșeală
+      <span aria-hidden>⚠</span> {label}
     </a>
   )
 }

@@ -2,6 +2,8 @@ import Link from 'next/link'
 import { Logo } from './logo'
 import { NavLinks } from './nav-links'
 import { MobileNav } from './mobile-nav'
+import { Feedback } from './feedback'
+import { ReportMistake } from './report-mistake'
 
 const SearchIcon = ({ size = 14 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -24,7 +26,7 @@ export function Nav() {
 
           <NavLinks variant="top" />
 
-          <div className="ml-auto flex items-center gap-4 shrink-0">
+          <div className="ml-auto flex items-center gap-3.5 shrink-0">
             <form action="/cautare" className="relative">
               <input
                 name="q"
@@ -37,6 +39,8 @@ export function Nav() {
                 <SearchIcon size={14} />
               </button>
             </form>
+            <Feedback label="Feedback" className="whitespace-nowrap" />
+            <ReportMistake label="Eroare" className="whitespace-nowrap" />
             <span className="hidden xl:inline-block font-mono text-[9.5px] tracking-[0.1em] text-muted border border-[var(--ink)] rounded-[3px] px-2 py-[3px] select-none whitespace-nowrap">
               NEAFILIAT POLITIC
             </span>

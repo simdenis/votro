@@ -4,6 +4,8 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { NAV_LINKS } from './nav-links'
+import { Feedback } from './feedback'
+import { ReportMistake } from './report-mistake'
 
 export function MobileNav() {
   const [open, setOpen] = useState(false)
@@ -85,6 +87,10 @@ export function MobileNav() {
           <Link href="/cautare" className="px-3 py-3 text-[16px] font-medium text-faint">
             Căutare
           </Link>
+          <div className="flex items-center gap-4 px-3 pt-3 mt-1 border-t border-rim/60">
+            <Feedback label="Ai o idee?" />
+            <ReportMistake label="Raportează o greșeală" />
+          </div>
         </nav>
       </div>
     </>
