@@ -10,12 +10,19 @@ async function LastUpdated() {
   // vote (recess is normal, never a warning).
   const db = getDB()
   const [meta, vote] = await Promise.all([
-    db.from('scrape_meta').select('value').eq('key', 'last_scrape_at').maybeSingle(),
+    db.from('scrape_meta').select('key, value').in('key', ['last_scrape_at', 'last_scrape_rc']),
     db.from('votes').select('vote_date').order('vote_date', { ascending: false }).limit(1),
   ])
-  const checkedAt = meta.data?.value as string | undefined
+  const metaMap = Object.fromEntries(
+    ((meta.data ?? []) as { key: string; value: string }[]).map(r => [r.key, r.value]),
+  )
+  const checkedAt = metaMap['last_scrape_at'] as string | undefined
+  const lastRc    = metaMap['last_scrape_rc'] as string | undefined
   const lastVote  = vote.data?.[0]?.vote_date as string | undefined
   if (!checkedAt) return <span>Actualizat zilnic</span>
+  // rc is 0 on a clean run; anything else = a step failed (the heartbeat still
+  // fires, via the run_daily trap). Surfaced as a quiet ⚠, not the red stale one.
+  const failed = !!lastRc && lastRc !== '0'
   // A week-old "last vote" reads as a dead site when it's really just recess
   const quiet  = lastVote && Date.now() - new Date(lastVote).getTime() > 7 * 86_400_000
   const recess = quiet ? recessUntil() : null
@@ -31,6 +38,10 @@ async function LastUpdated() {
         : `${lastVote ? `Ultimul vot: ${formatRelativeTime(lastVote)} · ` : ''}Verificat ${formatRelativeTime(checkedAt)}`}
       {stale ? (
         <span title="Actualizarea automată pare întârziată — verificăm sursele. Nu e o eroare a datelor afișate." aria-label="actualizare automată întârziată">
+          {' '}⚠
+        </span>
+      ) : failed ? (
+        <span className="text-faint" title="Ultima verificare automată a raportat o eroare la un pas — unele date pot fi parțial neactualizate. Reverificăm zilnic." aria-label="ultima verificare a raportat o eroare">
           {' '}⚠
         </span>
       ) : null}
