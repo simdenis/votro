@@ -81,14 +81,12 @@ log "=== Presidential decrees (presidency.ro) ==="
 log "=== Law summaries (Gemini) ==="
 "$PY" scraper/gemini_summarizer.py >>"$LOG" 2>&1 || { rc=1; log "Gemini summarizer FAILED"; }
 
-# AI categories (Haiku) for laws the title-regex classifier missed — reads the
+# AI categories (Gemini) for laws the title-regex classifier missed — reads the
 # fresh summary, so it runs after the summarizer and before interest scoring
-# (which uses the category). Only fills law_category IS NULL, ~$0.0003/law.
-# DISABLED — this was the only user of the Anthropic (Claude) API key. Laws keep
-# whatever category the title-regex classifier assigns; only regex-missed ones go
-# uncategorized. Re-enable by uncommenting (or port to Gemini to match summaries).
-log "=== Law categories (Haiku) — DISABLED ==="
-# "$PY" scraper/categorize_laws.py >>"$LOG" 2>&1 || { rc=1; log "Categorizer FAILED"; }
+# (which uses the category). Only fills law_category IS NULL. Ported off Claude
+# to Gemini (free tier), so nothing uses the Anthropic key anymore.
+log "=== Law categories (Gemini) ==="
+"$PY" scraper/categorize_laws.py >>"$LOG" 2>&1 || { rc=1; log "Categorizer FAILED"; }
 
 # Public-interest scores (1-100) for post selection — runs after the summarizer
 # so fresh summaries feed the rating. Incremental, 429-safe, skips without key.
