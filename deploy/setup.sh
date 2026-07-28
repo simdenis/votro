@@ -42,11 +42,16 @@ if [ ! -f "$REPO_DIR/.env" ]; then
 EOF
 fi
 
-echo "==> Installing systemd timer"
-install -m644 "$REPO_DIR/deploy/votro-scrape.service" /etc/systemd/system/
-install -m644 "$REPO_DIR/deploy/votro-scrape.timer"   /etc/systemd/system/
+echo "==> Installing systemd timers"
+# Two cadences: the full pipeline twice a day, and a votes-only pass every 15 min
+# during plenary hours. Both go through run_daily.sh and share a lock, so they
+# never overlap.
+install -m644 "$REPO_DIR/deploy/votro-scrape.service"      /etc/systemd/system/
+install -m644 "$REPO_DIR/deploy/votro-scrape.timer"        /etc/systemd/system/
+install -m644 "$REPO_DIR/deploy/votro-scrape-fast.service" /etc/systemd/system/
+install -m644 "$REPO_DIR/deploy/votro-scrape-fast.timer"   /etc/systemd/system/
 systemctl daemon-reload
-systemctl enable --now votro-scrape.timer
+systemctl enable --now votro-scrape.timer votro-scrape-fast.timer
 
 echo
 echo "Done. Next:"

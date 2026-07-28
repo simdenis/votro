@@ -9,4 +9,9 @@ User=votro
 WorkingDirectory=/opt/votro
 ExecStart=/opt/votro/deploy/run_daily.sh
 # .env (SUPABASE_URL / SUPABASE_KEY) is read by python-dotenv from WorkingDirectory.
-TimeoutStartSec=1800
+# 30min silently SIGTERMed every run from 2026-07-14 on: the presidential/CCR step
+# alone takes ~22min and the Gemini backlog pushes the whole pipeline past the
+# limit, so it died mid-way and the heartbeat froze at 2026-07-13. The full run is
+# a batch job with no deadline — give it room and let the per-step failures (which
+# fold into rc) be the signal instead of a wall clock.
+TimeoutStartSec=4h

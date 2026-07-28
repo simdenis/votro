@@ -1,0 +1,14 @@
+[Unit]
+Description=VotRO fast vote scrape (both chambers only)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=votro
+WorkingDirectory=/opt/votro
+ExecStart=/opt/votro/deploy/run_daily.sh --fast
+# Votes only — ~40s. Anything slower means a chamber page is hanging, not that
+# there is more work to do, so a tight timeout is the right signal here (unlike
+# the full run, which is an open-ended batch job).
+TimeoutStartSec=10min

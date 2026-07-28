@@ -3,17 +3,35 @@
 # Usage:
 #   run_daily.sh            -> scrape yesterday AND today (UTC); upserts are idempotent
 #   run_daily.sh YYYY-MM-DD -> scrape a single date
+#   run_daily.sh --fast     -> votes only (~40s): both chambers + PLx resolution.
+#                              Runs every 15 min during plenary hours so the site
+#                              shows a vote minutes after it happens; the heavy
+#                              enrichment (25+ min against cdep/senat/presidency,
+#                              Gemini) stays on the twice-daily full run.
 set -uo pipefail
 
 REPO_DIR="${VOTRO_REPO_DIR:-/opt/votro}"
 LOG_DIR="${VOTRO_LOG_DIR:-/var/log/votro}"
 PY="$REPO_DIR/scraper/.venv/bin/python"
 
+FAST=0
+if [ "${1:-}" = "--fast" ]; then FAST=1; shift; fi
+
 mkdir -p "$LOG_DIR"
 LOG="$LOG_DIR/scrape-$(date -u '+%Y%m%d').log"
 log() { echo "[$(date -u '+%Y-%m-%dT%H:%M:%SZ')] $*" | tee -a "$LOG"; }
 
 cd "$REPO_DIR" || { log "FATAL: repo dir $REPO_DIR missing"; exit 1; }
+
+# One run at a time. The fast timer fires every 15 min while a full run can take
+# well over an hour; without this they would scrape the same dates concurrently
+# and race on the same rows. Taken BEFORE the heartbeat trap is installed, so a
+# skipped run leaves scrape_meta alone instead of reporting a result it never got.
+exec 9>"$LOG_DIR/.scrape.lock"
+if ! flock -n 9; then
+  log "=== Skipped ($([ "$FAST" = 1 ] && echo fast || echo full)) — another run holds the lock ==="
+  exit 0
+fi
 
 # Heartbeat on EVERY exit (trap), not just a clean finish. Otherwise a crash in
 # a late step (OOM, a hung API call, the cdep preflight below) freezes
@@ -57,6 +75,16 @@ done
 # PLX search the old resolver used returns zero results.
 log "=== PLx → L resolution ==="
 "$PY" scraper/resolve_plx.py >>"$LOG" 2>&1 || { rc=1; log "PLx resolver FAILED"; }
+
+# Everything above is what a vote actually needs: the two chamber scrapes and the
+# law-code merge. The site's vote counts and presence figures read live views
+# (deputy_stats / senator_stats), so they are already correct at this point — the
+# steps below enrich laws, not votes. Fast mode stops here; the trap writes the
+# heartbeat, which is what keeps the footer from going stale between full runs.
+if [ "$FAST" = 1 ]; then
+  log "=== Done (fast, rc=$rc) ==="
+  exit $rc
+fi
 
 # Collapse politician_party_history into clean chronological segments. The
 # per-vote state machine assumes date-ordered processing (it isn't), so it

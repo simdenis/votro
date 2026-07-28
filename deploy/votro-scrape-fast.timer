@@ -1,0 +1,15 @@
+[Unit]
+Description=Run the VotRO fast vote scrape every 15 min during plenary hours
+
+[Timer]
+# Times are Romanian local (DST handled automatically). Plenary sittings and the
+# electronic-vote pages that follow them fall inside this window; overnight there
+# is nothing new to fetch, so we don't poll cdep/senat for no reason.
+OnCalendar=*-*-* 08..20:00/15:00 Europe/Bucharest
+# Spread the request so we never hit cdep on the exact same second every quarter.
+RandomizedDelaySec=45
+# No Persistent= on purpose: a missed 15-min slot is worthless by the time the VPS
+# is back, and catching up would fire a burst of identical scrapes.
+
+[Install]
+WantedBy=timers.target
