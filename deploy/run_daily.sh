@@ -13,6 +13,19 @@ mkdir -p "$LOG_DIR"
 LOG="$LOG_DIR/scrape-$(date -u '+%Y%m%d').log"
 log() { echo "[$(date -u '+%Y-%m-%dT%H:%M:%SZ')] $*" | tee -a "$LOG"; }
 
+cd "$REPO_DIR" || { log "FATAL: repo dir $REPO_DIR missing"; exit 1; }
+
+# Heartbeat on EVERY exit (trap), not just a clean finish. Otherwise a crash in
+# a late step (OOM, a hung API call, the cdep preflight below) freezes
+# scrape_meta.last_scrape_at while the data actually updated — and the footer
+# shows a false "stale" ⚠. rc || ec so a hard early exit is recorded as rc=1.
+rc=0
+heartbeat() {
+  local ec=$?
+  "$PY" "$REPO_DIR/scraper/heartbeat.py" "$(( rc || ec ))" >>"$LOG" 2>&1 || log "WARN: heartbeat write failed"
+}
+trap heartbeat EXIT
+
 if [ -n "${1:-}" ]; then
   DATES=("$1")
 else
@@ -23,16 +36,14 @@ fi
 # clear message instead of eating a 25s timeout on every single request.
 if ! nc -z -w 5 www.cdep.ro 443 2>/dev/null; then
   log "FATAL: cdep.ro:443 unreachable — this VPS is not on an EU/RO IP (or cdep is down)."
+  rc=1
   exit 1
 fi
-
-cd "$REPO_DIR" || { log "FATAL: repo dir $REPO_DIR missing"; exit 1; }
 
 # Stay current: scraper fixes land on main and must apply from the next run
 # (a stale scraper once re-introduced wrong PL-x→L law links). Non-fatal.
 git pull --ff-only >>"$LOG" 2>&1 || log "WARN: git pull failed — running existing code"
 
-rc=0
 for TARGET in "${DATES[@]}"; do
   log "=== Camera Deputatilor — $TARGET ==="
   "$PY" scraper/camera_scraper.py --date "$TARGET" >>"$LOG" 2>&1 || { rc=1; log "Camera scrape FAILED ($TARGET)"; }
@@ -143,8 +154,5 @@ fi
 log "=== Alerts (followed laws/MPs) ==="
 "$PY" scraper/send_alerts.py >>"$LOG" 2>&1 || log "WARN: alerts send failed"
 
-# Heartbeat — lets the site footer tell "parliament idle" from "pipeline broken".
-"$PY" scraper/heartbeat.py "$rc" >>"$LOG" 2>&1 || log "WARN: heartbeat write failed"
-
 log "=== Done (rc=$rc) ==="
-exit $rc
+exit $rc  # trap fires heartbeat here (and on any earlier exit/crash)
