@@ -102,6 +102,22 @@ def main() -> None:
               f"{l['code']}: promulgated but {why} "
               f"(senate={l['senate_outcome']} camera={l['camera_outcome']})")
 
+    # 1b) every vote must record the group it was cast with (045). party_vote_breakdown
+    #     joins straight to it since 049, so a row without one silently disappears
+    #     from every party breakdown and from the /analize matrix instead of being
+    #     quietly wrong — make it loud.
+    orphan = (
+        db.table("politician_votes")
+        .select("id", count="exact")
+        .is_("party_id", "null")
+        .limit(1)
+        .execute()
+        .count
+    ) or 0
+    check(orphan == 0, "FAIL",
+          f"{orphan} politician_votes rows have no party_id — they are missing from "
+          f"every party breakdown (see migration 049)")
+
     # 2) stats views: presence within [0,100]; participations ≤ chamber votes held
     for view in ("senator_stats", "deputy_stats"):
         for s in all_rows(view, "name,presence_pct,total_votes,votes_for,votes_against,votes_abstention,votes_not_voted,chamber_votes,active"):
