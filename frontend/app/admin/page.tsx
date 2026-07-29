@@ -538,8 +538,13 @@ export default async function AdminPage({ searchParams }: {
                  hint="Cine nu apare în apelul nominal la niciun vot din ziua aia. Se actualizează singur la următoarea ședință; membrii Guvernului sunt numărați, dar semnalați separat, fiindcă absența lor e structurală.">
           <div className="border border-rim rounded-xl p-4">
             <PublishCard
+              // sv = design version. og responses are immutable and the edge
+              // copy lives 6h, so an hourly bust is not enough on its own: the
+              // hour's URL is already cached when a redesign ships, and the
+              // button keeps showing the previous card until it expires. Bump
+              // this whenever session-open-card.tsx changes.
               image={`${SITE}/api/og/sessioncard?v=${recentSitting.voteIds.join(',')}`
-                     + `&label=${encodeURIComponent(recentSitting.label)}&b=${cardBust}`}
+                     + `&label=${encodeURIComponent(recentSitting.label)}&sv=2&b=${cardBust}`}
               initialCaption={[
                 `${recentSitting.absent} din ${recentSitting.total} de deputați nu apar în apelul nominal la niciunul dintre cele ${recentSitting.voteIds.length === 1 ? 'vot' : `${recentSitting.voteIds.length} voturi`} din ${recentSitting.date}.`,
                 '',
