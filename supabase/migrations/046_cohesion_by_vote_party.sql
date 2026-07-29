@@ -16,6 +16,9 @@ with contested as (
       and least(for_count, against_count + coalesce(abstention_count, 0)) * 5
           >= for_count + against_count + coalesce(abstention_count, 0)
 ),
+-- count(a.vote_id) rather than count(a.*): vote_id is never null inside the
+-- CTE, so the two are equivalent, and a whole-row reference to a CTE alias is
+-- exactly the kind of construct worth not betting a migration on.
 -- Attribute every contested vote to a party ONCE, before touching parties.
 -- Joining parties to politicians first (the pre-045 shape) would restrict the
 -- scan to a party's *current* members, so a vote cast under a previous group
@@ -36,14 +39,14 @@ select
     p.abbreviation,
     coalesce(p.color, '#9e9e9e')    as color,
     count(distinct a.vote_id)       as votes_participated,
-    count(a.*) filter (where a.vote_choice in ('for','against','abstention')) as total_active_votes,
-    count(a.*) filter (where a.party_line_deviation = false
+    count(a.vote_id) filter (where a.vote_choice in ('for','against','abstention')) as total_active_votes,
+    count(a.vote_id) filter (where a.party_line_deviation = false
                           and a.vote_choice in ('for','against','abstention')) as with_party_votes,
-    count(a.*) filter (where a.party_line_deviation = true) as deviation_count,
+    count(a.vote_id) filter (where a.party_line_deviation = true) as deviation_count,
     round(
-        count(a.*) filter (where a.party_line_deviation = false
+        count(a.vote_id) filter (where a.party_line_deviation = false
                               and a.vote_choice in ('for','against','abstention'))::numeric
-        / nullif(count(a.*) filter (where a.vote_choice in ('for','against','abstention')), 0)
+        / nullif(count(a.vote_id) filter (where a.vote_choice in ('for','against','abstention')), 0)
         * 100, 1
     ) as cohesion_pct
 from parties p
