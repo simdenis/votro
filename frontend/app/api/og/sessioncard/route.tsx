@@ -113,7 +113,6 @@ async function renderCard(req: Request): Promise<Response> {
     absent: absent.length,
     total: deputies.length,
     headline: (sp.get('headline') ?? 'deputați n-au votat la deschiderea sesiunii extraordinare').slice(0, 90),
-    method: 'nu apar în apelul nominal public la niciunul dintre cele două voturi de deschidere',
     note: ministers > 0
       ? `Bara arată cât din mandatele grupului au lipsit. ${ministers} dintre cei absenți sunt membri ai Guvernului. Lista pe nume: la-butoane.ro`
       : 'Bara arată cât din mandatele grupului au lipsit. Lista pe nume: la-butoane.ro',

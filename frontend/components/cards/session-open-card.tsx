@@ -22,8 +22,6 @@ export interface SessionOpenCardData {
   total: number
   /** Under the number, e.g. "deputați n-au votat la deschiderea sesiunii extraordinare" */
   headline: string
-  /** How absence was established — always shown, never optional. */
-  method: string
   /** Bottom line: how to read the bars, plus any fairness caveat for this count. */
   note: string
   parties: PartyRow[]
@@ -61,9 +59,8 @@ export function SessionOpenCard({ data }: { data: SessionOpenCardData }) {
         </div>
 
         <div style={{ display: 'flex', fontSize: 38, fontWeight: 700, lineHeight: 1.2, marginTop: 18 }}>{data.headline}</div>
-        <div style={{ display: 'flex', fontSize: 20, opacity: 0.55, marginTop: 12 }}>{data.method}</div>
 
-        <div style={{ display: 'flex', height: 1, marginTop: 30, marginBottom: 8, background: C.hair }} />
+        <div style={{ display: 'flex', height: 1, marginTop: 34, marginBottom: 8, background: C.hair }} />
 
         <div style={{ display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'center' }}>
           {data.parties.map((p, i) => (
