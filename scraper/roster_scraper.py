@@ -96,6 +96,9 @@ class Member:
     key: frozenset = field(default_factory=frozenset)
     dated: bool = False           # camera list: date in the from/until column
     group: Optional[str] = None   # camera list: parliamentary-group label
+    # The chamber's own stable id (cdep idm / senat ParlamentarID). Survives a
+    # name change, which the name key does not — see migration 044.
+    ext_id: Optional[str] = None
 
 
 # ── Source parsing ────────────────────────────────────────────────────────────
@@ -153,7 +156,8 @@ def senate_roster() -> list[Member]:
     for m in re.finditer(r'href=[\'"][^\'"]*FisaSenator\.aspx\?ParlamentarID=([0-9a-fA-F-]{36})[\'"][^>]*>([^<]+)<', html):
         pid, name = m.group(1), re.sub(r"\s+", " ", m.group(2)).strip()
         if pid not in seen and name:
-            seen[pid] = Member(display=name, profile_url=SENATE_PROFILE.format(pid=pid), key=name_key(name))
+            seen[pid] = Member(display=name, profile_url=SENATE_PROFILE.format(pid=pid),
+                               key=name_key(name), ext_id=pid)
     return list(seen.values())
 
 
@@ -177,7 +181,8 @@ def camera_roster() -> list[Member]:
         group = re.sub(r"<br\s*/?>|\s+", " ", m.group(3)).strip() or None
         if idm not in seen and name and not name.isdigit():
             seen[idm] = Member(display=name, profile_url=CAMERA_PROFILE.format(idm=idm),
-                               key=name_key(name), dated=bool(m.group(4).strip()), group=group)
+                               key=name_key(name), dated=bool(m.group(4).strip()), group=group,
+                               ext_id=idm)
     return list(seen.values())
 
 
@@ -224,6 +229,24 @@ _GROUP_TO_ABBR = [
 ]
 
 
+def split_display(chamber: str, display: str) -> Optional[tuple[str, str]]:
+    """(surname, first names) from a roster display name, per chamber convention.
+
+    Shared by the insert path and the rename path so a member who changes their
+    name is stored exactly as they would have been if inserted today.
+    """
+    parts = display.split()
+    if len(parts) < 2:
+        return None
+    if chamber == "senate":
+        # senat.ro displays "SURNAME First-Names"; the ALL-CAPS run IS the
+        # surname signal — detect it, THEN title-case for storage.
+        caps = [t for t in parts if t == t.upper()]
+        return titlecase_name(" ".join(caps) or parts[-1]), " ".join(t for t in parts if t not in caps) or parts[0]
+    # cdep is already Title Case and puts the surname first.
+    return parts[0], " ".join(parts[1:])
+
+
 def group_to_abbr(label: Optional[str]) -> Optional[str]:
     if not label:
         return None
@@ -244,7 +267,7 @@ class Roster:
         while True:
             page = (
                 self.db.table("politicians")
-                .select("id, name, first_name, active, county, mandate_start, party_id")
+                .select("id, name, first_name, active, county, mandate_start, party_id, ext_id")
                 .eq("chamber", chamber)
                 .range(start, start + 999)
                 .execute()
@@ -265,30 +288,25 @@ class Roster:
 
     def _insert_member(self, chamber: str, mem: Member) -> Optional[dict]:
         """Insert a roster member who never voted (ministers, mostly)."""
-        parts = mem.display.split()
-        if len(parts) < 2:
+        split = split_display(chamber, mem.display)
+        if split is None:
             log.warning("cannot split name %r — not inserting", mem.display)
             return None
+        name, first = split
         label = mem.group
-        if chamber == "senate":
-            # senat.ro displays "SURNAME First-Names"; the ALL-CAPS run IS the
-            # surname signal — detect it, THEN title-case for storage.
-            caps = [t for t in parts if t == t.upper()]
-            name = titlecase_name(" ".join(caps) or parts[-1])
-            first = " ".join(t for t in parts if t not in caps) or parts[0]
-            if not label:
-                try:
-                    text = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", fetch(mem.profile_url)))
-                    m = re.search(r"Grupul parlamentar:\s*(.{3,100})", text)
-                    label = m.group(1) if m else None
-                except requests.RequestException:
-                    label = None
-                time.sleep(_DELAY)
-        else:
-            name, first = parts[0], " ".join(parts[1:])
+        if chamber == "senate" and not label:
+            # The senate list carries no group column — the profile page does.
+            try:
+                text = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", fetch(mem.profile_url)))
+                m = re.search(r"Grupul parlamentar:\s*(.{3,100})", text)
+                label = m.group(1) if m else None
+            except requests.RequestException:
+                label = None
+            time.sleep(_DELAY)
         abbr = group_to_abbr(label)
         payload = {"name": name, "first_name": first, "chamber": chamber,
-                   "active": True, "party_id": self._party_id(abbr)}
+                   "active": True, "party_id": self._party_id(abbr),
+                   "ext_id": mem.ext_id}
         try:
             row = self.db.table("politicians").insert(payload).execute().data[0]
         except Exception as e:  # UNIQUE(name, first_name) collisions etc.
@@ -328,9 +346,22 @@ class Roster:
         for p in pols:
             by_key.setdefault(name_key(p["name"], p["first_name"]), []).append(p)
 
+        by_ext = {p["ext_id"]: p for p in pols if p.get("ext_id")}
+
         matched: dict[str, Member] = {}  # politician id -> roster member
+        ext_matched: set[str] = set()    # matched by stable id, so a rename is safe to apply
         unmatched_roster: list[Member] = []
         for mem in roster:
+            # Stable roster id first (migration 044): it is the only key that
+            # survives a name change. Without it a member who marries is a
+            # stranger to the name matcher — the roster entry gets inserted as a
+            # new politician and the old row, matching nothing, gets deactivated
+            # with every vote they ever cast still attached to it.
+            hit = by_ext.get(mem.ext_id) if mem.ext_id else None
+            if hit is not None:
+                matched[hit["id"]] = mem
+                ext_matched.add(hit["id"])
+                continue
             hits = by_key.get(mem.key, [])
             if len(hits) > 1:
                 # Token sets collide for permuted names (Stoica Alin-Bogdan vs
@@ -399,10 +430,23 @@ class Roster:
 
         active_ids = set(matched)
         party_changes = 0
+        renames = 0
+        backfilled = 0
         for p in pols:
             should_be_active = p["id"] in active_ids
             new_county = counties.get(p["id"])
             new_start = starts.get(p["id"])
+            mem_here = matched.get(p["id"])
+            # Backfill the stable id on rows matched by name, so the NEXT rename
+            # is handled by id instead of creating a duplicate.
+            new_ext = mem_here.ext_id if mem_here and not p.get("ext_id") else None
+            # Only rows matched by stable id may be renamed. A name-key match
+            # already agrees on the tokens, and rewriting those would churn the
+            # stored order for permuted names (the two Stoicas) for no reason.
+            new_name: Optional[tuple[str, str]] = None
+            if (mem_here and p["id"] in ext_matched
+                    and name_key(p["name"], p["first_name"]) != mem_here.key):
+                new_name = split_display(chamber, mem_here.display)
             # The official roster group is authoritative for CURRENT affiliation:
             # it reflects a move (e.g. going independent) the moment it happens,
             # unlike party reconstructed from the member's last vote. The Senate
@@ -411,7 +455,8 @@ class Roster:
             mem = matched.get(p["id"])
             new_party_id = self._party_id(group_to_abbr(mem.group)) if mem else None
             party_changed = bool(new_party_id) and new_party_id != p.get("party_id")
-            if p["active"] != should_be_active or new_county or new_start or party_changed:
+            if (p["active"] != should_be_active or new_county or new_start
+                    or party_changed or new_ext or new_name):
                 update: dict = {"active": should_be_active}
                 if new_county:
                     update["county"] = new_county
@@ -420,9 +465,18 @@ class Roster:
                 if party_changed:
                     update["party_id"] = new_party_id
                     party_changes += 1
+                if new_ext:
+                    update["ext_id"] = new_ext
+                    backfilled += 1
+                if new_name:
+                    log.info("%s: renamed %s %s -> %s %s (ext_id=%s)", chamber,
+                             p["first_name"], p["name"], new_name[1], new_name[0], p.get("ext_id"))
+                    update["name"], update["first_name"] = new_name
+                    renames += 1
                 self.db.table("politicians").update(update).eq("id", p["id"]).execute()
-        log.info("%s: updates applied (%d counties, %d mandate starts, %d party changes)",
-                 chamber, len(counties), len(starts), party_changes)
+        log.info("%s: updates applied (%d counties, %d mandate starts, %d party changes, "
+                 "%d ext_ids backfilled, %d renames)",
+                 chamber, len(counties), len(starts), party_changes, backfilled, renames)
         return True
 
 
