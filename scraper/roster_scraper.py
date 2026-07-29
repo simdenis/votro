@@ -33,7 +33,7 @@ from typing import Optional
 import requests
 from dotenv import load_dotenv
 
-from name_utils import titlecase_name
+from name_utils import party_override, titlecase_name
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 log = logging.getLogger("roster")
@@ -453,7 +453,13 @@ class Roster:
             # list carries no group label (group_to_abbr → None), so party_id is
             # left untouched there and stays vote-reconstructed.
             mem = matched.get(p["id"])
-            new_party_id = self._party_id(group_to_abbr(mem.group)) if mem else None
+            # A pinned member keeps their pinned party. Without this the roster
+            # group (authoritative for everyone else) overwrites the pin on every
+            # full run, while camera_scraper writes it back on the next vote —
+            # the label then flip-flops with whichever scraper ran last.
+            pinned = party_override(p["name"], p["first_name"])
+            new_abbr = pinned or (group_to_abbr(mem.group) if mem else None)
+            new_party_id = self._party_id(new_abbr) if mem else None
             party_changed = bool(new_party_id) and new_party_id != p.get("party_id")
             if (p["active"] != should_be_active or new_county or new_start
                     or party_changed or new_ext or new_name):
