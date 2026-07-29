@@ -752,6 +752,10 @@ class SenatScraper:
                         "politician_id": pol_id,
                         "vote_id": vote_id,
                         "vote_choice": sv.vote_choice,
+                        # The group printed next to this name on THIS vote page
+                        # (migration 045) — politicians.party_id follows the
+                        # member when they switch, this must not.
+                        "party_id": party_id,
                         "party_line_deviation": False,  # computed below
                     },
                     on_conflict="politician_id,vote_id",
@@ -804,6 +808,17 @@ class SenatScraper:
             {"politician_id": politician_id, "party_id": party_id, "from_date": vote_date.isoformat()}
         ).execute()
 
+    def _party_abbrs(self) -> dict[str, str]:
+        """party_id → abbreviation, cached per run (the table is a few dozen rows).
+
+        Needed because deviations are now keyed by the vote row's own party_id,
+        and NO_LINE_PARTIES is expressed in abbreviations.
+        """
+        if not hasattr(self, "_abbr_cache"):
+            rows = self.db.table("parties").select("id, abbreviation").execute().data or []
+            self._abbr_cache = {r["id"]: r["abbreviation"] for r in rows}
+        return self._abbr_cache
+
     def _compute_deviations(self, vote_id: str) -> None:
         """
         For each party in this vote, find the plurality choice (for/against/abstention).
@@ -811,22 +826,27 @@ class SenatScraper:
         IND/MIN are catch-all labels for unaffiliated singles, not parties —
         they have no party line, so their members never deviate.
         """
+        # The group the senator voted WITH, off the row itself (migration 045).
+        # This used to join politicians(party_id), i.e. the party they belong to
+        # NOW — so re-scraping an old vote recomputed its deviations against a
+        # group that did not exist at the time, and a member who switched had
+        # their whole history re-judged against the new party's line.
         res = (
             self.db.table("politician_votes")
-            .select("id, vote_choice, politicians(party_id, parties(abbreviation))")
+            .select("id, vote_choice, party_id")
             .eq("vote_id", vote_id)
             .execute()
         )
         if not res.data:
             return
 
+        abbr_by_id = self._party_abbrs()
+
         # Group choices by party
         party_choices: dict[str, list[str]] = {}
         for row in res.data:
-            pol = row.get("politicians") or {}
-            party_id = pol.get("party_id")
-            abbr = (pol.get("parties") or {}).get("abbreviation")
-            if not party_id or abbr in NO_LINE_PARTIES:
+            party_id = row.get("party_id")
+            if not party_id or abbr_by_id.get(party_id) in NO_LINE_PARTIES:
                 continue
             party_choices.setdefault(party_id, []).append(row["vote_choice"])
 
@@ -840,7 +860,7 @@ class SenatScraper:
 
         # Update each row
         for row in res.data:
-            party_id = (row.get("politicians") or {}).get("party_id")
+            party_id = row.get("party_id")
             majority = party_majority.get(party_id) if party_id else None
             deviation = (majority is not None) and (row["vote_choice"] != majority) and (row["vote_choice"] in VALID)
             self.db.table("politician_votes").update(

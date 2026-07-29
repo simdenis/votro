@@ -35,7 +35,7 @@ from bs4 import BeautifulSoup, Tag
 from dotenv import load_dotenv
 from supabase import create_client, Client
 
-from name_utils import titlecase_name
+from name_utils import party_override, titlecase_name
 
 # ──────────────────────────────────────────────────────────────
 # Logging  (shares file with senat_scraper when both run)
@@ -175,14 +175,6 @@ _PARTY_FULL_NAME: dict[str, str] = {
 # Catch-all labels for members without a real party (unaffiliated, national
 # minorities) — no party line exists, so no party_line_deviation is computed.
 NO_LINE_PARTIES = {"IND", "MIN"}
-
-# Members cdep lists under a group label that maps to the wrong party. Keyed by
-# normalized "lastname|firstname" (see _norm). Applied in _upsert_politician so
-# the correction survives every roster/vote scrape instead of reverting.
-_PARTY_OVERRIDE: dict[str, str] = {
-    "grosaru|ioana": "MIN",   # national-minorities deputy, shown as IND on cdep
-}
-
 
 def _norm(s: str) -> str:
     """Lowercase + strip all diacritics, so 'ţ' (cedilla) and 'ț' (comma) match."""
@@ -753,7 +745,7 @@ class CameraScraper:
 
         # Force the correct party for known-misclassified members (overrides the
         # party the group-label mapping resolved). Upsert then corrects the row.
-        override = _PARTY_OVERRIDE.get(f"{_norm(last_name)}|{_norm(first_name)}")
+        override = party_override(last_name, first_name)
         if override:
             party_id = self._upsert_party(override, _PARTY_FULL_NAME.get(override, override)) or party_id
 
@@ -896,45 +888,6 @@ class CameraScraper:
         ).execute()
         self._open_history[politician_id] = party_id
 
-    def _compute_deviations(self, vote_id: str) -> None:
-        """Mark politician_votes where deputy voted against party majority.
-        IND/MIN are catch-all labels for unaffiliated singles — no party line."""
-        pv_res = (
-            self.db.table("politician_votes")
-            .select("id, politician_id, vote_choice, politicians(party_id, parties(abbreviation))")
-            .eq("vote_id", vote_id)
-            .execute()
-        )
-        rows = pv_res.data or []
-
-        from collections import Counter
-        # Group by party → majority choice
-        party_choices: dict[str, list[str]] = {}
-        for row in rows:
-            pol = row.get("politicians") or {}
-            pid = pol.get("party_id")
-            abbr = (pol.get("parties") or {}).get("abbreviation")
-            if pid and abbr not in NO_LINE_PARTIES:
-                party_choices.setdefault(pid, []).append(row["vote_choice"])
-
-        majority: dict[str, str] = {}
-        for pid, choices in party_choices.items():
-            active = [c for c in choices if c in ("for", "against", "abstention")]
-            if active:
-                majority[pid] = Counter(active).most_common(1)[0][0]
-
-        for row in rows:
-            pid = (row.get("politicians") or {}).get("party_id")
-            if not pid or pid not in majority:
-                continue
-            is_deviation = (
-                row["vote_choice"] in ("for", "against", "abstention")
-                and row["vote_choice"] != majority[pid]
-            )
-            self.db.table("politician_votes").update(
-                {"party_line_deviation": is_deviation}
-            ).eq("id", row["id"]).execute()
-
     def store_detail(self, detail: VoteDetail) -> bool:
         """Persist a VoteDetail to Supabase. Returns True on success."""
         try:
@@ -986,6 +939,10 @@ class CameraScraper:
                     "politician_id": pol_id,
                     "vote_id": vote_id,
                     "vote_choice": dv.vote_choice,
+                    # The group printed next to this name on THIS vote page
+                    # (migration 045). politicians.party_id follows the member
+                    # when they switch; this must not.
+                    "party_id": party_id,
                     "party_line_deviation": (
                         dv.vote_choice in active
                         and dv.party_abbr in majority
