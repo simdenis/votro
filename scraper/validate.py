@@ -65,13 +65,42 @@ def main() -> None:
                 return out
             start += step
 
-    # 1) law_status: a law rejected in a chamber must not read as promulgated
-    #    (the amendment-vs-final ranking bug). law_status is a view.
-    laws = all_rows("law_status", "code,senate_outcome,camera_outcome,presidential_status")
+    # 1) law_status: a promulgated law must not have been rejected by the chamber
+    #    whose vote decided it (the amendment-vs-final ranking bug). law_status is
+    #    a view.
+    #
+    #    NOT "rejected by either chamber": under Romanian bicameralism a bill goes
+    #    to the reflection chamber first and the decision chamber second, and the
+    #    second vote is the one that carries. Senate rejects -> Chamber adopts ->
+    #    promulgated is an ordinary, lawful path, and flagging it made this check
+    #    fail on every run (L575/2025, L73/2026), which set rc=1 daily, lit the
+    #    footer warning, and buried the failures that did matter.
+    #
+    #    Which chamber decides depends on the subject matter and we do not store
+    #    it, so use the later vote as the decisive one — the decision chamber
+    #    always votes second. With a date missing, fall back to the only
+    #    unambiguous case: both chambers rejected.
+    laws = all_rows("law_status", "code,senate_outcome,camera_outcome,presidential_status,"
+                                  "senate_vote_date,camera_vote_date")
     for l in laws:
-        if l["presidential_status"] == "promulgat" and "respins" in (l["senate_outcome"], l["camera_outcome"]):
-            check(False, "FAIL", f"{l['code']}: promulgated yet respins in a chamber "
-                                 f"(senate={l['senate_outcome']} camera={l['camera_outcome']})")
+        if l["presidential_status"] != "promulgat":
+            continue
+        senate_no = l["senate_outcome"] == "respins"
+        camera_no = l["camera_outcome"] == "respins"
+        if not (senate_no or camera_no):
+            continue
+        s_date, c_date = l.get("senate_vote_date"), l.get("camera_vote_date")
+        if senate_no and camera_no:
+            decisive_no, why = True, "both chambers rejected it"
+        elif not (s_date and c_date):
+            decisive_no, why = False, ""
+        elif senate_no:
+            decisive_no, why = s_date > c_date, f"the Senate decided last ({s_date}) and rejected"
+        else:
+            decisive_no, why = c_date > s_date, f"the Chamber decided last ({c_date}) and rejected"
+        check(not decisive_no, "FAIL",
+              f"{l['code']}: promulgated but {why} "
+              f"(senate={l['senate_outcome']} camera={l['camera_outcome']})")
 
     # 2) stats views: presence within [0,100]; participations ≤ chamber votes held
     for view in ("senator_stats", "deputy_stats"):
