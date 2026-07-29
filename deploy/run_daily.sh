@@ -109,11 +109,17 @@ log "=== Presidential decrees (presidency.ro) ==="
 log "=== Law summaries (Gemini) ==="
 "$PY" scraper/gemini_summarizer.py >>"$LOG" 2>&1 || { rc=1; log "Gemini summarizer FAILED"; }
 
-# AI categories (Gemini) for laws the title-regex classifier missed — reads the
-# fresh summary, so it runs after the summarizer and before interest scoring
-# (which uses the category). Only fills law_category IS NULL. Ported off Claude
-# to Gemini (free tier), so nothing uses the Anthropic key anymore.
-log "=== Law categories (Gemini) ==="
+# AI categories (Claude Haiku) for laws the title-regex classifier missed — reads
+# the fresh summary, so it runs after the summarizer and before interest scoring
+# (which uses the category). Only fills law_category IS NULL.
+#
+# Back on Haiku after the Gemini port (83d6cc7) sent the key in a form that
+# endpoint rejects: every call answered 401 "Expected OAuth 2 access token", and
+# because an unparseable answer is treated as "no category", the step burned
+# through the backlog logging NICIUNA instead of failing loudly. Haiku is ~$0.0003
+# per law — the whole backlog is under $0.10 — and it has no free-tier quota to
+# exhaust, which is what also takes down the two scorers below.
+log "=== Law categories (Claude Haiku) ==="
 "$PY" scraper/categorize_laws.py >>"$LOG" 2>&1 || { rc=1; log "Categorizer FAILED"; }
 
 # Public-interest scores (1-100) for post selection — runs after the summarizer
