@@ -186,6 +186,53 @@ def refresh_token(cfg: Config) -> dict:
     return r.json()
 
 
+def persist_env_value(key: str, value: str) -> str:
+    """Rewrite one KEY=... line in the .env dotenv loaded from, atomically.
+
+    A refreshed token that is only printed is a token nobody saves, so the
+    60-day clock keeps running and the step dies silently two months later.
+    Writing it back is what makes the refresh worth scheduling.
+
+    Atomic because this is a secrets file: a crash midway through an in-place
+    rewrite would leave .env truncated, and everything on the box reads it —
+    scrapers, newsletter, the poster itself. Write a sibling temp file, fsync,
+    then rename over the original, which is atomic within a filesystem.
+
+    Deliberately no .bak: a refresh extends the token rather than revoking the
+    old one, which stays valid until its own expiry, so there is nothing to roll
+    back to — and a backup would only put a second copy of a live secret on disk.
+    """
+    from dotenv import find_dotenv
+
+    path = find_dotenv(usecwd=True)
+    if not path:
+        raise RuntimeError("no .env found — cannot persist the refreshed token")
+    with open(path, "r", encoding="utf-8") as fh:
+        lines = fh.readlines()
+
+    hit = False
+    for i, line in enumerate(lines):
+        if line.startswith(f"{key}="):
+            lines[i] = f"{key}={value}\n"
+            hit = True
+            break
+    if not hit:
+        # Appending would hide a real problem: the value came from somewhere
+        # else (shell export, another env file) and rewriting .env would not
+        # change what the next run reads.
+        raise RuntimeError(f"{key} is not set in {path} — refusing to guess where it lives")
+
+    mode = os.stat(path).st_mode & 0o777
+    tmp = path + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as fh:
+        fh.writelines(lines)
+        fh.flush()
+        os.fsync(fh.fileno())
+    os.chmod(tmp, mode)
+    os.replace(tmp, path)
+    return path
+
+
 def verify_token(cfg: Config) -> dict:
     """Return basic info about the IG account the token can publish to."""
     cfg.require_publishing()
@@ -713,6 +760,8 @@ def main() -> None:
     ap = argparse.ArgumentParser(description="Publish a VotRO post to Instagram.")
     ap.add_argument("--exchange-token", metavar="SHORT_TOKEN",
                     help="exchange a short-lived token for a 60-day one")
+    ap.add_argument("--print-only", action="store_true",
+                    help="--refresh-token: print the new token instead of writing it to .env")
     ap.add_argument("--refresh-token", action="store_true",
                     help="extend the current IG_ACCESS_TOKEN by 60 days")
     ap.add_argument("--verify", action="store_true", help="check the access token / account")
@@ -746,8 +795,15 @@ def main() -> None:
         return
     if args.refresh_token:
         info = refresh_token(cfg)
-        print(f"IG_ACCESS_TOKEN={info['access_token']}")
-        print(f"# expires in {info['expires_in'] // 86400} days — put it in scraper/.env")
+        days = info["expires_in"] // 86400
+        if args.print_only:
+            print(f"IG_ACCESS_TOKEN={info['access_token']}")
+            print(f"# expires in {days} days — put it in scraper/.env")
+            return
+        path = persist_env_value("IG_ACCESS_TOKEN", info["access_token"])
+        # Never the token itself: this runs from run_daily and everything it
+        # prints lands in a log file that outlives the token.
+        print(f"IG_ACCESS_TOKEN refreshed, expires in {days} days — written to {path}")
         return
     if args.verify:
         print(verify_token(cfg))

@@ -183,6 +183,17 @@ if [ "$(date -u +%d)" = "01" ]; then
   "$PY" scraper/instagram_poster.py --shame --email-preview >>"$LOG" 2>&1 || log "WARN: IG preview email failed"
 fi
 
+# Mondays: extend the Instagram token. It is long-lived, which means 60 days,
+# and nothing renewed it — so it would have expired around late September and
+# the monthly absence card would have stopped arriving with no error anyone
+# reads (the step below is WARN-only by design). Weekly rather than monthly so a
+# few missed runs still leave weeks of margin; the API only requires the token to
+# be older than 24h. Writes the new value back into .env itself.
+if [ "$(date -u +%u)" = "1" ]; then
+  log "=== Instagram token refresh (weekly) ==="
+  "$PY" scraper/instagram_poster.py --refresh-token >>"$LOG" 2>&1 || log "WARN: IG token refresh failed"
+fi
+
 # Email alerts for followed laws/MPs (migration 040). New vote/promulgation →
 # email the confirmed followers. Skips without RESEND_API_KEY. Email trouble
 # must not flip the heartbeat.
