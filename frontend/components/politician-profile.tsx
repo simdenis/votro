@@ -87,6 +87,19 @@ export function PoliticianProfile({ stats, history, deviationRows, partyHistory,
                 guvern · {stats.gov_role}
               </span>
             )}
+            {/* Two different facts share party_abbr: the electoral category a
+                member was elected on, and the parliamentary group they sit in.
+                They coincide for every minorities deputy until one leaves the
+                group — then the badge alone reads "ordinary independent" and
+                erases a reserved-seat mandate. county carries the category. */}
+            {stats.county === 'Minorități' && stats.party_abbr !== 'MIN' && (
+              <span
+                className="text-[10px] uppercase font-semibold tracking-wide border border-rim text-muted rounded-[3px] px-1.5 py-px"
+                title="Ales pe un mandat rezervat organizațiilor minorităților naționale, dar nu face parte din grupul parlamentar al minorităților. Categoria electorală ține tot mandatul; apartenența la grup se poate schimba."
+              >
+                minorități
+              </span>
+            )}
             <span className="text-[10px] text-faint" title="Partidul din care face parte acum. Voturile sunt atribuite afilierii curente.">afiliere curentă</span>
             <span className="text-xs text-muted">
               {chamberLabel}
