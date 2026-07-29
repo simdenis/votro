@@ -42,11 +42,25 @@ async function presentIds(voteId: string): Promise<string[]> {
 }
 
 async function activeDeputies(): Promise<Deputy[]> {
+  // politicians + parties, not deputy_stats: that view aggregates every one of
+  // the ~351k politician_votes rows to produce counts this card never reads, and
+  // it answers in ~4.5s — enough for the cold render to blow its budget and
+  // return a 500 (the warm edge cache then hides it until the copy expires).
+  // The roster itself is ~330 rows and answers in milliseconds.
   const r = await fetch(
-    `${SUPABASE_URL}/rest/v1/deputy_stats?select=politician_id,party_abbr,party_color,gov_role&active=eq.true&limit=1000`,
+    `${SUPABASE_URL}/rest/v1/politicians?select=id,gov_role,parties(abbreviation,color)` +
+      `&chamber=eq.deputies&active=is.true&limit=1000`,
     { headers: SB, cache: 'no-store' },
   )
-  return (await r.json()) ?? []
+  const rows: { id: string; gov_role: string | null;
+                parties: { abbreviation: string; color: string | null } | null }[] =
+    (await r.json()) ?? []
+  return rows.map(p => ({
+    politician_id: p.id,
+    party_abbr: p.parties?.abbreviation ?? null,
+    party_color: p.parties?.color ?? null,
+    gov_role: p.gov_role,
+  }))
 }
 
 export async function GET(req: Request) {
