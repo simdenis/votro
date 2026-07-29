@@ -242,6 +242,63 @@ async function fetchMonthlyAbsents() {
   return { month, label, missing: false as const, entries }
 }
 
+// ── most recent sitting: who did not vote that day ───────────────────────────
+// Event-driven, not calendar-driven: a session opening or any sitting day is
+// worth posting the day it happens, which the monthly ranking above cannot
+// carry. Absence is derived — the chamber publishes who voted, so an absentee is
+// a sitting deputy who appears in none of that day's roll-calls.
+
+async function fetchRecentSitting() {
+  const db = getDB()
+  const { data: last } = await db.from('votes')
+    .select('vote_date').eq('chamber', 'deputies')
+    .order('vote_date', { ascending: false }).limit(1)
+  const date = last?.[0]?.vote_date as string | undefined
+  if (!date) return null
+
+  const [{ data: dayVotes }, { data: deputies }] = await Promise.all([
+    db.from('votes').select('id, description').eq('chamber', 'deputies').eq('vote_date', date),
+    db.from('politicians').select('id, gov_role, parties(abbreviation)')
+      .eq('chamber', 'deputies').eq('active', true).limit(1000),
+  ])
+  const voteIds = (dayVotes ?? []).map(v => v.id as string)
+  if (!voteIds.length || !deputies?.length) return null
+
+  const present = new Set<string>()
+  for (const id of voteIds) {
+    const { data } = await db.from('politician_votes').select('politician_id').eq('vote_id', id).limit(1000)
+    for (const r of data ?? []) present.add(r.politician_id as string)
+  }
+
+  type Row = { id: string; gov_role: string | null; parties: { abbreviation: string } | null }
+  const rows = deputies as unknown as Row[]
+  const absent = rows.filter(d => !present.has(d.id))
+  const seats = new Map<string, number>()
+  const missing = new Map<string, number>()
+  for (const d of rows) {
+    const a = d.parties?.abbreviation ?? 'IND'
+    seats.set(a, (seats.get(a) ?? 0) + 1)
+  }
+  for (const d of absent) {
+    const a = d.parties?.abbreviation ?? 'IND'
+    missing.set(a, (missing.get(a) ?? 0) + 1)
+  }
+  const parties = [...seats.entries()]
+    .map(([abbr, s]) => ({ abbr, absent: missing.get(abbr) ?? 0, seats: s,
+                           pct: Math.round(((missing.get(abbr) ?? 0) / s) * 100) }))
+    .sort((a, b) => b.pct - a.pct)
+
+  const [y, m, d] = date.split('-')
+  const label = `${Number(d)} ${RO_MONTHS[Number(m) - 1]} ${y} · camera deputaților`
+  return {
+    date, label, voteIds,
+    descriptions: (dayVotes ?? []).map(v => (v.description as string | null) ?? '').filter(Boolean),
+    absent: absent.length, total: rows.length,
+    ministers: absent.filter(d => d.gov_role).length,
+    parties,
+  }
+}
+
 // ── month options for the period pickers ─────────────────────────────────────
 // dec 2024 (mandate start) → last complete month, newest first.
 function monthOptions(): { value: string; label: string }[] {
@@ -314,11 +371,12 @@ export default async function AdminPage({ searchParams }: {
   const cardBust = new Date().toISOString().slice(0, 13).replace(/[-:T]/g, '')
   const db = getDB()
 
-  const [candidates, weekLaws, tacit, monthlyAbs, allSwitchers, { data: todayVotes }] = await Promise.all([
+  const [candidates, weekLaws, tacit, monthlyAbs, recentSitting, allSwitchers, { data: todayVotes }] = await Promise.all([
     fetchCandidates(),
     fetchWeekLaws(),
     fetchTacit(),
     fetchMonthlyAbsents(),
+    fetchRecentSitting(),
     getSwitchers(),
     db.from('votes').select('law_id, chamber, outcome, laws(id, code, title)')
       .eq('vote_type', 'vot final').eq('vote_date', today).not('law_id', 'is', null),
@@ -474,6 +532,34 @@ export default async function AdminPage({ searchParams }: {
           </div>
         )}
       </Section>
+
+      {recentSitting && (
+        <Section title={`Absenți la ultima ședință — ${recentSitting.date}`} cadence="la fiecare ședință"
+                 hint="Cine nu apare în apelul nominal la niciun vot din ziua aia. Se actualizează singur la următoarea ședință; membrii Guvernului sunt numărați, dar semnalați separat, fiindcă absența lor e structurală.">
+          <div className="border border-rim rounded-xl p-4">
+            <PublishCard
+              image={`${SITE}/api/og/sessioncard?v=${recentSitting.voteIds.join(',')}`
+                     + `&label=${encodeURIComponent(recentSitting.label)}&b=${cardBust}`}
+              initialCaption={[
+                `${recentSitting.absent} din ${recentSitting.total} de deputați nu apar în apelul nominal la niciunul dintre cele ${recentSitting.voteIds.length === 1 ? 'vot' : `${recentSitting.voteIds.length} voturi`} din ${recentSitting.date}.`,
+                '',
+                'Raportat la propriile mandate: ' + recentSitting.parties.slice(0, 3)
+                  .map(p => `${p.abbr} ${p.absent} din ${p.seats} (${p.pct}%)`).join(', ') + '.',
+                ...(recentSitting.ministers
+                  ? ['', `${recentSitting.ministers} dintre cei absenți sunt membri ai Guvernului, care nu votează în plen.`]
+                  : []),
+                '',
+                'Camera publică doar cine a votat, nu cine a lipsit — cifra acoperă deci și absența din sală și prezența fără vot exprimat.',
+                '',
+                'Lista completă pe nume, pentru fiecare vot: la-butoane.ro',
+              ].join('\n')}
+            />
+            <p className="text-[12px] text-muted mt-3">
+              Voturile din ziua aia: {recentSitting.descriptions.map(d => d.split('\n')[0]).join(' · ') || '—'}
+            </p>
+          </div>
+        </Section>
+      )}
 
       <Section title="Absențe — clasament" cadence="lunar / mandat"
                hint="Alege perioada: tot mandatul sau o lună anume. Fără membri ai Guvernului, fără cei cu notă de context, doar mandate întregi.">
