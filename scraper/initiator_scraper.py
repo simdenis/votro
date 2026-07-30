@@ -31,6 +31,8 @@ import unicodedata
 import requests
 from dotenv import load_dotenv
 
+from paging import rest_all
+
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 log = logging.getLogger("initiators")
 
@@ -142,11 +144,15 @@ class Store:
         return r.json()
 
     def politicians(self) -> list[dict]:
-        r = requests.get(f"{self.url}/rest/v1/politicians",
-                         params={"select": "id,search_name,chamber", "limit": "2000"},
-                         headers=self.h, timeout=30)
-        r.raise_for_status()
-        return r.json()
+        # Paged, not limit=2000: Supabase clamps any limit to 1000, and this is
+        # the lookup table initiator names are matched against — a missing
+        # member becomes an unresolved initiator, not an error.
+        def get(table: str, **params: str) -> list[dict]:
+            r = requests.get(f"{self.url}/rest/v1/{table}", params=params, headers=self.h, timeout=30)
+            r.raise_for_status()
+            return r.json()
+
+        return rest_all(get, "politicians", select="id,search_name,chamber")
 
     def save(self, law_id: str, itype: str | None, people: list[dict]) -> None:
         r = requests.patch(f"{self.url}/rest/v1/laws", params={"id": f"eq.{law_id}"},

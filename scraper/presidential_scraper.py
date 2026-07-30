@@ -36,6 +36,8 @@ from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 from supabase import create_client, Client
 
+from paging import fetch_all
+
 # ──────────────────────────────────────────────────────────────
 # Logging
 # ──────────────────────────────────────────────────────────────
@@ -203,18 +205,18 @@ class PresidentialScraper:
         """Laws eligible for presidential status scraping — every law with a vote,
         not just 'complet'. We're often missing one chamber's vote (Camera data
         started late), but a law can still be promulgated, and senat.ro's
-        legislative journey is available by code regardless of what we hold."""
-        res = (
-            self.db.from_("law_status")
-            .select("law_id, code, presidential_status")
-            .execute()
-        )
-        rows = res.data or []
-        return [
-            {"law_id": r["law_id"], "code": r["code"]}
-            for r in rows
-            if all_laws or r.get("presidential_status") is None
-        ]
+        legislative journey is available by code regardless of what we hold.
+
+        Paged, and the null filter is pushed to the server: law_status passed
+        1000 rows, so a single unpaged read returned an arbitrary 1000 of them
+        and the laws that fell outside were never checked for promulgation."""
+
+        def query():
+            q = self.db.from_("law_status").select("law_id, code, presidential_status")
+            return q if all_laws else q.is_("presidential_status", "null")
+
+        rows = fetch_all(query, order_by="law_id")
+        return [{"law_id": r["law_id"], "code": r["code"]} for r in rows]
 
     def _update_law(self, law_id: str, result: PresidentialResult) -> bool:
         payload: dict = {}

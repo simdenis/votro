@@ -18,6 +18,8 @@ import os
 import requests
 from dotenv import load_dotenv
 
+from paging import rest_all
+
 
 def main() -> None:
     load_dotenv()
@@ -47,7 +49,7 @@ def main() -> None:
                    "vote_type": "eq.vot final", "law_id": "not.is.null"}
     if not args.all:
         vote_params["vote_date"] = f"gte.{cutoff}"
-    for v in get("votes", **vote_params):
+    for v in rest_all(get, "votes", **vote_params):
         law_ids.add(v["law_id"])
         votes_by_law.setdefault(v["law_id"], []).append(v)
 
@@ -56,7 +58,7 @@ def main() -> None:
         pres_params["presidential_date"] = f"gte.{cutoff}"
     else:
         pres_params["presidential_status"] = "not.is.null"
-    law_ids |= {l["id"] for l in get("laws", **pres_params)}
+    law_ids |= {l["id"] for l in rest_all(get, "laws", **pres_params)}
 
     if not law_ids:
         print(f"No decisive activity in the last {args.days} days.")

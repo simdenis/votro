@@ -36,6 +36,7 @@ from dotenv import load_dotenv
 from supabase import create_client, Client
 
 from name_utils import party_override, titlecase_name
+from paging import fetch_all
 
 # ──────────────────────────────────────────────────────────────
 # Logging  (shares file with senat_scraper when both run)
@@ -265,11 +266,21 @@ def _classify_law(title: str) -> Optional[str]:
 # cdep serves the vote object as a description prefixed with vote boilerplate, e.g.
 #   "Vot final - PL-x 446/2026 - Vot final adoptare Adoptare PL 446/2026 <real title>"
 #   "Vot final - PH CD 37/2026 - Vot final adoptare PHCD 37/2026 <real title>"
+#   "Vot final\n- PH CD 100/2025 Adoptare PHCD 100/2025 <real title>"
+#   "Vot final - PHCD 21/2026 - vot final PHCD 21/2026 <real title>"
 # Strip that prefix so only the actual law description remains.
+#
+# One repeated group rather than a pattern per shape: cdep restates the code
+# one to three times with any mix of "- ", "vot final" and "Adoptare/Respingere"
+# between the repeats. The repetition stops on its own at the real title, which
+# always opens with a word ("privind", "pentru", "Lege…"), never with a code.
+# The earlier two-segment-only version missed 81 laws, which then carried the
+# raw vote subject as their title on the site.
 _VOTE_TITLE_BOILERPLATE = re.compile(
-    r"^\s*Vot final\s*-\s*.*?\s*-\s*Vot final\s+\w+\s+"
+    r"^\s*Vot final\s*-\s*"
+    r"(?:\s*-?\s*(?:vot\s+final\s+)?"
     r"(?:(?:Adoptare|Respingere|Adoptarea|Respingerea)\s+)?"
-    r"(?:PL-?x?|PLCD|PHCD|PH\s*CD|PL)\s*[\d/]+\s+",
+    r"(?:PL-?x?|PLCD|PHCD|PH\s*CD|PL)\s*[\d/]+\s*)+",
     re.IGNORECASE | re.DOTALL,
 )
 
@@ -875,13 +886,12 @@ class CameraScraper:
         naive per-member query (senat_scraper's approach) would add two
         round-trips per deputy per vote."""
         if self._open_history is None:
-            res = (
-                self.db.table("politician_party_history")
+            rows = fetch_all(
+                lambda: self.db.table("politician_party_history")
                 .select("politician_id, party_id")
                 .is_("to_date", "null")
-                .execute()
             )
-            self._open_history = {r["politician_id"]: r["party_id"] for r in (res.data or [])}
+            self._open_history = {r["politician_id"]: r["party_id"] for r in rows}
         current = self._open_history.get(politician_id)
         if current == party_id:
             return

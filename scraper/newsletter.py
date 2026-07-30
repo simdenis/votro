@@ -28,10 +28,15 @@ import sys
 import requests
 from dotenv import load_dotenv
 
+from paging import rest_all
+
 INK, PAPER, GRAY = "#171A1F", "#F5F6F8", "#6E7480"
 GREEN, RED, AMBER = "#2EA871", "#EE7B5E", "#B27A24"
 MONTHS = ["ianuarie", "februarie", "martie", "aprilie", "mai", "iunie", "iulie",
           "august", "septembrie", "octombrie", "noiembrie", "decembrie"]
+# Below this many plenary votes in the window, skip the chamber's absence
+# ranking entirely — same floor as instagram_poster._MIN_HELD.
+MIN_HELD = 5
 
 
 def ro_date(iso: str) -> str:
@@ -52,7 +57,8 @@ class Data:
 
     def week(self, days: int, top: int) -> dict:
         cutoff = (datetime.date.today() - datetime.timedelta(days=days)).isoformat()
-        votes = self.get("votes", select="id,law_id,chamber,vote_date,outcome,for_count,against_count",
+        votes = rest_all(self.get, "votes",
+                         select="id,law_id,chamber,vote_date,outcome,for_count,against_count",
                          vote_date=f"gte.{cutoff}")
         finals = [v for v in votes if v.get("law_id")]
         law_ids = sorted({v["law_id"] for v in finals})
@@ -71,7 +77,7 @@ class Data:
             ({"law": laws[lid], "vote": v} for lid, v in by_law.items() if lid in laws),
             key=lambda x: -(x["law"].get("interest_score") or 0),
         )
-        pending = self.get("pending_bills", select="id")
+        pending = rest_all(self.get, "pending_bills", select="id")
 
         # Absenții săptămânii: for each chamber's plenary votes this week,
         # active members (ministers excluded — their absence is structural)
@@ -83,18 +89,36 @@ class Data:
             if v.get("chamber") in vote_ids_by_chamber:
                 vote_ids_by_chamber[v["chamber"]].append(v["id"])
         for chamber, vids in vote_ids_by_chamber.items():
-            if not vids:
+            # Same floor as the Instagram card: under a handful of plenary votes
+            # a ranking is noise, and "100% absent" off three votes is a smear.
+            if len(vids) < MIN_HELD:
                 continue
             participated: dict[str, int] = {}
+            # Paged: a chunk of 60 votes is ~20k politician_votes rows, and an
+            # unpaged read stops at 1000 — roughly three votes' worth. Every
+            # participation past that went missing, so the ranking named
+            # whoever happened to sit outside the truncation.
             for i in range(0, len(vids), 60):
-                for r in self.get("politician_votes", select="politician_id,vote_choice",
+                for r in rest_all(self.get, "politician_votes",
+                                  select="politician_id,vote_choice",
                                   vote_id=f"in.({','.join(vids[i:i + 60])})"):
                     if r["vote_choice"] != "absent":
                         participated[r["politician_id"]] = participated.get(r["politician_id"], 0) + 1
-            members = self.get("politicians", select="id,name,first_name,gov_role,parties(abbreviation)",
+            members = rest_all(self.get, "politicians",
+                               select="id,name,first_name,gov_role,mandate_start,context_note,"
+                                      "parties(abbreviation)",
                                chamber=f"eq.{chamber}", active="is.true")
             for m in members:
                 if m.get("gov_role"):
+                    continue
+                # The same two exclusions the shame card makes, for the same
+                # reason: someone seated mid-week has an incomplete denominator,
+                # and naming a member on documented leave (medical, delegation)
+                # as the week's top absentee is exactly what context_note exists
+                # to prevent. The email can't show the ⓘ caveat the site does.
+                if m.get("context_note"):
+                    continue
+                if (m.get("mandate_start") or "2000-01-01")[:10] > cutoff:
                     continue
                 missed = len(vids) - participated.get(m["id"], 0)
                 if missed > 0:
@@ -173,7 +197,7 @@ def render(data: dict, site: str) -> tuple[str, str]:
     <tr><td style="padding:26px 0 6px;font-size:12px;font-weight:700;letter-spacing:2px;color:{RED};">ABSENȚII SĂPTĂMÂNII</td></tr>
     <tr><td>
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0">{absents_rows}</table>
-      <div style="font-size:11px;color:{GRAY};padding-top:8px;">Absențe la voturile de plen din această săptămână. Membrii Guvernului nu sunt incluși.</div>
+      <div style="font-size:11px;color:{GRAY};padding-top:8px;">Absențe la voturile de plen din această săptămână. Doar parlamentarii activi toată săptămâna, fără cei cu notă de context (concediu/delegație). Membrii Guvernului nu sunt incluși.</div>
     </td></tr>""" if absents_rows else ""
 
     body = f"""<!doctype html><html lang="ro"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head><body style="margin:0;padding:0;background:{PAPER};">

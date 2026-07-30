@@ -34,6 +34,7 @@ import requests
 from supabase import create_client
 
 from senat_scraper import SenatScraper, _classify_law, _repair_mojibake
+from paging import fetch_all
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
 log = logging.getLogger("fix_plx")
@@ -96,8 +97,11 @@ def main() -> None:
     url, key = load_env()
     db = create_client(url, key)
 
-    laws = db.table("laws").select("id, code, title").execute().data or []
-    votes = db.table("votes").select("id, law_id, chamber, senat_app_id").execute().data or []
+    # Paged: this script detaches votes from laws, and both tables are past the
+    # 1000-row response cap — deciding that on a truncated read would detach
+    # votes whose law simply was not in the first page.
+    laws = fetch_all(lambda: db.table("laws").select("id, code, title"))
+    votes = fetch_all(lambda: db.table("votes").select("id, law_id, chamber, senat_app_id"))
 
     by_law: dict[str, list[dict]] = {}
     for v in votes:

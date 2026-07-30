@@ -23,6 +23,8 @@ from collections import defaultdict
 
 from dotenv import load_dotenv
 
+from paging import fetch_all
+
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 log = logging.getLogger("validate")
 
@@ -56,14 +58,8 @@ def main() -> None:
 
     db = create_client(url, key)
 
-    def all_rows(table: str, select: str) -> list[dict]:
-        out, step, start = [], 1000, 0
-        while True:
-            batch = db.table(table).select(select).range(start, start + step - 1).execute().data
-            out.extend(batch)
-            if len(batch) < step:
-                return out
-            start += step
+    def all_rows(table: str, select: str, order_by: str = "id") -> list[dict]:
+        return fetch_all(lambda: db.table(table).select(select), order_by=order_by)
 
     # 1) law_status: a promulgated law must not have been rejected by the chamber
     #    whose vote decided it (the amendment-vs-final ranking bug). law_status is
@@ -81,7 +77,7 @@ def main() -> None:
     #    always votes second. With a date missing, fall back to the only
     #    unambiguous case: both chambers rejected.
     laws = all_rows("law_status", "code,senate_outcome,camera_outcome,presidential_status,"
-                                  "senate_vote_date,camera_vote_date")
+                                  "senate_vote_date,camera_vote_date", "law_id")
     for l in laws:
         if l["presidential_status"] != "promulgat":
             continue
@@ -120,7 +116,9 @@ def main() -> None:
 
     # 2) stats views: presence within [0,100]; participations ≤ chamber votes held
     for view in ("senator_stats", "deputy_stats"):
-        for s in all_rows(view, "name,presence_pct,total_votes,votes_for,votes_against,votes_abstention,votes_not_voted,chamber_votes,active"):
+        for s in all_rows(view, "name,presence_pct,total_votes,votes_for,votes_against,"
+                                "votes_abstention,votes_not_voted,chamber_votes,active",
+                          "politician_id"):
             p = s.get("presence_pct")
             check(p is None or 0 <= p <= 100, "FAIL", f"{view} {s['name']}: presence_pct={p} out of range")
             participated = (s.get("votes_for") or 0) + (s.get("votes_against") or 0) \

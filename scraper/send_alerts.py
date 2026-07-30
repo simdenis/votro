@@ -20,6 +20,8 @@ import sys
 import requests
 from dotenv import load_dotenv
 
+from paging import rest_all
+
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 log = logging.getLogger("alerts")
 
@@ -34,6 +36,12 @@ class Store:
 
     def get(self, path: str) -> list[dict]:
         r = requests.get(f"{self.url}/rest/v1/{path}", headers=self.h, timeout=_TIMEOUT)
+        r.raise_for_status()
+        return r.json()
+
+    def query(self, table: str, **params: str) -> list[dict]:
+        """Same read, filters as params — the shape rest_all() drives."""
+        r = requests.get(f"{self.url}/rest/v1/{table}", params=params, headers=self.h, timeout=_TIMEOUT)
         r.raise_for_status()
         return r.json()
 
@@ -127,7 +135,10 @@ def main() -> None:
     sender = os.environ.get("NEWSLETTER_FROM", "LaButoane <alerte@la-butoane.ro>")
     db = Store(url, sk)
 
-    subs = db.get("alert_subscriptions?confirmed=eq.true&select=id,email,target_type,target_id,token,created_at,last_notified_at&limit=5000")
+    # Paged, not limit=5000: Supabase clamps any limit to 1000, so the 1001st
+    # subscriber would simply never get an email.
+    subs = rest_all(db.query, "alert_subscriptions", confirmed="eq.true",
+                    select="id,email,target_type,target_id,token,created_at,last_notified_at")
     log.info("%d confirmed subscriptions", len(subs))
     sent = 0
     for sub in subs:

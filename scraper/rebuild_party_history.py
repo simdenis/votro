@@ -29,6 +29,8 @@ from collections import defaultdict
 
 from dotenv import load_dotenv
 
+from paging import fetch_all
+
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 log = logging.getLogger("party-history-rebuild")
 
@@ -66,7 +68,9 @@ def main() -> None:
     from supabase import create_client
 
     db = create_client(url, key)
-    rows = db.table("politician_party_history").select("*").execute().data or []
+    # Paged: this rewrites the whole table from what it reads, so a truncated
+    # read would erase the segments it never saw.
+    rows = fetch_all(lambda: db.table("politician_party_history").select("*"))
     by_pol: dict[str, list[tuple[str, str]]] = defaultdict(list)
     for r in rows:
         by_pol[r["politician_id"]].append((r["from_date"], r["party_id"]))

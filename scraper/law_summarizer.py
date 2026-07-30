@@ -28,6 +28,8 @@ import requests
 from dotenv import load_dotenv
 from supabase import create_client, Client
 
+from paging import fetch_all
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
@@ -132,12 +134,15 @@ class LawSummarizer:
         self.stats = {"summarized": 0, "link_only": 0, "no_em": 0, "skipped": 0, "errors": 0}
 
     def _laws_to_process(self, only: str | None, redo: bool) -> list[dict]:
-        q = self.db.table("laws").select("id, code, summary, summary_checked_at")
-        if only:
-            q = q.eq("code", only)
-        elif not redo:
-            q = q.is_("summary_checked_at", "null")
-        return q.execute().data or []
+        def query():
+            q = self.db.table("laws").select("id, code, summary, summary_checked_at")
+            if only:
+                return q.eq("code", only)
+            return q if redo else q.is_("summary_checked_at", "null")
+
+        # Paged — laws is past 1000, so --redo used to summarize an arbitrary
+        # 1000 of them and call it a full pass.
+        return fetch_all(query)
 
     def process_one(self, law: dict) -> None:
         # Link-only mode: store the EM PDF URL (for a "read the full memo" link)

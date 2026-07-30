@@ -24,6 +24,8 @@ import time
 import anthropic
 from dotenv import load_dotenv
 
+from paging import fetch_all
+
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 log = logging.getLogger("categorize")
 
@@ -80,13 +82,9 @@ def main() -> None:
 
     db = create_client(url, key)
     client = anthropic.Anthropic()
-    laws = (
-        db.table("laws")
-        .select("id, code, title, summary")
-        .is_("law_category", "null")
-        .limit(args.limit)
-        .execute()
-        .data
+    laws = fetch_all(
+        lambda: db.table("laws").select("id, code, title, summary").is_("law_category", "null"),
+        total=args.limit,
     )
     log.info("%d law(s) without category", len(laws))
 

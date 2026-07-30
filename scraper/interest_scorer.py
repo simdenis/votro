@@ -22,10 +22,13 @@ import datetime
 import json
 import logging
 import os
+import re
 import time
 
 import requests
 from dotenv import load_dotenv
+
+from paging import rest_all
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 log = logging.getLogger("interest")
@@ -56,6 +59,24 @@ PROMPT = (
     "Un obiect pentru fiecare lege, în ordinea dată, fără alt text.\n\n"
     "Legile:\n"
 )
+
+
+# A Chamber hotărâre "privind adoptarea opiniei referitoare la Comunicarea
+# Comisiei…" is a non-binding opinion on an EU document: nothing changes for
+# anyone in Romania. Gemini scores them 80-90 anyway, because it reads the
+# subject matter (defence, energy, migration) and not the instrument — which
+# put procedural formalities at the top of the homepage's "Interes" sort and of
+# the Instagram post-candidate list. Deterministic cap rather than more prompt:
+# the rule is structural, and an LLM has already shown it cannot hold it.
+_EU_OPINION = re.compile(r"adoptarea opiniei|opiniei referitoare la", re.IGNORECASE)
+_EU_OPINION_CAP = 25
+
+
+def cap_procedural(code: str, title: str, score: int) -> int:
+    """Ceiling for instruments that cannot affect a citizen, whatever they discuss."""
+    if code.upper().startswith("PHCD") and _EU_OPINION.search(title or ""):
+        return min(score, _EU_OPINION_CAP)
+    return score
 
 
 class RateLimited(Exception):
@@ -112,18 +133,20 @@ class Store:
         self.url = url.rstrip("/")
         self.h = {"apikey": key, "Authorization": f"Bearer {key}"}
 
-    def laws_to_process(self, limit: int, only: str | None) -> list[dict]:
-        sel = "id,code,title,summary,law_category"
-        params = {"select": sel, "order": "code.desc", "limit": str(limit)}
-        if only:
-            params = {"select": sel, "code": f"eq.{only}", "limit": "1"}
-        else:
-            # anything missing a score OR a headline (added by migration 039) —
-            # so the headline backfills onto already-scored laws too
-            params["or"] = "(interest_score.is.null,headline.is.null)"
-        r = requests.get(f"{self.url}/rest/v1/laws", params=params, headers=self.h, timeout=30)
+    def get(self, table: str, **params: str) -> list[dict]:
+        r = requests.get(f"{self.url}/rest/v1/{table}", params=params, headers=self.h, timeout=30)
         r.raise_for_status()
         return r.json()
+
+    def laws_to_process(self, limit: int, only: str | None) -> list[dict]:
+        sel = "id,code,title,summary,law_category"
+        if only:
+            return self.get("laws", select=sel, code=f"eq.{only}", limit="1")
+        # anything missing a score OR a headline (added by migration 039) —
+        # so the headline backfills onto already-scored laws too. Paged, so a
+        # --limit above 1000 means what it says.
+        return rest_all(self.get, "laws", select=sel, order="code.desc", total=limit,
+                        **{"or": "(interest_score.is.null,headline.is.null)"})
 
     def save(self, law_id: str, hit: dict | None) -> None:
         payload = {
@@ -178,6 +201,8 @@ def main() -> None:
                 log.info("rotating to Gemini key #%d", ki + 1)
         for l in batch:
             hit = scores.get(l["code"])
+            if hit:
+                hit["score"] = cap_procedural(l["code"], l.get("title") or "", hit["score"])
             if args.dry_run:
                 print(f"{l['code']}: {hit['score'] if hit else '—'}  ⟨{hit['headline'] if hit else '—'}⟩  {hit['reason'] if hit else '(no score)'}")
                 continue

@@ -28,6 +28,8 @@ import time
 import requests
 from dotenv import load_dotenv
 
+from paging import rest_all
+
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 log = logging.getLogger("pending-ai")
 
@@ -116,15 +118,18 @@ class Store:
         self.url = url.rstrip("/")
         self.h = {"apikey": key, "Authorization": f"Bearer {key}"}
 
-    def bills(self, limit: int, only: str | None) -> list[dict]:
-        params = {"select": "id,code,title,pdf_url", "order": "tacit_deadline.asc", "limit": str(limit)}
-        if only:
-            params = {"select": "id,code,title,pdf_url", "code": f"eq.{only}", "limit": "1"}
-        else:
-            params["ai_checked_at"] = "is.null"
-        r = requests.get(f"{self.url}/rest/v1/pending_bills", params=params, headers=self.h, timeout=30)
+    def get(self, table: str, **params: str) -> list[dict]:
+        r = requests.get(f"{self.url}/rest/v1/{table}", params=params, headers=self.h, timeout=30)
         r.raise_for_status()
         return r.json()
+
+    def bills(self, limit: int, only: str | None) -> list[dict]:
+        sel = "id,code,title,pdf_url"
+        if only:
+            return self.get("pending_bills", select=sel, code=f"eq.{only}", limit="1")
+        # id breaks deadline ties — paging on a non-unique order can repeat rows
+        return rest_all(self.get, "pending_bills", select=sel, order="tacit_deadline.asc,id.asc",
+                        total=limit, ai_checked_at="is.null")
 
     def save(self, bill_id: str, res: dict | None) -> None:
         payload: dict = {"ai_checked_at": datetime.datetime.now(datetime.timezone.utc).isoformat()}

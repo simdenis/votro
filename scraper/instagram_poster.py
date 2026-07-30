@@ -533,9 +533,17 @@ def _interval_absences(cfg: Config, dfrom: str, dto: str, top: int = 5) -> tuple
     ranked: list[dict] = []
     warnings: list[str] = []
     for view, chamber_key, label in (("senator_stats", "senate", "SENAT"), ("deputy_stats", "deputies", "CAMERĂ")):
-        held = len(_sb_rows(cfg, "votes", [
-            ("select", "id"), ("vote_date", f"gte.{dfrom}"), ("vote_date", f"lte.{dto}"),
-            ("chamber", f"eq.{chamber_key}"), ("limit", "5000")]))
+        # Paged, not limit=5000: Supabase clamps any limit to 1000, so a wide
+        # --from/--to would undercount the denominator every ranking divides by.
+        held = 0
+        for off in range(0, 200000, 1000):
+            page = _sb_rows(cfg, "votes", [
+                ("select", "id"), ("vote_date", f"gte.{dfrom}"), ("vote_date", f"lte.{dto}"),
+                ("chamber", f"eq.{chamber_key}"), ("order", "id"),
+                ("limit", "1000"), ("offset", str(off))])
+            held += len(page)
+            if len(page) < 1000:
+                break
         if held == 0:
             continue
         if held < _MIN_HELD:
@@ -544,10 +552,14 @@ def _interval_absences(cfg: Config, dfrom: str, dto: str, top: int = 5) -> tuple
         present: dict[str, int] = {}
         PAGE = 1000
         for off in range(0, 200000, PAGE):
+            # order=id: offset paging over an unordered result can hand back the
+            # same row twice and never show another, which here would silently
+            # credit one member's participations to nobody.
             batch = _sb_rows(cfg, "politician_votes", [
                 ("select", "politician_id,votes!inner(vote_date,chamber)"),
                 ("votes.vote_date", f"gte.{dfrom}"), ("votes.vote_date", f"lte.{dto}"),
-                ("votes.chamber", f"eq.{chamber_key}"), ("limit", str(PAGE)), ("offset", str(off))])
+                ("votes.chamber", f"eq.{chamber_key}"), ("order", "id"),
+                ("limit", str(PAGE)), ("offset", str(off))])
             for row in batch:
                 present[row["politician_id"]] = present.get(row["politician_id"], 0) + 1
             if len(batch) < PAGE:

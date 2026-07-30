@@ -41,6 +41,7 @@ from supabase import create_client
 
 from senat_scraper import _classify_law, _repair_mojibake
 from fix_plx_codes import load_env
+from paging import fetch_all
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
 log = logging.getLogger("resolve_plx")
@@ -117,7 +118,7 @@ def main() -> None:
     db = create_client(url, key)
     search = PlxResolver()
 
-    laws = db.table("laws").select("id, code, title").like("code", "PLx%").execute().data or []
+    laws = fetch_all(lambda: db.table("laws").select("id, code, title").like("code", "PLx%"))
     log.info("%d PLx laws to resolve", len(laws))
     stats = {"merged": 0, "renamed": 0, "unresolved": 0}
 
