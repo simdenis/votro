@@ -36,10 +36,21 @@ export async function GET(req: Request) {
     return proxy(path, req, { filename: `voturi-${slug}` })
   }
 
-  // period query — defaults to the current year (RO time) if unbounded
+  // period query — defaults to the current year (RO time) if unbounded.
+  // A *present but unparseable* bound is an error, not a reason to silently
+  // widen the window: ?from=abc used to return the whole year with a 200.
+  for (const k of ['from', 'to'] as const) {
+    const raw = p.get(k)
+    if (raw !== null && raw !== '' && !cleanDate(raw)) {
+      return json({ error: `Parametrul „${k}" trebuie să fie o dată calendaristică validă în format YYYY-MM-DD.` }, 400)
+    }
+  }
   const today = todayRo()
   const from = cleanDate(p.get('from')) ?? `${today.slice(0, 4)}-01-01`
   const to = cleanDate(p.get('to')) ?? today
+  if (from > to) {
+    return json({ error: 'Intervalul e inversat: „from" trebuie să fie ≤ „to".' }, 400)
+  }
   const chamber = cleanChamber(p.get('camera') ?? p.get('chamber'))
   const filters = [`vote_date=gte.${from}`, `vote_date=lte.${to}`]
   if (chamber) filters.push(`chamber=eq.${chamber}`)

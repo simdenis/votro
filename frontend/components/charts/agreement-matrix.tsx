@@ -92,7 +92,7 @@ export function AgreementMatrix({ parties, months, monthLabels, buckets, contest
             <span className="ml-auto text-[15px] font-bold tabular-nums text-foreground">{hov.pct}%</span>
           </div>
         ) : (
-          <p className="text-[12px] text-faint">Treci cu mouse-ul peste o celulă pentru detalii.</p>
+          <p className="text-[12px] text-faint">Apasă (sau treci cu mouse-ul) peste o celulă pentru detalii.</p>
         )}
       </div>
 
@@ -121,19 +121,32 @@ export function AgreementMatrix({ parties, months, monthLabels, buckets, contest
                   )
                 }
                 const rec = pair[key(rowP.abbr, colP.abbr)]
+                // An empty square read as "0% agreement"; say it's missing data.
                 if (!rec || rec.shared < 3) {
-                  return <div key={colP.abbr} className="aspect-square rounded-[3px] bg-raised" />
+                  return (
+                    <div key={colP.abbr}
+                         title={`${rowP.abbr} ↔ ${colP.abbr}: prea puține voturi disputate în comun în perioada aleasă`}
+                         className="aspect-square rounded-[3px] bg-raised flex items-center justify-center">
+                      <span className="text-[11px] text-faint" aria-hidden>—</span>
+                      <span className="sr-only">{`${rowP.abbr} ↔ ${colP.abbr}: date insuficiente`}</span>
+                    </div>
+                  )
                 }
                 const pct = Math.round((rec.agreed / rec.shared) * 100)
                 const { bg, ink } = cellBg(pct)
+                const show = () => setHov({ a: rowP.abbr, b: colP.abbr, pct, agreed: rec.agreed, shared: rec.shared })
+                // <button>, not <div>: on touch there is no hover, so a tap (and
+                // Tab for keyboard) has to be able to open the same readout.
                 return (
-                  <div key={colP.abbr}
-                       onMouseEnter={() => setHov({ a: rowP.abbr, b: colP.abbr, pct, agreed: rec.agreed, shared: rec.shared })}
-                       onMouseLeave={() => setHov(null)}
-                       className="aspect-square rounded-[3px] flex items-center justify-center tabular-nums cursor-default ring-inset hover:ring-2 hover:ring-foreground/25 transition-[box-shadow]"
+                  <button key={colP.abbr} type="button"
+                       onMouseEnter={show} onMouseLeave={() => setHov(null)}
+                       onFocus={show} onBlur={() => setHov(null)}
+                       onClick={show}
+                       aria-label={`${rowP.abbr} ↔ ${colP.abbr}: ${pct}% acord, ${rec.agreed} din ${rec.shared} voturi disputate`}
+                       className="aspect-square rounded-[3px] flex items-center justify-center tabular-nums ring-inset hover:ring-2 hover:ring-foreground/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-foreground transition-[box-shadow]"
                        style={{ backgroundColor: bg }}>
                     <span className="text-[11px] font-semibold" style={{ color: ink }}>{pct}%</span>
-                  </div>
+                  </button>
                 )
               })}
             </div>

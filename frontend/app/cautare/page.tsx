@@ -10,6 +10,17 @@ export const metadata: Metadata = {
   description: 'Caută parlamentari și legi în LaButoane.',
 }
 
+const LAW_LIMIT = 15   // rows shown
+const LAW_SCAN  = 1000 // rows ranked before cutting (PostgREST caps at 1000 anyway)
+
+/** Sortable rank for a law code: "L230/2026" → [2026, 230], "PHCD9/2026" →
+ *  [2026, 9]. Newest year first, then highest number — i.e. most recent first.
+ *  Codes that don't parse sort last rather than jumping to the top. */
+function codeRank(code: string | null): [number, number] {
+  const m = /^[A-Za-z-]*\s*(\d+)\s*\/\s*(\d{4})$/.exec((code ?? '').trim())
+  return m ? [Number(m[2]), Number(m[1])] : [-1, -1]
+}
+
 export default async function SearchPage({
   searchParams,
 }: {
@@ -19,13 +30,16 @@ export default async function SearchPage({
   const q  = sp.q?.trim() ?? ''
   // Diacritic-insensitive: strip accents + lowercase, matching the DB's
   // generated search columns (migration 016).
-  const nq = q.normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+  // % and _ are ilike wildcards \u2014 a query like "50%" would otherwise match
+  // everything starting with "50". Drop them; they carry no search meaning here.
+  const nq = q.normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/[%_]/g, ' ').trim().toLowerCase()
 
   let politicians: any[] = []
   let laws: any[]        = []
   let parties: any[]     = []
+  let lawTotal           = 0
 
-  if (q.length >= 2) {
+  if (nq.length >= 2) {
     const db = getDB()
     // party term: strip PostgREST-significant chars before interpolating into .or()
     const pq = q.replace(/[,()%*]/g, ' ').trim()
@@ -36,12 +50,15 @@ export default async function SearchPage({
         .ilike('search_name', `%${nq}%`)
         .order('name')
         .limit(15),
+      // Over-fetch and rank in JS. order('code') is a TEXT sort, so it ranked
+      // "PHCD20/2026" over "L99/2026" over "L650/2025" — neither relevance nor
+      // recency. Combined with a 15-row cut that made the visible results
+      // arbitrary for any common word. codeRank sorts by year then number.
       db
         .from('laws')
-        .select('id, code, title, law_category')
+        .select('id, code, title, law_category', { count: 'exact' })
         .ilike('search_text', `%${nq}%`)
-        .order('code', { ascending: false })
-        .limit(15),
+        .limit(LAW_SCAN),
       pq.length >= 2
         ? db
             .from('parties')
@@ -51,12 +68,18 @@ export default async function SearchPage({
         : Promise.resolve({ data: [] as any[] }),
     ])
     politicians = polRes.data ?? []
-    laws        = lawRes.data  ?? []
     parties     = partyRes.data ?? []
+    lawTotal    = lawRes.count ?? (lawRes.data?.length ?? 0)
+    laws        = [...(lawRes.data ?? [])]
+      .sort((a: any, b: any) => {
+        const [ay, an] = codeRank(a.code), [by, bn] = codeRank(b.code)
+        return by - ay || bn - an
+      })
+      .slice(0, LAW_LIMIT)
   }
 
   const hasResults = politicians.length > 0 || laws.length > 0 || parties.length > 0
-  const searched   = q.length >= 2
+  const searched   = nq.length >= 2
 
   return (
     <div className="space-y-8 max-w-2xl">
@@ -81,7 +104,7 @@ export default async function SearchPage({
         </div>
       </form>
 
-      {q.length > 0 && q.length < 2 && (
+      {q.length > 0 && nq.length < 2 && (
         <p className="text-sm text-muted">Introdu cel puțin 2 caractere.</p>
       )}
 
@@ -153,8 +176,10 @@ export default async function SearchPage({
       {/* Laws */}
       {laws.length > 0 && (
         <section className="space-y-3">
+          {/* the list is capped at LAW_LIMIT rows — say so, or "Legi (15)" reads
+              as "there are exactly 15", which for common words is badly wrong */}
           <h2 className="text-xs font-semibold uppercase tracking-widest text-muted">
-            Legi ({laws.length})
+            Legi ({lawTotal > laws.length ? `cele mai recente ${laws.length} din ${lawTotal}` : laws.length})
           </h2>
           <div className="bg-surface border border-rim rounded-xl overflow-hidden divide-y divide-rim">
             {laws.map((l: any) => (

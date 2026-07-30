@@ -2,7 +2,7 @@ import { ImageResponse } from 'next/og'
 import { SummaryCard, type SummaryCardData } from '@/components/cards/summary-card'
 import { mapLawToCard } from '@/lib/votecard'
 import { getCardFonts } from '@/lib/og-fonts'
-import { isUuid } from '@/lib/utils'
+import { isUuid, plainSummary } from '@/lib/utils'
 import type { LawStatus } from '@/lib/types'
 import { withEdgeCache } from '@/lib/og-edge-cache'
 import { initiatorLineFromRows } from '@/lib/ig-carousel'
@@ -61,7 +61,7 @@ async function renderCard(request: Request): Promise<Response> {
       lawTitle: law.title,
       category: law.law_category,
       year: mapped.year,
-      summary: law.summary,
+      summary: plainSummary(law.summary),
       headline: noHeadline ? null : headlineRow,
       statusLabel: mapped.statusLabel,
       statusColor: mapped.statusColor,

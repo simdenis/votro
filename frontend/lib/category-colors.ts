@@ -16,6 +16,8 @@ export const CATEGORY_COLORS: Record<string, string> = {
   'Energie': '#E67E22',
   'Tehnologie': '#2C3E75',
   'Apărare': '#37474F',
+  // plum — the only unused hue region left; not a party colour, not a vote hue
+  'Electoral': '#8E4585',
 }
 
 export function categoryColor(category: string | null | undefined): string | null {

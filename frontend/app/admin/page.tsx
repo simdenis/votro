@@ -583,13 +583,14 @@ export default async function AdminPage({ searchParams }: {
           <p className="text-[13px] text-faint">Niciun traseist confirmat încă.</p>
         ) : allSwitchers.length <= 8 ? (
           <div className="border border-rim rounded-xl p-4">
-            <PublishCard image={`${SITE}/api/og/switchcard?all=1`} initialCaption={switchAllCaption} />
+            {/* v=count busts next/og's immutable cache when the roster changes */}
+            <PublishCard image={`${SITE}/api/og/switchcard?all=1&v=${allSwitchers.length}`} initialCaption={switchAllCaption} />
           </div>
         ) : (
           <div className="border border-rim rounded-xl p-4">
             <CarouselPublishCard
               slides={Array.from({ length: Math.ceil(allSwitchers.length / 8) }, (_, i) => ({
-                url: `${SITE}/api/og/switchcard?all=1&page=${i}`,
+                url: `${SITE}/api/og/switchcard?all=1&page=${i}&v=${allSwitchers.length}`,
                 label: `Slide ${i + 1}`,
               }))}
               initialCaption={switchAllCaption}

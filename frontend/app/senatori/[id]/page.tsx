@@ -16,8 +16,11 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://la-butoane.ro'
 // still resolve (old links). Returns the politician_id or null.
 // cache(): generateMetadata and the page share one resolve + one stats query.
 const resolveId = cache(async (param: string): Promise<string | null> => {
+  // lower-cased before the lookup: slug is a lower-case generated column
+  // (migration 031), so a pasted "/Ionel-Stancu" used to 404.
+  const slug = param.toLowerCase()
   if (isUuid(param)) return param
-  const { data } = await getDB().from('politicians').select('id').eq('slug', param).eq('chamber', 'senate').maybeSingle()
+  const { data } = await getDB().from('politicians').select('id').eq('slug', slug).eq('chamber', 'senate').maybeSingle()
   return (data as { id: string } | null)?.id ?? null
 })
 const getStats = cache(async (pid: string): Promise<SenatorStats | null> => {

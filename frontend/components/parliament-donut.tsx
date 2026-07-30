@@ -30,7 +30,7 @@ export function ParliamentDonut({ parties, total }: Props) {
     <div>
       <p className="text-[11px] uppercase tracking-[0.14em] text-faint mb-3">Componența Parlamentului</p>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-start gap-4">
         <svg viewBox="0 0 120 120" className="w-[116px] h-[116px] flex-shrink-0" role="img" aria-label={`Parlament: ${sum} parlamentari`}>
           <circle cx="60" cy="60" r={R} fill="none" stroke="var(--rim)" strokeWidth="15" />
           {segments.map(s => (

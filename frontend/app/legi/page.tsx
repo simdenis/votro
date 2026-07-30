@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
-import { formatDate, capFirst, lawSlug } from '@/lib/utils'
+import { formatDate, capFirst, lawSlug, plainSummary } from '@/lib/utils'
 import { OutcomeBadge } from '@/components/outcome-badge'
 import { BaseLawBadges } from '@/components/base-law-badge'
 import { CategoryBadge } from '@/components/category-badge'
@@ -40,7 +40,7 @@ const SORTS: { id: Sort; label: string }[] = [
 const CATEGORIES = [
   'Sănătate', 'Educație', 'Justiție', 'Social', 'Infrastructură', 'Transport',
   'Agricultură', 'Mediu', 'Energie', 'Apărare', 'Economie', 'Tehnologie',
-  'Administrație',
+  'Administrație', 'Electoral',
 ] as const
 
 function chipClass(active: boolean) {
@@ -254,7 +254,7 @@ export default async function LegiPage({
                     {/* plain-language summary is the headline where we have one;
                         the official title stays as the small verifiable subtitle */}
                     <Link href={`/legi/${lawSlug(law.code)}`} className="block hover:underline" title={capFirst(law.title)}>
-                      <span className="line-clamp-2 text-foreground">{law.summary || capFirst(law.title)}</span>
+                      <span className="line-clamp-2 text-foreground">{plainSummary(law.summary) || capFirst(law.title)}</span>
                       {law.summary && (
                         <span className="line-clamp-1 text-[11px] text-faint mt-0.5">{capFirst(law.title)}</span>
                       )}

@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
-import { formatDate, isUuid, lawSlug, slugToCode, countNoun } from '@/lib/utils'
+import { formatDate, isUuid, lawSlug, slugToCode, countNoun, plainSummary } from '@/lib/utils'
 import { DeadlineBadge, daysLeft } from '@/components/deadline-badge'
 import { SectionNav, LEGI_SECTIONS } from '@/components/section-nav'
 import type { PendingBill } from '@/lib/types'
@@ -16,7 +16,8 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://la-butoane.ro'
 // cache(): generateMetadata and the page share one query per render.
 const getBill = cache(async (id: string): Promise<PendingBill | null> => {
   const q = getDB().from('pending_bills').select('*')
-  const { data } = await (isUuid(id) ? q.eq('id', id) : q.eq('code', slugToCode(id))).maybeSingle()
+  // ilike + limit(1): lower-cased pasted URLs ("/tacite/bp186-2026") must resolve
+  const { data } = await (isUuid(id) ? q.eq('id', id) : q.ilike('code', slugToCode(id)).limit(1)).maybeSingle()
   return data as PendingBill | null
 })
 
@@ -68,7 +69,7 @@ export default async function TacitBillPage({ params }: { params: Promise<{ id: 
         </div>
         {/* plain-language summary is the headline; official title below it */}
         <h1 className="font-serif text-[26px] sm:text-[32px] font-normal text-foreground leading-[1.15] tracking-[-0.01em]">
-          {bill.summary || bill.title || bill.code}
+          {plainSummary(bill.summary) || bill.title || bill.code}
         </h1>
         {bill.summary && bill.title && (
           <p className="text-[13px] text-muted mt-3 leading-relaxed">

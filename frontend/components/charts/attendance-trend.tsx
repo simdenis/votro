@@ -39,8 +39,13 @@ export function AttendanceTrend({ months, series }: Props) {
         {/* series */}
         {series.map(s => {
           const pts = s.points.map((v, i) => (v == null ? null : [x(i), y(v)] as const))
-          const d = pts.filter(Boolean).map((p, i) => `${i === 0 ? 'M' : 'L'} ${p![0].toFixed(1)} ${p![1].toFixed(1)}`).join(' ')
-          const last = [...pts].reverse().find(Boolean)!
+          // A null month is a recess, not a data point to interpolate over —
+          // start a fresh subpath after every gap so the break stays visible.
+          const d = pts.map((p, i) =>
+            p == null ? '' : `${pts[i - 1] == null ? 'M' : 'L'} ${p[0].toFixed(1)} ${p[1].toFixed(1)}`
+          ).filter(Boolean).join(' ')
+          const last = [...pts].reverse().find(Boolean)
+          if (!last) return null
           return (
             <g key={s.name}>
               <path d={d} fill="none" stroke={s.color} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />

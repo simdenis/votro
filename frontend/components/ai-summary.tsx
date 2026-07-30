@@ -1,3 +1,5 @@
+import { plainSummary } from '@/lib/utils'
+
 /** "Pe scurt" summary box. AI summaries are the site's biggest credibility
  *  risk — a single wrong one hands a comms person "site-ul ăsta inventează".
  *  So every AI summary is explicitly tagged "generat automat" and carries a
@@ -14,9 +16,10 @@ export function AiSummary({
   /** Law code, used in the error-report subject so we know what to check. */
   code?: string | null
 }) {
+  const text = plainSummary(summary)
   const reportHref =
     `mailto:siminiucdenis@gmail.com?subject=${encodeURIComponent(`Eroare rezumat — ${code ?? 'lege'}`)}` +
-    `&body=${encodeURIComponent(`Rezumatul afișat:\n„${summary}"\n\nCe e greșit / imprecis:\n`)}`
+    `&body=${encodeURIComponent(`Rezumatul afișat:\n„${text}"\n\nCe e greșit / imprecis:\n`)}`
 
   return (
     <div className="relative bg-surface border border-rim rounded-xl p-5 pl-6 overflow-hidden">
@@ -32,7 +35,7 @@ export function AiSummary({
           </span>
         )}
       </div>
-      <p className="text-[15px] text-foreground leading-relaxed">{summary}</p>
+      <p className="text-[15px] text-foreground leading-relaxed">{text}</p>
       {isAi && (
         // frames time-relative statements ("amână până la 1 ian 2026") as the
         // proposal's original intent, so an old summary doesn't read as a

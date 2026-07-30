@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
-import { countNoun, lawSlug, personSlug, todayRo, formatDate, recessUntil } from '@/lib/utils'
+import { countNoun, lawSlug, personSlug, plainSummary, todayRo, formatDate, recessUntil } from '@/lib/utils'
 import { OutcomeBadge } from '@/components/outcome-badge'
 import { AbsenceTop } from '@/components/absence-top'
 import { ParliamentDonut } from '@/components/parliament-donut'
@@ -243,7 +243,7 @@ export default async function Dashboard() {
                       className="flex items-center justify-between gap-2 bg-surface border border-rim rounded-lg px-3 py-2.5 hover:bg-raised transition-colors"
                     >
                       <span className="min-w-0">
-                        <span className="block text-[13px] font-medium text-foreground line-clamp-2 leading-snug">{b.summary || b.title || b.code}</span>
+                        <span className="block text-[13px] font-medium text-foreground line-clamp-2 leading-snug">{plainSummary(b.summary) || b.title || b.code}</span>
                         <span className="block font-mono text-[10px] text-muted mt-0.5">{b.code}</span>
                       </span>
                       {days != null && (
@@ -265,12 +265,12 @@ export default async function Dashboard() {
             {promLaws.map(l => (
               <Link
                 key={l.law_id}
-                href={`/legi/${l.law_id}`}
+                href={`/legi/${lawSlug(l.code)}`}
                 className="block bg-surface border border-rim rounded-lg px-3 py-2.5 hover:bg-raised transition-colors"
               >
                 {/* plain-language summary is the headline; official title/code below */}
                 <span className="block text-[13.5px] font-medium text-foreground leading-snug line-clamp-2">
-                  {l.summary || l.title}
+                  {plainSummary(l.summary) || l.title}
                 </span>
                 <span className="flex items-center gap-2 mt-1 font-mono text-[10px] text-muted">
                   <span>{l.code}</span>

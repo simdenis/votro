@@ -89,6 +89,23 @@ export function personSlug(firstName: string | null | undefined, name: string | 
   return folded.replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
 }
 
+/** The AI summarizer sometimes returns Markdown ("**Ce schimbă legea**\n\n…").
+ *  Nothing renders Markdown, so the asterisks showed up literally on ~70 laws.
+ *  Strip emphasis and heading marks, keep the paragraph break as a space. */
+export function plainSummary(s: string | null | undefined): string {
+  if (!s) return ''
+  return s
+    .replace(/\*\*([\s\S]*?)\*\*/g, '$1')   // **bold**
+    .replace(/__([\s\S]*?)__/g, '$1')       // __bold__
+    .replace(/^\s{0,3}#{1,6}\s+/gm, '')     // # heading
+    .replace(/^\s{0,3}[-*]\s+/gm, '')       // - bullet
+    // Fold to one paragraph. The Markdown ones open with an unpunctuated
+    // headline, so close it off rather than running it into the next sentence.
+    .replace(/\s*\n+\s*/g, (_m, i, s: string) =>
+      /[.!?:;,)\]"”]$/.test(s.slice(0, i).trimEnd()) ? ' ' : '. ')
+    .trim()
+}
+
 export function textOnColor(bgHex: string): string {
   // PNL yellow needs black text; everything else uses white
   return bgHex === '#ffdd00' ? '#000000' : '#ffffff'

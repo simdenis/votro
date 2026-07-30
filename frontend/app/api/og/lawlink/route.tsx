@@ -2,7 +2,7 @@ import { ImageResponse } from 'next/og'
 import { mapLawToCard } from '@/lib/votecard'
 import { getCardFonts } from '@/lib/og-fonts'
 import { categoryColor } from '@/lib/category-colors'
-import { isUuid } from '@/lib/utils'
+import { isUuid, plainSummary } from '@/lib/utils'
 import type { LawStatus } from '@/lib/types'
 
 // 1200×630 link preview for a law page (shared on FB/WhatsApp/Twitter, indexed
@@ -34,7 +34,7 @@ export async function GET(req: Request) {
   const accent = categoryColor(law.law_category) ?? C.navy
   const hero = (headline || law.title || law.code).trim()
   const heroSize = hero.length <= 40 ? 62 : hero.length <= 70 ? 50 : hero.length <= 110 ? 40 : 34
-  const summary = (law.summary ?? '').trim()
+  const summary = plainSummary(law.summary)
 
   return new ImageResponse(
     (

@@ -1,6 +1,7 @@
 import { ImageResponse } from 'next/og'
 import { TacitListCard, type TacitEntry } from '@/components/cards/tacit-list-card'
 import { getCardFonts } from '@/lib/og-fonts'
+import { plainSummary } from '@/lib/utils'
 
 // 1080×1350 "pe cale să treacă tacit" — pending bills expiring in ≤7 days,
 // soonest first, top 10. Light render (no hemicycle) → fine on the CPU cap.
@@ -29,7 +30,7 @@ export async function GET() {
   const entries: TacitEntry[] = rows.map(r => ({
     code: r.code,
     // the plain-language summary IS the title — the official title is jargon
-    title: r.summary || r.title || '',
+    title: plainSummary(r.summary) || r.title || '',
     chamber: r.chamber === 'senate' ? 'SENAT' : 'CAMERĂ',
     daysLeft: Math.max(0, Math.round((new Date(r.tacit_deadline).getTime() - today.getTime()) / 86400_000)),
     interest: r.interest_score,

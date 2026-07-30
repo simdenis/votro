@@ -1,4 +1,4 @@
-import { proxy, json, cleanName, cleanChamber, politicianVoteRows, toCsv, wantsCsv, sbJson, CSV_BOM } from '@/lib/api-v1'
+import { json, cleanName, cleanChamber, politicianVoteRows, toCsv, wantsCsv, sbJson, withTrueAbsent, rowsResponse, CSV_BOM } from '@/lib/api-v1'
 import { isUuid } from '@/lib/utils'
 
 // GET /api/v1/parlamentari?camera=camera|senat[&nume=Ponta]
@@ -48,8 +48,16 @@ export async function GET(req: Request) {
   }
 
   // ── aggregate stats (default) ───────────────────────────────────────────────
+  // Not proxy(): rows get votes_true_absent bolted on, because votes_absent
+  // alone under-reports absences by ~40× (see withTrueAbsent).
   const filters = ['order=name.asc', 'limit=1000']
   if (name) filters.unshift(`name=ilike.*${encodeURIComponent(name)}*`)
-  const path = `${view}?${filters.join('&')}`
-  return proxy(path, req, { filename: `parlamentari-${chamber}${name ? '-' + name.replace(/\s+/g, '-') : ''}` })
+  let stats: Record<string, unknown>[]
+  try {
+    stats = withTrueAbsent(await sbJson<Record<string, unknown>[]>(`${view}?${filters.join('&')}`))
+  } catch {
+    return json({ error: 'Sursa de date e indisponibilă momentan.' }, 502)
+  }
+  return rowsResponse(stats, req,
+    `parlamentari-${chamber}${name ? '-' + name.replace(/\s+/g, '-') : ''}`)
 }

@@ -13,11 +13,19 @@ export default function ContribuiePage() {
       <SectionNav items={DESPRE_SECTIONS} />
       <h1 className="font-serif text-[30px] sm:text-[40px] font-normal tracking-[-0.01em] leading-[1.05] text-foreground">Contribuie</h1>
 
-      <section className="space-y-3">
+      <section className="space-y-4">
         <p className="text-foreground leading-relaxed">
           LaButoane este un proiect independent, fără publicitate și fără finanțare instituțională.
           Dacă îți este util, poți susține dezvoltarea lui continuă.
         </p>
+        <a
+          href="https://www.patreon.com/c/labutoane"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 rounded-md bg-foreground px-4 py-2 text-sm font-semibold text-background transition-opacity hover:opacity-90"
+        >
+          Susține pe Patreon
+        </a>
       </section>
 
       <section className="space-y-3">

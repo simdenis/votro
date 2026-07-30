@@ -32,13 +32,22 @@ MODEL = "claude-haiku-4-5"
 CATEGORIES = [
     "Sănătate", "Educație", "Justiție", "Social", "Infrastructură",
     "Transport", "Agricultură", "Mediu", "Energie", "Apărare",
-    "Economie", "Tehnologie", "Administrație",
+    # "Electoral" added in migration 050: without it, laws on elections,
+    # referendums and party financing had no home and the model filed them
+    # under whatever was nearest (usually Transport or Administrație).
+    "Economie", "Tehnologie", "Administrație", "Electoral",
 ]
 
 PROMPT = f"""Categorizează această lege românească într-una din categoriile:
 {", ".join(CATEGORIES)}
 
-Răspunde DOAR cu numele categoriei, nimic altceva. Dacă niciuna nu se potrivește clar, răspunde NICIUNA.
+Reguli:
+- Răspunde DOAR cu numele exact al categoriei, nimic altceva.
+- Alege categoria după DOMENIUL legii, nu după cuvinte izolate din titlu. O lege
+  despre "autorizarea" a ceva sau despre "autorităţile" locale nu e Transport;
+  Transport e doar despre vehicule, trafic sau transport de persoane/mărfuri.
+- Legile despre alegeri, referendumuri, campanii sau finanţarea partidelor sunt Electoral.
+- Dacă niciuna nu se potriveşte clar, răspunde NICIUNA. Nu ghici.
 
 Titlu: {{title}}
 Rezumat: {{summary}}"""

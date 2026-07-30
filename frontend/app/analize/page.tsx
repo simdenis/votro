@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
-import { formatDate, capFirst, hasPartyLine } from '@/lib/utils'
+import { formatDate, capFirst, hasPartyLine, plainSummary } from '@/lib/utils'
 import { AgreementMatrix, type MatrixParty, type AgreementBucket } from '@/components/charts/agreement-matrix'
 import { AttendanceTrend, type TrendSeries } from '@/components/charts/attendance-trend'
 
@@ -67,7 +67,7 @@ export default async function AnalizePage() {
   if (closestCodes.length) {
     const { data: sumRows } = await db.from('laws').select('code, summary').in('code', closestCodes)
     for (const r of (sumRows ?? []) as { code: string; summary: string | null }[]) {
-      if (r.summary) summaryOf[r.code] = r.summary
+      if (r.summary) summaryOf[r.code] = plainSummary(r.summary)
     }
   }
   // only votes that have a plain-language summary (skip bare titles), top 12
@@ -75,7 +75,18 @@ export default async function AnalizePage() {
 
   // ── 3. Attendance trend ────────────────────────────────────────────────
   const attend = (attendRes.data ?? []) as AttendRow[]
-  const monthKeys = [...new Set(attend.map(r => r.month))].sort()
+  // Every calendar month from first to last, not just the ones with votes —
+  // otherwise a full recess vanishes from the axis instead of showing as the
+  // gap the caption promises, and the time axis stops being linear.
+  const seen = [...new Set(attend.map(r => r.month))].sort()
+  const monthKeys: string[] = []
+  if (seen.length) {
+    const [y0, m0] = seen[0].split('-').map(Number)
+    const [y1, m1] = seen[seen.length - 1].split('-').map(Number)
+    for (let t = y0 * 12 + (m0 - 1); t <= y1 * 12 + (m1 - 1); t++) {
+      monthKeys.push(`${Math.floor(t / 12)}-${String((t % 12) + 1).padStart(2, '0')}`)
+    }
+  }
   const rateOf: Record<string, Record<string, number>> = { senate: {}, deputies: {} }
   for (const r of attend) rateOf[r.chamber][r.month] = r.attendance_pct
   const trend: TrendSeries[] = [

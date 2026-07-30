@@ -234,7 +234,13 @@ _CATEGORY_RULES: list[tuple[str, str]] = [
     ("Justiție",       r"penal|cod penal|recidiv|infracțiu|judecăt|procuror|avocat|execut.*silit|insolv|tribunal|contravențional"),
     ("Social",         r"social|familie|copil|femicid|violenț.*domestic|pensii|pensionar|muncă|salariu|șomaj|ajutor.*social|discriminar"),
     ("Infrastructură", r"autostrad|drum|feroviar|metrou|cale ferată|rutier|port |aeroport|pod |tunel|infrastructur"),
-    ("Transport",      r"transport|trafic|circulaț|vehicul|auto"),
+    # Whole vehicle words only. A bare "auto" also matches "autorizarea",
+    # "autorităţilor", "Autonome", "autoexcludere" — it put 46 of 65 Transport
+    # laws in the wrong bucket. Titles this no longer claims fall through to
+    # NULL, which is what categorize_laws.py (Haiku) is for.
+    ("Transport",      r"transport|trafic|circulaţi|circulaț|vehicul"
+                       r"|autovehicul|autoturism|autobuz|autocar|automobil"
+                       r"|autoutilitar|auto-?şcoal|auto-?școal"),
     ("Agricultură",    r"agricult|rural|produse agricole|silvic|fond funciar|pădure|defrișare|pescuit|acvacult"),
     ("Mediu",          r"mediu|ecolog|climă|deșeuri|reciclare|biodiversit|arii protejate|poluare|apă potabilă"),
     ("Energie",        r"energie|petrol|gaze|electricitate|nuclear|regenerab|cărbune|combustibil"),

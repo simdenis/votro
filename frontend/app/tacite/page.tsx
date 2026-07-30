@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
-import { formatDate, lawSlug } from '@/lib/utils'
+import { formatDate, lawSlug, plainSummary } from '@/lib/utils'
 import { DeadlineBadge } from '@/components/deadline-badge'
 import type { PendingBill } from '@/lib/types'
 import { SectionNav, LEGI_SECTIONS } from '@/components/section-nav'
@@ -77,7 +77,7 @@ export default async function TacitePage() {
                     {/* the plain-language summary is the headline; official
                         title drops to a secondary line */}
                     <Link href={`/tacite/${lawSlug(b.code)}`} className="text-foreground hover:underline font-medium">
-                      {b.summary || b.title || b.code}
+                      {plainSummary(b.summary) || b.title || b.code}
                     </Link>
                     {b.summary && b.title && (
                       <span className="block text-[11.5px] text-faint mt-1 leading-snug">

@@ -20,7 +20,11 @@ export function cleanCode(v: string | null): string | null {
 }
 export function cleanDate(v: string | null): string | null {
   if (!v) return null
-  return /^\d{4}-\d{2}-\d{2}$/.test(v.trim()) ? v.trim() : null
+  const t = v.trim()
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(t)) return null
+  // Shape alone let "2026-13-45" through to PostgREST as a 500.
+  const d = new Date(`${t}T00:00:00Z`)
+  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === t ? t : null
 }
 export function cleanChamber(v: string | null): 'deputies' | 'senate' | null {
   const t = (v ?? '').trim().toLowerCase()
@@ -69,7 +73,12 @@ const CSV_HEADERS: Record<string, string> = {
   vote_choice: 'vot', politician_id: 'id_parlamentar', law_id: 'id_lege', vote_id: 'id_vot',
   presence_pct: 'prezenta_pct', deviation_pct: 'deviere_pct',
   total_votes: 'total_voturi', votes_for: 'voturi_pentru', votes_against: 'voturi_impotriva',
-  votes_abstention: 'voturi_abtineri', votes_absent: 'absente', votes_not_voted: 'nu_au_votat',
+  // votes_absent counts only roll-call rows explicitly marked absent/not_voted,
+  // which is a tiny number — the real absences are votes the member has no row
+  // for at all. Calling it "absente" made consumers read 14 where the site
+  // shows 538. votes_true_absent (added by withTrueAbsent) is the honest one.
+  votes_abstention: 'voturi_abtineri', votes_absent: 'marcat_absent_sau_nu_a_votat',
+  votes_true_absent: 'absente_reale', votes_not_voted: 'nu_au_votat',
   deviations: 'devieri', chamber_votes: 'voturi_camera', gov_role: 'rol_guvern',
   active: 'activ', mandate_start: 'inceput_mandat', party_id: 'id_partid',
   tacit_deadline: 'termen_tacit', committee: 'comisie', term_days: 'zile_termen', source_url: 'sursa',
@@ -84,6 +93,33 @@ function localizeCsvHeader(csv: string): string {
 
 interface ProxyOpts { maxAge?: number; swr?: number; filename?: string }
 
+/** PostgREST fetch with one retry. A cold Worker or a momentary upstream blip
+ *  used to surface as a hard 502 to API consumers (seen on
+ *  /api/v1/parlamentari: 502 once, then 200 on three straight retries).
+ *  Only transient failures are retried — a 4xx is the caller's fault and is
+ *  returned as-is. */
+async function sbFetch(url: string, accept: string, revalidate: number): Promise<Response> {
+  const headers = {
+    apikey: SUPABASE_KEY,
+    Authorization: `Bearer ${SUPABASE_KEY}`,
+    Accept: accept,
+  }
+  let lastErr: unknown
+  for (let attempt = 0; attempt < 2; attempt++) {
+    if (attempt) await new Promise(r => setTimeout(r, 250))
+    try {
+      const r = await fetch(url, { headers, next: { revalidate } })
+      // 5xx / 429 are worth a second shot; anything else is final either way.
+      if (r.status < 500 && r.status !== 429) return r
+      lastErr = new Error(`postgrest ${r.status}`)
+      if (attempt) return r
+    } catch (e) {
+      lastErr = e
+    }
+  }
+  throw lastErr instanceof Error ? lastErr : new Error('postgrest unreachable')
+}
+
 /** Run a PostgREST query server-side and return it JSON or CSV, with CDN cache
  *  headers. `path` is the PostgREST path+query without a leading slash. */
 export async function proxy(path: string, req: Request, opts: ProxyOpts = {}): Promise<Response> {
@@ -92,14 +128,8 @@ export async function proxy(path: string, req: Request, opts: ProxyOpts = {}): P
   const swr = opts.swr ?? 86400
   let upstream: Response
   try {
-    upstream = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
-      headers: {
-        apikey: SUPABASE_KEY,
-        Authorization: `Bearer ${SUPABASE_KEY}`,
-        Accept: csv ? 'text/csv' : 'application/json',
-      },
-      next: { revalidate: maxAge },
-    })
+    upstream = await sbFetch(`${SUPABASE_URL}/rest/v1/${path}`,
+      csv ? 'text/csv' : 'application/json', maxAge)
   } catch {
     return json({ error: 'Sursa de date e indisponibilă momentan.' }, 502)
   }
@@ -135,14 +165,7 @@ export async function proxyAll(path: string, req: Request, opts: ProxyOpts = {})
   try {
     for (let page = 0; page < PG_MAX_PAGES; page++) {
       const url = `${SUPABASE_URL}/rest/v1/${path}${sep}limit=${PG_PAGE}&offset=${page * PG_PAGE}`
-      const r = await fetch(url, {
-        headers: {
-          apikey: SUPABASE_KEY,
-          Authorization: `Bearer ${SUPABASE_KEY}`,
-          Accept: csv ? 'text/csv' : 'application/json',
-        },
-        next: { revalidate: maxAge },
-      })
+      const r = await sbFetch(url, csv ? 'text/csv' : 'application/json', maxAge)
       if (!r.ok) return json({ error: 'Interogare invalidă.' }, r.status === 400 ? 400 : 502)
       let rows: number
       if (csv) {
@@ -179,10 +202,7 @@ export async function proxyAll(path: string, req: Request, opts: ProxyOpts = {})
 /** Server-side PostgREST fetch returning parsed JSON (for endpoints that
  *  post-process rows instead of proxying the body straight through). */
 export async function sbJson<T = unknown>(path: string, revalidate = 3600): Promise<T> {
-  const r = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
-    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` },
-    next: { revalidate },
-  })
+  const r = await sbFetch(`${SUPABASE_URL}/rest/v1/${path}`, 'application/json', revalidate)
   if (!r.ok) throw new Error(`postgrest ${r.status}`)
   return r.json()
 }
@@ -293,6 +313,47 @@ export async function politicianVoteRows(politicianId: string): Promise<Record<s
     }))
     .sort((a, b) => String(b.data_vot).localeCompare(String(a.data_vot))
       || String(a.cod).localeCompare(String(b.cod)))
+}
+
+interface StatRow {
+  chamber_votes?: number | null
+  votes_for?: number | null
+  votes_against?: number | null
+  votes_abstention?: number | null
+  votes_not_voted?: number | null
+  [k: string]: unknown
+}
+
+/** Adds votes_true_absent to deputy_stats / senator_stats rows: plenary votes
+ *  held in the member's chamber minus every recorded participation. Mirrors
+ *  lib/types.ts trueAbsent(), which is what the site itself displays — without
+ *  it the API's only absence-shaped number (votes_absent) is off by ~40×. */
+export function withTrueAbsent<T extends StatRow>(rows: T[]): (T & { votes_true_absent: number | null })[] {
+  return rows.map(r => ({
+    ...r,
+    votes_true_absent: r.chamber_votes
+      ? Math.max(0, r.chamber_votes - (r.votes_for ?? 0) - (r.votes_against ?? 0)
+          - (r.votes_abstention ?? 0) - (r.votes_not_voted ?? 0))
+      : null,
+  }))
+}
+
+/** JSON or CSV for post-processed rows, with the same cache/CORS headers the
+ *  proxy() path sets. */
+export function rowsResponse(
+  rows: Record<string, unknown>[], req: Request, filename: string, maxAge = 3600, swr = 86400,
+): Response {
+  const csv = wantsCsv(req)
+  const headers: Record<string, string> = {
+    'Content-Type': csv ? 'text/csv; charset=utf-8' : 'application/json; charset=utf-8',
+    'Cache-Control': `public, s-maxage=${maxAge}, stale-while-revalidate=${swr}`,
+    'Access-Control-Allow-Origin': '*',
+  }
+  if (csv) headers['Content-Disposition'] = `attachment; filename="${filename}.csv"`
+  return new Response(
+    csv ? CSV_BOM + localizeCsvHeader(toCsv(rows)) : JSON.stringify(rows),
+    { status: 200, headers },
+  )
 }
 
 export function json(obj: unknown, status = 200): Response {

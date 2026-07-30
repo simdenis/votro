@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
-import { formatDate, capFirst, isUuid, lawSlug, slugToCode } from '@/lib/utils'
+import { formatDate, capFirst, isUuid, lawSlug, plainSummary, slugToCode } from '@/lib/utils'
 import { activeSeats } from '@/lib/seats'
 import { OutcomeBadge } from '@/components/outcome-badge'
 import { PartyBreakdown } from '@/components/party-breakdown'
@@ -28,7 +28,10 @@ export async function generateStaticParams() { return [] }
 // cache(): generateMetadata and the page share one query per render.
 const getLaw = cache(async (id: string): Promise<LawStatus | null> => {
   const q = getDB().from('law_status').select('*')
-  const { data } = await (isUuid(id) ? q.eq('law_id', id) : q.eq('code', slugToCode(id))).maybeSingle()
+  // ilike, not eq: codes are typed and pasted lower-cased ("/legi/l230-2026"),
+  // and Postgres eq is case-sensitive, so those all 404'd. Codes are
+  // [A-Za-z]+\d+/\d+ — no % or _ — so there is nothing to escape here.
+  const { data } = await (isUuid(id) ? q.eq('law_id', id) : q.ilike('code', slugToCode(id)).limit(1)).maybeSingle()
   return data as LawStatus | null
 })
 
@@ -39,7 +42,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   // plain-language summary as the description (unique per law — was the generic
   // site description on all 1200+ law pages); law-specific 1200×630 OG card
   const desc = (law.summary
-    ? law.summary
+    ? plainSummary(law.summary)
     : `${law.code}: ${(law.title ?? '').trim()}`).slice(0, 300)
   const og = `${process.env.NEXT_PUBLIC_SITE_URL ?? ''}/api/og/lawlink?id=${law.law_id}`
   const title = `${law.code} — ${(law.title ?? '').slice(0, 60)}`
@@ -109,7 +112,7 @@ export default async function LawDetail({ params }: { params: Promise<{ id: stri
     name: capFirst(law.title),
     legislationIdentifier: law.code,
     inLanguage: 'ro',
-    ...(law.summary ? { abstract: law.summary } : {}),
+    ...(law.summary ? { abstract: plainSummary(law.summary) } : {}),
     legislationPassedBy: { '@type': 'Organization', name: 'Parlamentul României' },
   }
 

@@ -1,4 +1,13 @@
 import Link from 'next/link'
+import type { Metadata } from 'next'
+
+// OpenNext's ISR layer caches the notFound() render and serves it with HTTP
+// 200, so a bad /legi/... or /deputati/... URL is a soft 404 as far as crawlers
+// are concerned. noindex is what actually keeps them out of the index.
+export const metadata: Metadata = {
+  title: 'Pagina nu există',
+  robots: { index: false, follow: true },
+}
 
 export default function NotFound() {
   return (
