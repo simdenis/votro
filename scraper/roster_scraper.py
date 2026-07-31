@@ -188,9 +188,31 @@ def camera_roster() -> list[Member]:
 
 _ENDED = re.compile(r"data încetării mandatului", re.IGNORECASE)
 
+# "data încetării mandatului: 31 decembrie 2024 - demisie - HCD nr.2/2025"
+# The reason sits between the dashes; the trailing act reference is dropped.
+_ENDED_DETAIL = re.compile(
+    r"data\s+încetării\s+mandatului:\s*(\d{1,2})\s+(\w+)\s+(\d{4})"
+    r"(?:\s*-\s*([^-]{1,40}?)\s*-)?",
+    re.IGNORECASE,
+)
+
 
 def mandate_ended(profile_html: str) -> bool:
     return bool(_ENDED.search(profile_html))
+
+
+def extract_mandate_end(html: str) -> tuple[Optional[str], Optional[str]]:
+    """(iso_date, reason) from the profile, (None, None) if unparseable."""
+    text = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", html))
+    m = _ENDED_DETAIL.search(text)
+    if not m:
+        return None, None
+    month = _RO_MONTHS.get(m.group(2).lower())
+    if not month:
+        return None, None
+    date = f"{m.group(3)}-{month:02d}-{int(m.group(1)):02d}"
+    reason = (m.group(4) or "").strip().lower() or None
+    return date, reason
 
 
 # Mandate start, for the presence denominator (migration 021).
@@ -267,7 +289,7 @@ class Roster:
         while True:
             page = (
                 self.db.table("politicians")
-                .select("id, name, first_name, active, county, mandate_start, party_id, ext_id")
+                .select("id, name, first_name, active, county, mandate_start, mandate_end, party_id, ext_id")
                 .eq("chamber", chamber)
                 .range(start, start + 999)
                 .execute()
@@ -327,11 +349,16 @@ class Roster:
         # column) next to their replacements. Dated rows are ambiguous — only
         # the profile says "data încetării mandatului" — so resolve those few.
         current: list[Member] = []
+        ended: list[tuple[Member, Optional[str], Optional[str]]] = []  # (member, end_date, reason)
         for mem in roster:
             if mem.dated:
                 try:
-                    if mandate_ended(fetch(mem.profile_url)):
-                        log.info("%s: mandate ended — %s", chamber, mem.display)
+                    html = fetch(mem.profile_url)
+                    if mandate_ended(html):
+                        end_date, reason = extract_mandate_end(html)
+                        log.info("%s: mandate ended — %s (%s, %s)", chamber, mem.display,
+                                 end_date or "?", reason or "?")
+                        ended.append((mem, end_date, reason))
                         time.sleep(_DELAY)
                         continue
                 except requests.RequestException as e:
@@ -483,6 +510,29 @@ class Roster:
         log.info("%s: updates applied (%d counties, %d mandate starts, %d party changes, "
                  "%d ext_ids backfilled, %d renames)",
                  chamber, len(counties), len(starts), party_changes, backfilled, renames)
+
+        # Ended mandates: stamp when and why (migration 051). Runs every day,
+        # not just on the active→inactive transition, so members deactivated
+        # before the column existed get their dates on the next pass.
+        ends_written = 0
+        for mem, end_date, reason in ended:
+            if not end_date:
+                continue
+            hit = by_ext.get(mem.ext_id) if mem.ext_id else None
+            if hit is None:
+                hits = by_key.get(mem.key, [])
+                hit = hits[0] if len(hits) == 1 else None
+            if hit is None:
+                log.warning("%s: ended mandate %r matches no DB row — skipped", chamber, mem.display)
+                continue
+            if hit.get("mandate_end") == end_date:
+                continue
+            self.db.table("politicians").update(
+                {"mandate_end": end_date, "mandate_end_reason": reason}
+            ).eq("id", hit["id"]).execute()
+            ends_written += 1
+        if ends_written:
+            log.info("%s: %d mandate end date(s) stamped", chamber, ends_written)
         return True
 
 

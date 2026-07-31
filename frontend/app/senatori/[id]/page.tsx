@@ -4,6 +4,7 @@ import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
 import { countNoun, hasPartyLine, isUuid, personSlug } from '@/lib/utils'
 import { PoliticianProfile } from '@/components/politician-profile'
+import { MandateEndedNote, type MandateRow } from '@/components/mandate-ended-note'
 import type { SenatorStats, VoteHistoryRow, PartyHistoryEntry } from '@/lib/types'
 
 export const revalidate = 600 // ISR — CDN-cache per senator for 10 min
@@ -56,7 +57,7 @@ export default async function SenatorProfile({ params }: { params: Promise<{ id:
   // history columns trimmed to what VoteHistory/DeviationList render —
   // votes!inner(*, laws(*)) dragged every law summary into the client props
   const HISTORY_COLS = 'id, vote_id, vote_choice, party_line_deviation, votes!inner(vote_date, vote_type, outcome, description, laws(code, title, law_category))'
-  const [stats, r1, r3, r4] = await Promise.all([
+  const [stats, r1, r3, r4, mandate] = await Promise.all([
     getStats(pid),
     db
       .from('politician_votes')
@@ -76,19 +77,23 @@ export default async function SenatorProfile({ params }: { params: Promise<{ id:
       .select('*, parties(name, abbreviation, color)')
       .eq('politician_id', pid)
       .order('from_date', { ascending: true }),
+    db.from('politicians').select('active, mandate_end, mandate_end_reason').eq('id', pid).maybeSingle(),
   ])
 
   if (!stats) notFound()
 
   return (
-    <PoliticianProfile
-      stats={stats}
-      history={(r1.data as unknown as VoteHistoryRow[] | null) ?? []}
-      deviationRows={(r3.data as unknown as VoteHistoryRow[] | null) ?? []}
-      partyHistory={(r4.data as PartyHistoryEntry[] | null) ?? []}
-      basePath="/senatori"
-      chamberLabel="Senat"
-      siteUrl={SITE_URL}
-    />
+    <>
+      <MandateEndedNote row={mandate.data as MandateRow | null} />
+      <PoliticianProfile
+        stats={stats}
+        history={(r1.data as unknown as VoteHistoryRow[] | null) ?? []}
+        deviationRows={(r3.data as unknown as VoteHistoryRow[] | null) ?? []}
+        partyHistory={(r4.data as PartyHistoryEntry[] | null) ?? []}
+        basePath="/senatori"
+        chamberLabel="Senat"
+        siteUrl={SITE_URL}
+      />
+    </>
   )
 }
