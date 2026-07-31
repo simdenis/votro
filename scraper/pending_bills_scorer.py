@@ -94,23 +94,82 @@ def _gemini(api_key: str, parts: list[dict]) -> dict | None:
     }
 
 
+def _fetch_pdf_b64(bill: dict) -> str | None:
+    if not bill.get("pdf_url"):
+        return None
+    try:
+        pdf = requests.get(bill["pdf_url"], timeout=60,
+                           headers={"User-Agent": "Mozilla/5.0"})
+        if pdf.ok and pdf.content[:4] == b"%PDF":
+            return base64.standard_b64encode(pdf.content).decode()
+        log.info("%s: pdf fetch %s / not a PDF — falling back to title",
+                 bill["code"], pdf.status_code)
+    except requests.RequestException as e:
+        log.info("%s: pdf fetch failed (%s) — falling back to title", bill["code"], e)
+    return None
+
+
 def rate_bill(api_key: str, bill: dict) -> dict | None:
     parts: list[dict] = []
-    if bill.get("pdf_url"):
-        try:
-            pdf = requests.get(bill["pdf_url"], timeout=60,
-                               headers={"User-Agent": "Mozilla/5.0"})
-            if pdf.ok and pdf.content[:4] == b"%PDF":
-                parts.append({"inline_data": {
-                    "mime_type": "application/pdf",
-                    "data": base64.standard_b64encode(pdf.content).decode()}})
-            else:
-                log.info("%s: pdf fetch %s / not a PDF — falling back to title",
-                         bill["code"], pdf.status_code)
-        except requests.RequestException as e:
-            log.info("%s: pdf fetch failed (%s) — falling back to title", bill["code"], e)
+    b64 = _fetch_pdf_b64(bill)
+    if b64:
+        parts.append({"inline_data": {"mime_type": "application/pdf", "data": b64}})
     parts.append({"text": PROMPT + f"\n\nTitlul proiectului: {bill.get('title') or bill['code']}"})
     return _gemini(api_key, parts)
+
+
+# ── Haiku fallback ────────────────────────────────────────────────────────────
+# Same prompt, same JSON contract, Anthropic Haiku instead of Gemini. Used when
+# every Gemini key is rate-limited/depleted (2026-07-30: one key permanently
+# 429s "prepayment credits depleted", the free ones share a daily quota), so
+# the tacit ranking doesn't stay deadline-only until the quota resets.
+# ~23 bills × (PDF + ~200 output tokens) ≈ a cent or two per full pass.
+_HAIKU_MODEL = "claude-haiku-4-5"
+_HAIKU_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "summary": {"type": "string"},
+        "score": {"type": "integer"},
+        "reason": {"type": "string"},
+    },
+    "required": ["summary", "score", "reason"],
+    "additionalProperties": False,
+}
+
+
+def rate_bill_haiku(client, bill: dict) -> dict | None:
+    import anthropic
+
+    content: list[dict] = []
+    b64 = _fetch_pdf_b64(bill)
+    if b64:
+        content.append({"type": "document",
+                        "source": {"type": "base64", "media_type": "application/pdf", "data": b64}})
+    content.append({"type": "text",
+                    "text": PROMPT + f"\n\nTitlul proiectului: {bill.get('title') or bill['code']}"})
+    try:
+        resp = client.messages.create(
+            model=_HAIKU_MODEL,
+            max_tokens=700,
+            output_config={"format": {"type": "json_schema", "schema": _HAIKU_SCHEMA}},
+            messages=[{"role": "user", "content": content}],
+        )
+    except anthropic.APIError as e:
+        log.warning("%s: haiku error: %s", bill["code"], e)
+        return None
+    if resp.stop_reason == "refusal":
+        log.warning("%s: haiku refused", bill["code"])
+        return None
+    try:
+        item = json.loads(next(b.text for b in resp.content if b.type == "text"))
+    except (StopIteration, json.JSONDecodeError) as e:
+        log.warning("%s: unparseable haiku response: %s", bill["code"], e)
+        return None
+    return {
+        "summary": (item.get("summary") or "").strip()[:1200] or None,
+        "score": max(1, min(100, int(item["score"]))),
+        "reason": (item.get("reason") or "").strip()[:200] or None,
+    }
 
 
 class Store:
@@ -165,23 +224,34 @@ def main() -> None:
         return
     log.info("%d pending bill(s) to rate", len(bills))
 
+    haiku = None
+    if os.environ.get("ANTHROPIC_API_KEY"):
+        import anthropic
+        haiku = anthropic.Anthropic()
+
     ki = 0
     done = 0
     for b in bills:
         # Loop, not a single retry: the next key can be rate-limited too (a
         # depleted paid key 429s permanently), and an uncaught RateLimited on
         # the retry killed the whole run on 2026-07-30 with 0 of 23 bills rated.
-        while True:
+        while ki < len(keys):
             try:
                 res = rate_bill(keys[ki], b)
                 break
             except RateLimited:
                 ki += 1
-                if ki >= len(keys):
-                    log.info("quota exhausted on all %d key(s) — %d saved, resuming next run",
-                             len(keys), done)
-                    return
-                log.info("key %d exhausted — rotating", ki)
+                if ki < len(keys):
+                    log.info("key %d exhausted — rotating", ki)
+        if ki >= len(keys):
+            # Gemini is out for the day — finish the run on Haiku instead of
+            # leaving the remaining bills unrated until the quota resets.
+            if haiku is None:
+                log.info("quota exhausted on all %d Gemini key(s), no ANTHROPIC_API_KEY — "
+                         "%d saved, resuming next run", len(keys), done)
+                return
+            log.info("%s: Gemini exhausted — rating with %s", b["code"], _HAIKU_MODEL)
+            res = rate_bill_haiku(haiku, b)
         if args.dry_run:
             log.info("%s → %s", b["code"], res)
         else:
