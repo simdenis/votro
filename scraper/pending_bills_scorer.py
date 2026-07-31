@@ -168,15 +168,20 @@ def main() -> None:
     ki = 0
     done = 0
     for b in bills:
-        try:
-            res = rate_bill(keys[ki], b)
-        except RateLimited:
-            ki += 1
-            if ki >= len(keys):
-                log.info("daily quota exhausted on all %d key(s) — resuming next run", len(keys))
+        # Loop, not a single retry: the next key can be rate-limited too (a
+        # depleted paid key 429s permanently), and an uncaught RateLimited on
+        # the retry killed the whole run on 2026-07-30 with 0 of 23 bills rated.
+        while True:
+            try:
+                res = rate_bill(keys[ki], b)
                 break
-            log.info("key %d exhausted — rotating", ki)
-            res = rate_bill(keys[ki], b)
+            except RateLimited:
+                ki += 1
+                if ki >= len(keys):
+                    log.info("quota exhausted on all %d key(s) — %d saved, resuming next run",
+                             len(keys), done)
+                    return
+                log.info("key %d exhausted — rotating", ki)
         if args.dry_run:
             log.info("%s → %s", b["code"], res)
         else:
