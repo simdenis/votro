@@ -56,7 +56,7 @@ export default async function Dashboard() {
     // Goes quiet during recess (unlike promulgations), which is why the recess
     // banner sits above it.
     db.from('votes')
-      .select('id, vote_date, chamber, outcome, description, laws(code, title, law_category)')
+      .select('id, vote_date, chamber, outcome, description, laws(code, title, summary, law_category)')
       .eq('vote_type', 'vot final').not('law_id', 'is', null)
       .order('vote_date', { ascending: false }).limit(8),
   ])
@@ -77,7 +77,7 @@ export default async function Dashboard() {
     .map(s => ({ ...s, href: `/deputati/${personSlug(s.first_name, s.name)}` }))
     .sort((a, b) => a.presence_pct - b.presence_pct)
   const tacitBills = (r9.data ?? []) as { id: string; code: string; title: string | null; summary: string | null; tacit_deadline: string | null }[]
-  type RecentVote = { id: string; vote_date: string; chamber: string; outcome: 'adoptat' | 'respins' | null; description: string | null; laws: { code: string; title: string; law_category: string | null } | null }
+  type RecentVote = { id: string; vote_date: string; chamber: string; outcome: 'adoptat' | 'respins' | null; description: string | null; laws: { code: string; title: string; summary: string | null; law_category: string | null } | null }
   const recentVotes = (r10.data as unknown as RecentVote[] | null) ?? []
   // Recess banner (art. 66: parliament breaks Jul–Aug and Jan). Show it only
   // when there's genuinely no recent activity — extraordinary sessions happen.
@@ -302,8 +302,10 @@ export default async function Dashboard() {
                     href={`/voturi/${v.id}`}
                     className="block bg-surface border border-rim rounded-lg px-3 py-2.5 hover:bg-raised transition-colors"
                   >
+                    {/* same pattern as the promulgated feed: plain-language
+                        summary is the headline, official title only as fallback */}
                     <span className="block text-[13.5px] font-medium text-foreground leading-snug line-clamp-2">
-                      {v.laws?.title || v.description || v.laws?.code}
+                      {plainSummary(v.laws?.summary ?? null) || v.laws?.title || v.description || v.laws?.code}
                     </span>
                     <span className="flex items-center gap-2 mt-1 font-mono text-[10px] text-muted">
                       {v.laws?.code && <span>{v.laws.code}</span>}
