@@ -196,23 +196,34 @@ _ENDED_DETAIL = re.compile(
     re.IGNORECASE,
 )
 
+# "înlocuit de: Sorin Năcuţă n. 17 dec. 1990 Formaţiunea…" — the name runs
+# until the successor's birth line ("n. "), a year range (the deceased's
+# "1966-2026" can follow directly), or the next section heading. Absent on
+# national-minority seats (the organisation fills them, no list successor).
+_REPLACED_BY = re.compile(
+    r"înlocuit[ăa]?\s+de:\s*(.{3,60}?)\s+(?:n\.\s|\d{4}\s*-\s*\d{4}|Forma[țţt]iunea|Organiza[țţt]ia)",
+    re.IGNORECASE,
+)
+
 
 def mandate_ended(profile_html: str) -> bool:
     return bool(_ENDED.search(profile_html))
 
 
-def extract_mandate_end(html: str) -> tuple[Optional[str], Optional[str]]:
-    """(iso_date, reason) from the profile, (None, None) if unparseable."""
+def extract_mandate_end(html: str) -> tuple[Optional[str], Optional[str], Optional[str]]:
+    """(iso_date, reason, replaced_by) from the profile; Nones if unparseable."""
     text = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", html))
     m = _ENDED_DETAIL.search(text)
     if not m:
-        return None, None
+        return None, None, None
     month = _RO_MONTHS.get(m.group(2).lower())
     if not month:
-        return None, None
+        return None, None, None
     date = f"{m.group(3)}-{month:02d}-{int(m.group(1)):02d}"
     reason = (m.group(4) or "").strip().lower() or None
-    return date, reason
+    r = _REPLACED_BY.search(text)
+    replaced_by = r.group(1).strip() if r else None
+    return date, reason, replaced_by
 
 
 # Mandate start, for the presence denominator (migration 021).
@@ -289,7 +300,7 @@ class Roster:
         while True:
             page = (
                 self.db.table("politicians")
-                .select("id, name, first_name, active, county, mandate_start, mandate_end, party_id, ext_id")
+                .select("id, name, first_name, active, county, mandate_start, mandate_end, replaced_by, party_id, ext_id")
                 .eq("chamber", chamber)
                 .range(start, start + 999)
                 .execute()
@@ -349,16 +360,17 @@ class Roster:
         # column) next to their replacements. Dated rows are ambiguous — only
         # the profile says "data încetării mandatului" — so resolve those few.
         current: list[Member] = []
-        ended: list[tuple[Member, Optional[str], Optional[str]]] = []  # (member, end_date, reason)
+        # (member, end_date, reason, replaced_by)
+        ended: list[tuple[Member, Optional[str], Optional[str], Optional[str]]] = []
         for mem in roster:
             if mem.dated:
                 try:
                     html = fetch(mem.profile_url)
                     if mandate_ended(html):
-                        end_date, reason = extract_mandate_end(html)
-                        log.info("%s: mandate ended — %s (%s, %s)", chamber, mem.display,
-                                 end_date or "?", reason or "?")
-                        ended.append((mem, end_date, reason))
+                        end_date, reason, replaced_by = extract_mandate_end(html)
+                        log.info("%s: mandate ended — %s (%s, %s, înlocuit de %s)", chamber,
+                                 mem.display, end_date or "?", reason or "?", replaced_by or "—")
+                        ended.append((mem, end_date, reason, replaced_by))
                         time.sleep(_DELAY)
                         continue
                 except requests.RequestException as e:
@@ -515,7 +527,7 @@ class Roster:
         # not just on the active→inactive transition, so members deactivated
         # before the column existed get their dates on the next pass.
         ends_written = 0
-        for mem, end_date, reason in ended:
+        for mem, end_date, reason, replaced_by in ended:
             if not end_date:
                 continue
             hit = by_ext.get(mem.ext_id) if mem.ext_id else None
@@ -525,10 +537,10 @@ class Roster:
             if hit is None:
                 log.warning("%s: ended mandate %r matches no DB row — skipped", chamber, mem.display)
                 continue
-            if hit.get("mandate_end") == end_date:
+            if hit.get("mandate_end") == end_date and hit.get("replaced_by") == replaced_by:
                 continue
             self.db.table("politicians").update(
-                {"mandate_end": end_date, "mandate_end_reason": reason}
+                {"mandate_end": end_date, "mandate_end_reason": reason, "replaced_by": replaced_by}
             ).eq("id", hit["id"]).execute()
             ends_written += 1
         if ends_written:

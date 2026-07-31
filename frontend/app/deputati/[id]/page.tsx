@@ -77,7 +77,7 @@ export default async function DeputyPage({ params }: { params: Promise<{ id: str
       .select('*, parties(name, abbreviation, color)')
       .eq('politician_id', pid)
       .order('from_date', { ascending: true }),
-    db.from('politicians').select('active, mandate_end, mandate_end_reason').eq('id', pid).maybeSingle(),
+    db.from('politicians').select('active, mandate_end, mandate_end_reason, replaced_by').eq('id', pid).maybeSingle(),
   ])
 
   const history = r1.data as unknown as VoteHistoryRow[] | null

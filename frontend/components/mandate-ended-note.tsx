@@ -7,6 +7,7 @@ export interface MandateRow {
   active: boolean
   mandate_end: string | null
   mandate_end_reason: string | null
+  replaced_by: string | null
 }
 
 function fmt(d: string) {
@@ -23,6 +24,7 @@ export function MandateEndedNote({ row }: { row: MandateRow | null }) {
         <span className="font-medium text-foreground">Mandat încheiat</span>
         {row.mandate_end ? ` la ${fmt(row.mandate_end)}` : ''}
         {row.mandate_end_reason ? ` (${row.mandate_end_reason})` : ''}
+        {row.replaced_by ? `, înlocuit de ${row.replaced_by}` : ''}
         {'. '}Statisticile și istoricul de vot de mai jos acoperă perioada mandatului.
       </p>
     </div>
