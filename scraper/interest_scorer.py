@@ -83,6 +83,64 @@ class RateLimited(Exception):
     pass
 
 
+# ── Haiku fallback ────────────────────────────────────────────────────────────
+# Same prompt and batch shape, Anthropic Haiku instead of Gemini — used when
+# every Gemini key is rate-limited (same pattern as pending_bills_scorer).
+# Structured outputs enforce the JSON contract the Gemini path parses by hand.
+_HAIKU_MODEL = "claude-haiku-4-5"
+_HAIKU_SCHEMA = {
+    "type": "object",
+    "properties": {"items": {"type": "array", "items": {
+        "type": "object",
+        "properties": {
+            "code": {"type": "string"},
+            "score": {"type": "integer"},
+            "reason": {"type": "string"},
+            "headline": {"type": "string"},
+        },
+        "required": ["code", "score", "reason", "headline"],
+        "additionalProperties": False,
+    }}},
+    "required": ["items"],
+    "additionalProperties": False,
+}
+
+
+def haiku_scores(client, laws: list[dict]) -> dict[str, dict]:
+    import anthropic
+
+    lines = []
+    for l in laws:
+        summary = (l.get("summary") or "").replace("\n", " ").strip()
+        cat = l.get("law_category") or "necategorizată"
+        lines.append(f"- {l['code']} | {cat} | {l['title'][:400]}" + (f" | Rezumat: {summary}" if summary else ""))
+    try:
+        resp = client.messages.create(
+            model=_HAIKU_MODEL,
+            max_tokens=4000,
+            output_config={"format": {"type": "json_schema", "schema": _HAIKU_SCHEMA}},
+            messages=[{"role": "user", "content": PROMPT + "\n".join(lines)}],
+        )
+    except anthropic.APIError as e:
+        log.warning("haiku error: %s", e)
+        return {}
+    if resp.stop_reason == "refusal":
+        return {}
+    try:
+        items = json.loads(next(b.text for b in resp.content if b.type == "text"))["items"]
+    except (StopIteration, KeyError, json.JSONDecodeError) as e:
+        log.warning("unparseable haiku response: %s", e)
+        return {}
+    out: dict[str, dict] = {}
+    for it in items:
+        out[it["code"].strip()] = {
+            "score": max(1, min(100, int(it["score"]))),
+            "reason": (it.get("reason") or "").strip()[:200] or None,
+            "headline": (it.get("headline") or "").strip()[:120] or None,
+        }
+    return out
+
+
 def gemini_scores(api_key: str, laws: list[dict]) -> dict[str, dict]:
     lines = []
     for l in laws:
@@ -184,21 +242,34 @@ def main() -> None:
         return
     log.info("scoring %d laws in batches of %d", len(laws), BATCH)
 
+    haiku = None
+    if os.environ.get("ANTHROPIC_API_KEY"):
+        import anthropic
+        haiku = anthropic.Anthropic()
+
     ki = 0
     scored = failed = 0
     for i in range(0, len(laws), BATCH):
         batch = laws[i:i + BATCH]
-        while True:
-            try:
-                scores = gemini_scores(keys[ki], batch)
-                break
-            except RateLimited:
-                ki += 1
-                if ki >= len(keys):
+        if haiku is not None and ki >= len(keys):
+            scores = haiku_scores(haiku, batch)
+        else:
+            while ki < len(keys):
+                try:
+                    scores = gemini_scores(keys[ki], batch)
+                    break
+                except RateLimited:
+                    ki += 1
+                    if ki < len(keys):
+                        log.info("rotating to Gemini key #%d", ki + 1)
+            if ki >= len(keys):
+                # Gemini is out for the day — finish on Haiku, or stop cleanly.
+                if haiku is None:
                     log.warning("all Gemini keys rate-limited — stopping; next run resumes")
                     log.info("done: %d scored, %d failed", scored, failed)
                     return
-                log.info("rotating to Gemini key #%d", ki + 1)
+                log.info("all Gemini keys rate-limited — continuing with %s", _HAIKU_MODEL)
+                scores = haiku_scores(haiku, batch)
         for l in batch:
             hit = scores.get(l["code"])
             if hit:

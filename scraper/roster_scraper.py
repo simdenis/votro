@@ -360,8 +360,8 @@ class Roster:
         # column) next to their replacements. Dated rows are ambiguous — only
         # the profile says "data încetării mandatului" — so resolve those few.
         current: list[Member] = []
-        # (member, end_date, reason, replaced_by)
-        ended: list[tuple[Member, Optional[str], Optional[str], Optional[str]]] = []
+        # (member, end_date, reason, replaced_by, start_date)
+        ended: list[tuple[Member, Optional[str], Optional[str], Optional[str], Optional[str]]] = []
         for mem in roster:
             if mem.dated:
                 try:
@@ -370,7 +370,10 @@ class Roster:
                         end_date, reason, replaced_by = extract_mandate_end(html)
                         log.info("%s: mandate ended — %s (%s, %s, înlocuit de %s)", chamber,
                                  mem.display, end_date or "?", reason or "?", replaced_by or "—")
-                        ended.append((mem, end_date, reason, replaced_by))
+                        # mandate_start too — the profile pass below only covers
+                        # CURRENT members, so ex-members kept NULL forever and
+                        # their presence denominator started at the legislature.
+                        ended.append((mem, end_date, reason, replaced_by, extract_mandate_start(html)))
                         time.sleep(_DELAY)
                         continue
                 except requests.RequestException as e:
@@ -527,7 +530,7 @@ class Roster:
         # not just on the active→inactive transition, so members deactivated
         # before the column existed get their dates on the next pass.
         ends_written = 0
-        for mem, end_date, reason, replaced_by in ended:
+        for mem, end_date, reason, replaced_by, start_date in ended:
             if not end_date:
                 continue
             hit = by_ext.get(mem.ext_id) if mem.ext_id else None
@@ -537,11 +540,14 @@ class Roster:
             if hit is None:
                 log.warning("%s: ended mandate %r matches no DB row — skipped", chamber, mem.display)
                 continue
-            if hit.get("mandate_end") == end_date and hit.get("replaced_by") == replaced_by:
+            fill_start = start_date if not hit.get("mandate_start") else None
+            if (hit.get("mandate_end") == end_date and hit.get("replaced_by") == replaced_by
+                    and not fill_start):
                 continue
-            self.db.table("politicians").update(
-                {"mandate_end": end_date, "mandate_end_reason": reason, "replaced_by": replaced_by}
-            ).eq("id", hit["id"]).execute()
+            update = {"mandate_end": end_date, "mandate_end_reason": reason, "replaced_by": replaced_by}
+            if fill_start:
+                update["mandate_start"] = fill_start
+            self.db.table("politicians").update(update).eq("id", hit["id"]).execute()
             ends_written += 1
         if ends_written:
             log.info("%s: %d mandate end date(s) stamped", chamber, ends_written)

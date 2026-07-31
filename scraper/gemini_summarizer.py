@@ -109,6 +109,37 @@ def gemini_summary(api_key: str, pdf_bytes: bytes) -> str | None:
     return None if text.upper().startswith("INDISPONIBIL") else text or None
 
 
+# ── Haiku fallback ────────────────────────────────────────────────────────────
+# Same prompt, same INDISPONIBIL convention, Anthropic Haiku instead of Gemini —
+# used when every Gemini key is rate-limited so the run finishes instead of
+# leaving laws unsummarized until the quota resets (same pattern as
+# pending_bills_scorer).
+_HAIKU_MODEL = "claude-haiku-4-5"
+
+
+def haiku_summary(client, pdf_bytes: bytes) -> str | None:
+    import anthropic
+
+    try:
+        resp = client.messages.create(
+            model=_HAIKU_MODEL,
+            max_tokens=500,
+            messages=[{"role": "user", "content": [
+                {"type": "document",
+                 "source": {"type": "base64", "media_type": "application/pdf",
+                            "data": base64.standard_b64encode(pdf_bytes).decode()}},
+                {"type": "text", "text": PROMPT},
+            ]}],
+        )
+    except anthropic.APIError as e:
+        log.warning("haiku error: %s", e)
+        return None
+    if resp.stop_reason == "refusal":
+        return None
+    text = next((b.text for b in resp.content if b.type == "text"), "").strip()
+    return None if not text or text.upper().startswith("INDISPONIBIL") else text
+
+
 class Store:
     def __init__(self, url: str, key: str) -> None:
         self.url = url.rstrip("/")
@@ -158,6 +189,11 @@ def main() -> None:
     if not (url and key):
         sys.exit("ERROR: SUPABASE_URL and SUPABASE_KEY must be set")
 
+    haiku = None
+    if os.environ.get("ANTHROPIC_API_KEY"):
+        import anthropic
+        haiku = anthropic.Anthropic()
+
     ki = 0
     store = Store(url, key)
     laws = store.laws_to_process(args.limit, args.redo)
@@ -177,24 +213,33 @@ def main() -> None:
             if not args.dry_run:
                 store.save(law["id"], None, None)
             continue
-        # Try current key; on persistent 429 rotate to the next key. If every key
-        # is exhausted, stop the run cleanly (the next run resumes where we left off).
+        # Try current key; on persistent 429 rotate to the next key. When every
+        # key is exhausted, finish the run on Haiku (if configured) — otherwise
+        # stop cleanly and let the next run resume.
         summary = None
-        exhausted = False
-        while True:
-            try:
-                summary = gemini_summary(keys[ki], pdf.content)
+        if haiku is not None and ki >= len(keys):
+            summary = haiku_summary(haiku, pdf.content)
+        else:
+            exhausted = False
+            while True:
+                try:
+                    summary = gemini_summary(keys[ki], pdf.content)
+                    break
+                except RateLimited as e:
+                    if ki + 1 < len(keys):
+                        ki += 1
+                        log.info("key %d exhausted — switching to key %d", ki, ki + 1)
+                        continue
+                    ki = len(keys)
+                    if haiku is not None:
+                        log.info("all Gemini keys rate-limited — continuing with %s", _HAIKU_MODEL)
+                        summary = haiku_summary(haiku, pdf.content)
+                        break
+                    log.warning("all keys rate limited — stopping cleanly, next run resumes (%s)", e)
+                    exhausted = True
+                    break
+            if exhausted:
                 break
-            except RateLimited as e:
-                if ki + 1 < len(keys):
-                    ki += 1
-                    log.info("key %d exhausted — switching to key %d", ki, ki + 1)
-                    continue
-                log.warning("all keys rate limited — stopping cleanly, next run resumes (%s)", e)
-                exhausted = True
-                break
-        if exhausted:
-            break
         done += 1
         if summary:
             ok += 1
