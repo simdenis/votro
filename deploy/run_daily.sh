@@ -169,18 +169,30 @@ log "=== Validation ==="
 # rejected). Needs RESEND_API_KEY / RESEND_AUDIENCE_ID / NEWSLETTER_FROM in
 # scraper/.env — skips gracefully when unset. Failure must not flip the
 # heartbeat: email trouble is not a data-pipeline problem.
-if [ "$(date -u +%u)" = "6" ]; then
+# Once-per-day marker: run_daily fires twice a day (06 and 14 UTC), and a
+# weekday guard alone sent the newsletter twice on 2026-08-01. The marker is
+# written only after a successful send, so a failed morning send still gets
+# the afternoon retry.
+if [ "$(date -u +%u)" = "6" ] && [ ! -f "/tmp/.newsletter-sent-$(date -u +%Y%m%d)" ]; then
   log "=== Weekly newsletter (Saturday) ==="
-  "$PY" scraper/newsletter.py --send >>"$LOG" 2>&1 || log "WARN: newsletter send failed"
+  if "$PY" scraper/newsletter.py --send >>"$LOG" 2>&1; then
+    touch "/tmp/.newsletter-sent-$(date -u +%Y%m%d)"
+  else
+    log "WARN: newsletter send failed"
+  fi
 fi
 
 # 1st of the month: email last month's IG absence-card preview (image + caption
 # + sanity warnings) for manual approval — it NEVER publishes to Instagram.
 # Needs IG_PREVIEW_EMAIL, RESEND_API_KEY, CARD_SIGN_SECRET in scraper/.env.
 # Like the newsletter, email trouble must not flip the heartbeat.
-if [ "$(date -u +%d)" = "01" ]; then
+if [ "$(date -u +%d)" = "01" ] && [ ! -f "/tmp/.igpreview-sent-$(date -u +%Y%m)" ]; then
   log "=== Monthly IG absence preview (approval email) ==="
-  "$PY" scraper/instagram_poster.py --shame --email-preview >>"$LOG" 2>&1 || log "WARN: IG preview email failed"
+  if "$PY" scraper/instagram_poster.py --shame --email-preview >>"$LOG" 2>&1; then
+    touch "/tmp/.igpreview-sent-$(date -u +%Y%m)"
+  else
+    log "WARN: IG preview email failed"
+  fi
 fi
 
 # Mondays: extend the Instagram token. It is long-lived, which means 60 days,
