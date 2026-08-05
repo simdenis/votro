@@ -61,6 +61,17 @@ PROMPT = (
 )
 
 
+# A title that is just the registry code + vote boilerplate ("PL 530/2026 -
+# vot final") means cdep's vote subject carried no actual title. Scoring it
+# produces a generic headline ("Lege nouă: ce se schimbă?") that would embarrass
+# us on the homepage — skip, unstamped, so the law is rescored once a real
+# title lands (resolve_plx / senat scraper).
+_NO_REAL_TITLE = re.compile(
+    r"^\s*(?:PL-?x?|PLCD|PHCD|PH\s*CD|PL)\s*[\d/]+\s*-?\s*(?:vot\s+final)?\s*$",
+    re.IGNORECASE,
+)
+
+
 # A Chamber hotărâre "privind adoptarea opiniei referitoare la Comunicarea
 # Comisiei…" is a non-binding opinion on an EU document: nothing changes for
 # anyone in Romania. Gemini scores them 80-90 anyway, because it reads the
@@ -237,6 +248,11 @@ def main() -> None:
 
     store = Store(url, sb_key)
     laws = store.laws_to_process(args.limit, args.redo)
+    skipped = [l for l in laws if _NO_REAL_TITLE.match(l.get("title") or "")]
+    if skipped:
+        log.info("skipping %d law(s) with boilerplate-only titles: %s",
+                 len(skipped), ", ".join(l["code"] for l in skipped[:5]))
+        laws = [l for l in laws if not _NO_REAL_TITLE.match(l.get("title") or "")]
     if not laws:
         log.info("nothing to score")
         return

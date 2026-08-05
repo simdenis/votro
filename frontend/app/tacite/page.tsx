@@ -5,6 +5,7 @@ import { formatDate, lawSlug, plainSummary } from '@/lib/utils'
 import { DeadlineBadge } from '@/components/deadline-badge'
 import type { PendingBill } from '@/lib/types'
 import { SectionNav, LEGI_SECTIONS } from '@/components/section-nav'
+import { NewsletterForm } from '@/components/newsletter-form'
 
 export const revalidate = 600 // ISR — CDN-cache for 10 min
 export const metadata: Metadata = {
@@ -43,6 +44,17 @@ export default async function TacitePage() {
           </a>
           , actualizat zilnic).
         </p>
+      </div>
+
+      {/* Deadlines are the one thing that moves during recess — the reader who
+          cares about them today is exactly the one who wants the Saturday
+          digest. The follow-per-law system only covers laws already voted, so
+          the newsletter is the right subscription surface here. */}
+      <div className="bg-surface border border-rim rounded-xl px-4 py-3.5 max-w-2xl">
+        <p className="text-[13px] font-medium text-foreground mb-2">
+          Urmărim termenele astea pentru tine — sâmbăta, pe email, ce s-a votat și ce urmează să treacă tacit.
+        </p>
+        <NewsletterForm compact />
       </div>
 
       {!bills.length ? (
