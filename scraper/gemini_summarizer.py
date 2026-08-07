@@ -57,6 +57,9 @@ PROMPT = (
     "„elimină”, „amână”)\n"
     "- dacă e esențial să menționezi scopul urmărit, atribuie-l EXPLICIT inițiatorilor: "
     "„inițiatorii spun că…” / „potrivit inițiatorilor…”\n"
+    "- începe DIRECT cu schimbarea („Permite…”, „Interzice…”, „Mărește…”, „Elimină…”); "
+    "FĂRĂ titlu, FĂRĂ bold sau markdown (**), FĂRĂ deschideri de umplutură de tip "
+    "„Acest proiect de lege…” / „Proiectul de lege propune…”\n"
     "- 1-2 fraze scurte, maximum ~50 de cuvinte; diacritice corecte (ă, â, î, ș, ț)\n"
     "- folosește STRICT informația din document; nu inventa\n"
     "- ton strict factual, descriptiv — rezumatul apare ca titlu pe un site neafiliat politic\n"
@@ -75,6 +78,16 @@ def em_url_for(code: str) -> str | None:
 
 class RateLimited(Exception):
     pass
+
+
+# Models add a "**Titlu**\n" header now and then no matter what the prompt says
+# (76 slipped into prod before this existed). Strip it plus stray markdown so
+# the summary reads as one plain paragraph everywhere it's shown.
+_MD_HEADER = re.compile(r"^\s*\*\*[^*\n]{5,160}\*\*\s*\n+")
+
+
+def _clean_summary(text: str) -> str:
+    return _MD_HEADER.sub("", text).replace("**", "").strip()
 
 
 def gemini_summary(api_key: str, pdf_bytes: bytes) -> str | None:
@@ -106,6 +119,7 @@ def gemini_summary(api_key: str, pdf_bytes: bytes) -> str | None:
         text = r.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
     except (KeyError, IndexError):
         return None
+    text = _clean_summary(text)
     return None if text.upper().startswith("INDISPONIBIL") else text or None
 
 
@@ -136,7 +150,7 @@ def haiku_summary(client, pdf_bytes: bytes) -> str | None:
         return None
     if resp.stop_reason == "refusal":
         return None
-    text = next((b.text for b in resp.content if b.type == "text"), "").strip()
+    text = _clean_summary(next((b.text for b in resp.content if b.type == "text"), ""))
     return None if not text or text.upper().startswith("INDISPONIBIL") else text
 
 

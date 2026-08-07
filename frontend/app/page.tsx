@@ -58,7 +58,7 @@ export default async function Dashboard() {
     db.from('votes')
       .select('id, vote_date, chamber, outcome, description, laws(code, title, summary, law_category)')
       .eq('vote_type', 'vot final').not('law_id', 'is', null)
-      .order('vote_date', { ascending: false }).limit(8),
+      .order('vote_date', { ascending: false }).limit(16),
   ])
 
   const totalLaws     = r0.count ?? 0
@@ -78,7 +78,18 @@ export default async function Dashboard() {
     .sort((a, b) => a.presence_pct - b.presence_pct)
   const tacitBills = (r9.data ?? []) as { id: string; code: string; title: string | null; summary: string | null; tacit_deadline: string | null }[]
   type RecentVote = { id: string; vote_date: string; chamber: string; outcome: 'adoptat' | 'respins' | null; description: string | null; laws: { code: string; title: string; summary: string | null; law_category: string | null } | null }
-  const recentVotes = (r10.data as unknown as RecentVote[] | null) ?? []
+  // One card per law (both chambers voting L455 in the same week showed the
+  // same summary twice), and skip laws whose only "title" is cdep's vote
+  // boilerplate ("Pl 531/2026 - vot final") — nothing readable to show.
+  const BOILERPLATE = /^(?:PL-?x?|PHCD|PH ?CD|PL)\s*[\d/]+\s*-?\s*(?:vot final)?$/i
+  const seenLaw = new Set<string>()
+  const recentVotes = (((r10.data as unknown as RecentVote[] | null) ?? [])
+    .filter(v => {
+      const code = v.laws?.code ?? ''
+      if (seenLaw.has(code)) return false
+      seenLaw.add(code)
+      return Boolean(v.laws?.summary) || !BOILERPLATE.test((v.laws?.title ?? '').trim())
+    })).slice(0, 8)
   // Recess banner (art. 66: parliament breaks Jul–Aug and Jan). Show it only
   // when there's genuinely no recent activity — extraordinary sessions happen.
   const lastVoteDate = recentVotes[0]?.vote_date
