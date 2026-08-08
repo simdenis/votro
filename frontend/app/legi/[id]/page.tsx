@@ -144,7 +144,15 @@ export default async function LawDetail({ params }: { params: Promise<{ id: stri
 
         {law.summary && (
           <div className="mt-5">
-            <AiSummary summary={law.summary} isAi={law.summary_is_ai} emUrl={law.em_url} code={law.code} />
+            <AiSummary
+              summary={law.summary}
+              isAi={law.summary_is_ai}
+              emUrl={law.em_url}
+              code={law.code}
+              motivare={law.motivare_initiatori}
+              summarySource={law.summary_source}
+              billPdfUrl={law.bill_pdf_url}
+            />
           </div>
         )}
 

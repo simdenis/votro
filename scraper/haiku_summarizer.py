@@ -1,11 +1,9 @@
-"""Plain-language law summaries via Claude Haiku 4.5 (paid, no quota headaches).
+"""Structured two-part law summaries via Claude Haiku 4.5 (paid, no quota headaches).
 
-Same job as gemini_summarizer.py (reads the expunere de motive PDF natively,
-writes a short plain-Romanian summary), but through the Anthropic API. Reuses
-that module's em_url_for / Store / PROMPT so the two providers stay identical.
-
-Haiku 4.5 pricing: $1 / 1M input, $5 / 1M output — the whole remaining backlog
-is ~$2-3. Incremental & resumable (only laws with no summary, not yet checked).
+Same job as gemini_summarizer.py (reads the bill-text + expunere de motive PDFs
+natively, returns the ce_face / motivare_initiatori JSON), but through the
+Anthropic API. Reuses that module's fetchers, prompt, and Store so the two
+providers stay identical.
 
 Env: ANTHROPIC_API_KEY, SUPABASE_URL, SUPABASE_KEY.
 Usage:
@@ -14,61 +12,24 @@ Usage:
 from __future__ import annotations
 
 import argparse
-import base64
 import logging
 import os
 import sys
 import time
 
 import anthropic
-import requests
 from dotenv import load_dotenv
 
-from gemini_summarizer import em_url_for, Store, PROMPT, UA
+from gemini_summarizer import (Store, em_url_for, fetch_pdf, fg_url_for,
+                               haiku_summary, summary_source_for)
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 log = logging.getLogger("haiku-summary")
 
-MODEL = "claude-haiku-4-5"
-
-
-def clean_summary(text: str) -> str:
-    """Strip markdown/label drift the model sometimes adds (headers, **bold**,
-    a leading "Ce schimbă:" / "Schimbarea:" label) so the site shows plain prose."""
-    import re
-    text = re.sub(r"^\s*#{1,6}[^\n]*\n+", "", text)          # leading markdown header line
-    text = text.replace("**", "").replace("__", "")           # bold markers
-    text = re.sub(r"^\s*(Ce schimbă[^:]*|Schimbarea|Pe scurt)\s*:\s*", "", text, flags=re.IGNORECASE)
-    return re.sub(r"\s+", " ", text).strip()
-
-
-def haiku_summary(client: anthropic.Anthropic, pdf_bytes: bytes) -> str | None:
-    msg = client.messages.create(
-        model=MODEL,
-        max_tokens=300,
-        messages=[{
-            "role": "user",
-            "content": [
-                {"type": "document", "source": {
-                    "type": "base64", "media_type": "application/pdf",
-                    "data": base64.standard_b64encode(pdf_bytes).decode(),
-                }},
-                {"type": "text", "text": PROMPT},
-            ],
-        }],
-    )
-    if msg.stop_reason == "refusal":
-        return None
-    text = next((b.text for b in msg.content if b.type == "text"), "").strip()
-    if text.upper().startswith("INDISPONIBIL"):
-        return None
-    text = clean_summary(text)
-    return text or None
-
 
 def main() -> None:
     load_dotenv()
-    ap = argparse.ArgumentParser(description="Plain-language law summaries via Claude Haiku")
+    ap = argparse.ArgumentParser(description="Structured two-part law summaries via Claude Haiku")
     ap.add_argument("--limit", type=int, default=500, help="max laws this run")
     ap.add_argument("--redo", metavar="CODE", help="re-summarize one law by code")
     ap.add_argument("--dry-run", action="store_true", help="print, don't write")
@@ -86,29 +47,22 @@ def main() -> None:
     log.info("%d law(s) to process", len(laws))
     done = ok = 0
     for law in laws:
-        em = em_url_for(law["code"])
-        if not em:
-            continue
+        title = law.get("title") or law["code"]
+        em, fg = em_url_for(law["code"]), fg_url_for(law["code"])
+        em_pdf, fg_pdf = fetch_pdf(em), fetch_pdf(fg)
+        source = summary_source_for(fg_pdf, em_pdf)
         try:
-            pdf = requests.get(em, timeout=45, headers=UA)
-        except requests.RequestException as e:
-            log.warning("%s: PDF fetch failed: %s", law["code"], e)
-            continue
-        if not pdf.ok or "pdf" not in pdf.headers.get("content-type", "").lower() or len(pdf.content) < 1000:
-            if not args.dry_run:
-                store.save(law["id"], None, None)
-            continue
-        try:
-            summary = haiku_summary(client, pdf.content)
+            res = haiku_summary(client, fg_pdf, em_pdf, title)
         except anthropic.APIStatusError as e:
             log.warning("%s: API error %s — skipping this run", law["code"], e.status_code)
             continue
         done += 1
-        if summary:
+        if res:
             ok += 1
-        log.info("%s: %s", law["code"], (summary or "INDISPONIBIL")[:90])
+        log.info("%s [%s]: %s", law["code"], source,
+                 (res["ce_face"] if res else "INDISPONIBIL")[:90])
         if not args.dry_run:
-            store.save(law["id"], summary, em)
+            store.save(law["id"], res, em if em_pdf else None, fg if fg_pdf else None, source)
         time.sleep(0.3)
 
     log.info("done: %d processed, %d summarized%s", done, ok, " (dry-run)" if args.dry_run else "")

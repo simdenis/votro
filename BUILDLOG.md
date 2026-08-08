@@ -64,3 +64,24 @@
 | Native app (iOS/Android) | Deferred | PWA covers mobile for now; native only if analytics justify the investment |
 | Law initiators | Skipped | Available on detail page but not relevant enough to scrape |
 | Search | Not started | Full-text search on laws/senators via Postgres `tsvector` when needed |
+
+## AI summaries v2 — describe & attribute (2026-08-07)
+
+Single free-text summaries kept absorbing the initiators' advocacy as fact
+(expunerea de motive is a sales pitch, and it was the model's only source).
+Replaced with a structured two-part output, generated from BOTH official PDFs
+(bill text …FG.PDF + expunere …EM.PDF, senat.ro):
+
+- `laws.summary` ("ce face") — neutral mechanical description, article-anchored
+- `laws.motivare_initiatori` — sponsors' stated justification, quoted from the
+  expunere, always framed as their claim ("Inițiatorii invocă…")
+- `laws.summary_source` — what the model actually read: em+text | em | text |
+  title; never claims more than was fetched
+- guards: max_tokens/truncation reject + brevity retry, word caps (~70/~100),
+  quote-close repair only on end_turn with unambiguous quote state
+
+**Scope decision:** backfilled the Educație category (89 laws, partner
+deliverable) + all 2026 laws (236) — NOT the pre-2026 backlog (~790 laws,
+~$25, low traffic). Pre-2026 laws keep their old single-field summaries;
+the frontend renders both formats (motivare section only when present).
+Old summaries are never overwritten by a failed generation.

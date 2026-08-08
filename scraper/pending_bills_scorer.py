@@ -1,10 +1,12 @@
 """AI summary + public-interest score for pending (tacit-term) bills, via Gemini.
 
-One call per bill: the expunere de motive PDF (pending_bills.pdf_url, filled by
-tacit_scraper) goes in as inline data and Gemini returns JSON with a 2-3
-sentence plain-Romanian summary plus a 1-100 interest score (same rubric as
-interest_scorer.py). Bills without a pdf_url are scored from the title alone —
-weaker, but better than nothing.
+One call per bill: the fișa PDF (pending_bills.pdf_url, filled by
+tacit_scraper — usually the pl* bill text, sometimes the em* expunere; the
+prompt labels whichever it actually is) goes in as inline data and Gemini
+returns JSON with a 2-3 sentence plain-Romanian summary plus a 1-100 interest
+score (same rubric as interest_scorer.py). Bills without a pdf_url are scored
+from the title alone — weaker, but better than nothing. What the model read
+lands in pending_bills.summary_source ('text' | 'em' | 'title'; migration 054).
 
 Incremental & resumable like the other Gemini scrapers: only rows with
 ai_checked_at IS NULL, stamps ai_checked_at either way, stops cleanly on a
@@ -23,6 +25,7 @@ import datetime
 import json
 import logging
 import os
+import re
 import time
 
 import requests
@@ -40,8 +43,9 @@ _TIMEOUT = 120
 
 PROMPT = (
     "Ești editor la o publicație românească de transparență parlamentară, "
-    "pentru public larg. Primești expunerea de motive a unui proiect de lege "
-    "aflat în termen de adoptare tacită în Parlament.\n"
+    "pentru public larg. Primești un document oficial al unui proiect de lege "
+    "aflat în termen de adoptare tacită în Parlament; rândul dinaintea "
+    "documentului spune ce este.\n"
     "1) Rezumă proiectul în 2-3 propoziții simple, în română, fără jargon "
     "juridic — ce s-ar schimba concret pentru oameni.\n"
     "2) Dă un scor de interes public de la 1 la 100: cât de mult i-ar păsa "
@@ -53,6 +57,24 @@ PROMPT = (
     'Răspunde STRICT cu JSON: {"summary": "...", "score": N, '
     '"reason": "max 15 cuvinte, în română"} — fără alt text.'
 )
+
+
+# cdep names fișa PDFs by role: pl* = the bill text, em* = expunerea de motive
+# (tacit_scraper.find_pdf prefers pl*). Label whichever we actually have — the
+# prompt must not claim EM provenance for a bill-text PDF — and record it in
+# pending_bills.summary_source ('text' | 'em' | 'title').
+_DOC_LABELS = {
+    "text": "Documentul atașat este TEXTUL PROIECTULUI (forma inițiatorului), nu expunerea de motive.",
+    "em": "Documentul atașat este expunerea de motive a proiectului.",
+}
+
+
+def doc_kind(pdf_url: str | None) -> str:
+    if not pdf_url:
+        return "title"
+    if re.search(r"/em\d[^/]*\.pdf$", pdf_url, re.I):
+        return "em"
+    return "text"
 
 
 class RateLimited(Exception):
@@ -109,12 +131,15 @@ def _fetch_pdf_b64(bill: dict) -> str | None:
     return None
 
 
-def rate_bill(api_key: str, bill: dict) -> dict | None:
+def rate_bill(api_key: str, bill: dict, b64: str | None, kind: str) -> dict | None:
     parts: list[dict] = []
-    b64 = _fetch_pdf_b64(bill)
     if b64:
+        parts.append({"text": _DOC_LABELS[kind]})
         parts.append({"inline_data": {"mime_type": "application/pdf", "data": b64}})
-    parts.append({"text": PROMPT + f"\n\nTitlul proiectului: {bill.get('title') or bill['code']}"})
+    text = PROMPT + f"\n\nTitlul proiectului: {bill.get('title') or bill['code']}"
+    if not b64:
+        text += "\n(Nu există document atașat — evaluează doar pe baza titlului.)"
+    parts.append({"text": text})
     return _gemini(api_key, parts)
 
 
@@ -137,16 +162,18 @@ _HAIKU_SCHEMA = {
 }
 
 
-def rate_bill_haiku(client, bill: dict) -> dict | None:
+def rate_bill_haiku(client, bill: dict, b64: str | None, kind: str) -> dict | None:
     import anthropic
 
     content: list[dict] = []
-    b64 = _fetch_pdf_b64(bill)
     if b64:
+        content.append({"type": "text", "text": _DOC_LABELS[kind]})
         content.append({"type": "document",
                         "source": {"type": "base64", "media_type": "application/pdf", "data": b64}})
-    content.append({"type": "text",
-                    "text": PROMPT + f"\n\nTitlul proiectului: {bill.get('title') or bill['code']}"})
+    text = PROMPT + f"\n\nTitlul proiectului: {bill.get('title') or bill['code']}"
+    if not b64:
+        text += "\n(Nu există document atașat — evaluează doar pe baza titlului.)"
+    content.append({"type": "text", "text": text})
     try:
         resp = client.messages.create(
             model=_HAIKU_MODEL,
@@ -190,11 +217,11 @@ class Store:
         return rest_all(self.get, "pending_bills", select=sel, order="tacit_deadline.asc,id.asc",
                         total=limit, ai_checked_at="is.null")
 
-    def save(self, bill_id: str, res: dict | None) -> None:
+    def save(self, bill_id: str, res: dict | None, source: str | None) -> None:
         payload: dict = {"ai_checked_at": datetime.datetime.now(datetime.timezone.utc).isoformat()}
         if res:
             payload |= {"summary": res["summary"], "interest_score": res["score"],
-                        "interest_reason": res["reason"]}
+                        "interest_reason": res["reason"], "summary_source": source}
         r = requests.patch(f"{self.url}/rest/v1/pending_bills", params={"id": f"eq.{bill_id}"},
                            headers={**self.h, "Content-Type": "application/json"},
                            json=payload, timeout=30)
@@ -232,12 +259,14 @@ def main() -> None:
     ki = 0
     done = 0
     for b in bills:
+        b64 = _fetch_pdf_b64(b)
+        kind = doc_kind(b["pdf_url"]) if b64 else "title"
         # Loop, not a single retry: the next key can be rate-limited too (a
         # depleted paid key 429s permanently), and an uncaught RateLimited on
         # the retry killed the whole run on 2026-07-30 with 0 of 23 bills rated.
         while ki < len(keys):
             try:
-                res = rate_bill(keys[ki], b)
+                res = rate_bill(keys[ki], b, b64, kind)
                 break
             except RateLimited:
                 ki += 1
@@ -251,11 +280,11 @@ def main() -> None:
                          "%d saved, resuming next run", len(keys), done)
                 return
             log.info("%s: Gemini exhausted — rating with %s", b["code"], _HAIKU_MODEL)
-            res = rate_bill_haiku(haiku, b)
+            res = rate_bill_haiku(haiku, b, b64, kind)
         if args.dry_run:
-            log.info("%s → %s", b["code"], res)
+            log.info("%s [%s] → %s", b["code"], kind, res)
         else:
-            store.save(b["id"], res)
+            store.save(b["id"], res, kind)
             done += 1
             if res:
                 log.info("%s → %d (%s)", b["code"], res["score"], res["reason"])

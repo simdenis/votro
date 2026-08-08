@@ -1,5 +1,8 @@
 export type PresidentialStatus = 'promulgat' | 'retrimis' | 'sesizat_ccr'
 export type CcrDecision = 'constitutional' | 'neconstitutional' | 'partial_neconstitutional'
+/** What the summary model actually read (migration 054): both PDFs, EM only,
+ *  bill text only, or just the official title. Null on pre-v2 summaries. */
+export type SummarySource = 'em+text' | 'em' | 'text' | 'title'
 
 export interface LawStatus {
   law_id: string
@@ -8,7 +11,10 @@ export interface LawStatus {
   law_category: string | null
   summary: string | null
   summary_is_ai: boolean
+  motivare_initiatori: string | null
+  summary_source: SummarySource | null
   em_url: string | null
+  bill_pdf_url: string | null
   presidential_status: PresidentialStatus | null
   presidential_date: string | null
   ccr_decision: CcrDecision | null
@@ -53,7 +59,10 @@ export interface Law {
   law_category: string | null
   summary: string | null
   summary_is_ai: boolean
+  motivare_initiatori: string | null
+  summary_source: SummarySource | null
   em_url: string | null
+  bill_pdf_url: string | null
   scraped_at: string
   /** Gemini public-interest score 1–100 (migration 025) — "hotness". */
   interest_score: number | null

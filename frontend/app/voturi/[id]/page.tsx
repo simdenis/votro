@@ -250,7 +250,15 @@ export default async function VoteDetail({
 
       {/* ── AI law summary (same box as the law page) ────── */}
       {vote.laws?.summary && (
-        <AiSummary summary={vote.laws.summary} isAi={vote.laws.summary_is_ai} emUrl={vote.laws.em_url} code={vote.laws.code} />
+        <AiSummary
+          summary={vote.laws.summary}
+          isAi={vote.laws.summary_is_ai}
+          emUrl={vote.laws.em_url}
+          code={vote.laws.code}
+          motivare={vote.laws.motivare_initiatori}
+          summarySource={vote.laws.summary_source}
+          billPdfUrl={vote.laws.bill_pdf_url}
+        />
       )}
 
       {/* ── Two-column body ───────────────────────────────
