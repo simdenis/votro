@@ -21,7 +21,7 @@ import anthropic
 from dotenv import load_dotenv
 
 from gemini_summarizer import (Store, em_url_for, fetch_pdf, fg_url_for,
-                               haiku_summary, summary_source_for)
+                               fit_documents, haiku_summary, summary_source_for)
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 log = logging.getLogger("haiku-summary")
@@ -50,6 +50,7 @@ def main() -> None:
         title = law.get("title") or law["code"]
         em, fg = em_url_for(law["code"]), fg_url_for(law["code"])
         em_pdf, fg_pdf = fetch_pdf(em), fetch_pdf(fg)
+        fg_pdf, em_pdf = fit_documents(fg_pdf, em_pdf)
         source = summary_source_for(fg_pdf, em_pdf)
         try:
             res = haiku_summary(client, fg_pdf, em_pdf, title)

@@ -130,6 +130,44 @@ def fetch_pdf(url: str | None) -> bytes | None:
     return None
 
 
+# Both APIs cap what one request may carry: Anthropic rejects >100 PDF pages
+# outright and >200k tokens; scanned senat.ro pages cost ~3k tokens each, so
+# ~60 combined pages is the real ceiling. Big bills (L455/2026: 233-page text)
+# 400'd and were logged as INDISPONIBIL. Drop the bill text and keep the
+# expunere — it is the smaller document and carries the motivare — so
+# summary_source honestly degrades to 'em' instead of losing the law.
+_MAX_COMBINED_PAGES = 60
+
+
+def pdf_pages(pdf: bytes | None) -> int:
+    if not pdf:
+        return 0
+    try:
+        import io
+
+        import pypdf
+        return len(pypdf.PdfReader(io.BytesIO(pdf)).pages)
+    except Exception:  # noqa: BLE001 — unreadable PDF: treat as oversized
+        return _MAX_COMBINED_PAGES + 1
+
+
+def fit_documents(fg_pdf: bytes | None, em_pdf: bytes | None) -> tuple[bytes | None, bytes | None]:
+    """Trim the document pair to what one API request can carry. Callers must
+    run this BEFORE summary_source_for, so the recorded source reflects what
+    was actually sent."""
+    fg_n, em_n = pdf_pages(fg_pdf), pdf_pages(em_pdf)
+    if fg_n + em_n <= _MAX_COMBINED_PAGES:
+        return fg_pdf, em_pdf
+    if em_pdf is not None and em_n <= _MAX_COMBINED_PAGES:
+        log.info("documents too large (%dp text + %dp EM) — sending the expunere only", fg_n, em_n)
+        return None, em_pdf
+    if fg_pdf is not None and fg_n <= _MAX_COMBINED_PAGES:
+        log.info("no usable EM and text is %dp — sending the bill text only", fg_n)
+        return fg_pdf, None
+    log.info("both documents too large (%dp text, %dp EM) — falling back to the title", fg_n, em_n)
+    return None, None
+
+
 def summary_source_for(fg_pdf: bytes | None, em_pdf: bytes | None) -> str:
     if em_pdf and fg_pdf:
         return "em+text"
@@ -242,7 +280,7 @@ def gemini_summary(api_key: str, fg_pdf: bytes | None, em_pdf: bytes | None,
             "contents": [{"parts": parts}],
             # thinkingBudget: 0 — 2.5 models think by default; the reasoning eats
             # the output budget and truncates the summary. Simple task, skip it.
-            "generationConfig": {"temperature": 0, "maxOutputTokens": 1000,
+            "generationConfig": {"temperature": 0, "maxOutputTokens": 1500,
                                  "responseMimeType": "application/json",
                                  "thinkingConfig": {"thinkingBudget": 0}},
         }
@@ -322,7 +360,7 @@ def haiku_summary(client, fg_pdf: bytes | None, em_pdf: bytes | None,
         try:
             resp = client.messages.create(
                 model=_HAIKU_MODEL,
-                max_tokens=1000,
+                max_tokens=1500,
                 temperature=0,
                 output_config={"format": {"type": "json_schema", "schema": _HAIKU_SCHEMA}},
                 messages=[{"role": "user", "content": content}],
@@ -424,6 +462,7 @@ def main() -> None:
         title = law.get("title") or law["code"]
         em, fg = em_url_for(law["code"]), fg_url_for(law["code"])
         em_pdf, fg_pdf = fetch_pdf(em), fetch_pdf(fg)
+        fg_pdf, em_pdf = fit_documents(fg_pdf, em_pdf)
         source = summary_source_for(fg_pdf, em_pdf)
         # Try current key; on persistent 429 rotate to the next key. When every
         # key is exhausted, finish the run on Haiku (if configured) — otherwise
