@@ -75,7 +75,7 @@ export const CSV_BOM = String.fromCharCode(0xFEFF)
 const CSV_HEADERS: Record<string, string> = {
   code: 'cod', law_code: 'cod_lege', title: 'titlu', law_title: 'titlu_lege',
   law_category: 'categorie', summary: 'rezumat', summary_is_ai: 'rezumat_ai',
-  interest_score: 'scor_interes', chamber: 'camera', vote_date: 'data_vot',
+  chamber: 'camera', vote_date: 'data_vot',
   outcome: 'rezultat', description: 'descriere',
   for_count: 'pentru', against_count: 'impotriva', abstention_count: 'abtineri',
   not_voted_count: 'nu_au_votat', present_count: 'prezenti',

@@ -6,8 +6,6 @@ export interface TacitEntry {
   title: string
   chamber: 'SENAT' | 'CAMERĂ'
   daysLeft: number
-  /** Gemini public-interest score 1-100 (null until the scorer has run). */
-  interest?: number | null
 }
 
 export interface TacitListCardData {
@@ -46,9 +44,9 @@ export function TacitListCard({ data }: { data: TacitListCardData }) {
               ...(i < data.entries.length - 1 ? { borderBottom: `1px solid ${C.hair}` } : {}),
             }}>
               <div style={{ display: 'flex', flexDirection: 'column', flex: 1, marginRight: 20 }}>
-                {/* kicker: code · chamber · score — small */}
+                {/* kicker: code · chamber — small */}
                 <div style={{ display: 'flex', fontFamily: MONO, fontSize: compact ? 13 : 14, color: C.faint, letterSpacing: 0.5, marginBottom: 3 }}>
-                  {e.interest != null ? `${e.code} · ${e.chamber} · interes ${e.interest}/100` : `${e.code} · ${e.chamber}`}
+                  {`${e.code} · ${e.chamber}`}
                 </div>
                 {/* the plain-language summary IS the headline */}
                 <div style={{ display: 'flex', fontSize: compact ? 20 : 23, fontWeight: 700, lineHeight: 1.25 }}>

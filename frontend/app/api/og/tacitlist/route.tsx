@@ -19,12 +19,12 @@ export async function GET() {
   const today = new Date()
   const iso = today.toISOString().slice(0, 10)
   const limitDate = new Date(today.getTime() + 7 * 86400_000).toISOString().slice(0, 10)
-  // hottest first (Gemini score via pending_bills_scorer), deadline as tiebreak
-  const rows: { code: string; title: string | null; summary: string | null; chamber: string; tacit_deadline: string; interest_score: number | null }[] =
+  // soonest deadline first — objective urgency, no editorial ranking
+  const rows: { code: string; title: string | null; summary: string | null; chamber: string; tacit_deadline: string }[] =
     (await (await fetch(
-      `${U}/rest/v1/pending_bills?select=code,title,summary,chamber,tacit_deadline,interest_score` +
+      `${U}/rest/v1/pending_bills?select=code,title,summary,chamber,tacit_deadline` +
       `&tacit_deadline=gte.${iso}&tacit_deadline=lte.${limitDate}` +
-      `&order=interest_score.desc.nullslast,tacit_deadline.asc&limit=10`,
+      `&order=tacit_deadline.asc&limit=10`,
       { headers: SB })).json()) ?? []
 
   const entries: TacitEntry[] = rows.map(r => ({
@@ -33,7 +33,6 @@ export async function GET() {
     title: plainSummary(r.summary) || r.title || '',
     chamber: r.chamber === 'senate' ? 'SENAT' : 'CAMERĂ',
     daysLeft: Math.max(0, Math.round((new Date(r.tacit_deadline).getTime() - today.getTime()) / 86400_000)),
-    interest: r.interest_score,
   }))
 
   const fonts = await getCardFonts()
