@@ -129,8 +129,10 @@ both the dynamic URL and the static filename, so nothing serves a stale image.
   render command it displays), the all-time absence card, and a free-form image/carousel
   publisher. Publishing calls Instagram directly from the worker
   (`/api/admin/publish`, needs `IG_USER_ID`/`IG_ACCESS_TOKEN` as worker secrets) with a
-  two-tap confirm. The approval email's "Deschide în admin" button prefills the signed
-  monthly card + caption. **After `--refresh-token`, re-upload the token:**
+  two-tap confirm. The approval email's "Deschide în admin" button carries a short-lived
+  signed login token (`?t=…`, HMAC of its expiry under `ADMIN_KEY`, **expires in 30 min** —
+  never the raw key in the URL) and prefills the signed monthly card + caption. **After
+  `--refresh-token`, re-upload the token:**
   `cd frontend && npx wrangler secret put IG_ACCESS_TOKEN` — the worker keeps its own
   copy and goes stale otherwise.
 - Reels and Stories use a different flow — not implemented yet.

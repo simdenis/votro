@@ -641,18 +641,22 @@ def _shame_interval(cfg: Config, dfrom: str, dto: str) -> tuple[str, str, list[s
 
 def _admin_link_html(cfg: Config, image_url: str, caption: str) -> str:
     """One-tap 'publish from the browser' button for the approval email — hits
-    the login exchange (/api/admin/login?key=…&next=…), which sets the httpOnly
-    admin cookie and redirects to /admin with the image + caption prefilled
-    (b64url, same lesson as the card payload: raw URLs/text in query params get
-    mangled). The key is consumed once by the exchange, not left in a bookmarked
-    URL. Needs ADMIN_KEY in the env; without it the email keeps only the CLI
-    command."""
+    the login exchange (/api/admin/login?t=<login token>&next=…), which sets the
+    httpOnly admin cookie and redirects to /admin with the image + caption
+    prefilled (b64url, same lesson as the card payload: raw URLs/text in query
+    params get mangled). The token is a short-lived HMAC of its expiry under
+    ADMIN_KEY (never the raw key in a URL) and expires in 30 min — it must match
+    the frontend's verifyLoginToken exactly. Needs ADMIN_KEY in the env; without
+    it the email keeps only the CLI command."""
     admin_key = os.environ.get("ADMIN_KEY", "")
     if not admin_key:
         return ""
     b64 = lambda s: _b64.urlsafe_b64encode(s.encode()).decode().rstrip("=")
     nxt = _quote(f"/admin?img={b64(image_url)}&cap={b64(caption)}", safe="")
-    href = f"{cfg.site_url}/api/admin/login?key={_quote(admin_key)}&next={nxt}"
+    exp = int(time.time()) + 1800
+    sig = _hmac.new(admin_key.encode(), f"login-v1:{exp}".encode(), hashlib.sha256).hexdigest()
+    token = f"{exp}.{sig}"
+    href = f"{cfg.site_url}/api/admin/login?t={_quote(token)}&next={nxt}"
     return (f'<p style="margin:0 0 12px;"><a href="{_html.escape(href, quote=True)}" '
             f'style="display:inline-block;background:#171A1F;color:#FFFFFF;text-decoration:none;'
             f'border-radius:8px;padding:10px 18px;font-weight:600;">Deschide în admin → publică</a></p>'
