@@ -37,13 +37,14 @@ export async function GET(request: Request) {
     : SAMPLE_VOTE_CARD
 
   const fonts = await getCardFonts()
-  // Render at 2× (2160px) — a 1080px PNG looks soft on hi-dpi screens.
+  // Render at 1× (1080×1350, native Instagram 4:5) — 2× (5.8MP) blows the CF
+  // Free CPU budget; 1× is the IG spec size so the feed loses nothing.
   return new ImageResponse(
     (
-      <div style={{ display: 'flex', width: 1080, height: 1350, transform: 'scale(2)', transformOrigin: 'top left' }}>
+      <div style={{ display: 'flex', width: 1080, height: 1350 }}>
         <VoteCard data={data} />
       </div>
     ),
-    { width: 2160, height: 2700, fonts },
+    { width: 1080, height: 1350, fonts },
   )
 }

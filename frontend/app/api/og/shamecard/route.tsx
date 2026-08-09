@@ -139,10 +139,10 @@ async function renderCard(req: Request): Promise<Response> {
   const fonts = await getCardFonts()
   return new ImageResponse(
     (
-      <div style={{ display: 'flex', width: 1080, height: 1350, transform: 'scale(2)', transformOrigin: 'top left' }}>
+      <div style={{ display: 'flex', width: 1080, height: 1350 }}>
         <ShameCard data={data} />
       </div>
     ),
-    { width: 2160, height: 2700, fonts },
+    { width: 1080, height: 1350, fonts },
   )
 }

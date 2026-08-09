@@ -54,7 +54,7 @@ export async function GET(req: Request) {
   const fonts = await getCardFonts()
   return new ImageResponse(
     (
-      <div style={{ display: 'flex', width: 1080, height: 1350, transform: 'scale(2)', transformOrigin: 'top left' }}>
+      <div style={{ display: 'flex', width: 1080, height: 1350 }}>
         <div style={{ width: 1080, height: 1350, display: 'flex', flexDirection: 'column', background: C.bg, color: C.text, fontFamily: SANS }}>
           <div style={{ display: 'flex', alignItems: 'center', padding: '36px 64px 22px' }}>
             <div style={{ display: 'flex', fontFamily: MONO, fontSize: 16, letterSpacing: 2.5, textTransform: 'uppercase', color: C.faint }}>
@@ -130,6 +130,6 @@ export async function GET(req: Request) {
         </div>
       </div>
     ),
-    { width: 2160, height: 2700, fonts },
+    { width: 1080, height: 1350, fonts },
   )
 }

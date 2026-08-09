@@ -74,10 +74,10 @@ async function renderCard(request: Request): Promise<Response> {
   // Render at 2× (2160px) — a 1080px PNG looks soft on hi-dpi screens.
   return new ImageResponse(
     (
-      <div style={{ display: 'flex', width: 1080, height: 1350, transform: 'scale(2)', transformOrigin: 'top left' }}>
+      <div style={{ display: 'flex', width: 1080, height: 1350 }}>
         <SummaryCard data={data} />
       </div>
     ),
-    { width: 2160, height: 2700, fonts },
+    { width: 1080, height: 1350, fonts },
   )
 }

@@ -15,10 +15,9 @@
 		"nodejs_compat",
 		"global_fetch_strictly_public"
 	],
-	// Workers Paid (since 2026-07-20): 30s CPU cap. This is what lets the
-	// satori/resvg hemicycle cards (lawcard/tacitcard/deviationcard) render live
-	// — no more Free-plan 10ms 1102/503, no more offline pre-render dance.
-	"limits": { "cpu_ms": 30000 },
+	// Free plan: no cpu_ms limit (Paid-only). The satori/resvg cards render live
+	// within Free's CPU budget because they output at 1× (1080×1350, native IG
+	// size); a 2× render (5.8MP raster) was the only thing that blew the budget.
 	"assets": {
 		"directory": ".open-next/assets",
 		"binding": "ASSETS"

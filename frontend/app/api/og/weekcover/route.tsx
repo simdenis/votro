@@ -25,7 +25,7 @@ async function render(req: Request): Promise<Response> {
   const fonts = await getCardFonts()
   return new ImageResponse(
     (
-      <div style={{ display: 'flex', width: 1080, height: 1350, transform: 'scale(2)', transformOrigin: 'top left' }}>
+      <div style={{ display: 'flex', width: 1080, height: 1350 }}>
         <div style={{ width: 1080, height: 1350, display: 'flex', flexDirection: 'column', background: C.bg, color: C.text, fontFamily: SANS }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '54px 72px 0' }}>
             <div style={{ display: 'flex', fontFamily: MONO, fontSize: 18, letterSpacing: 3, textTransform: 'uppercase', color: C.faint }}>Săptămâna aceasta</div>
@@ -67,6 +67,6 @@ async function render(req: Request): Promise<Response> {
         </div>
       </div>
     ),
-    { width: 2160, height: 2700, fonts },
+    { width: 1080, height: 1350, fonts },
   )
 }
