@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
+import { KEEP_NON_PROCEDURAL } from '@/lib/vote-filters'
 import { formatDate } from '@/lib/utils'
 import { OutcomeBadge } from '@/components/outcome-badge'
 import { MiniVoteBar } from '@/components/mini-vote-bar'
@@ -30,6 +31,7 @@ export default async function VotesPage({
   let q = db
     .from('votes')
     .select(`id, vote_date, chamber, outcome, for_count, against_count, abstention_count, description, ${sp.category ? lawCols.replace('laws(', 'laws!inner(') : lawCols}`, { count: 'exact' })
+    .or(KEEP_NON_PROCEDURAL)
     .order('vote_date', { ascending: false })
     .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1)
   if (sp.outcome)  q = q.eq('outcome', sp.outcome)

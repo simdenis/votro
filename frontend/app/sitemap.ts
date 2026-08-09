@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next'
 import { getDB } from '@/lib/supabase'
+import { KEEP_NON_PROCEDURAL } from '@/lib/vote-filters'
 import { lawSlug, personSlug } from '@/lib/utils'
 
 export const revalidate = 3600
@@ -23,7 +24,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const [votes, senators, deputies, laws, parties, tacitBills] = await Promise.all([
     allRows<{ id: string; vote_date: string }>((lo, hi) =>
-      db.from('votes').select('id, vote_date').order('vote_date', { ascending: false }).range(lo, hi)),
+      db.from('votes').select('id, vote_date').or(KEEP_NON_PROCEDURAL).order('vote_date', { ascending: false }).range(lo, hi)),
     db.from('senator_stats').select('politician_id, name, first_name'),
     db.from('deputy_stats').select('politician_id, name, first_name'),
     allRows<{ id: string; code: string }>((lo, hi) =>
