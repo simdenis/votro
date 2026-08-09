@@ -1,5 +1,6 @@
-import { cookies } from 'next/headers'
+import { cookies, headers } from 'next/headers'
 import { createHmac, timingSafeEqual } from 'node:crypto'
+import { jwtVerify, createRemoteJWKSet } from 'jose'
 
 // Admin auth via an httpOnly cookie instead of a ?key= URL param. The key
 // never appears in a URL (referrer/history/log leak) nor in the page HTML/JS
@@ -69,7 +70,32 @@ export function verifyLoginToken(token: string | undefined | null): boolean {
   return safeEqualHex(token.slice(dot + 1), hmac(`${LOGIN_CTX}:${exp}`))
 }
 
-/** True when the request carries a valid admin session cookie. */
+// Cloudflare Access sits in front of /admin: it authenticates the owner's Gmail
+// at the edge and forwards a signed JWT (Cf-Access-Jwt-Assertion header on
+// Access-gated paths, CF_Authorization cookie everywhere else on the domain).
+// Trusting it makes Access the single sign-in; the /api/admin/* routes stay off
+// Access (VPS uses the x-admin-key header), so they verify the same cookie here.
+const CF_TEAM = process.env.CF_ACCESS_TEAM_DOMAIN || 'jolly-disk-909f.cloudflareaccess.com'
+const CF_AUD = process.env.CF_ACCESS_AUD || '0d1c5281937706cdaaf42e94e69acab209945cd5bca13d300de0a9cdd39b4c05'
+const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || 'siminiucdenis@gmail.com')
+  .split(',').map(s => s.trim().toLowerCase()).filter(Boolean)
+const JWKS = createRemoteJWKSet(new URL(`https://${CF_TEAM}/cdn-cgi/access/certs`))
+
+async function verifyAccessJwt(token: string | undefined | null): Promise<boolean> {
+  if (!token) return false
+  try {
+    const { payload } = await jwtVerify(token, JWKS, { issuer: `https://${CF_TEAM}`, audience: CF_AUD })
+    return ADMIN_EMAILS.includes(String(payload.email ?? '').toLowerCase())
+  } catch {
+    return false
+  }
+}
+
+/** True when the request is a Cloudflare Access session for an allowed email,
+ *  or (fallback) carries a valid legacy admin cookie. */
 export async function isAdmin(): Promise<boolean> {
+  const jwt = (await headers()).get('cf-access-jwt-assertion')
+    ?? (await cookies()).get('CF_Authorization')?.value
+  if (await verifyAccessJwt(jwt)) return true
   return verifySession((await cookies()).get(ADMIN_COOKIE)?.value)
 }
