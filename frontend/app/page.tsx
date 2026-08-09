@@ -4,6 +4,7 @@ import { getDB } from '@/lib/supabase'
 import { countNoun, lawSlug, personSlug, plainSummary, todayRo, formatDate, recessUntil } from '@/lib/utils'
 import { OutcomeBadge } from '@/components/outcome-badge'
 import { AbsenceTop } from '@/components/absence-top'
+import { daysLeft } from '@/components/deadline-badge'
 import { ParliamentDonut } from '@/components/parliament-donut'
 import { CountyMap } from '@/components/county-map'
 import { NewsletterForm } from '@/components/newsletter-form'
@@ -24,11 +25,6 @@ export default async function Dashboard() {
   const today = todayRo()
   const [r0, r2, r3, r4, r5, r6, r7, r8, r9, r10] = await Promise.all([
     db.from('law_status').select('*', { count: 'exact', head: true }),
-    // substantive votes only — presence checks / agenda changes drown the feed.
-    // Fetch a wider window so the feed's sort + category filter + date slider
-    // have real data to work over (RecentVotes filters/sorts client-side).
-    // columns trimmed to what RecentVotes renders — select('*, laws(*)') shipped
-    // every law's em_url/scraped_at/etc into the serialized client props twice
     // Recently promulgated laws — the "finished, now it's law" feed. More alive
     // than raw votes (which stop during recess) and reads in plain language.
     db.from('law_status')
@@ -66,6 +62,9 @@ export default async function Dashboard() {
   const promLaws      = (r2.data as PromLaw[] | null) ?? []
   const promulgatedCount = r3.count ?? 0
   const respinsCount  = r4.count ?? 0
+  // an outage returns count=null → the stats would read "0 legi urmărite" as if
+  // true; distinguish a failed load from a genuinely empty count
+  const statsError = Boolean(r0.error || r3.error || r4.error)
   const allParties    = r5.data ?? []
   type LowPresence = { politician_id: string; name: string; first_name: string; party_abbr: string; party_color: string; presence_pct: number; chamber_votes: number | null; context_note: string | null; href: string }
   // Split by chamber: a senator and a deputy have different denominators, so
@@ -198,20 +197,26 @@ export default async function Dashboard() {
       </header>
 
       {/* ── Stats row ────────────────────────────────────── */}
-      <section className="grid grid-cols-3 border-t-2 border-sidebar mb-12">
-        {stats.map((s, i) => (
-          <Link
-            key={s.label}
-            href={s.href}
-            className={`py-5 pr-6 hover:bg-raised/60 transition-colors ${i > 0 ? 'border-l border-rim pl-4 sm:pl-6' : ''}`}
-          >
-            <div className="text-[36px] font-bold tabular-nums tracking-[-0.02em] leading-none" style={{ color: s.color }}>
-              {s.value}
-            </div>
-            <div className="text-[12px] text-muted mt-2 font-medium">{s.label}</div>
-          </Link>
-        ))}
-      </section>
+      {statsError ? (
+        <section className="border-t-2 border-sidebar mb-12 py-5">
+          <p className="text-[13px] text-muted">Datele nu au putut fi încărcate. Reîncearcă în câteva momente.</p>
+        </section>
+      ) : (
+        <section className="grid grid-cols-3 border-t-2 border-sidebar mb-12">
+          {stats.map((s, i) => (
+            <Link
+              key={s.label}
+              href={s.href}
+              className={`py-5 pr-6 hover:bg-raised/60 transition-colors ${i > 0 ? 'border-l border-rim pl-4 sm:pl-6' : ''}`}
+            >
+              <div className="text-[36px] font-bold tabular-nums tracking-[-0.02em] leading-none" style={{ color: s.color }}>
+                {s.value}
+              </div>
+              <div className="text-[12px] text-muted mt-2 font-medium">{s.label}</div>
+            </Link>
+          ))}
+        </section>
+      )}
 
       {/* ── Vote list + cohesion sidebar ─────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-x-12 gap-y-10 items-start">
@@ -244,9 +249,7 @@ export default async function Dashboard() {
               </p>
               <div className="space-y-2">
                 {tacitBills.map(b => {
-                  const days = b.tacit_deadline
-                    ? Math.ceil((new Date(b.tacit_deadline + 'T23:59:59+03:00').getTime() - Date.now()) / 86_400_000)
-                    : null
+                  const days = b.tacit_deadline ? daysLeft(b.tacit_deadline) : null
                   return (
                     <Link
                       key={b.id}
@@ -290,7 +293,7 @@ export default async function Dashboard() {
               </Link>
             ))}
           </div>
-          <Link href="/legi?status=promulgat" className="inline-block mt-5 text-[13px] text-muted hover:text-foreground transition-colors">
+          <Link href="/legi?tab=promulgate" className="inline-block mt-5 text-[13px] text-muted hover:text-foreground transition-colors">
             Toate legile →
           </Link>
 

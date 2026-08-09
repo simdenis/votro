@@ -1,10 +1,13 @@
 import { notFound } from 'next/navigation'
+import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
 import { VoteCard } from '@/components/cards/vote-card'
 import { mapVoteToCard } from '@/lib/votecard'
 import { activeSeats, activeSeatsByParty } from '@/lib/seats'
 
 export const dynamic = 'force-dynamic'
+// IG-card preview, not a content page — keep it out of the index
+export const metadata: Metadata = { robots: { index: false } }
 
 // On-screen preview of the 1080×1080 Instagram card (scaled down).
 // The PNG export lives at /api/og/votecard?vote=<id>.

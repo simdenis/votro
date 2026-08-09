@@ -22,6 +22,7 @@ function FilterInner({ categories }: { categories: string[] }) {
     <div className="flex flex-wrap gap-3 items-center">
       <select
         className={baseInput}
+        aria-label="Filtrează după rezultat"
         value={params.get('outcome') ?? ''}
         onChange={e => update('outcome', e.target.value)}
       >
@@ -33,6 +34,7 @@ function FilterInner({ categories }: { categories: string[] }) {
       {categories.length > 0 && (
         <select
           className={baseInput}
+          aria-label="Filtrează după categorie"
           value={params.get('category') ?? ''}
           onChange={e => update('category', e.target.value)}
         >
@@ -46,6 +48,7 @@ function FilterInner({ categories }: { categories: string[] }) {
       <input
         type="date"
         className={baseInput}
+        aria-label="De la data"
         value={params.get('from') ?? ''}
         onChange={e => update('from', e.target.value)}
       />
@@ -53,6 +56,7 @@ function FilterInner({ categories }: { categories: string[] }) {
       <input
         type="date"
         className={baseInput}
+        aria-label="Până la data"
         value={params.get('to') ?? ''}
         onChange={e => update('to', e.target.value)}
       />

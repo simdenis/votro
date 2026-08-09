@@ -74,6 +74,7 @@ export function AbsenceTop({ senators, deputies }: { senators: Item[]; deputies:
                 <span
                   className="flex-shrink-0"
                   onClick={e => { e.preventDefault(); e.stopPropagation() }}
+                  onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation() } }}
                   aria-label="Există o notă de context pentru absențe"
                 >
                   <InfoHint title="Context absențe" tip={s.context_note} />

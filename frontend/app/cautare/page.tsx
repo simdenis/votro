@@ -91,6 +91,7 @@ export default async function SearchPage({
           <input
             name="q"
             defaultValue={q}
+            aria-label="Caută parlamentar sau lege"
             placeholder="Caută parlamentar sau lege…"
             autoFocus
             className="flex-1 bg-surface border border-rim rounded-lg px-4 py-2.5 text-sm text-foreground placeholder:text-faint focus:outline-none focus:border-foreground/40 transition-colors"

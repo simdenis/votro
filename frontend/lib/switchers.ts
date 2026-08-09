@@ -21,6 +21,20 @@ function norm(abbr: string): string {
   return abbr === 'P' ? 'IND' : abbr
 }
 
+// PostgREST caps every response at 1000 rows; the vote-level history is well
+// past that, and an unpaged read truncates the newest segments — misclassifying
+// switchers by their latest party.
+const PAGE = 1000
+async function allRows<T>(build: (lo: number, hi: number) => PromiseLike<{ data: unknown }>): Promise<T[]> {
+  const out: T[] = []
+  for (let lo = 0; ; lo += PAGE) {
+    const { data } = await build(lo, lo + PAGE - 1)
+    const rows = (data ?? []) as T[]
+    out.push(...rows)
+    if (rows.length < PAGE) return out
+  }
+}
+
 /** Genuine party switchers.
  *
  * The per-vote party history is noisy in two ways:
@@ -37,12 +51,12 @@ function norm(abbr: string): string {
  * genuine, roster-confirmed switches. */
 export async function getSwitchers(): Promise<Switcher[]> {
   const db = getDB()
-  const { data } = await db
-    .from('politician_party_history')
-    .select('politician_id, from_date, to_date, parties(abbreviation, color), politicians!inner(name, first_name, chamber, active, parties(abbreviation))')
-    .order('from_date', { ascending: true })
-
-  const rows = (data ?? []) as any[]
+  const rows = await allRows<any>((lo, hi) =>
+    db
+      .from('politician_party_history')
+      .select('politician_id, from_date, to_date, parties(abbreviation, color), politicians!inner(name, first_name, chamber, active, parties(abbreviation))')
+      .order('from_date', { ascending: true })
+      .range(lo, hi))
   const byPol = new Map<string, { s: Switcher; currentParty: string }>()
   for (const r of rows) {
     const pol = r.politicians

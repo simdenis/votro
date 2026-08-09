@@ -14,7 +14,11 @@ export function MiniVoteBar({ forCount, againstCount, abstentionCount }: Props) 
   const pct = (n: number) => `${((n / total) * 100).toFixed(1)}%`
 
   return (
-    <div className="flex h-2 w-24 rounded-full overflow-hidden">
+    <div
+      className="flex h-2 w-24 rounded-full overflow-hidden"
+      role="img"
+      aria-label={`${f} pentru, ${a} împotrivă, ${b} abțineri`}
+    >
       {f > 0 && <div className="bg-adoptat" style={{ width: pct(f) }} />}
       {a > 0 && <div className="bg-respins" style={{ width: pct(a) }} />}
       {b > 0 && <div className="bg-abstention" style={{ width: pct(b) }} />}

@@ -47,6 +47,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${base}/fosti`, changeFrequency: 'weekly', priority: 0.5 },
     { url: `${base}/despre`, changeFrequency: 'monthly', priority: 0.4 },
     { url: `${base}/contribuie`, changeFrequency: 'monthly', priority: 0.3 },
+    { url: `${base}/confidentialitate`, changeFrequency: 'monthly', priority: 0.2 },
   ]
 
   const voteUrls: MetadataRoute.Sitemap = votes.map(v => ({

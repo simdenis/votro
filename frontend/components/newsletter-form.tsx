@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 
-/** Newsletter signup — posts to /api/newsletter (Resend audience). */
+/** Newsletter signup — posts to /api/newsletter (double opt-in; confirm via email). */
 export function NewsletterForm({ compact = false }: { compact?: boolean }) {
   const [email, setEmail] = useState('')
   const [state, setState] = useState<'idle' | 'busy' | 'done' | 'error'>('idle')
@@ -34,7 +34,7 @@ export function NewsletterForm({ compact = false }: { compact?: boolean }) {
   if (state === 'done') {
     return (
       <p className={`${compact ? 'text-[12.5px]' : 'text-sm'} text-adoptat font-medium`}>
-        Te-ai abonat. Primul număr ajunge sâmbătă.
+        Ți-am trimis un email de confirmare. Deschide-l ca să te abonezi.
       </p>
     )
   }
@@ -47,6 +47,7 @@ export function NewsletterForm({ compact = false }: { compact?: boolean }) {
           required
           value={email}
           onChange={e => setEmail(e.target.value)}
+          aria-label="Adresa ta de email"
           placeholder="emailul tău"
           className={`flex-1 min-w-0 bg-surface border border-rim rounded-lg px-3 ${compact ? 'py-1.5 text-[12.5px]' : 'py-2 text-sm'} text-foreground placeholder:text-faint focus:outline-none focus:border-foreground/40 transition-colors`}
         />

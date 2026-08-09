@@ -47,6 +47,7 @@ export function FollowButton({ targetType, targetId, what }: {
     <form onSubmit={submit} className="flex items-center gap-2 flex-wrap">
       <input
         type="email" required value={email} onChange={e => setEmail(e.target.value)}
+        aria-label="Adresa ta de email"
         autoFocus placeholder="emailul tău"
         className="text-[13px] bg-surface border border-rim rounded-md px-3 py-1.5 w-52"
       />

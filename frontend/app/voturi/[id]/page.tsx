@@ -66,7 +66,7 @@ export default async function VoteDetail({
     getVote(id),
     db
       .from('politician_votes')
-      .select('id, politician_id, vote_choice, party_line_deviation, politicians!inner(first_name, name, parties!inner(abbreviation, color))')
+      .select('id, politician_id, vote_choice, party_line_deviation, politicians!inner(first_name, name, parties(abbreviation, color))')
       .eq('vote_id', id)
       .order('vote_choice'),
     db.from('party_vote_breakdown').select('*').eq('vote_id', id),
@@ -83,7 +83,7 @@ export default async function VoteDetail({
   // out absentees, so fall back to the nominal seat totals.
   const { data: rosterData } = await db
     .from('politicians')
-    .select('id, name, first_name, parties!inner(abbreviation, color)')
+    .select('id, name, first_name, parties(abbreviation, color)')
     .eq('chamber', vote.chamber)
     .eq('active', true)
   const roster = (rosterData ?? []) as any[]
@@ -127,16 +127,22 @@ export default async function VoteDetail({
   const memberNoun    = (n: number) =>
     isDep ? countNoun(n, 'deputat', 'deputați') : countNoun(n, 'senator', 'senatori')
 
+  // party_id is nullable, so parties comes back null for party-less MPs (left
+  // join); keep them in the roster/breakdown under a fallback bucket.
+  const FALLBACK_PARTY = { abbreviation: 'fără partid', color: '#9e9e9e' }
+  const partyOf = (pol: { parties: { abbreviation: string; color: string } | null }) =>
+    pol.parties ?? FALLBACK_PARTY
+
   const person = (sv: PoliticianVoteWithDetails): HoverPerson => ({
     name: `${sv.politicians.first_name} ${sv.politicians.name}`.trim(),
-    color: sv.politicians.parties.color,
-    party: sv.politicians.parties.abbreviation,
+    color: partyOf(sv.politicians).color,
+    party: partyOf(sv.politicians).abbreviation,
   })
   const deviatorPeople = senatorVotes?.filter(sv => sv.party_line_deviation).map(person) ?? []
   // party -> vote_choice -> people, for hoverable numbers in the breakdown
   const voters: Record<string, Record<string, HoverPerson[]>> = {}
   for (const sv of senatorVotes ?? []) {
-    const party = sv.politicians.parties.abbreviation
+    const party = partyOf(sv.politicians).abbreviation
     ;((voters[party] ??= {})[sv.vote_choice] ??= []).push(person(sv))
   }
 
@@ -147,8 +153,8 @@ export default async function VoteDetail({
   if (!jointSession && individualVotes.length > 0) {
     const acc = new Map<string, { color: string; ch: Record<string, number> }>()
     for (const sv of individualVotes) {
-      const abbr = sv.politicians.parties.abbreviation
-      const e = acc.get(abbr) ?? acc.set(abbr, { color: sv.politicians.parties.color, ch: {} }).get(abbr)!
+      const abbr = partyOf(sv.politicians).abbreviation
+      const e = acc.get(abbr) ?? acc.set(abbr, { color: partyOf(sv.politicians).color, ch: {} }).get(abbr)!
       e.ch[sv.vote_choice] = (e.ch[sv.vote_choice] ?? 0) + 1
     }
     breakdownRows = [...acc].flatMap(([abbr, { color, ch }]) =>
@@ -348,8 +354,8 @@ export default async function VoteDetail({
                     </span>
                     {/* noLink: this badge sits inside the row <Link>; nested <a> breaks hydration */}
                     <PartyBadge
-                      abbreviation={sv.politicians.parties.abbreviation}
-                      color={sv.politicians.parties.color}
+                      abbreviation={partyOf(sv.politicians).abbreviation}
+                      color={partyOf(sv.politicians).color}
                       noLink
                     />
                     <span

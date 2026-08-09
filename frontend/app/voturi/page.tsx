@@ -67,7 +67,9 @@ export default async function VotesPage({
 
       <VoteFilter categories={categories} />
 
-      {!votes?.length ? (
+      {votesRes.error ? (
+        <p className="text-sm text-muted py-8">Datele nu au putut fi încărcate. Reîncearcă în câteva momente.</p>
+      ) : !votes?.length ? (
         <p className="text-sm text-muted py-8">Nu există voturi pentru filtrele selectate.</p>
       ) : (
         <div className="overflow-x-auto">

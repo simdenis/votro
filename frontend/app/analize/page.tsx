@@ -22,10 +22,25 @@ type ClosestRow = {
   law_code: string | null; law_title: string | null
 }
 
+// PostgREST hard-caps every response at 1000 rows; party_agreement_monthly is
+// pairs × months and grows past that over a legislature, silently dropping cells.
+const PAGE = 1000
+async function allRows<T>(build: (lo: number, hi: number) => PromiseLike<{ data: unknown }>): Promise<T[]> {
+  const out: T[] = []
+  for (let lo = 0; ; lo += PAGE) {
+    const { data } = await build(lo, lo + PAGE - 1)
+    const rows = (data ?? []) as T[]
+    out.push(...rows)
+    if (rows.length < PAGE) return out
+  }
+}
+
 export default async function AnalizePage() {
   const db = getDB()
-  const [bucketRes, attendRes, closestRes, partiesRes, contestedRes] = await Promise.all([
-    db.from('party_agreement_monthly').select('party_a, party_b, month, shared, agreed'),
+  const [buckets, attendRes, closestRes, partiesRes, contestedRes] = await Promise.all([
+    allRows<AgreementBucket>((lo, hi) =>
+      db.from('party_agreement_monthly').select('party_a, party_b, month, shared, agreed')
+        .order('month').order('party_a').order('party_b').range(lo, hi)),
     db.from('monthly_attendance').select('month, chamber, attendance_pct'),
     // over-fetch: we keep only votes whose law has a plain-language summary
     db.from('closest_votes').select('*').order('margin', { ascending: true }).limit(60),
@@ -45,7 +60,6 @@ export default async function AnalizePage() {
   }
 
   // ── 1. Agreement matrix ────────────────────────────────────────────────
-  const buckets = (bucketRes.data ?? []) as AgreementBucket[]
   // only parties that actually appear in contested-vote data (drops e.g. PACE,
   // which currently has no members mapped to it)
   const present = new Set<string>()

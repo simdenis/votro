@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 }
 
 export default async function TacitePage() {
-  const { data } = await getDB()
+  const { data, error } = await getDB()
     .from('pending_bills')
     .select('*')
     .order('tacit_deadline', { ascending: true })
@@ -57,7 +57,11 @@ export default async function TacitePage() {
         <NewsletterForm compact />
       </div>
 
-      {!bills.length ? (
+      {error ? (
+        <p className="text-sm text-muted py-8">
+          Datele nu au putut fi încărcate. Reîncearcă în câteva momente.
+        </p>
+      ) : !bills.length ? (
         <p className="text-sm text-muted py-8">
           Niciun proiect cu termen constituțional în curs — lista se actualizează zilnic.
         </p>

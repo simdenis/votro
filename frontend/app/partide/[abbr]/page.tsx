@@ -19,10 +19,12 @@ export async function generateMetadata({ params }: { params: Promise<{ abbr: str
   const desc = hasPartyLine(data.abbreviation)
     ? `Coeziune internă ${data.cohesion_pct != null ? `${data.cohesion_pct.toFixed(1)}%` : '—'}. Vezi cum au votat senatorii și deputații ${data.abbreviation}.`
     : `Vezi cum au votat parlamentarii din grupul ${data.name}.`
+  const title = `${data.abbreviation} — Coeziune și voturi`
   return {
-    title: `${data.abbreviation} — Coeziune și voturi`,
+    title,
     description: desc,
-    openGraph: { description: desc },
+    alternates: { canonical: `/partide/${data.abbreviation}` },
+    openGraph: { title, description: desc },
   }
 }
 

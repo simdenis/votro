@@ -1,9 +1,11 @@
-import { countNoun } from '@/lib/utils'
+import { countNoun, todayRo } from '@/lib/utils'
 
-/** Days until a tacit-adoption deadline expires (end of day, Romania time). */
+/** Whole days until a tacit-adoption deadline, by calendar date in Romania's
+ *  timezone — a fixed +03:00 offset flips a day early in winter (RO is +02:00),
+ *  so compare RO calendar dates instead of doing epoch math. */
 export function daysLeft(deadline: string): number {
-  const ms = new Date(deadline + 'T23:59:59+03:00').getTime() - Date.now()
-  return Math.ceil(ms / 86_400_000)
+  const ms = Date.parse(deadline.slice(0, 10) + 'T00:00:00Z') - Date.parse(todayRo() + 'T00:00:00Z')
+  return Math.round(ms / 86_400_000)
 }
 
 export function DeadlineBadge({ deadline, size = 'sm' }: { deadline: string; size?: 'sm' | 'lg' }) {

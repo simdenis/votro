@@ -88,16 +88,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="preconnect" href="https://zmxewrkykbxawfhzxbni.supabase.co" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(SITE_LD) }} />
-        {/* Cloudflare Web Analytics — cookieless, so no consent banner needed.
-            Activates only once NEXT_PUBLIC_CF_BEACON_TOKEN is set (dashboard →
-            Analytics → Web Analytics → add site → copy the token). */}
-        {process.env.NEXT_PUBLIC_CF_BEACON_TOKEN && (
-          <script
-            defer
-            src="https://static.cloudflareinsights.com/beacon.min.js"
-            data-cf-beacon={`{"token": "${process.env.NEXT_PUBLIC_CF_BEACON_TOKEN}"}`}
-          />
-        )}
       </head>
       <body className="flex flex-col min-h-screen">
         <Nav />
