@@ -123,18 +123,16 @@ export default function DesprePage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-sm font-semibold uppercase tracking-widest text-muted">Scorul de „Interes"</h2>
+        <h2 className="text-sm font-semibold uppercase tracking-widest text-muted">Cum alegem ce evidențiem</h2>
         <p className="text-foreground leading-relaxed">
-          Pe pagina principală poți sorta voturile după <strong className="text-foreground">Interes</strong> —
-          un scor de la 1 la 100 <strong>generat automat (AI, model Gemini)</strong> din titlul și
-          rezumatul legii. Estimează cât de mult ar interesa legea un cetățean obișnuit (nu un jurist
-          sau funcționar).
+          Nu putem citi manual fiecare proiect, așa că <strong className="text-foreground">intern</strong> folosim
+          un scor automat (AI) care estimează cât de mult ar interesa o lege un cetățean obișnuit. Ne ajută
+          doar să decidem ce merită scos în față în newsletter și pe Instagram.
         </p>
         <p className="text-sm text-muted leading-relaxed">
-          Factorii luați în calcul: impactul direct asupra vieții de zi cu zi (bani, taxe, pensii,
-          salarii, sănătate, școală, prețuri, amenzi, drepturi) și cât de discutat e subiectul în
-          spațiul public. Legile tehnice sau de rutină (ratificări, reorganizări administrative)
-          primesc scoruri mici. E un ajutor editorial, nu un verdict asupra importanței juridice a legii.
+          Acest scor <strong>nu apare pe site</strong>, nu ordonează datele publice și nu influențează în
+          niciun fel cifrele de vot, prezența sau clasamentele afișate. Datele publice rămân neutre și
+          neordonate editorial — scorul e strict un ajutor de redacție pentru ce anume comunicăm mai departe.
         </p>
       </section>
 
