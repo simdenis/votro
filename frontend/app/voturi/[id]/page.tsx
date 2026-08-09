@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
+import { partyOf } from '@/lib/party'
 import { formatDate, choiceLabel, choiceColor, countNoun, capFirst, lawSlug , personSlug, CHAMBER_SEATS } from '@/lib/utils'
 import { OutcomeBadge } from '@/components/outcome-badge'
 import { PartyBadge } from '@/components/party-badge'
@@ -126,12 +127,6 @@ export default async function VoteDetail({
   const memberPath    = isDep ? '/deputati' : '/senatori'
   const memberNoun    = (n: number) =>
     isDep ? countNoun(n, 'deputat', 'deputați') : countNoun(n, 'senator', 'senatori')
-
-  // party_id is nullable, so parties comes back null for party-less MPs (left
-  // join); keep them in the roster/breakdown under a fallback bucket.
-  const FALLBACK_PARTY = { abbreviation: 'fără partid', color: '#9e9e9e' }
-  const partyOf = (pol: { parties: { abbreviation: string; color: string } | null }) =>
-    pol.parties ?? FALLBACK_PARTY
 
   const person = (sv: PoliticianVoteWithDetails): HoverPerson => ({
     name: `${sv.politicians.first_name} ${sv.politicians.name}`.trim(),

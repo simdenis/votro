@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
+import { allRows } from '@/lib/paging'
 import { formatDate, capFirst, hasPartyLine, plainSummary } from '@/lib/utils'
 import { AgreementMatrix, type MatrixParty, type AgreementBucket } from '@/components/charts/agreement-matrix'
 import { AttendanceTrend, type TrendSeries } from '@/components/charts/attendance-trend'
@@ -22,18 +23,8 @@ type ClosestRow = {
   law_code: string | null; law_title: string | null
 }
 
-// PostgREST hard-caps every response at 1000 rows; party_agreement_monthly is
-// pairs × months and grows past that over a legislature, silently dropping cells.
-const PAGE = 1000
-async function allRows<T>(build: (lo: number, hi: number) => PromiseLike<{ data: unknown }>): Promise<T[]> {
-  const out: T[] = []
-  for (let lo = 0; ; lo += PAGE) {
-    const { data } = await build(lo, lo + PAGE - 1)
-    const rows = (data ?? []) as T[]
-    out.push(...rows)
-    if (rows.length < PAGE) return out
-  }
-}
+// party_agreement_monthly is pairs × months and grows past PostgREST's 1000-row
+// cap over a legislature, silently dropping cells — so it's read via allRows.
 
 export default async function AnalizePage() {
   const db = getDB()

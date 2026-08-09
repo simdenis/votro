@@ -1,4 +1,5 @@
 import { getDB } from '@/lib/supabase'
+import { allRows } from '@/lib/paging'
 import type { PartyHistoryEntry } from '@/lib/types'
 
 export interface Switcher {
@@ -21,19 +22,9 @@ function norm(abbr: string): string {
   return abbr === 'P' ? 'IND' : abbr
 }
 
-// PostgREST caps every response at 1000 rows; the vote-level history is well
-// past that, and an unpaged read truncates the newest segments — misclassifying
-// switchers by their latest party.
-const PAGE = 1000
-async function allRows<T>(build: (lo: number, hi: number) => PromiseLike<{ data: unknown }>): Promise<T[]> {
-  const out: T[] = []
-  for (let lo = 0; ; lo += PAGE) {
-    const { data } = await build(lo, lo + PAGE - 1)
-    const rows = (data ?? []) as T[]
-    out.push(...rows)
-    if (rows.length < PAGE) return out
-  }
-}
+// The vote-level party history runs well past PostgREST's 1000-row cap, and an
+// unpaged read truncates the newest segments — misclassifying switchers by their
+// latest party. allRows pages the whole table (see lib/paging).
 
 /** Genuine party switchers.
  *
