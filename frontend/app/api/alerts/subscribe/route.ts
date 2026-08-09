@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { isUuid } from '@/lib/utils'
 
 // POST { email, targetType: 'law'|'politician', targetId } → create a pending
 // subscription (via the subscribe_alert RPC, anon-callable) and email a
@@ -28,17 +29,28 @@ export async function POST(req: Request) {
   if (typeof email !== 'string' || !EMAIL_RE.test(email.trim()) || email.length > 254) {
     return NextResponse.json({ error: 'Adresă de email invalidă.' }, { status: 400 })
   }
-  if ((targetType !== 'law' && targetType !== 'politician') || typeof targetId !== 'string') {
+  if ((targetType !== 'law' && targetType !== 'politician') || typeof targetId !== 'string' || !isUuid(targetId)) {
     return NextResponse.json({ error: 'țintă invalidă' }, { status: 400 })
   }
 
-  // create/upsert the pending subscription → token
-  const rpc = await fetch(`${U}/rest/v1/rpc/subscribe_alert`, {
-    method: 'POST', headers: SB,
-    body: JSON.stringify({ p_email: email.trim(), p_type: targetType, p_id: targetId }),
-  })
-  if (!rpc.ok) return NextResponse.json({ error: 'Nu am putut salva abonarea.' }, { status: 502 })
-  const token = await rpc.json() as string
+  // create/upsert the pending subscription → {status, token}. The RPC enforces
+  // the rate limit (no repeat within 10 min, ≤5/hour per address); a "throttled"
+  // status means we must NOT send another confirmation email.
+  let result: { status?: string; token?: string }
+  try {
+    const rpc = await fetch(`${U}/rest/v1/rpc/subscribe_alert`, {
+      method: 'POST', headers: SB,
+      body: JSON.stringify({ p_email: email.trim(), p_type: targetType, p_id: targetId }),
+    })
+    if (!rpc.ok) return NextResponse.json({ error: 'Nu am putut salva abonarea.' }, { status: 502 })
+    result = await rpc.json()
+  } catch {
+    return NextResponse.json({ error: 'Nu am putut salva abonarea.' }, { status: 502 })
+  }
+  if (result?.status !== 'ok' || !result.token) {
+    return NextResponse.json({ ok: true })
+  }
+  const token = result.token
 
   const key = process.env.RESEND_API_KEY
   if (key) {

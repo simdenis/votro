@@ -1,4 +1,4 @@
-import { proxy, proxyAll, json, cleanCode, cleanDate, cleanChamber, nominalVoteRows, toCsv, wantsCsv, CSV_BOM } from '@/lib/api-v1'
+import { proxy, proxyAll, json, cleanCode, cleanDate, cleanChamber, nominalVoteRows, toCsv, wantsCsv, truthyParam, rejectUnknownParams, CSV_BOM } from '@/lib/api-v1'
 import { todayRo } from '@/lib/utils'
 
 // GET /api/v1/votes
@@ -7,6 +7,8 @@ import { todayRo } from '@/lib/utils'
 //   ?from=YYYY-MM-DD&to=…&camera=senat|camera   → votes in a period
 // Add ?format=csv (or Accept: text/csv) for CSV. Cached at the edge.
 export async function GET(req: Request) {
+  const bad = rejectUnknownParams(req, ['code', 'nominal', 'from', 'to', 'camera', 'chamber', 'format'])
+  if (bad) return bad
   const p = new URL(req.url).searchParams
   const code = cleanCode(p.get('code'))
 
@@ -14,7 +16,7 @@ export async function GET(req: Request) {
     if (!code) return json({ error: 'Cod de lege invalid.' }, 400)
     const slug = code.replace(/[^\w]+/g, '-')
 
-    if (p.get('nominal')) {
+    if (truthyParam(p.get('nominal'))) {
       let rows: Record<string, unknown>[]
       try {
         rows = await nominalVoteRows(code)
@@ -50,6 +52,13 @@ export async function GET(req: Request) {
   const to = cleanDate(p.get('to')) ?? today
   if (from > to) {
     return json({ error: 'Intervalul e inversat: „from" trebuie să fie ≤ „to".' }, 400)
+  }
+  // Bound the window so a single request can't force an arbitrarily large dump —
+  // the /api/v1/export endpoint exists for the full dataset.
+  const MAX_WINDOW_DAYS = 366
+  const spanDays = (Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86_400_000
+  if (spanDays > MAX_WINDOW_DAYS) {
+    return json({ error: `Intervalul e prea mare (max ${MAX_WINDOW_DAYS} de zile). Pentru tot setul, folosește /api/v1/export/voturi.` }, 400)
   }
   const chamber = cleanChamber(p.get('camera') ?? p.get('chamber'))
   const filters = [`vote_date=gte.${from}`, `vote_date=lte.${to}`]

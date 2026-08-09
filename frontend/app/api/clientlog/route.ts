@@ -6,6 +6,8 @@ import { NextRequest } from 'next/server'
 // throw — a broken logger must not itself error. Not a substitute for Sentry,
 // just enough to *notice* breakage after launch.
 export async function POST(req: NextRequest) {
+  const len = Number(req.headers.get('content-length') ?? 0)
+  if (len > 10_240) return new Response(null, { status: 413 })
   try {
     const b = (await req.json().catch(() => ({}))) as Record<string, unknown>
     const clip = (v: unknown, n: number) => String(v ?? '').slice(0, n)

@@ -1,10 +1,10 @@
-import { proxyAll, json } from '@/lib/api-v1'
+import { proxyAll, json, rejectUnknownParams } from '@/lib/api-v1'
 
 // GET /api/v1/export/<dataset>[?format=csv]
 // Full-dataset bulk dump — the "download the whole thing" file. Cached hard at
-// the edge (24h, week-long stale-while-revalidate) and refreshed nightly by the
-// cron in vercel.json, so it behaves like a static file on a CDN rather than a
-// live DB query. JSON by default, CSV with ?format=csv.
+// the edge (24h, week-long stale-while-revalidate) and warmed nightly by the
+// VPS curl to /api/v1/refresh, so it behaves like a static file on a CDN rather
+// than a live DB query. JSON by default, CSV with ?format=csv.
 const DATASETS: Record<string, { path: string; label: string }> = {
   voturi: {
     label: 'voturi',
@@ -24,6 +24,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ dataset:
   if (!spec) {
     return json({ error: 'Set necunoscut.', disponibile: Object.keys(DATASETS) }, 404)
   }
+  const bad = rejectUnknownParams(req, ['format'])
+  if (bad) return bad
   // proxyAll: votes/laws exceed PostgREST's 1000-row cap — a single fetch
   // silently truncated the "full dataset" download.
   return proxyAll(spec.path, req, { maxAge: 86_400, swr: 604_800, filename: `labutoane-${spec.label}` })

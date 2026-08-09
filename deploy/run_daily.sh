@@ -23,6 +23,12 @@ log() { echo "[$(date -u '+%Y-%m-%dT%H:%M:%SZ')] $*" | tee -a "$LOG"; }
 
 cd "$REPO_DIR" || { log "FATAL: repo dir $REPO_DIR missing"; exit 1; }
 
+# CRON_SECRET lives in .env (single source of secrets), but this script never
+# sources .env — it holds values with spaces and redirection chars that break
+# `source`. Pull out just this one key for the cache-warm curl below.
+CRON_SECRET="$(sed -n 's/^CRON_SECRET=//p' "$REPO_DIR/.env" 2>/dev/null | head -1)"
+export CRON_SECRET
+
 # One run at a time. The fast timer fires every 15 min while a full run can take
 # well over an hour; without this they would scrape the same dates concurrently
 # and race on the same rows. Taken BEFORE the heartbeat trap is installed, so a
@@ -211,6 +217,20 @@ fi
 # must not flip the heartbeat.
 log "=== Alerts (followed laws/MPs) ==="
 "$PY" scraper/send_alerts.py >>"$LOG" 2>&1 || log "WARN: alerts send failed"
+
+# Warm the public bulk exports (and run DB housekeeping) through the origin so
+# the CDN serves same-day files without a visitor ever triggering a cold DB
+# dump. The site is on Cloudflare Workers, so there is no platform cron — this
+# is the only thing that calls /api/v1/refresh. CRON_SECRET must match the value
+# set on Cloudflare; without it the endpoint returns 401. Non-fatal: a cache
+# miss is not a data-pipeline failure.
+if [ -n "${CRON_SECRET:-}" ]; then
+  log "=== Warm public API cache (/api/v1/refresh) ==="
+  curl -fsS --max-time 120 -H "x-cron-secret: $CRON_SECRET" \
+    "https://la-butoane.ro/api/v1/refresh" >>"$LOG" 2>&1 || log "WARN: cache warm failed"
+else
+  log "=== Skipping cache warm — CRON_SECRET unset ==="
+fi
 
 log "=== Done (rc=$rc) ==="
 exit $rc  # trap fires heartbeat here (and on any earlier exit/crash)

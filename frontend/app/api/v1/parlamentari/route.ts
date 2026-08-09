@@ -1,4 +1,4 @@
-import { json, cleanName, cleanChamber, politicianVoteRows, toCsv, wantsCsv, sbJson, withTrueAbsent, rowsResponse, CSV_BOM } from '@/lib/api-v1'
+import { json, cleanName, cleanChamber, politicianVoteRows, toCsv, wantsCsv, truthyParam, sbJson, withTrueAbsent, rowsResponse, CSV_BOM } from '@/lib/api-v1'
 import { isUuid } from '@/lib/utils'
 
 // GET /api/v1/parlamentari?camera=camera|senat[&nume=Ponta]
@@ -13,7 +13,7 @@ export async function GET(req: Request) {
   const name = cleanName(p.get('nume') ?? p.get('name'))
 
   // ── full voting record for one MP ──────────────────────────────────────────
-  if (p.get('voturi')) {
+  if (truthyParam(p.get('voturi'))) {
     const idParam = p.get('id')
     let pid = isUuid(idParam) ? idParam : null
     if (!pid) {

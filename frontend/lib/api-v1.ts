@@ -1,3 +1,5 @@
+import { timingSafeEqual } from 'node:crypto'
+
 // Shared plumbing for the public /api/v1/* endpoints.
 //
 // Why this exists: "Ia datele" used to hand visitors a curl line straight to
@@ -38,6 +40,22 @@ export function cleanName(v: string | null): string | null {
   if (!v) return null
   const t = v.trim().replace(/[^\p{L}\s\-]/gu, '').slice(0, 40).trim()
   return t || null
+}
+
+/** A boolean query param is true only for an explicit 1/true/yes/on — so
+ *  ?nominal=0 and ?voturi=false read as false, not "any non-empty value". */
+export function truthyParam(v: string | null): boolean {
+  return v != null && ['1', 'true', 'yes', 'on'].includes(v.trim().toLowerCase())
+}
+
+/** Reject any query param outside the canonical set. An unknown param (?x=123)
+ *  is a distinct CDN cache key, so it bypasses the warm cache and forces a cold
+ *  full dump every time — cheap DoS. Returns a 400 Response, or null if clean. */
+export function rejectUnknownParams(req: Request, allowed: readonly string[]): Response | null {
+  for (const k of new URL(req.url).searchParams.keys()) {
+    if (!allowed.includes(k)) return json({ error: `Parametru necunoscut: „${k}".`, acceptati: allowed }, 400)
+  }
+  return null
 }
 
 // ── response helper ──────────────────────────────────────────────────────────
@@ -91,6 +109,33 @@ function localizeCsvHeader(csv: string): string {
   return header + csv.slice(nl)
 }
 
+// Spreadsheet formula-injection defense for CSV that comes straight from
+// PostgREST (scraped law titles/descriptions could carry a =/+/-/@ payload that
+// Excel/Sheets executes). Re-parse the CSV (RFC-4180, quote-aware) and prefix
+// any field starting with = + - @ with a single quote so it's read as text.
+function neutralizeCsv(csv: string): string {
+  if (!csv) return csv
+  const rows: string[][] = []
+  let row: string[] = [], field = '', inQuotes = false, started = false
+  for (let i = 0; i < csv.length; i++) {
+    const c = csv[i]
+    if (inQuotes) {
+      if (c === '"') { if (csv[i + 1] === '"') { field += '"'; i++ } else inQuotes = false }
+      else field += c
+    } else if (c === '"') { inQuotes = true; started = true }
+    else if (c === ',') { row.push(field); field = ''; started = true }
+    else if (c === '\n') { row.push(field); rows.push(row); row = []; field = ''; started = false }
+    else if (c === '\r') { /* CRLF → handled by the \n branch */ }
+    else { field += c; started = true }
+  }
+  if (started || field !== '' || row.length) { row.push(field); rows.push(row) }
+  const cell = (s: string) => {
+    if (/^[=+\-@]/.test(s)) s = `'${s}`
+    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
+  }
+  return rows.map(r => r.map(cell).join(',')).join('\n')
+}
+
 interface ProxyOpts { maxAge?: number; swr?: number; filename?: string }
 
 /** PostgREST fetch with one retry. A cold Worker or a momentary upstream blip
@@ -137,7 +182,7 @@ export async function proxy(path: string, req: Request, opts: ProxyOpts = {}): P
   if (!upstream.ok) {
     return json({ error: 'Interogare invalidă.' }, upstream.status === 400 ? 400 : 502)
   }
-  if (csv) body = CSV_BOM + localizeCsvHeader(body)
+  if (csv) body = CSV_BOM + localizeCsvHeader(neutralizeCsv(body))
   const headers: Record<string, string> = {
     'Content-Type': csv ? 'text/csv; charset=utf-8' : 'application/json; charset=utf-8',
     'Cache-Control': `public, s-maxage=${maxAge}, stale-while-revalidate=${swr}`,
@@ -188,7 +233,7 @@ export async function proxyAll(path: string, req: Request, opts: ProxyOpts = {})
     return json({ error: 'Sursa de date e indisponibilă momentan.' }, 502)
   }
   const body = csv
-    ? CSV_BOM + localizeCsvHeader(csvParts.join('\n'))
+    ? CSV_BOM + localizeCsvHeader(neutralizeCsv(csvParts.join('\n')))
     : JSON.stringify(jsonRows)
   const headers: Record<string, string> = {
     'Content-Type': csv ? 'text/csv; charset=utf-8' : 'application/json; charset=utf-8',
@@ -212,7 +257,10 @@ export function toCsv(rows: Record<string, unknown>[]): string {
   if (!rows.length) return ''
   const cols = Object.keys(rows[0])
   const cell = (v: unknown) => {
-    const s = v == null ? '' : String(v)
+    let s = v == null ? '' : String(v)
+    // Neutralize spreadsheet formula injection: a cell starting with = + - @
+    // executes in Excel/Sheets. Prefix with ' so it's read as literal text.
+    if (/^[=+\-@]/.test(s)) s = `'${s}`
     return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
   }
   return [cols.join(','), ...rows.map(r => cols.map(c => cell(r[c])).join(','))].join('\n')
@@ -354,6 +402,16 @@ export function rowsResponse(
     csv ? CSV_BOM + localizeCsvHeader(toCsv(rows)) : JSON.stringify(rows),
     { status: 200, headers },
   )
+}
+
+/** Constant-time compare of a request-supplied secret against an env secret.
+ *  Returns false when the env secret is unset (fail closed). */
+export function secretMatches(candidate: string | null | undefined, secret: string | undefined): boolean {
+  if (!secret || !candidate) return false
+  const a = Buffer.from(candidate)
+  const b = Buffer.from(secret)
+  if (a.length !== b.length) return false
+  return timingSafeEqual(a, b)
 }
 
 export function json(obj: unknown, status = 200): Response {

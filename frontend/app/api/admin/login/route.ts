@@ -11,6 +11,10 @@ import { keyMatches, ADMIN_COOKIE, ADMIN_COOKIE_MAX_AGE } from '@/lib/admin-auth
 
 export const dynamic = 'force-dynamic'
 
+// Fixed delay on a bad key, to slow online brute force. The compare itself is
+// already constant-time (keyMatches).
+const failDelay = () => new Promise(r => setTimeout(r, 600))
+
 function setCookie() {
   return {
     name: ADMIN_COOKIE, value: process.env.ADMIN_KEY!,
@@ -22,6 +26,7 @@ export async function POST(req: Request) {
   let key: unknown
   try { ({ key } = await req.json()) } catch { return NextResponse.json({ error: 'body invalid' }, { status: 400 }) }
   if (!keyMatches(typeof key === 'string' ? key : null)) {
+    await failDelay()
     return NextResponse.json({ error: 'cheie greșită' }, { status: 401 })
   }
   ;(await cookies()).set(setCookie())
@@ -30,10 +35,13 @@ export async function POST(req: Request) {
 
 export async function GET(req: Request) {
   const sp = new URL(req.url).searchParams
-  // only ever redirect to a same-origin path — never an absolute/attacker URL
+  // only ever redirect to a same-origin path — never an absolute/attacker URL.
+  // Must start with a single "/" not followed by "/" or "\": WHATWG parsing
+  // treats "\" as "/", so "/\evil.com" and "//evil.com" are both off-origin.
   const nextParam = sp.get('next') || '/admin'
-  const dest = nextParam.startsWith('/') && !nextParam.startsWith('//') ? nextParam : '/admin'
+  const dest = /^\/(?![/\\])/.test(nextParam) ? nextParam : '/admin'
   if (!keyMatches(sp.get('key'))) {
+    await failDelay()
     return NextResponse.redirect(new URL('/admin', req.url))
   }
   ;(await cookies()).set(setCookie())
