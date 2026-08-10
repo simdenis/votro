@@ -1,122 +1,185 @@
 # VotRO — Romanian Parliamentary Vote Tracker
 
-Scrapes Senate plenary vote data from [senat.ro](https://www.senat.ro) and stores it in a Supabase (Postgres) database.
+Tracks how every member of the Romanian Parliament votes, in plain language, and
+makes it searchable, shareable, and downloadable as open data.
 
-## Project layout
+**Live:** [la-butoane.ro](https://la-butoane.ro) · weekly newsletter · Instagram cards
+
+It ingests **nominal plenary votes from both chambers** — the Senate
+([senat.ro](https://www.senat.ro)) and the Chamber of Deputies
+([cdep.ro](https://www.cdep.ro)) — for the current legislature (since December
+2024), links each vote to its bill, follows the bill through to promulgation, and
+surfaces the things official sources make hard to see: how each MP voted,
+party-line deviations, attendance, party switching, and bills that pass *without a
+vote*.
+
+---
+
+## What it surfaces
+
+- **Roll-call record** — how each MP voted on every plenary vote, with the
+  party-line deviation flagged.
+- **Attendance** — presence/absence per MP, with fairness guards on the public
+  rankings (not just a raw "most absent" list).
+- **Party switching (traseism)** — reconstructed from the official membership
+  lists, so a one-sitting mislabel doesn't read as a switch.
+- **Tacit adoption (art. 75)** — bills that become law because a chamber let the
+  constitutional term lapse without voting. Tracked with a live countdown.
+- **A bill's full journey** — chamber outcomes → CCR (constitutional court) →
+  presidential promulgation.
+- **Plain-language summaries** — the official gist of a bill, with the source PDF
+  always one click away.
+
+**Scope & limits (also on [/despre](https://la-butoane.ro/despre)):** nominal
+plenary votes only — not committee votes, not secret electronic ballots. Data is
+as complete and fresh as the official sources publish it (daily, ~24h lag
+possible). An internal AI "interest" score helps decide what to feature in the
+newsletter/Instagram; it is **not shown on the site and does not order or affect
+any public data**.
+
+---
+
+## Architecture
 
 ```
-.
-├── scraper/
-│   ├── senat_scraper.py      # Main scraper
-│   ├── test_single_vote.py   # Sanity-check a single vote URL
-│   └── requirements.txt
-├── supabase/
-│   └── migrations/
-│       └── 001_initial_schema.sql
-├── .env.example
-└── README.md
+  senat.ro ─┐
+  cdep.ro  ─┤   scraper/ (Python, on an EU VPS)          Supabase (Postgres)
+  presidency┤   ├─ scrape both chambers + rosters   ─▶   ├─ votes, politician_votes
+  gov.ro   ─┘   ├─ resolve PLx⇄L registries              ├─ laws, law_status (view)
+                ├─ presidential / CCR / tacit status      ├─ party history, pending_bills
+                ├─ plain-language + AI summaries          └─ analytics materialized views
+                ├─ refresh matviews, validate                     │
+                └─ newsletter · Instagram · alerts                 │ anon read (RLS)
+                                                                   ▼
+                                        frontend/ (Next.js 15 App Router)
+                                        └─ deployed to Cloudflare Workers (OpenNext)
+                                           ├─ public site + /api/v1 open data (CSV/JSON)
+                                           ├─ share/Instagram cards (satori)
+                                           └─ admin behind Cloudflare Access
+```
+
+The daily pipeline runs from an EU VPS because **cdep.ro geo-blocks non-EU IPs**.
+`deploy/run_daily.sh` orchestrates it under systemd timers (a full twice-daily run
+plus a ~40s "votes only" run every 15 min during plenary hours), with a heartbeat
+and a post-run integrity check.
+
+---
+
+## Repository layout
+
+```
+scraper/            Python data pipeline (~35 modules) — see below
+  senat_scraper.py        Senate plenary votes (senat.ro, ASP.NET WebForms)
+  camera_scraper.py       Chamber of Deputies plenary votes (cdep.ro)
+  roster_scraper.py       Active mandates + electoral county, both chambers
+  resolve_plx.py          Map Chamber PLx{n}/{yr} codes to their Senate L codes
+  presidential_scraper.py Promulgation + CCR status for each bill
+  tacit_scraper.py        Bills with a running art. 75 tacit-adoption term
+  initiator_scraper.py    Who proposed each bill
+  gov_scraper.py          Cabinet / government roles
+  rebuild_party_history.py Clean chronological party segments (traseism)
+  categorize_laws.py      Topic category per law
+  law_summarizer.py       Extract the official summary (no AI)
+  gemini_summarizer.py    Plain-language summaries (Gemini)
+  haiku_summarizer.py     Plain-language summaries (Claude Haiku)
+  interest_scorer.py      Internal 1–100 "interest" signal (post-selection only)
+  refresh_matviews.py     Rebuild analytics materialized views
+  newsletter.py           Weekly "Săptămâna în Parlament" digest (Resend)
+  instagram_poster.py     Post generated cards to Instagram
+  send_alerts.py          Email people following a law or an MP
+  validate.py             Post-scrape data-integrity smoke test
+  paging.py               PostgREST 1000-row-cap paging helper
+  ...                     backfills, name utils, heartbeat, test scripts
+frontend/           Next.js 15 app → Cloudflare Workers (OpenNext)
+  app/api/v1/             Public open-data API (votes, laws, parlamentari, export)
+  lib/, components/       Data access, UI, satori share cards
+  test/                   Vitest regression tests
+supabase/migrations/ 57 SQL migrations (schema, views, RLS, RPCs)
+deploy/             run_daily.sh + systemd unit/timer files (VPS)
 ```
 
 ---
 
-## 1. Supabase setup
+## Data model (core tables)
 
-1. Create a project at [supabase.com](https://supabase.com).
-2. Open **SQL Editor** and run `supabase/migrations/001_initial_schema.sql`.
-3. Copy your **Project URL** and **service role key** (Settings → API).
+| Table | What it holds | Dedup key |
+|---|---|---|
+| `laws` | Bills — code, title, category, summary | `code` |
+| `votes` | Plenary votes — chamber, date, totals, outcome | `senat_app_id` / cdep `idv` |
+| `politicians` | MPs — name, party, chamber, mandate, county | `(name, first_name)` |
+| `parties` | Parties | `abbreviation` |
+| `politician_votes` | Roll call — one row per MP per vote | `(politician_id, vote_id)` |
+| `politician_party_history` | Party membership over time (traseism) | derived |
+| `pending_bills` | Bills under a tacit-adoption term | `code` |
+
+`law_status` (view) stitches a bill's chamber outcomes, CCR decision, and
+presidential status into one row. Analytics (party agreement, monthly attendance,
+absence rankings) live in materialized views refreshed after each run.
 
 ---
 
-## 2. Environment variables
+## Public API (open data)
 
-```bash
-cp .env.example .env
-# Edit .env and fill in SUPABASE_URL and SUPABASE_KEY
+Read-only, anon, CORS-open — documented at [/date](https://la-butoane.ro/date):
+
+```
+GET /api/v1/votes?format=json|csv
+GET /api/v1/laws?code=L230/2025
+GET /api/v1/parlamentari
+GET /api/v1/export/{voturi|legi|deputati|senatori}[?format=csv]
 ```
 
-| Variable | Description |
-|---|---|
-| `SUPABASE_URL` | `https://<ref>.supabase.co` |
-| `SUPABASE_KEY` | Service role key (not the anon key — needs write access) |
-| `SCRAPER_DELAY_MIN` | Min seconds between requests (default `1.0`) |
-| `SCRAPER_DELAY_MAX` | Max seconds between requests (default `2.0`) |
+Everything is sourced from senat.ro / cdep.ro and independently verifiable.
 
 ---
 
-## 3. Python environment
+## Local development
+
+### Scraper
 
 ```bash
 cd scraper
-python -m venv .venv
-source .venv/bin/activate      # Windows: .venv\Scripts\activate
+python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
+cp ../.env.example ../.env      # fill SUPABASE_URL + SUPABASE_KEY (service role)
+
+python test_single_vote.py      # parse one Senate vote, no DB needed
+python test_camera_vote.py      # parse one Chamber vote, no DB needed
+
+python senat_scraper.py  --date 2026-04-01
+python camera_scraper.py --date 2026-04-01
 ```
 
----
+Both scrapers are **resumable** (they skip votes already stored by their source
+id), rate-limited (1–2s jitter, exponential back-off), and identify themselves via
+`User-Agent`. Full and fast runs are wired together in `deploy/run_daily.sh`.
 
-## 4. Sanity check (no Supabase needed)
-
-Fetch and parse one known vote page and print all extracted fields:
+### Frontend
 
 ```bash
-python test_single_vote.py
+cd frontend
+npm install
+npm run dev        # http://localhost:3000
+npm test           # Vitest regression tests
+npm run deploy     # OpenNext build + deploy to Cloudflare Workers
 ```
 
-Expected output: law code `L95/2026`, vote date `2026-04-01`, ~97 senators.
+Frontend env lives in `frontend/.env.local` (Supabase URL + anon key, plus
+service keys for Resend, AI providers, and the cron secret in production).
 
 ---
 
-## 5. Running the scraper
+## How chamber enumeration works
 
-```bash
-# Scrape the last 30 days (default)
-python senat_scraper.py
+Both official sites need reverse-engineered navigation:
 
-# Scrape a specific date range
-python senat_scraper.py --start 2026-01-01 --end 2026-04-27
+- **Senate (`senat_scraper.py`)** — ASP.NET WebForms. The vote index is driven by
+  a calendar posted back via `__VIEWSTATE`; dates encode as integer days since
+  2000-01-01. The scraper posts the month, then the day, reads the vote list, and
+  fetches each `VoturiPlenDetaliu.aspx?AppID={uuid}`.
+- **Chamber (`camera_scraper.py`)** — a plain daily list at
+  `cdep.ro/pls/steno/evot.lista?dat=YYYYMMDD&idl=1`; extract each `idv`, then fetch
+  `evot.lista?idv={id}&idl=1` for the per-party deputy breakdown.
 
-# Scrape a single date
-python senat_scraper.py --date 2026-04-01
-```
-
-The scraper is **resumable**: it checks `senat_app_id` before inserting and skips already-scraped votes.
-
-Logs are written to `scraper.log` and stdout simultaneously.
-
----
-
-## 6. Database schema overview
-
-| Table | Key columns | Dedup key |
-|---|---|---|
-| `laws` | `code`, `title` | `code` |
-| `votes` | `law_id`, `vote_date`, `vote_type`, totals | `senat_app_id` |
-| `parties` | `name`, `abbreviation` | `abbreviation` |
-| `politicians` | `name`, `first_name`, `party_id` | `(name, first_name)` |
-| `politician_votes` | `politician_id`, `vote_id`, `vote_choice`, `party_line_deviation` | `(politician_id, vote_id)` |
-
-`party_line_deviation` is `true` when a senator's vote differs from their party's plurality choice on that vote.
-
-Convenience views: `party_vote_summary`, `deviations`.
-
----
-
-## 7. How enumeration works
-
-senat.ro uses ASP.NET WebForms. The vote index page at `/VoturiPlen.aspx` has a calendar control navigated via `__doPostBack`. Dates are encoded as integer days since **2000-01-01** (confirmed: `V9556` = March 1 2026).
-
-The scraper:
-1. GETs the index page to obtain `__VIEWSTATE`.
-2. POSTs `V{first_day_of_month}` to navigate to the right month.
-3. POSTs `{day_count}` to select a date — response contains the vote list.
-4. Extracts `AppID` UUIDs from vote row links.
-5. GETs `/VoturiPlenDetaliu.aspx?AppID={uuid}` for each vote.
-
----
-
-## 8. Politeness & rate limits
-
-- 1–2 second random delay between every request.
-- Exponential back-off retry (up to 3 attempts) on HTTP errors.
-- Descriptive `User-Agent` header identifying the project.
-- Never run with `--start` earlier than 2010 without manual review of the date range.
+The two chambers number bills in separate registries (Senate `L…`, Chamber
+`PLx…`); `resolve_plx.py` reconciles them so a bill's whole journey is one record.
