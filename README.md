@@ -5,6 +5,11 @@ makes it searchable, shareable, and downloadable as open data.
 
 **Live:** [la-butoane.ro](https://la-butoane.ro) · weekly newsletter · Instagram cards
 
+![A LaButoane vote card — how the Senate voted on a bill, at a glance](docs/preview.png)
+
+> Built and maintained solo — the scrapers, the Postgres schema, the public API,
+> the Next.js frontend, and the VPS + Cloudflare infrastructure.
+
 It ingests **nominal plenary votes from both chambers** — the Senate
 ([senat.ro](https://www.senat.ro)) and the Chamber of Deputies
 ([cdep.ro](https://www.cdep.ro)) — for the current legislature (since December
