@@ -5,8 +5,6 @@ makes it searchable, shareable, and downloadable as open data.
 
 **Live:** [la-butoane.ro](https://la-butoane.ro) · weekly newsletter · Instagram cards
 
-![A LaButoane vote card — how the Senate voted on a bill, at a glance](docs/preview.png)
-
 > Built and maintained solo — the scrapers, the Postgres schema, the public API,
 > the Next.js frontend, and the VPS + Cloudflare infrastructure.
 
@@ -15,8 +13,8 @@ It ingests **nominal plenary votes from both chambers** — the Senate
 ([cdep.ro](https://www.cdep.ro)) — for the current legislature (since December
 2024), links each vote to its bill, follows the bill through to promulgation, and
 surfaces the things official sources make hard to see: how each MP voted,
-party-line deviations, attendance, party switching, and bills that pass *without a
-vote*.
+party-line deviations, attendance, party switching, and bills a chamber can adopt
+*without anyone voting*.
 
 ---
 
@@ -28,8 +26,8 @@ vote*.
   rankings (not just a raw "most absent" list).
 - **Party switching (traseism)** — reconstructed from the official membership
   lists, so a one-sitting mislabel doesn't read as a switch.
-- **Tacit adoption (art. 75)** — bills that become law because a chamber let the
-  constitutional term lapse without voting. Tracked with a live countdown.
+- **Tacit adoption (art. 75)** — bills deemed adopted by a chamber because it let
+  the constitutional term lapse without voting. Tracked with a live countdown.
 - **A bill's full journey** — chamber outcomes → CCR (constitutional court) →
   presidential promulgation.
 - **Plain-language summaries** — the official gist of a bill, with the source PDF
