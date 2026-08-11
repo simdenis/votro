@@ -56,12 +56,19 @@ else
   DATES=("$(date -u -d 'yesterday' '+%Y-%m-%d')" "$(date -u '+%Y-%m-%d')")
 fi
 
-# Preflight: cdep.ro silently drops packets from non-EU IPs. Fail fast with a
-# clear message instead of eating a 25s timeout on every single request.
+# Preflight: cdep.ro silently drops packets from non-EU IPs. On the full run this
+# is fatal (the enrichment below needs cdep). On a fast run a transient blip
+# shouldn't page us — skip the Chamber this cycle and carry on with the Senate.
+CDEP_OK=1
 if ! nc -z -w 5 www.cdep.ro 443 2>/dev/null; then
-  log "FATAL: cdep.ro:443 unreachable — this VPS is not on an EU/RO IP (or cdep is down)."
-  rc=1
-  exit 1
+  CDEP_OK=0
+  if [ "$FAST" = 1 ]; then
+    log "WARN: cdep.ro:443 unreachable — skipping Camera + PLx this fast cycle (Senate only)."
+  else
+    log "FATAL: cdep.ro:443 unreachable — this VPS is not on an EU/RO IP (or cdep is down)."
+    rc=1
+    exit 1
+  fi
 fi
 
 # Stay current: scraper fixes land on main and must apply from the next run
@@ -69,8 +76,10 @@ fi
 git pull --ff-only >>"$LOG" 2>&1 || log "WARN: git pull failed — running existing code"
 
 for TARGET in "${DATES[@]}"; do
-  log "=== Camera Deputatilor — $TARGET ==="
-  "$PY" scraper/camera_scraper.py --date "$TARGET" >>"$LOG" 2>&1 || { rc=1; log "Camera scrape FAILED ($TARGET)"; }
+  if [ "$CDEP_OK" = 1 ]; then
+    log "=== Camera Deputatilor — $TARGET ==="
+    "$PY" scraper/camera_scraper.py --date "$TARGET" >>"$LOG" 2>&1 || { rc=1; log "Camera scrape FAILED ($TARGET)"; }
+  fi
 
   log "=== Senat — $TARGET ==="
   "$PY" scraper/senat_scraper.py --date "$TARGET" >>"$LOG" 2>&1 || { rc=1; log "Senat scrape FAILED ($TARGET)"; }
@@ -79,8 +88,10 @@ done
 # Merge Camera-registry duplicates (PLx…) into their Senate L laws. Needs
 # cdep.ro (project fisa), so it must run here on the EU VPS — the senat.ro
 # PLX search the old resolver used returns zero results.
-log "=== PLx → L resolution ==="
-"$PY" scraper/resolve_plx.py >>"$LOG" 2>&1 || { rc=1; log "PLx resolver FAILED"; }
+if [ "$CDEP_OK" = 1 ]; then
+  log "=== PLx → L resolution ==="
+  "$PY" scraper/resolve_plx.py >>"$LOG" 2>&1 || { rc=1; log "PLx resolver FAILED"; }
+fi
 
 # Everything above is what a vote actually needs: the two chamber scrapes and the
 # law-code merge. The site's vote counts and presence figures read live views
