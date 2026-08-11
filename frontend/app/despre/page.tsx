@@ -38,9 +38,9 @@ export default function DesprePage() {
       <section className="space-y-3">
         <h2 className="text-sm font-semibold uppercase tracking-widest text-muted">Ce înseamnă devierea de la linia de partid</h2>
         <p className="text-foreground leading-relaxed">
-          Pentru fiecare vot, calculăm poziția majorității fiecărui partid (pentru / împotrivă / abținere).
+          Pentru fiecare vot, calculăm poziția dominantă (cea mai frecventă) a fiecărui partid (pentru / împotrivă / abținere).
           Un parlamentar este marcat cu <span className="text-deviere font-semibold">⚠ deviere</span> dacă
-          a votat altfel decât majoritatea colegilor săi de partid în acel vot specific.
+          a votat altfel decât poziția dominantă a colegilor săi de partid în acel vot specific.
         </p>
         <p className="text-sm text-muted leading-relaxed">
           Nota: absenții și cei care nu au votat nu intră în calculul devierilor. Contează doar voturile
@@ -51,9 +51,9 @@ export default function DesprePage() {
           Loialitatea și prezența sunt două lucruri diferite, așa că le arătăm separat, cu numitori
           expliciți. Dacă le pui într-o singură cifră, un absent ajunge să pară un rebel. Loialitatea e
           raportul dintre voturile aliniate cu partidul și voturile exprimate (de exemplu 397/415 = 96%).
-          Prezența e raportul dintre voturile exprimate și toate voturile de plen ținute în camera sa
-          (de exemplu 415/958 = 43%). Un parlamentar poate fi 96% loial și, în același timp, prezent la
-          doar 43% din voturi.
+          Prezența e raportul dintre voturile la care e prezent (cele exprimate plus „prezent, fără vot")
+          și toate voturile de plen ținute în camera sa (de exemplu 415/958 = 43%). Un parlamentar poate
+          fi 96% loial și, în același timp, prezent la doar 43% din voturi.
         </p>
         <p className="text-sm text-muted leading-relaxed">
           Coeziunea unui partid se calculează doar pe voturile disputate, adică cele în care tabăra
