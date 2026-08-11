@@ -22,7 +22,7 @@ export default function ContribuiePage() {
           href="https://www.patreon.com/c/labutoane"
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 rounded-md bg-foreground px-4 py-2 text-sm font-semibold text-background transition-opacity hover:opacity-90"
+          className="inline-flex items-center gap-2 rounded-md bg-white px-4 py-2 text-sm font-semibold text-black border border-rim transition-opacity hover:opacity-90"
         >
           Susține pe Patreon
         </a>
