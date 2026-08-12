@@ -15,9 +15,10 @@
 		"nodejs_compat",
 		"global_fetch_strictly_public"
 	],
-	// Free plan: no cpu_ms limit (Paid-only). The satori/resvg cards render live
-	// within Free's CPU budget because they output at 1× (1080×1350, native IG
-	// size); a 2× render (5.8MP raster) was the only thing that blew the budget.
+	// Workers Paid: 30s CPU cap. Free's budget intermittently 1102'd not just the
+	// satori/resvg cards but the heavy list-page renders too (deputați 330 rows,
+	// tacite, voturi) — this is the real fix. Cards stay at 1× (native IG size).
+	"limits": { "cpu_ms": 30000 },
 	"assets": {
 		"directory": ".open-next/assets",
 		"binding": "ASSETS"
