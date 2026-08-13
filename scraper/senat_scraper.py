@@ -327,12 +327,12 @@ class SenatScraper:
             detail.law_code = code_match.group(1).upper()
 
         vote_type_match = re.search(
-            r"\b(vot final|vot preliminar|vot de respingere|reexaminare)\b",
+            r"\b(vot final|vot preliminar|vot de respingere|reexaminare)(\s*\((?:respingere|adoptare)\))?",
             full_text,
             re.IGNORECASE,
         )
         if vote_type_match:
-            detail.vote_type = vote_type_match.group(1).lower()
+            detail.vote_type = (vote_type_match.group(1) + (vote_type_match.group(2) or "")).lower()
 
         # ── law title ─────────────────────────────────────────
         # The page uses <h5> for the bill description text.
@@ -680,7 +680,13 @@ class SenatScraper:
     ) -> Optional[str]:
         t = detail.totals
         if t.for_ > 0 or t.against > 0:
-            outcome = "adoptat" if t.for_ > t.against else "respins"
+            # When the plenary votes on a REJECTION report — "vot final (respingere)"
+            # / "vot de respingere" — the tally's meaning inverts: FOR winning means
+            # the bill was rejected. A failed rejection vote decides nothing → None.
+            if "respinger" in (detail.vote_type or ""):
+                outcome = "respins" if t.for_ > t.against else None
+            else:
+                outcome = "adoptat" if t.for_ > t.against else "respins"
         else:
             outcome = None
         description = detail.law_title[:500] or None
