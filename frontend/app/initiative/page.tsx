@@ -84,12 +84,18 @@ export default async function InitiativePage({
   const camera = (CAMERE.some(c => c.id === sp.camera) ? sp.camera : 'toate') as 'toate' | 'deputies' | 'senate'
 
   // The registry holds ~2500+ rows — a single select silently truncates at 1000.
-  const rows = await allRows<Initiative>((lo, hi) =>
-    getDB()
+  // explicit columns, not '*': smaller payload, and a distinct fetch-cache key
+  // from the deploy-time render that cached the then-empty table
+  const rows = await allRows<Initiative>(async (lo, hi) => {
+    const res = await getDB()
       .from('initiatives')
-      .select('*')
+      .select('id,cdep_code,senat_code,cdep_idp,title,obiect,registered_date,'
+        + 'chamber_first,stage,stage_date,committee_since,law_category,law_id')
       .order('registered_date', { ascending: true, nullsFirst: false })
-      .range(lo, hi))
+      .range(lo, hi)
+    if (res.error) console.error('initiatives query failed:', JSON.stringify(res.error))
+    return res
+  })
 
   const categories = [...new Set(rows.map(r => r.law_category).filter((c): c is string => !!c))]
     .sort((a, b) => a.localeCompare(b, 'ro'))
