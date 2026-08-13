@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { isOrdinanceBill, normalizeStage } from '@/lib/initiative-stage'
+import { formatCdepCode, isOrdinanceBill, normalizeStage } from '@/lib/initiative-stage'
 
 // The stage contract behind /initiative: official wording from the cdep
 // listing cell, the senat "Stadiu" field and journey rows → normalized enum.
@@ -98,6 +98,13 @@ describe('isOrdinanceBill — the "already in force" asterisk', () => {
     expect(isOrdinanceBill('Propunere legislativă pentru modificarea Legii nr.198/2023')).toBe(false)
     expect(isOrdinanceBill('Proiect de Lege pentru modificarea Ordonanţei de urgenţă a Guvernului nr.57/2019')).toBe(false)
     expect(isOrdinanceBill(null)).toBe(false)
+  })
+})
+
+describe('formatCdepCode — official display form', () => {
+  it('renders the cdep registry form, leaves everything else alone', () => {
+    expect(formatCdepCode('PLx427/2025')).toBe('PL-x 427/2025')
+    expect(formatCdepCode('L108/2026')).toBe('L108/2026')
   })
 })
 

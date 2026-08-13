@@ -4,7 +4,7 @@ import { getDB } from '@/lib/supabase'
 import { allRows } from '@/lib/paging'
 import { capFirst, formatDate, lawSlug, todayRo } from '@/lib/utils'
 import { CategoryBadge } from '@/components/category-badge'
-import { isOrdinanceBill, NO_PLENARY_VOTE, STAGE_LABELS, type Stage } from '@/lib/initiative-stage'
+import { formatCdepCode, isOrdinanceBill, NO_PLENARY_VOTE, STAGE_LABELS, type Stage } from '@/lib/initiative-stage'
 import type { Initiative } from '@/lib/types'
 import { SectionNav, LEGI_SECTIONS } from '@/components/section-nav'
 
@@ -77,7 +77,7 @@ function StagePill({ stage }: { stage: Stage }) {
 export default async function InitiativePage({
   searchParams,
 }: {
-  searchParams: Promise<{ stadiu?: string; camera?: string; categorie?: string }>
+  searchParams: Promise<{ stadiu?: string; camera?: string; categorie?: string; tot?: string }>
 }) {
   const sp = await searchParams
   const stadiu = (STADII.some(s => s.id === sp.stadiu) ? sp.stadiu : 'fara-vot') as StadiuId
@@ -108,6 +108,12 @@ export default async function InitiativePage({
     (!categorie || r.law_category === categorie))
 
   const today = todayRo()
+
+  // wide views ("toate" is ~1250 rows / 6MB of HTML) render a capped slice
+  // with an explicit expand link; the sort puts the oldest waits on top anyway
+  const CAP = 300
+  const capped = sp.tot !== '1' && filtered.length > CAP
+  const visible = capped ? filtered.slice(0, CAP) : filtered
 
   function buildUrl(over: { stadiu?: StadiuId; camera?: string; categorie?: string | null }) {
     const st = over.stadiu ?? stadiu
@@ -208,7 +214,7 @@ export default async function InitiativePage({
               </tr>
             </thead>
             <tbody>
-              {filtered.map(r => {
+              {visible.map(r => {
                 const code = r.senat_code ?? r.cdep_code
                 const obiect = r.obiect && r.obiect.length > 200
                   ? r.obiect.slice(0, 197).trimEnd() + '…'
@@ -247,7 +253,7 @@ export default async function InitiativePage({
                         <span className="block text-[11.5px] text-faint mt-1 leading-snug">{capFirst(obiect)}</span>
                       )}
                       <span className="flex flex-wrap items-center gap-x-3 font-mono text-[11px] text-muted mt-0.5">
-                        {r.cdep_code && <span>{r.cdep_code}</span>}
+                        {r.cdep_code && <span>{formatCdepCode(r.cdep_code)}</span>}
                         {r.senat_code && <span>{r.senat_code}</span>}
                         {isOrdinanceBill(r.title) && (
                           <span
@@ -298,6 +304,17 @@ export default async function InitiativePage({
               })}
             </tbody>
           </table>
+          {capped && (
+            <p className="py-4 text-sm">
+              <Link
+                href={`${buildUrl({})}${buildUrl({}).includes('?') ? '&' : '?'}tot=1`}
+                className="text-info hover:underline"
+              >
+                Arată toate cele {filtered.length} inițiative →
+              </Link>
+              <span className="text-muted"> (primele {CAP} afișate, cele mai vechi întâi)</span>
+            </p>
+          )}
         </div>
       )}
 

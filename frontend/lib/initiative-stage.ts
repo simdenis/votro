@@ -37,6 +37,13 @@ export const STAGE_LABELS: Record<Stage, string> = {
 const strip = (s: string) =>
   s.toLowerCase().normalize('NFKD').replace(/\p{M}/gu, '')
 
+/** Internal "PLx427/2025" (laws-table convention) → official "PL-x 427/2025",
+    so the code on screen matches cdep.ro and is findable with Ctrl-F. */
+export function formatCdepCode(code: string): string {
+  const m = code.match(/^PLx(\d+)\/(\d{4})$/)
+  return m ? `PL-x ${m[1]}/${m[2]}` : code
+}
+
 /** Bills that approve or reject a government ordinance (OUG/OG). The ordinance
     is already in force since its Monitorul Oficial publication — the wait for
     this vote delays only parliament's confirmation, not the rules themselves.
