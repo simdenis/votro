@@ -1,3 +1,5 @@
+import type { Stage } from './initiative-stage'
+
 export type PresidentialStatus = 'promulgat' | 'retrimis' | 'sesizat_ccr'
 export type CcrDecision = 'constitutional' | 'neconstitutional' | 'partial_neconstitutional'
 /** What the summary model actually read (migration 054): both PDFs, EM only,
@@ -166,6 +168,24 @@ export interface PendingBill {
   summary?: string | null
   interest_score?: number | null
   interest_reason?: string | null
+}
+
+export interface Initiative {
+  id: string
+  cdep_code: string | null
+  senat_code: string | null
+  cdep_idp: number | null
+  title: string | null
+  obiect: string | null
+  registered_date: string | null
+  chamber_first: 'senate' | 'deputies' | null
+  stage_raw: string | null
+  stage: Stage | null
+  stage_date: string | null
+  committee_since: string | null
+  law_category: string | null
+  law_id: string | null
+  scraped_at: string
 }
 
 export type SenatorStats = PoliticianStats

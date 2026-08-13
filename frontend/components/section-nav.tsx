@@ -13,6 +13,7 @@ export const LEGI_SECTIONS: SectionItem[] = [
   { href: '/legi', label: 'Legi' },
   { href: '/voturi', label: 'Voturi' },
   { href: '/tacite', label: 'Legi tacite' },
+  { href: '/initiative', label: 'Inițiative' },
 ]
 
 export const PARLAMENTARI_SECTIONS: SectionItem[] = [

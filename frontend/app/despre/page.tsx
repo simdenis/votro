@@ -110,6 +110,26 @@ export default function DesprePage() {
         </p>
       </section>
 
+      <section id="metodologie-initiative" className="space-y-3 scroll-mt-20">
+        <h2 className="text-sm font-semibold uppercase tracking-widest text-muted">Inițiative și timpul fără vot în plen</h2>
+        <p className="text-foreground leading-relaxed">
+          Pagina „Inițiative" urmărește toate inițiativele legislative înregistrate la Parlament,
+          din două registre oficiale: registrul PL-x al Camerei Deputaților (cdep.ro) și registrul
+          L al Senatului (senat.ro), legate între ele prin referința încrucișată din fișa cdep.
+          Pentru fiecare inițiativă afișăm două contoare diferite: „zile de la depunere" curge de
+          la înregistrarea inițiativei în Parlament, iar „zile fără raport" de când proiectul se
+          află la comisia sesizată în fond, în așteptarea raportului. Sunt termene separate, care
+          curg diferit — un proiect poate fi depus de mult, dar trimis recent la comisie.
+        </p>
+        <p className="text-sm text-muted leading-relaxed">
+          Filtrul „fără vot în plen" arată inițiativele aflate în lucru la prima cameră sesizată,
+          înainte de orice vot în plen. Nu include proiectele adoptate tacit — acelea au trecut de
+          prima cameră fără vot și au mers mai departe — și nici proiectele deja votate, în orice
+          sens. Durata petrecută în comisie depinde și de avize, de termenele stabilite și de
+          sesiunile parlamentare, așa că nu spune prin ea însăși de ce un proiect așteaptă.
+        </p>
+      </section>
+
       <section className="space-y-3">
         <h2 className="text-sm font-semibold uppercase tracking-widest text-muted">Rezumatele „Pe scurt"</h2>
         <p className="text-foreground leading-relaxed">

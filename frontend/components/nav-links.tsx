@@ -7,7 +7,7 @@ import { LEGI_SECTIONS, PARLAMENTARI_SECTIONS, DESPRE_SECTIONS, type SectionItem
 
 // Top-level tabs; sections with children get a hover dropdown.
 export const NAV_LINKS: { href: string; label: string; match: string[]; children?: SectionItem[] }[] = [
-  { href: '/legi',      label: 'Legi',         match: ['/legi', '/voturi', '/tacite'], children: LEGI_SECTIONS },
+  { href: '/legi',      label: 'Legi',         match: ['/legi', '/voturi', '/tacite', '/initiative'], children: LEGI_SECTIONS },
   { href: '/senatori',  label: 'Parlamentari', match: ['/senatori', '/deputati', '/traseisti', '/parlamentarul-tau'], children: PARLAMENTARI_SECTIONS },
   { href: '/partide',   label: 'Partide',      match: ['/partide'] },
   { href: '/analize',   label: 'Analize',      match: ['/analize'] },
