@@ -169,6 +169,11 @@ log "=== Law initiators (senat.ro fisa) ==="
 log "=== Tacit deadlines ==="
 "$PY" scraper/tacit_scraper.py >>"$LOG" 2>&1 || { rc=1; log "Tacit scrape FAILED"; }
 
+# All filed initiatives (cdep PL-x listing + senat L registry) — including the
+# ones stuck in committee that never reach a plenary vote (/initiative).
+log "=== Initiatives (cdep + senat registries) ==="
+"$PY" scraper/initiative_scraper.py >>"$LOG" 2>&1 || { rc=1; log "Initiative scrape FAILED"; }
+
 # AI summary + interest score for pending bills (Gemini reads the expunere
 # PDF). Incremental (ai_checked_at IS NULL), skips without key. Ranks the
 # weekly "pe cale să treacă tacit" post by hotness instead of deadline alone.

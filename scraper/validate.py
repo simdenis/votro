@@ -16,6 +16,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import datetime
 import logging
 import os
 import sys
@@ -153,14 +154,42 @@ def main() -> None:
         check(n <= 1, "FAIL", f"politician {pol_id[:8]} has {n} open party-history segments")
 
     # 5) votes: outcome present when counts exist; no absurd totals
-    votes = all_rows("votes", "id,chamber,outcome,for_count,against_count,abstention_count,present_count")
+    votes = all_rows("votes", "id,law_id,chamber,outcome,for_count,against_count,abstention_count,present_count")
     for v in votes:
         counted = (v.get("for_count") or 0) + (v.get("against_count") or 0) + (v.get("abstention_count") or 0)
         check(not (counted > 0 and v.get("outcome") is None), "WARN",
               f"vote {v['id'][:8]} ({v['chamber']}): {counted} votes cast but outcome is NULL")
 
-    log.info("validation done: %d FAIL, %d WARN over %d laws / %d votes / %d history rows",
-             fails, warns, len(laws), len(votes), len(hist))
+    # 6) initiatives (057): clocks sane; a promulgated/adopted initiative whose
+    #    code matches a law we hold votes for must carry the law link — without
+    #    it the title never links to the vote record.
+    today = datetime.date.today().isoformat()
+    law_codes = {l["code"]: l["id"] for l in all_rows("laws", "id,code")}
+    voted_law_ids = {v["law_id"] for v in votes if v.get("law_id")}
+    inits = all_rows("initiatives", "cdep_code,senat_code,stage,stage_raw,registered_date,"
+                                    "committee_since,stage_date,law_id")
+    unmapped = 0
+    for i in inits:
+        code = i.get("senat_code") or i.get("cdep_code")
+        if i.get("committee_since"):
+            check(i["committee_since"] <= today, "FAIL",
+                  f"initiative {code}: committee_since {i['committee_since']} is in the future")
+        if i.get("registered_date"):
+            check("2020-01-01" <= i["registered_date"] <= today, "FAIL",
+                  f"initiative {code}: registered_date {i['registered_date']} out of range")
+            if i.get("stage_date"):
+                check(i["registered_date"] <= i["stage_date"], "WARN",
+                      f"initiative {code}: stage_date {i['stage_date']} precedes registration {i['registered_date']}")
+        if i.get("stage") in ("adoptat_final", "promulgat") and not i.get("law_id"):
+            law_id = law_codes.get(i.get("senat_code") or "") or law_codes.get(i.get("cdep_code") or "")
+            check(not (law_id and law_id in voted_law_ids), "FAIL",
+                  f"initiative {code}: stage={i['stage']} but not linked to law {law_id} which has votes")
+        if i.get("stage") is None and i.get("stage_raw"):
+            unmapped += 1
+    check(unmapped == 0, "WARN", f"{unmapped} initiatives have stage_raw the normalizer doesn't map")
+
+    log.info("validation done: %d FAIL, %d WARN over %d laws / %d votes / %d history rows / %d initiatives",
+             fails, warns, len(laws), len(votes), len(hist), len(inits))
     sys.exit(1 if fails or (args.strict and warns) else 0)
 
 
