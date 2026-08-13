@@ -220,7 +220,9 @@ export default async function InitiativePage({
                       )}
                     </td>
                     <td className="py-3 pr-4 whitespace-nowrap align-top hidden md:table-cell">
-                      {r.committee_since
+                      {/* the clock only runs while the report is actually missing —
+                          once raport_depus (or any vote/outcome) it stops applying */}
+                      {r.committee_since && (r.stage === 'in_comisie' || r.stage === 'la_decizionala')
                         ? <span className="text-muted">{daysSince(r.committee_since, today)}</span>
                         : <span className="text-faint">—</span>}
                     </td>
