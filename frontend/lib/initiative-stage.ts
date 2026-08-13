@@ -37,6 +37,14 @@ export const STAGE_LABELS: Record<Stage, string> = {
 const strip = (s: string) =>
   s.toLowerCase().normalize('NFKD').replace(/\p{M}/gu, '')
 
+/** Bills that approve or reject a government ordinance (OUG/OG). The ordinance
+    is already in force since its Monitorul Oficial publication — the wait for
+    this vote delays only parliament's confirmation, not the rules themselves.
+    Marked with an asterisk on /initiative. */
+export function isOrdinanceBill(title: string | null | undefined): boolean {
+  return !!title && /(aprobarea|respingerea) ordonantei/.test(strip(title))
+}
+
 export interface StageCtx {
   /** the raw text describes the decisional chamber's own decision */
   decisional?: boolean

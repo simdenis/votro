@@ -4,7 +4,7 @@ import { getDB } from '@/lib/supabase'
 import { allRows } from '@/lib/paging'
 import { capFirst, formatDate, lawSlug, todayRo } from '@/lib/utils'
 import { CategoryBadge } from '@/components/category-badge'
-import { NO_PLENARY_VOTE, STAGE_LABELS, type Stage } from '@/lib/initiative-stage'
+import { isOrdinanceBill, NO_PLENARY_VOTE, STAGE_LABELS, type Stage } from '@/lib/initiative-stage'
 import type { Initiative } from '@/lib/types'
 import { SectionNav, LEGI_SECTIONS } from '@/components/section-nav'
 
@@ -249,6 +249,14 @@ export default async function InitiativePage({
                       <span className="flex flex-wrap items-center gap-x-3 font-mono text-[11px] text-muted mt-0.5">
                         {r.cdep_code && <span>{r.cdep_code}</span>}
                         {r.senat_code && <span>{r.senat_code}</span>}
+                        {isOrdinanceBill(r.title) && (
+                          <span
+                            className="cursor-help border-b border-dotted border-muted/60"
+                            title="Ordonanța (OUG/OG) pe care acest proiect o aprobă sau o respinge e deja în vigoare de la publicarea în Monitorul Oficial — așteptarea privește doar confirmarea Parlamentului. Vezi nota de sub tabel."
+                          >
+                            ordonanță în vigoare *
+                          </span>
+                        )}
                         {r.cdep_idp != null && (
                           <a
                             href={`https://www.cdep.ro/ords/pls/proiecte/upl_pck2015.proiect?cam=2&idp=${r.cdep_idp}`}
@@ -301,7 +309,10 @@ export default async function InitiativePage({
         „Zile de la depunere" curge de la înregistrarea inițiativei; „zile fără raport" de când
         proiectul e la comisia sesizată în fond — două termene diferite. Timpul petrecut în
         comisie nu implică prin sine rea-voință: termenele depind de complexitate, avize și
-        sesiunile parlamentare.{' '}
+        sesiunile parlamentare. * Proiectele marcate „ordonanță în vigoare" aprobă sau resping
+        o ordonanță a Guvernului (OUG/OG) care produce deja efecte de la publicarea în Monitorul
+        Oficial — până la votul final, regulile se aplică oricum; în discuție e doar confirmarea
+        sau infirmarea lor de către Parlament.{' '}
         <Link href="/despre#metodologie-initiative" className="text-info hover:underline">
           Metodologia completă →
         </Link>

@@ -128,6 +128,13 @@ export default function DesprePage() {
           sens. Durata petrecută în comisie depinde și de avize, de termenele stabilite și de
           sesiunile parlamentare, așa că nu spune prin ea însăși de ce un proiect așteaptă.
         </p>
+        <p className="text-sm text-muted leading-relaxed">
+          Proiectele marcate „ordonanță în vigoare" sunt un caz aparte: ele aprobă sau resping o
+          ordonanță a Guvernului (OUG/OG), iar ordonanța produce efecte de la publicarea în
+          Monitorul Oficial, nu de la votul Parlamentului. O astfel de inițiativă care așteaptă
+          nu ține regulile pe loc — ele se aplică deja; așteptarea amână doar confirmarea sau
+          infirmarea lor de către legiuitor.
+        </p>
       </section>
 
       <section className="space-y-3">

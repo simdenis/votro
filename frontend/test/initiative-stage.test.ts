@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { normalizeStage } from '@/lib/initiative-stage'
+import { isOrdinanceBill, normalizeStage } from '@/lib/initiative-stage'
 
 // The stage contract behind /initiative: official wording from the cdep
 // listing cell, the senat "Stadiu" field and journey rows → normalized enum.
@@ -84,6 +84,20 @@ describe('normalizeStage — decidedFirst context', () => {
   it('committee work AFTER the first chamber decided is not "fără vot în plen"', () => {
     expect(normalizeStage('la comisii', { decidedFirst: true })).toBe('la_decizionala')
     expect(normalizeStage('raport depus', { decidedFirst: true })).toBe('la_decizionala')
+  })
+})
+
+describe('isOrdinanceBill — the "already in force" asterisk', () => {
+  it('matches OUG/OG approvals and rejections, both diacritic spellings', () => {
+    expect(isOrdinanceBill('Proiect de Lege pentru aprobarea Ordonanţei de urgenţă a Guvernului nr.93/2025')).toBe(true)
+    expect(isOrdinanceBill('Proiect de Lege privind aprobarea Ordonanței Guvernului nr.3/2026')).toBe(true)
+    expect(isOrdinanceBill('Lege pentru respingerea Ordonanţei de urgenţă a Guvernului nr.1/2026')).toBe(true)
+  })
+
+  it('does not match ordinary bills, even ones amending an OUG', () => {
+    expect(isOrdinanceBill('Propunere legislativă pentru modificarea Legii nr.198/2023')).toBe(false)
+    expect(isOrdinanceBill('Proiect de Lege pentru modificarea Ordonanţei de urgenţă a Guvernului nr.57/2019')).toBe(false)
+    expect(isOrdinanceBill(null)).toBe(false)
   })
 })
 
