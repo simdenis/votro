@@ -389,9 +389,11 @@ def run(args: argparse.Namespace) -> int:
             sys.exit("ERROR: SUPABASE_URL and SUPABASE_KEY must be set")
         from supabase import create_client
         db = create_client(url, key)
+        # every payload key must be here, or the change-diff below compares
+        # against a missing key and rewrites the whole table each run
         existing = fetch_all(lambda: db.table("initiatives").select(
-            "id,cdep_code,senat_code,cdep_idp,stage,stage_raw,stage_date,obiect,"
-            "chamber_first,registered_date,committee_since,law_id"))
+            "id,cdep_code,senat_code,cdep_idp,title,stage,stage_raw,stage_date,obiect,"
+            "chamber_first,registered_date,committee_since,law_category,law_id"))
         for r in existing:
             for c in (r["cdep_code"], r["senat_code"]):
                 if c:
