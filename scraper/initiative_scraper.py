@@ -438,16 +438,27 @@ def run(args: argparse.Namespace) -> int:
 
     # 3) senat registry — refresh non-final known codes + probe past the max
     senat_by_code: dict[str, dict] = {}
-    known_l: dict[int, int] = {}
+    known_nums: dict[int, set[int]] = {}
     refresh: set[str] = set()
     for r in existing:
         sc = r.get("senat_code")
         if not sc:
             continue
         n, y = int(sc[1:].split("/")[0]), int(sc.split("/")[1])
-        known_l[y] = max(known_l.get(y, 0), n)
+        known_nums.setdefault(y, set()).add(n)
         if r.get("stage") not in FINAL_STAGES:
             refresh.add(sc)
+    # probe start = end of the CONTIGUOUS run, not the plain max: cdep fișe
+    # cross-ref future-session numbers (L639/2026 in August), and starting past
+    # them would skip every registration that later fills the gap
+    known_l: dict[int, int] = {}
+    for y, nums in known_nums.items():
+        head = 0
+        for n in sorted(nums):
+            if n - head > 25:
+                break
+            head = n
+        known_l[y] = head
     for f in fisa_by_code.values():  # cross-refs discovered this run
         if f.get("senat_code"):
             refresh.add(f["senat_code"])
@@ -470,6 +481,10 @@ def run(args: argparse.Namespace) -> int:
         while misses < PROBE_MISSES:
             if args.limit and len(senat_by_code) >= args.limit:
                 break
+            if n in known_nums.get(year, set()):
+                misses = 0  # a known future-session number keeps the probe alive
+                n += 1
+                continue
             code = f"L{n}/{year}"
             data = senat_get(code)
             if data is None:
@@ -531,11 +546,21 @@ def run(args: argparse.Namespace) -> int:
         return 1
 
     laws = {l["code"]: l["id"] for l in fetch_all(lambda: db.table("laws").select("id,code"))}
-    inserted = updated = unchanged = 0
+    inserted = updated = unchanged = merged = 0
     for r in rows:
         r["law_id"] = laws.get(r["senat_code"] or "") or laws.get(r["cdep_code"] or "")
-        prev = existing_by_code.get(r["senat_code"] or "") or existing_by_code.get(r["cdep_code"] or "")
+        prev_s = existing_by_code.get(r["senat_code"] or "")
+        prev_c = existing_by_code.get(r["cdep_code"] or "")
+        prev = prev_s or prev_c
         payload = {k: v for k, v in r.items() if v is not None or k in ("stage_date", "committee_since")}
+        if prev_s and prev_c and prev_s["id"] != prev_c["id"]:
+            # both legs were separate rows until this run linked them — fold the
+            # cdep-only row into the senat one, or the unique(cdep_code) blows up
+            if not payload.get("obiect") and prev_c.get("obiect"):
+                payload["obiect"] = prev_c["obiect"]
+            db.table("initiatives").delete().eq("id", prev_c["id"]).execute()
+            existing_by_code.pop(prev_c["cdep_code"] or "", None)
+            merged += 1
         # registration never moves later — a run that saw only the cdep leg must
         # not overwrite the earlier senat-registry date (and vice versa)
         if prev and prev.get("registered_date") and (
@@ -556,8 +581,8 @@ def run(args: argparse.Namespace) -> int:
             db.table("initiatives").insert(payload).execute()
             inserted += 1
     unmapped = sum(1 for r in rows if r.get("stage") is None and r.get("stage_raw"))
-    log.info("done: %d inserted, %d updated, %d unchanged, %d unmapped stage_raw",
-             inserted, updated, unchanged, unmapped)
+    log.info("done: %d inserted, %d updated, %d unchanged, %d merged, %d unmapped stage_raw",
+             inserted, updated, unchanged, merged, unmapped)
     return 0
 
 
