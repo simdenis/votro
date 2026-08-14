@@ -188,7 +188,9 @@ class InitiativeScraper:
         return rows
 
     def cdep_fisa(self, idp: int, num: str, year: str) -> dict | None:
-        html = self._fetch(CDEP_FISA, {"cam": "2", "idp": str(idp)}, valid="Obiect de reglementare")
+        # validity marker is the page header, NOT "Obiect de reglementare" —
+        # some fișe legitimately have no obiect section and must still parse
+        html = self._fetch(CDEP_FISA, {"cam": "2", "idp": str(idp)}, valid="rmărirea procesului legislativ")
         if html is None:
             return None
         # cdep answers 200 even for unknown ids — confirm the fișă is about
@@ -574,7 +576,7 @@ def run(args: argparse.Namespace) -> int:
         if prev:
             diff = {k: v for k, v in payload.items()
                     if k != "scraped_at" and str(prev.get(k, object())) != str(v)}
-            if not diff and prev.get("obiect"):
+            if not diff:
                 unchanged += 1
                 continue
             db.table("initiatives").update(payload).eq("id", prev["id"]).execute()
