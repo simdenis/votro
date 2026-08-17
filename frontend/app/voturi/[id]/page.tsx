@@ -35,7 +35,9 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { id } = await params
   const vote = await getVote(id)
-  if (!vote) return { title: 'Vot' }
+  // real 404 for unknown ids — notFound() only in the page body leaves a
+  // soft-404 (200 + noindex) once the loading shell has streamed
+  if (!vote) notFound()
 
   const code    = vote.laws?.code ?? 'Vot de plen'
   const title   = vote.laws?.title ?? vote.description ?? 'Vot fără lege asociată'

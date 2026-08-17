@@ -15,7 +15,8 @@ export async function generateMetadata({ params }: { params: Promise<{ abbr: str
   const { abbr } = await params
   const db = getDB()
   const { data } = await db.from('party_cohesion').select('name, abbreviation, cohesion_pct').eq('abbreviation', abbr.toUpperCase()).maybeSingle()
-  if (!data) return { title: abbr.toUpperCase() }
+  // real 404 for unknown abbreviations — see deputati/[id]
+  if (!data) notFound()
   const desc = hasPartyLine(data.abbreviation)
     ? `Coeziune internă ${data.cohesion_pct != null ? `${data.cohesion_pct.toFixed(1)}%` : '—'}. Vezi cum au votat senatorii și deputații ${data.abbreviation}.`
     : `Vezi cum au votat parlamentarii din grupul ${data.name}.`

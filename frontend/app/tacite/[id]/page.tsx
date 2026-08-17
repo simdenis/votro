@@ -24,7 +24,8 @@ const getBill = cache(async (id: string): Promise<PendingBill | null> => {
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params
   const bill = await getBill(id)
-  if (!bill) return { title: 'Termen tacit' }
+  // real 404 for unknown codes — see deputati/[id]
+  if (!bill) notFound()
   const d = bill.tacit_deadline ? daysLeft(bill.tacit_deadline) : null
   const desc = [
     bill.title ?? bill.code,

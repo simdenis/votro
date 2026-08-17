@@ -32,7 +32,11 @@ const getStats = cache(async (pid: string): Promise<PoliticianStats | null> => {
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params
   const pid = await resolveId(id)
-  const data = pid ? await getStats(pid) : null
+  // notFound() here, not only in the page body: metadata resolves before the
+  // loading.tsx shell streams, so unknown slugs get a real 404 status instead
+  // of a soft-404 (200 + noindex) that Search Console flags.
+  if (!pid) notFound()
+  const data = await getStats(pid)
   if (!data) return { title: 'Deputat' }
 
   const name    = `${data.first_name} ${data.name}`

@@ -32,7 +32,10 @@ const getStats = cache(async (pid: string): Promise<SenatorStats | null> => {
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params
   const pid = await resolveId(id)
-  const data = pid ? await getStats(pid) : null
+  // real 404 for unknown slugs — see deputati/[id]: notFound() after streaming
+  // starts leaves a soft-404 (200 + noindex)
+  if (!pid) notFound()
+  const data = await getStats(pid)
   if (!data) return { title: 'Senator' }
 
   const name    = `${data.first_name} ${data.name}`

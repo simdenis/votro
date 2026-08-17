@@ -38,7 +38,8 @@ const getLaw = cache(async (id: string): Promise<LawStatus | null> => {
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params
   const law = await getLaw(id)
-  if (!law) return { title: 'Lege' }
+  // real 404 for unknown codes — see deputati/[id]
+  if (!law) notFound()
   // plain-language summary as the description (unique per law — was the generic
   // site description on all 1200+ law pages); law-specific 1200×630 OG card
   const desc = (law.summary
