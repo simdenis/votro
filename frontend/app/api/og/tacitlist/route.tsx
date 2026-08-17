@@ -15,8 +15,12 @@ const SB = { apikey: K, Authorization: `Bearer ${K}` }
 const RO_MONTHS = ['ianuarie', 'februarie', 'martie', 'aprilie', 'mai', 'iunie',
                    'iulie', 'august', 'septembrie', 'octombrie', 'noiembrie', 'decembrie']
 
-export async function GET() {
-  const today = new Date()
+export async function GET(req: Request) {
+  // ?at=YYYY-MM-DD pins the reference day — preview a future window, and pin
+  // the render on publish day so the countdown can't drift past midnight.
+  // Harmless as a public param: it only shifts the DB query window.
+  const at = new URL(req.url).searchParams.get('at')
+  const today = at && /^\d{4}-\d{2}-\d{2}$/.test(at) ? new Date(`${at}T12:00:00Z`) : new Date()
   const iso = today.toISOString().slice(0, 10)
   const limitDate = new Date(today.getTime() + 7 * 86400_000).toISOString().slice(0, 10)
   // soonest deadline first — objective urgency, no editorial ranking
@@ -27,10 +31,19 @@ export async function GET() {
       `&order=tacit_deadline.asc&limit=10`,
       { headers: SB })).json()) ?? []
 
+  // AI summaries all open with the same subject ("Acest proiect de lege
+  // propune…") — 10 identical openers on one list card read terribly. Drop the
+  // subject, keep the verb ("Propune modificări la…"), so entries stay
+  // grammatical but scannable. List-card-local: law pages keep full sentences.
+  const deboilerplate = (s: string) => {
+    const t = s.replace(/^\s*(acest proiect de lege|această lege|proiectul de lege|propunerea legislativă|prezenta lege|acest proiect)\s+/i, '')
+    return t === s ? s : t.charAt(0).toUpperCase() + t.slice(1)
+  }
+
   const entries: TacitEntry[] = rows.map(r => ({
     code: r.code,
     // the plain-language summary IS the title — the official title is jargon
-    title: plainSummary(r.summary) || r.title || '',
+    title: deboilerplate(plainSummary(r.summary)) || r.title || '',
     chamber: r.chamber === 'senate' ? 'SENAT' : 'CAMERĂ',
     daysLeft: Math.max(0, Math.round((new Date(r.tacit_deadline).getTime() - today.getTime()) / 86400_000)),
   }))
