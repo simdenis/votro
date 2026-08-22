@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { SectionNav, DESPRE_SECTIONS } from '@/components/section-nav'
+import { PRESS_MENTIONS } from '@/lib/press'
 
 export const metadata: Metadata = {
   title: 'Despre LaButoane',
@@ -170,6 +171,33 @@ export default function DesprePage() {
           <li>Nu include comisii parlamentare sau voturi prin vot electronic secret.</li>
           <li>Datele sunt actualizate zilnic — poate exista un decalaj de până la 24 de ore față de votul live.</li>
           <li>Calitatea datelor depinde de sursa oficială (senat.ro / cdep.ro).</li>
+        </ul>
+      </section>
+
+      <section id="in-presa" className="space-y-3 scroll-mt-20">
+        <h2 className="text-sm font-semibold uppercase tracking-widest text-muted">În presă</h2>
+        <p className="text-sm text-muted leading-relaxed">
+          Analize și articole care folosesc sau citează datele LaButoane:
+        </p>
+        <ul className="space-y-3">
+          {PRESS_MENTIONS.map((m) => (
+            <li key={m.url} className="text-sm leading-relaxed">
+              <span className="font-semibold text-foreground">{m.outlet}</span>
+              <span className="text-muted">
+                {' · '}
+                {new Date(m.date).toLocaleDateString('ro-RO', { day: 'numeric', month: 'long', year: 'numeric' })}
+              </span>
+              <br />
+              <a
+                href={m.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-foreground underline hover:text-muted"
+              >
+                {m.title}
+              </a>
+            </li>
+          ))}
         </ul>
       </section>
 
