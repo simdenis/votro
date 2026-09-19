@@ -481,12 +481,17 @@ export function SwitchMonthCard({ site, months, hashtags }: {
   )
 }
 
-/** Pick this week's promulgated laws → post them as one carousel (a slide per
- *  law's summary card). Button + checkboxes. */
-export function WeekSelectionCard({ site, laws }: {
+/** Pick laws → post them as one carousel (cover + a summary card per law).
+ *  Button + checkboxes. Defaults fit the weekly "promulgate" digest; pass
+ *  coverKind/captionHeader for other selections (e.g. passed both chambers). */
+export function WeekSelectionCard({ site, laws, coverKind, captionHeader, captionOutro }: {
   site: string
   /** desc = plain-language summary shown for picking; title = caption line */
   laws: { id: string; code: string; title: string; desc?: string }[]
+  /** weekcover ?kind= (default promulgate wording) */
+  coverKind?: 'votate' | 'parlament'
+  captionHeader?: string
+  captionOutro?: string
 }) {
   const [sel, setSel] = useState<Set<string>>(new Set())
   const [showPreview, setShowPreview] = useState(false)
@@ -498,14 +503,14 @@ export function WeekSelectionCard({ site, laws }: {
   const overLimit = chosenAll.length > MAX_LAWS
   // slide 1 = the "look what passed this week" cover, then a card per law
   const images = chosen.length
-    ? [`${site}/api/og/weekcover?n=${chosen.length}`,
+    ? [`${site}/api/og/weekcover?n=${chosen.length}${coverKind ? `&kind=${coverKind}` : ''}`,
        ...chosen.map(l => `${site}/api/og/summarycard?id=${l.id}`)]
     : []
   const autoCaption = [
-    '📋 Legile promulgate săptămâna aceasta', '',
+    captionHeader ?? '📋 Legile promulgate săptămâna aceasta', '',
     // full plain-language summary per law (blank line between for readability)
     ...chosen.flatMap(l => [`${l.code} — ${l.desc || l.title}`, '']).slice(0, -1),
-    '', `Fiecare, explicată pe ${site} (link în bio)`, '',
+    '', captionOutro ?? `Fiecare, explicată pe ${site} (link în bio)`, '',
     '#parlament #legi #laButoane #transparență #românia',
   ].join('\n')
   const caption = edited ?? autoCaption

@@ -215,7 +215,6 @@ async function fetchAwaitingPromulgation() {
                interest_reason: e?.interest_reason ?? null, lastVote }
     })
     .sort((a, b) => (b.interest_score ?? -1) - (a.interest_score ?? -1))
-    .slice(0, 12)
 }
 
 // ── weekly: tacit deadlines ──────────────────────────────────────────────────
@@ -566,13 +565,26 @@ export default async function AdminPage({ searchParams }: {
         </Section>
       )}
 
+      <Section title="Trecute de ambele camere săptămâna asta" cadence="săptămânal"
+               hint="Votul final decisiv în ultimele 7 zile — acum la Președinte. Bifează ce vrei să incluzi → un carusel (coperta + un slide per lege).">
+        <div className="border border-rim rounded-xl p-4">
+          <WeekSelectionCard site={SITE} coverKind="parlament"
+            captionHeader="🏛️ Trecute de Parlament săptămâna asta — acum la Președinte, spre promulgare"
+            captionOutro={`Pot fi promulgate, retrimise sau contestate la CCR. Fiecare, explicată pe ${SITE} (link în bio)`}
+            laws={awaiting
+              .filter(l => l.lastVote >= new Date(Date.now() - 7 * 86400_000).toISOString().slice(0, 10))
+              .map(l => ({ id: l.law_id, code: l.code, title: l.headline || l.title,
+                           desc: l.headline || l.summary || l.title }))} />
+        </div>
+      </Section>
+
       <Section title="Adoptate de ambele camere — așteaptă promulgarea" cadence="oricând"
                hint="Trecute de Senat și Cameră, încă nesemnate de Președinte — postabile oricând, sortate după interes. Nu sunt legi încă: pot fi retrimise sau contestate la CCR.">
         {awaiting.length === 0 ? (
           <p className="text-[13px] text-faint">Nimic în așteptare la Președinte.</p>
         ) : (
           <div className="flex flex-col gap-6">
-            {awaiting.map(l => (
+            {awaiting.slice(0, 12).map(l => (
               <div key={l.law_id} className="border border-rim rounded-xl p-4">
                 <div className="flex items-baseline gap-2 flex-wrap mb-3">
                   <span className="text-[13px] font-bold">{l.code}</span>

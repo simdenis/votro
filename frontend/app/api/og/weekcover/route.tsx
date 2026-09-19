@@ -21,17 +21,23 @@ export async function GET(req: Request) {
 async function render(req: Request): Promise<Response> {
   const sp = new URL(req.url).searchParams
   const n = Math.max(1, Math.min(20, Number(sp.get('n')) || 0))
-  const votate = sp.get('kind') === 'votate'
+  const kind = sp.get('kind')  // default: promulgate · votate · parlament (both chambers, at the President)
+  const votate = kind === 'votate'
+  const parlament = kind === 'parlament'
   const now = new Date()
-  // promulgate: the trailing 7 days; votate: the previous calendar week Mon–Sun
+  // promulgate/parlament: the trailing 7 days; votate: the previous calendar week Mon–Sun
   const lastMon = new Date(now.getTime() - (((now.getDay() + 6) % 7) + 7) * 86400_000)
   const from = votate ? lastMon : new Date(now.getTime() - 6 * 86400_000)
   const to = votate ? new Date(lastMon.getTime() + 6 * 86400_000) : now
   const range = `${from.getDate()} ${RO_MONTHS[from.getMonth()]} – ${to.getDate()} ${RO_MONTHS[to.getMonth()]} ${to.getFullYear()}`
   const noun = votate
     ? (n === 1 ? 'vot final adoptat' : 'voturi finale adoptate')
+    : parlament
+    ? (n === 1 ? 'lege trimisă la promulgare' : 'legi trimise la promulgare')
     : (n === 1 ? 'lege promulgată' : 'legi promulgate')
-  const title = votate ? 'Ce a votat Parlamentul săptămâna trecută' : 'Ce s-a făcut lege săptămâna asta'
+  const title = votate ? 'Ce a votat Parlamentul săptămâna trecută'
+    : parlament ? 'Ce a trecut de Parlament săptămâna asta'
+    : 'Ce s-a făcut lege săptămâna asta'
   const kicker = votate ? 'Săptămâna trecută' : 'Săptămâna aceasta'
 
   const fonts = await getCardFonts()
