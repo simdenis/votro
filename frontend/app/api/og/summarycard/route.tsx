@@ -47,8 +47,13 @@ async function renderCard(request: Request): Promise<Response> {
     ? ((await (await fetch(`${U}/rest/v1/law_status?law_id=eq.${id}&select=*&limit=1`, { headers: SB })).json())?.[0] as LawStatus | undefined)
     : undefined
 
+  // A real id must NEVER fall through to SAMPLE (it's a different law — one
+  // such card got published to Instagram). Unknown id → loud 404; SAMPLE is
+  // only the no-id design preview.
+  if (id && !law) return new Response('Not found', { status: 404 })
+
   let data = SAMPLE
-  if (law?.summary) {
+  if (law) {
     // headline lives on laws, not the law_status view — fetch it alongside
     const [mapped, initiator, headlineRow] = await Promise.all([
       Promise.resolve(mapLawToCard(law, [], null)),
@@ -61,7 +66,8 @@ async function renderCard(request: Request): Promise<Response> {
       lawTitle: law.title,
       category: law.law_category,
       year: mapped.year,
-      summary: plainSummary(law.summary),
+      // no AI summary yet → the official title as hero, never another law's card
+      summary: law.summary ? plainSummary(law.summary) : law.title,
       headline: noHeadline ? null : headlineRow,
       statusLabel: mapped.statusLabel,
       statusColor: mapped.statusColor,
