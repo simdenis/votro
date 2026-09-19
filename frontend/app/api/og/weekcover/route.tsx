@@ -2,8 +2,11 @@ import { ImageResponse } from 'next/og'
 import { getCardFonts } from '@/lib/og-fonts'
 import { withEdgeCache } from '@/lib/og-edge-cache'
 
-// 1080×1350 cover for the weekly "legi promulgate" digest carousel — slide 1,
-// then a summary card per law. /api/og/weekcover?n=<count>
+// 1080×1350 cover for the weekly digest carousel — slide 1, then a summary
+// card per law. /api/og/weekcover?n=<count>[&kind=votate]
+// kind=votate: "voturi finale adoptate" wording instead of "promulgate" —
+// a bill that just cleared a final vote is NOT law yet, the cover must not
+// claim it is.
 
 const C = { bg: '#FFFFFF', text: '#171A1F', for: '#2EA871', hair: '#E7E9EC', faint: '#6E7480' }
 const SERIF = 'Plex Display'
@@ -16,11 +19,20 @@ export async function GET(req: Request) {
 }
 
 async function render(req: Request): Promise<Response> {
-  const n = Math.max(1, Math.min(20, Number(new URL(req.url).searchParams.get('n')) || 0))
+  const sp = new URL(req.url).searchParams
+  const n = Math.max(1, Math.min(20, Number(sp.get('n')) || 0))
+  const votate = sp.get('kind') === 'votate'
   const now = new Date()
-  const from = new Date(now.getTime() - 6 * 86400_000)
-  const range = `${from.getDate()} ${RO_MONTHS[from.getMonth()]} – ${now.getDate()} ${RO_MONTHS[now.getMonth()]} ${now.getFullYear()}`
-  const noun = n === 1 ? 'lege promulgată' : 'legi promulgate'
+  // promulgate: the trailing 7 days; votate: the previous calendar week Mon–Sun
+  const lastMon = new Date(now.getTime() - (((now.getDay() + 6) % 7) + 7) * 86400_000)
+  const from = votate ? lastMon : new Date(now.getTime() - 6 * 86400_000)
+  const to = votate ? new Date(lastMon.getTime() + 6 * 86400_000) : now
+  const range = `${from.getDate()} ${RO_MONTHS[from.getMonth()]} – ${to.getDate()} ${RO_MONTHS[to.getMonth()]} ${to.getFullYear()}`
+  const noun = votate
+    ? (n === 1 ? 'vot final adoptat' : 'voturi finale adoptate')
+    : (n === 1 ? 'lege promulgată' : 'legi promulgate')
+  const title = votate ? 'Ce a votat Parlamentul săptămâna trecută' : 'Ce s-a făcut lege săptămâna asta'
+  const kicker = votate ? 'Săptămâna trecută' : 'Săptămâna aceasta'
 
   const fonts = await getCardFonts()
   return new ImageResponse(
@@ -28,14 +40,14 @@ async function render(req: Request): Promise<Response> {
       <div style={{ display: 'flex', width: 1080, height: 1350 }}>
         <div style={{ width: 1080, height: 1350, display: 'flex', flexDirection: 'column', background: C.bg, color: C.text, fontFamily: SANS }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '54px 72px 0' }}>
-            <div style={{ display: 'flex', fontFamily: MONO, fontSize: 18, letterSpacing: 3, textTransform: 'uppercase', color: C.faint }}>Săptămâna aceasta</div>
+            <div style={{ display: 'flex', fontFamily: MONO, fontSize: 18, letterSpacing: 3, textTransform: 'uppercase', color: C.faint }}>{kicker}</div>
             <div style={{ display: 'flex', fontFamily: MONO, fontSize: 15, color: C.faint }}>{range}</div>
           </div>
 
           <div style={{ display: 'flex', flex: 1, alignItems: 'center', padding: '0 72px' }}>
             <div style={{ display: 'flex', width: 10, alignSelf: 'stretch', margin: '110px 0', borderRadius: 6, background: C.for, flexShrink: 0 }} />
             <div style={{ display: 'flex', flexDirection: 'column', flex: 1, paddingLeft: 44 }}>
-              <div style={{ fontFamily: SERIF, fontSize: 82, lineHeight: 1.04, color: C.text }}>Ce s-a făcut lege săptămâna asta</div>
+              <div style={{ fontFamily: SERIF, fontSize: 82, lineHeight: 1.04, color: C.text }}>{title}</div>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 16, marginTop: 34 }}>
                 <div style={{ display: 'flex', fontFamily: SERIF, fontSize: 72, color: C.for }}>{`${n}`}</div>
                 <div style={{ display: 'flex', fontSize: 30, color: C.text, opacity: 0.7 }}>{noun}</div>
