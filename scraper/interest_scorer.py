@@ -54,6 +54,10 @@ PROMPT = (
     "factual, fără exagerări sau senzaționalism. Exemple: Legea împotriva "
     "uciderii femeilor / Pensii mai mari pentru cei cu venituri mici / "
     "Fumatul interzis în mai multe spații.\n"
+    "IMPORTANT: nu amesteca legile între ele — headline-ul și reason-ul unei "
+    "legi trebuie să reiasă STRICT din titlul și rezumatul ACELEI legi, nu din "
+    "temele altor legi din listă. Dacă titlul nu spune clar despre ce e legea, "
+    "nu inventa un subiect.\n"
     "Răspunde STRICT cu JSON: o listă de obiecte "
     '{"code": "...", "score": N, "reason": "...", "headline": "..."}. '
     "Un obiect pentru fiecare lege, în ordinea dată, fără alt text.\n\n"
@@ -67,7 +71,9 @@ PROMPT = (
 # us on the homepage — skip, unstamped, so the law is rescored once a real
 # title lands (resolve_plx / senat scraper).
 _NO_REAL_TITLE = re.compile(
-    r"^\s*(?:PL-?x?|PLCD|PHCD|PH\s*CD|PL)\s*[\d/]+\s*-?\s*(?:vot\s+final)?\s*$",
+    # "PH CD 53/2026 - Vot final adoptare" and friends: anything after "vot
+    # final" is still vote boilerplate ("adoptare", "respingere"), not a title.
+    r"^\s*(?:PL-?x?|PLCD|PHCD|PH\s*CD|PL)\s*[\d/]+\s*-?\s*(?:vot\s+final.*)?$",
     re.IGNORECASE,
 )
 
