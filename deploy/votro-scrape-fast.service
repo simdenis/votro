@@ -4,6 +4,9 @@ After=network-online.target
 Wants=network-online.target
 
 [Service]
+# cdep.ro serves the wrong certSIGN intermediate; trust the system store (has Web CA G2) instead of certifi.
+Environment=REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+Environment=SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
 Type=oneshot
 User=votro
 WorkingDirectory=/opt/votro
