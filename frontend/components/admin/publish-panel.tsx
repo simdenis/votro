@@ -429,6 +429,58 @@ export function PeriodCard({ site, kind, months, bust }: {
   )
 }
 
+type SwitchMonthData = {
+  value: string   // 'YYYY-MM'
+  label: string   // 'august 2026'
+  entries: { name: string; chamber: string; from: string; to: string }[]
+}
+
+/** Traseiști card with a month picker — the switchcard og route already takes
+ *  ?month=, so this is just choosing which month to render + its caption. */
+export function SwitchMonthCard({ site, months, hashtags }: {
+  site: string
+  /** newest first, current month included; entries precomputed server-side */
+  months: SwitchMonthData[]
+  hashtags: string
+}) {
+  const [month, setMonth] = useState(months[0]?.value ?? '')
+  const [showPreview, setShowPreview] = useState(false)
+  const data = months.find(m => m.value === month) ?? months[0]
+  const image = `${site}/api/og/switchcard?month=${month}&v=${data?.entries.length ?? 0}`
+  const defaultCaption = data && data.entries.length ? [
+    `🔄 Traseism — ${data.label}`, '',
+    ...data.entries.map(e => `• ${e.name} (${e.chamber}): ${e.from} → ${e.to}`),
+    '', `Parcursul fiecăruia: ${site}/traseisti`, '', hashtags,
+  ].join('\n') : ''
+
+  const [caption, setCaption] = useState(defaultCaption)
+  // new month = new content: reset caption + preview
+  useEffect(() => { setCaption(defaultCaption); setShowPreview(false) }, [month]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  return (
+    <div className="flex flex-col gap-3">
+      <select value={month} onChange={e => setMonth(e.target.value)}
+              className="self-start text-[12px] bg-surface border border-rim rounded-md px-2 py-1">
+        {months.map(m => (
+          <option key={m.value} value={m.value}>{m.label} ({m.entries.length})</option>
+        ))}
+      </select>
+      {!data || data.entries.length === 0 ? (
+        <p className="text-[13px] text-faint">0 traseiști în {data?.label ?? 'luna aleasă'} — nimic de postat. ✓</p>
+      ) : (
+        <>
+          {showPreview
+            ? <CardPreview src={image} alt="card traseiști" />
+            : <button onClick={() => setShowPreview(true)} className="self-start text-[12px] text-muted underline underline-offset-2">👁 Vezi cardul</button>}
+          <textarea value={caption} onChange={e => setCaption(e.target.value)} rows={8}
+                    className="w-full text-[12.5px] leading-relaxed bg-surface border border-rim rounded-lg p-2.5 font-mono resize-y" />
+          <PublishActions images={[image]} caption={caption} storyImage={image} />
+        </>
+      )}
+    </div>
+  )
+}
+
 /** Pick this week's promulgated laws → post them as one carousel (a slide per
  *  law's summary card). Button + checkboxes. */
 export function WeekSelectionCard({ site, laws }: {

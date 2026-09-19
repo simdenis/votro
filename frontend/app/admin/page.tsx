@@ -1,5 +1,6 @@
 import { getDB } from '@/lib/supabase'
-import { PublishCard, CarouselPublishCard, ManualPublish, PeriodCard, WeekSelectionCard } from '@/components/admin/publish-panel'
+import { PublishCard, CarouselPublishCard, ManualPublish, PeriodCard, WeekSelectionCard, SwitchMonthCard } from '@/components/admin/publish-panel'
+import { AbsenceResearch } from '@/components/admin/absence-research'
 import { AdminLogin, LogoutButton } from '@/components/admin/admin-login'
 import { isAdmin } from '@/lib/admin-auth'
 import { lawSlides, lawCarouselCaption, initiatorLineFromRows, CARD_V, type Slide } from '@/lib/ig-carousel'
@@ -191,6 +192,32 @@ async function fetchWeekLaws(): Promise<WeekLaw[]> {
   }).sort((a, b) => b.eventDate.localeCompare(a.eventDate))
 }
 
+// ── passed both chambers, awaiting the President — standing post pool ────────
+// Not window-bound like the candidates above: a law can sit weeks between the
+// second chamber's vote and promulgation, and that whole time it's postable.
+
+async function fetchAwaitingPromulgation() {
+  const db = getDB()
+  const { data } = await db.from('law_status')
+    .select('law_id, code, title, summary, camera_vote_date, senate_vote_date, camera_for, camera_against, senate_for, senate_against')
+    .eq('senate_outcome', 'adoptat').eq('camera_outcome', 'adoptat')
+    .is('presidential_status', null)
+  if (!data?.length) return []
+  const { data: laws } = await db.from('laws')
+    .select('id, headline, interest_score, interest_reason')
+    .in('id', data.map(r => r.law_id))
+  const extra = new Map((laws ?? []).map(l => [l.id, l]))
+  return data
+    .map(r => {
+      const e = extra.get(r.law_id)
+      const lastVote = [r.camera_vote_date, r.senate_vote_date].filter(Boolean).sort().pop() ?? ''
+      return { ...r, headline: e?.headline ?? null, interest_score: e?.interest_score ?? null,
+               interest_reason: e?.interest_reason ?? null, lastVote }
+    })
+    .sort((a, b) => (b.interest_score ?? -1) - (a.interest_score ?? -1))
+    .slice(0, 12)
+}
+
 // ── weekly: tacit deadlines ──────────────────────────────────────────────────
 
 async function fetchTacit() {
@@ -371,13 +398,14 @@ export default async function AdminPage({ searchParams }: {
   const cardBust = new Date().toISOString().slice(0, 13).replace(/[-:T]/g, '')
   const db = getDB()
 
-  const [candidates, weekLaws, tacit, monthlyAbs, recentSitting, allSwitchers, { data: todayVotes }] = await Promise.all([
+  const [candidates, weekLaws, tacit, monthlyAbs, recentSitting, allSwitchers, awaiting, { data: todayVotes }] = await Promise.all([
     fetchCandidates(),
     fetchWeekLaws(),
     fetchTacit(),
     fetchMonthlyAbsents(),
     fetchRecentSitting(),
     getSwitchers(),
+    fetchAwaitingPromulgation(),
     db.from('votes').select('law_id, chamber, outcome, laws(id, code, title)')
       .eq('vote_type', 'vot final').eq('vote_date', today).not('law_id', 'is', null),
   ])
@@ -400,6 +428,22 @@ export default async function AdminPage({ searchParams }: {
 
   // month options for the period pickers: dec 2024 → last complete month, newest first
   const recentMonths = monthOptions()
+
+  // traseiști per month (current month first) — a switcher lands in the month
+  // of their LATEST hop, mirroring the switchcard og route's ?month= filter
+  const nowD = new Date()
+  const thisMonthLabel = `${RO_MONTHS[nowD.getMonth()]} ${nowD.getFullYear()}`
+  const switchMonths = [{ value: thisMonth, label: thisMonthLabel }, ...recentMonths].map(m => ({
+    ...m,
+    entries: allSwitchers
+      .filter((s: Switcher) => (s.segments[s.segments.length - 1]?.from_date ?? '').startsWith(m.value))
+      .map((s: Switcher) => ({
+        name: `${s.first_name} ${s.name}`,
+        chamber: s.chamber === 'senate' ? 'Senat' : 'Cameră',
+        from: s.segments[s.segments.length - 2]?.abbreviation ?? '?',
+        to: s.segments[s.segments.length - 1]?.abbreviation ?? '?',
+      })),
+  }))
   // this week's promulgated laws → the select-and-post carousel. `desc` (the
   // plain-language summary) is shown for picking; `title` (headline/official)
   // is the shorter caption line.
@@ -522,6 +566,35 @@ export default async function AdminPage({ searchParams }: {
         </Section>
       )}
 
+      <Section title="Adoptate de ambele camere — așteaptă promulgarea" cadence="oricând"
+               hint="Trecute de Senat și Cameră, încă nesemnate de Președinte — postabile oricând, sortate după interes. Nu sunt legi încă: pot fi retrimise sau contestate la CCR.">
+        {awaiting.length === 0 ? (
+          <p className="text-[13px] text-faint">Nimic în așteptare la Președinte.</p>
+        ) : (
+          <div className="flex flex-col gap-6">
+            {awaiting.map(l => (
+              <div key={l.law_id} className="border border-rim rounded-xl p-4">
+                <div className="flex items-baseline gap-2 flex-wrap mb-3">
+                  <span className="text-[13px] font-bold">{l.code}</span>
+                  <span className="text-[11px] font-medium text-adoptat">ultimul vot final · {roDate(l.lastVote)}</span>
+                  {l.interest_score != null && (
+                    <span className="text-[11px] text-faint">interes {l.interest_score}/100{l.interest_reason ? ` — ${l.interest_reason}` : ''}</span>
+                  )}
+                </div>
+                <p className="text-[12.5px] text-muted mb-3">{(l.headline || l.title).length > 160 ? (l.headline || l.title).slice(0, 157) + '…' : (l.headline || l.title)}</p>
+                <PublishCard image={`${SITE}/api/og/summarycard?id=${l.law_id}&v=${CARD_V}`}
+                             initialCaption={[
+                               l.headline ? `📋 ${l.headline}` : `📋 ${l.code} — pe scurt`, '',
+                               ...(l.summary ? [l.summary.length > 500 ? l.summary.slice(0, 497).trimEnd() + '…' : l.summary, ''] : []),
+                               `Adoptată de ambele camere (Senat ${l.senate_for ?? '–'}–${l.senate_against ?? '–'}, Cameră ${l.camera_for ?? '–'}–${l.camera_against ?? '–'}). Urmează promulgarea sau, eventual, retrimiterea/CCR.`, '',
+                               `Cum a votat fiecare parlamentar: ${SITE}/legi/${l.law_id} (link în bio)`, '', HASHTAGS,
+                             ].join('\n')} />
+              </div>
+            ))}
+          </div>
+        )}
+      </Section>
+
       <Section title="Pe cale să treacă tacit (≤ 7 zile)" cadence="săptămânal"
                hint="Termene constituționale care expiră în 7 zile — cele mai fierbinți primele (scor AI din expunerea de motive), la egalitate cel mai apropiat termen.">
         {tacit.length === 0 ? (
@@ -573,6 +646,13 @@ export default async function AdminPage({ searchParams }: {
         ) : (
           <div className="border border-rim rounded-xl p-4">
             <PeriodCard site={SITE} kind="absente" months={recentMonths} bust={cardBust} />
+            <div className="mt-4 pt-4 border-t border-rim">
+              <p className="text-[12px] text-faint mb-2">
+                Înainte de publicare: research web pe top 10 — există motive legitime (concediu medical,
+                delegație, demisie) care ar trebui să-i scoată din clasament?
+              </p>
+              <AbsenceResearch months={recentMonths} />
+            </div>
           </div>
         )}
       </Section>
@@ -599,15 +679,11 @@ export default async function AdminPage({ searchParams }: {
         )}
       </Section>
 
-      <Section title="Traseiști luna aceasta" cadence="lunar"
-               hint="Se sare peste lună dacă nimeni nu a schimbat partidul.">
-        {monthSwitchers.length === 0 ? (
-          <p className="text-[13px] text-faint">0 traseiști luna asta — nimic de postat. ✓</p>
-        ) : (
-          <div className="border border-rim rounded-xl p-4">
-            <PublishCard image={`${SITE}/api/og/switchcard?month=${thisMonth}`} initialCaption={switchCaption} />
-          </div>
-        )}
+      <Section title="Traseiști — pe lună" cadence="lunar"
+               hint="Alege luna — cardul arată cine a trecut la alt partid în luna aia (în paranteză, câți).">
+        <div className="border border-rim rounded-xl p-4">
+          <SwitchMonthCard site={SITE} months={switchMonths} hashtags={HASHTAGS} />
+        </div>
       </Section>
 
       <Section title="Matricea partidelor" cadence="lunar / mandat"
