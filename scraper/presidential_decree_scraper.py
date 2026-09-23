@@ -156,9 +156,17 @@ class Store:
     def __init__(self, url: str, key: str) -> None:
         self.url = url.rstrip("/")
         self.h = {"apikey": key, "Authorization": f"Bearer {key}"}
+        # One transient TLS/5xx hiccup against Supabase used to abort the whole
+        # step (SSL BAD_SIGNATURE, 2026-09-20). Retry with backoff instead.
+        from requests.adapters import HTTPAdapter
+        from urllib3.util.retry import Retry
+        self.s = requests.Session()
+        self.s.mount("https://", HTTPAdapter(max_retries=Retry(
+            total=4, backoff_factor=2, status_forcelist=(500, 502, 503, 504),
+            allowed_methods=frozenset({"GET", "PATCH"}))))
 
     def law_by_code(self, code: str) -> dict | None:
-        r = requests.get(f"{self.url}/rest/v1/laws",
+        r = self.s.get(f"{self.url}/rest/v1/laws",
                         params={"code": f"eq.{code}", "select": "id,code,presidential_status", "limit": "1"},
                         headers=self.h, timeout=30)
         r.raise_for_status()
@@ -169,7 +177,7 @@ class Store:
         payload = {"presidential_status": status}
         if date:
             payload["presidential_date"] = date.isoformat()
-        r = requests.patch(f"{self.url}/rest/v1/laws", params={"id": f"eq.{law_id}"},
+        r = self.s.patch(f"{self.url}/rest/v1/laws", params={"id": f"eq.{law_id}"},
                           headers={**self.h, "Content-Type": "application/json"},
                           json=payload, timeout=30)
         r.raise_for_status()

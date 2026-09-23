@@ -33,9 +33,19 @@ export CRON_SECRET
 # well over an hour; without this they would scrape the same dates concurrently
 # and race on the same rows. Taken BEFORE the heartbeat trap is installed, so a
 # skipped run leaves scrape_meta alone instead of reporting a result it never got.
+# A fast run that finds the lock taken just skips (the next slot is 15 min away).
+# The full run must NOT: both its slots (09:00/17:00 RO) coincide with a fast
+# slot, and whenever the fast run won the race the whole enrichment pipeline was
+# silently skipped for that half-day (12 times Jul–Sep 2026, twice on 09-19). Wait
+# for the fast run to finish instead — it takes ~40 s, 10 min at its timeout.
 exec 9>"$LOG_DIR/.scrape.lock"
-if ! flock -n 9; then
-  log "=== Skipped ($([ "$FAST" = 1 ] && echo fast || echo full)) — another run holds the lock ==="
+if [ "$FAST" = 1 ]; then
+  if ! flock -n 9; then
+    log "=== Skipped (fast) — another run holds the lock ==="
+    exit 0
+  fi
+elif ! flock -w 900 9; then
+  log "=== Skipped (full) — lock still held after 15 min ==="
   exit 0
 fi
 

@@ -102,8 +102,10 @@ class Member:
 
 
 # ── Source parsing ────────────────────────────────────────────────────────────
-def fetch(url: str, tries: int = 3) -> str:
-    # senat.ro intermittently serves empty/near-empty pages; retry with backoff.
+def fetch(url: str, tries: int = 5) -> str:
+    # senat.ro intermittently serves empty/near-empty pages or times out, cdep.ro
+    # answers 503 for a few minutes at a time; retry with a patient backoff
+    # (5·10·15·20 s) — three quick tries lost the roster step twice in Sept 2026.
     last: Exception | None = None
     for attempt in range(tries):
         try:
@@ -114,7 +116,7 @@ def fetch(url: str, tries: int = 3) -> str:
             last = RuntimeError(f"suspiciously small response ({len(r.text)}B)")
         except requests.RequestException as e:
             last = e
-        time.sleep(2 * (attempt + 1))
+        time.sleep(5 * (attempt + 1))
     raise last if isinstance(last, requests.RequestException) else requests.RequestException(str(last))
 
 

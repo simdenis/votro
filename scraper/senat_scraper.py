@@ -123,6 +123,7 @@ class SenatScraper:
         self.delay_max = delay_max
 
         self.session = requests.Session()
+        self._fisa_html: dict[str, Optional[str]] = {}  # law code → fișă html (per run)
         self.session.headers.update(
             {
                 "User-Agent": (
@@ -296,6 +297,16 @@ class SenatScraper:
         return app_ids
 
     # ── detail page parsing ────────────────────────────────────
+
+    def _fisa(self, code: str) -> Optional[str]:
+        """senat.ro fișă html for an L code, fetched once per run."""
+        m = re.match(r"^L(\d+)/(\d{4})$", code or "")
+        if not m:
+            return None
+        if code not in self._fisa_html:
+            r = self._fetch(f"{SENAT_FISA_URL}?nr_cls=L{m.group(1)}&an_cls={m.group(2)}")  # nr_cls keeps the L
+            self._fisa_html[code] = r.text if r else None
+        return self._fisa_html[code]
 
     def fetch_and_parse_detail(self, app_id: str) -> Optional[VoteDetail]:
         url = f"{self.DETAIL_URL}?AppID={app_id}"
@@ -679,16 +690,14 @@ class SenatScraper:
         detail: VoteDetail,
     ) -> Optional[str]:
         t = detail.totals
-        if t.for_ > 0 or t.against > 0:
-            # When the plenary votes on a REJECTION report — "vot final (respingere)"
-            # / "vot de respingere" — the tally's meaning inverts: FOR winning means
-            # the bill was rejected. A failed rejection vote decides nothing → None.
-            if "respinger" in (detail.vote_type or ""):
-                outcome = "respins" if t.for_ > t.against else None
-            else:
-                outcome = "adoptat" if t.for_ > t.against else "respins"
-        else:
-            outcome = None
+        outcome = tally_outcome(detail.vote_type, t)
+        if outcome is not None:
+            verdict = fisa_outcome(self._fisa(detail.law_code), detail.vote_date,
+                                   t.for_, t.against, t.abstentions)
+            if verdict and verdict != outcome:
+                log.info("%s: fișă says %s (tally rule said %s) — %d/%d/%d of %d present",
+                         detail.law_code, verdict, outcome, t.for_, t.against, t.abstentions, t.present)
+            outcome = verdict or outcome
         description = detail.law_title[:500] or None
         if description and _has_mojibake(description):
             description = _repair_mojibake(description)
@@ -1076,6 +1085,59 @@ def _repair_mojibake(title: str) -> str:
     t = re.sub(r"\?(?=[bcdfghjklmnpqrstvwxz])", "ș", t)
     t = re.sub(r"\?(?=[BCDFGHJKLMNPQRSTVWXZ])", "Ș", t)
     return t
+
+
+# ── plenary outcome ────────────────────────────────────────────
+# The vote-detail page (VoturiPlenDetaliu) prints the tally but never the
+# result, and the tally alone cannot decide it: adoption needs a majority of
+# senators PRESENT (ordinary law) or of ALL senators (organic law), so 44 for /
+# 0 against / 60 abstentions is a rejection. "for > against" called 21 such
+# final votes adoptat (2025-09 → 2026-09, every one "respins de Senat" on the
+# fișă). The fișă journey line is the authority — "adoptat de Senat rezultat vot
+# pentru= 84 contra=18 abțineri=4" — matched by date + tally; the majority rule
+# is only the fallback for votes the fișă has not recorded yet.
+SENAT_FISA_URL = "https://www.senat.ro/legis/lista.aspx"
+_JOURNEY_ROW = re.compile(
+    r"<tr[^>]*>\s*<td[^>]*>\s*(\d{2})-(\d{2})-(\d{4})\s*</td>\s*<td[^>]*>(.*?)</td>", re.S)
+_TALLY = re.compile(r"pentru\s*=\s*(\d+)\s*contra\s*=\s*(\d+)\s*ab\w*\s*=\s*(\d+)")
+
+
+def fisa_outcome(html: str, vote_date: Optional[datetime.date],
+                 for_: int, against: int, abstentions: int) -> Optional[str]:
+    """'adoptat' | 'respins' from the fișă journey row whose date and tally
+    match this vote; None when the fișă has no such row (yet)."""
+    if not html or not vote_date:
+        return None
+    want = (for_, against, abstentions)
+    for d, m, y, cell in _JOURNEY_ROW.findall(html):
+        if f"{y}-{m}-{d}" != vote_date.isoformat():
+            continue
+        t = _norm(re.sub(r"<[^>]+>", " ", cell).replace("&nbsp;", " "))
+        t = re.sub(r"\s+", " ", t)
+        tally = _TALLY.search(t)
+        if not tally or tuple(int(x) for x in tally.groups()) != want:
+            continue
+        head = t[: tally.start()]
+        if "senat" not in head:
+            continue  # the other chamber's decision, same day (rare)
+        if "respins" in head:
+            return "respins"
+        if "adoptat" in head:
+            return "adoptat"
+    return None
+
+
+def tally_outcome(vote_type: str, t: "VoteTotals") -> Optional[str]:
+    """Fallback when the fișă has no verdict: majority of those present
+    (present includes 'nu au votat'); without a present count, majority of
+    votes cast. A vote on a REJECTION report inverts: FOR winning = respins,
+    a failed rejection vote decides nothing."""
+    if t.for_ <= 0 and t.against <= 0:
+        return None
+    passed = t.for_ * 2 > t.present if t.present > 0 else t.for_ > t.against + t.abstentions
+    if "respinger" in (vote_type or ""):
+        return "respins" if passed else None
+    return "adoptat" if passed else "respins"
 
 
 def _norm(s: str) -> str:

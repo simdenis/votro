@@ -154,11 +154,22 @@ def main() -> None:
         check(n <= 1, "FAIL", f"politician {pol_id[:8]} has {n} open party-history segments")
 
     # 5) votes: outcome present when counts exist; no absurd totals
-    votes = all_rows("votes", "id,law_id,chamber,outcome,for_count,against_count,abstention_count,present_count")
+    votes = all_rows("votes", "id,law_id,chamber,vote_type,outcome,for_count,against_count,abstention_count,present_count")
     for v in votes:
         counted = (v.get("for_count") or 0) + (v.get("against_count") or 0) + (v.get("abstention_count") or 0)
         check(not (counted > 0 and v.get("outcome") is None), "WARN",
               f"vote {v['id'][:8]} ({v['chamber']}): {counted} votes cast but outcome is NULL")
+        # Senate adoption needs a majority of those present (organic laws even
+        # more): 44 for / 60 abstentions of 104 is a rejection. 21 Senate final
+        # votes were stored as adoptat this way (fixed 2026-09-23; the fișă is
+        # the source now). Senate only — cdep prints its own result label and
+        # its "prezenți" figure does not follow this arithmetic (L321/2026:
+        # 110 for of 292 present, adoptat).
+        present = v.get("present_count") or 0
+        check(not (v.get("chamber") == "senate" and v.get("outcome") == "adoptat" and present > 0
+                   and (v.get("for_count") or 0) * 2 <= present
+                   and "respinger" not in (v.get("vote_type") or "")), "FAIL",
+              f"vote {v['id'][:8]} ({v['chamber']}): adoptat with {v.get('for_count')} for of {present} present")
 
     # 6) initiatives (057): clocks sane; a promulgated/adopted initiative whose
     #    code matches a law we hold votes for must carry the law link — without
