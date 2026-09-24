@@ -139,6 +139,11 @@ export function mapLawToCard(
   if (promulgat) { statusLabel = 'PROMULGATĂ'; statusColor = '#1F7A51' }
   // a returned law passed both chambers, but green 'ADOPTATĂ' misleads —
   // the president bounced it back, and that is the story
+  // …unless Parliament has already voted again after the return: the
+  // re-examined form is adopted and heads back to Cotroceni (L43/2026)
+  else if (law.presidential_status === 'retrimis'
+    && [law.senate_vote_date, law.camera_vote_date].some(d => d && law.presidential_date && d > law.presidential_date)
+    && senateDone && cameraDone) { statusLabel = 'READOPTATĂ'; statusColor = '#1F7A51' }
   else if (law.presidential_status === 'retrimis') { statusLabel = 'RETRIMISĂ LA PARLAMENT'; statusColor = '#C25539' }
   else if (rejected) { statusLabel = 'RESPINSĂ'; statusColor = '#C25539' }
   else if (senateDone && cameraDone) { statusLabel = 'ADOPTATĂ'; statusColor = '#1F7A51' }

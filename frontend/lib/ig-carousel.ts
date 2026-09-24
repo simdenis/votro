@@ -9,7 +9,7 @@ import type { LawStatus } from '@/lib/types'
 import { tacitChambers, type LawStage } from '@/lib/law-stage'
 
 /** Mirror of CARD_V in scraper/instagram_poster.py — bump both together. */
-export const CARD_V = '12'
+export const CARD_V = '13'
 
 /** Deterministic static filename for an og-card suffix (poster contract). */
 export function slideName(suffix: string): string {
