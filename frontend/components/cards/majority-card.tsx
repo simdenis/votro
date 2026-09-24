@@ -1,9 +1,11 @@
 // 1080×1350 educational carousel — "0 voturi împotrivă. Și tot a picat."
-// Slide 1 cover (the L366/2026 arc), slide 2 the majority rule (art. 76),
-// slide 3 the three Senate rejections of 21 Sep 2026 + CTA. Slide 2 of the
-// published deck is the live /api/og/votecard for L366, not rendered here.
-// One-off content like intro/structura: the numbers are the official tallies
-// from senat.ro, frozen on purpose (the post is about that sitting).
+// 1 cover (the L366/2026 arc) · 2 the arithmetic (104 present → threshold 53,
+// only 44 for) drawn on a seat bar · 3 the paradox (the same 44 would have
+// passed had 30 abstainers left the room: 74 present → threshold 38) · 4 the
+// art. 76 rule · 5 the three Senate rejections of 21 Sep 2026 + CTA.
+// v1 (a raw votecard as slide 2, no arithmetic) read as unclear — the
+// threshold has to be SEEN. One-off content like intro/structura: official
+// senat.ro tallies, frozen on purpose (the post is about that sitting).
 
 import { computeArcDots } from './vote-card'
 
@@ -65,12 +67,55 @@ function Tally({ f, a, ab }: { f: number; a: number; ab: number }) {
   )
 }
 
+/** A row of `present` seats: `forN` green then `abstainN` amber, with the
+ *  majority threshold (floor(present/2)+1) drawn as a marker. Same pixel
+ *  scale across slides (one seat = W/104) so the hypothetical bar on slide 3
+ *  is visibly shorter than the real one. */
+function SeatBar({ present, forN, abstainN, scaleSeats = 104 }: { present: number; forN: number; abstainN: number; scaleSeats?: number }) {
+  const W = 952, H = 64
+  const px = W / scaleSeats
+  const threshold = Math.floor(present / 2) + 1
+  const tx = Math.round(threshold * px * 100) / 100
+  // HTML label, not SVG <text> (satori); the arrow glyph is not in the Plex subset either
+  return (
+    <div style={{ display: 'flex', position: 'relative', width: W, height: H + 44 }}>
+      <div style={{ display: 'flex', position: 'absolute', left: tx - 60, top: 0, width: 120, justifyContent: 'center', fontFamily: MONO, fontSize: 16, fontWeight: 600, letterSpacing: 1.5, color: C.text }}>
+        {`PRAG · ${threshold}`}
+      </div>
+      <svg width={W} height={H + 44} viewBox={`0 0 ${W} ${H + 44}`} style={{ position: 'absolute', left: 0, top: 0 }}>
+        <rect x={0} y={44} width={Math.round(present * px)} height={H} rx={10} fill="#E7E9EC" />
+        <rect x={0} y={44} width={Math.round(forN * px)} height={H} rx={10} fill={C.for} />
+        <rect x={Math.round(forN * px)} y={44} width={Math.round(abstainN * px)} height={H} fill={C.amber} />
+        <line x1={tx} y1={28} x2={tx} y2={44 + H + 8} stroke={C.text} strokeWidth={4} strokeDasharray="8 6" />
+      </svg>
+    </div>
+  )
+}
+
+function Arrow() {
+  return (
+    <div style={{ display: 'flex', paddingBottom: 34 }}>
+      <svg width="40" height="28" viewBox="0 0 40 28" fill="none" stroke={C.gray400} strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 14h32" /><path d="m24 3 11 11-11 11" />
+      </svg>
+    </div>
+  )
+}
+
+function Verdict({ ok }: { ok: boolean }) {
+  return (
+    <div style={{ display: 'flex', padding: '9px 18px', borderRadius: 6, background: ok ? '#1F7A51' : C.against, color: '#FFFFFF', fontFamily: MONO, fontSize: 16, fontWeight: 600, letterSpacing: 2.5 }}>
+      {ok ? 'ADOPTATĂ' : 'RESPINSĂ'}
+    </div>
+  )
+}
+
 export function MajorityCard({ data }: { data: MajorityCardData }) {
   // ── Slide 1 — cover: the L366/2026 arc (44 for / 0 against / 60 abstain / 30 absent)
   if (data.slide === 1) {
     const dots = computeArcDots(44, 0, 60, 0, 30)
     return (
-      <Frame kicker="CUM FUNCȚIONEAZĂ · 1/4">
+      <Frame kicker="CUM FUNCȚIONEAZĂ · 1/5">
         <div style={{ display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'center', padding: '0 64px' }}>
           <div style={{ fontFamily: SERIF, fontSize: 84, lineHeight: 1.05, letterSpacing: '-1px', color: C.text }}>
             0 voturi împotrivă. Și tot a picat.
@@ -90,17 +135,93 @@ export function MajorityCard({ data }: { data: MajorityCardData }) {
             <div style={{ display: 'flex', color: C.gray400 }}>30 ABSENȚI</div>
           </div>
           <div style={{ display: 'flex', fontSize: 26, fontWeight: 600, color: C.amberDark, marginTop: 44 }}>
-            Cum se poate? Glisează.
+            Nu e o eroare. E aritmetica din Constituție. Glisează.
           </div>
         </div>
       </Frame>
     )
   }
 
-  // ── Slide 3 of the deck — the rule ─────────────────────────────
+  // ── Slide 2 — the arithmetic ───────────────────────────────────
   if (data.slide === 2) {
     return (
-      <Frame kicker="CUM FUNCȚIONEAZĂ · 3/4">
+      <Frame kicker="CUM FUNCȚIONEAZĂ · 2/5">
+        <div style={{ display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'center', padding: '0 64px' }}>
+          <div style={{ display: 'flex', fontFamily: MONO, fontSize: 17, letterSpacing: 3, textTransform: 'uppercase', color: C.amberDark, marginBottom: 12 }}>
+            Socoteala
+          </div>
+          <div style={{ fontFamily: SERIF, fontSize: 60, lineHeight: 1.06, marginBottom: 18 }}>Pragul nu e „mai mulți pentru decât contra”.</div>
+          <div style={{ display: 'flex', fontSize: 26, lineHeight: 1.45, color: C.gray500, marginBottom: 40, maxWidth: 920 }}>
+            O lege ordinară trece cu majoritatea senatorilor prezenți. Se numără toți cei din sală, inclusiv cei care se abțin.
+          </div>
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 40, marginBottom: 8 }}>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <div style={{ fontFamily: SERIF, fontSize: 84, lineHeight: 1, color: C.text }}>104</div>
+              <div style={{ display: 'flex', fontFamily: MONO, fontSize: 15, letterSpacing: 2, color: C.gray500, marginTop: 8 }}>PREZENȚI</div>
+            </div>
+            <Arrow />
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <div style={{ fontFamily: SERIF, fontSize: 84, lineHeight: 1, color: C.text }}>53</div>
+              <div style={{ display: 'flex', fontFamily: MONO, fontSize: 15, letterSpacing: 2, color: C.gray500, marginTop: 8 }}>VOTURI „PENTRU” NECESARE</div>
+            </div>
+            <Arrow />
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <div style={{ fontFamily: SERIF, fontSize: 84, lineHeight: 1, color: C.for }}>44</div>
+              <div style={{ display: 'flex', fontFamily: MONO, fontSize: 15, letterSpacing: 2, color: C.gray500, marginTop: 8 }}>AU FOST</div>
+            </div>
+          </div>
+          <div style={{ display: 'flex', marginTop: 28 }}>
+            <SeatBar present={104} forN={44} abstainN={60} />
+          </div>
+          <div style={{ display: 'flex', gap: 26, fontFamily: MONO, fontSize: 14, letterSpacing: 1.5, marginTop: 4 }}>
+            <div style={{ display: 'flex', color: C.for }}>44 PENTRU</div>
+            <div style={{ display: 'flex', color: C.amberDark }}>60 ABȚINERI</div>
+            <div style={{ display: 'flex', color: C.gray500 }}>0 CONTRA</div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginTop: 44 }}>
+            <Verdict ok={false} />
+            <div style={{ display: 'flex', fontSize: 26, fontWeight: 600, color: C.text }}>Au lipsit 9 voturi „pentru”. Cele 0 voturi „contra” nu contează.</div>
+          </div>
+        </div>
+      </Frame>
+    )
+  }
+
+  // ── Slide 3 — the paradox: abstention vs absence ───────────────
+  if (data.slide === 3) {
+    return (
+      <Frame kicker="CUM FUNCȚIONEAZĂ · 3/5">
+        <div style={{ display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'center', padding: '0 64px' }}>
+          <div style={{ display: 'flex', fontFamily: MONO, fontSize: 17, letterSpacing: 3, textTransform: 'uppercase', color: C.amberDark, marginBottom: 12 }}>
+            Paradoxul abținerii
+          </div>
+          <div style={{ fontFamily: SERIF, fontSize: 60, lineHeight: 1.06, marginBottom: 18 }}>Aceleași 44 de voturi ar fi trecut legea. Dacă 30 de abțineri deveneau absențe.</div>
+          <div style={{ display: 'flex', fontSize: 25, lineHeight: 1.45, color: C.gray500, marginBottom: 36, maxWidth: 920 }}>
+            Abținerea se numără la prezență, deci ridică pragul. Absența nu. Practic, o abținere apasă legea mai tare decât o absență.
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 18, marginBottom: 6 }}>
+            <div style={{ display: 'flex', fontSize: 24, fontWeight: 600, color: C.text }}>Ce s-a întâmplat</div>
+            <div style={{ display: 'flex', fontFamily: MONO, fontSize: 15, letterSpacing: 1.5, color: C.gray500 }}>104 PREZENȚI · 44 PENTRU · 60 ABȚINERI</div>
+          </div>
+          <SeatBar present={104} forN={44} abstainN={60} />
+          <div style={{ display: 'flex', marginTop: 6 }}><Verdict ok={false} /></div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 18, marginTop: 44, marginBottom: 6 }}>
+            <div style={{ display: 'flex', fontSize: 24, fontWeight: 600, color: C.text }}>Dacă 30 dintre ei lipseau</div>
+            <div style={{ display: 'flex', fontFamily: MONO, fontSize: 15, letterSpacing: 1.5, color: C.gray500 }}>74 PREZENȚI · 44 PENTRU · 30 ABȚINERI</div>
+          </div>
+          <SeatBar present={74} forN={44} abstainN={30} />
+          <div style={{ display: 'flex', marginTop: 6 }}><Verdict ok={true} /></div>
+        </div>
+      </Frame>
+    )
+  }
+
+  // ── Slide 4 — the rule ─────────────────────────────────────────
+  if (data.slide === 4) {
+    return (
+      <Frame kicker="CUM FUNCȚIONEAZĂ · 4/5">
         <div style={{ display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'center', padding: '0 64px' }}>
           <div style={{ display: 'flex', fontFamily: MONO, fontSize: 17, letterSpacing: 3, textTransform: 'uppercase', color: C.amberDark, marginBottom: 12 }}>
             Regula majorității
@@ -109,9 +230,9 @@ export function MajorityCard({ data }: { data: MajorityCardData }) {
           <div style={{ display: 'flex', fontSize: 25, lineHeight: 1.45, color: C.gray500, marginBottom: 20, maxWidth: 920 }}>
             O lege trece doar dacă voturile „pentru” ating pragul cerut de Constituție:
           </div>
-          <Row lead="Lege ordinară: majoritatea celor prezenți" rest="Luni erau 104 senatori în sală, deci pragul era 53 de voturi „pentru”. Au fost 44." />
+          <Row lead="Lege ordinară: majoritatea celor prezenți" rest="Jumătate din cei aflați în sală, plus unu. Luni: 53 din 104." />
           <Row lead="Lege organică: majoritatea tuturor senatorilor" rest="68 din 134, indiferent câți sunt prezenți la vot." />
-          <Row lead="Abținerea nu e neutră" rest="Senatorul care se abține e prezent, deci ridică pragul, dar nu adaugă nimic la „pentru”. În practică, cântărește ca un vot contra." />
+          <Row lead="Contra sau abținere: același efect" rest="Niciuna nu adaugă la „pentru”, și amândouă se numără la prezență. Legea trece doar dacă „pentru” atinge pragul." />
           <div style={{ display: 'flex', marginTop: 34, background: C.raised, borderRadius: 12, padding: '24px 30px', fontSize: 23, lineHeight: 1.45, color: C.text }}>
             De aceea, pe LaButoane, rezultatul unui vot din Senat vine din fișa oficială a legii, nu din simpla comparație pentru/contra.
           </div>
@@ -120,9 +241,9 @@ export function MajorityCard({ data }: { data: MajorityCardData }) {
     )
   }
 
-  // ── Slide 4 of the deck — the three rejections + CTA ───────────
+  // ── Slide 5 — the three rejections + CTA ───────────────────────
   return (
-    <Frame kicker="CUM FUNCȚIONEAZĂ · 4/4">
+    <Frame kicker="CUM FUNCȚIONEAZĂ · 5/5">
       <div style={{ display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'center', padding: '0 64px' }}>
         <div style={{ display: 'flex', fontFamily: MONO, fontSize: 17, letterSpacing: 3, textTransform: 'uppercase', color: C.amberDark, marginBottom: 12 }}>
           Senat · 21 septembrie 2026
