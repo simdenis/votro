@@ -1,6 +1,7 @@
 import { ImageResponse } from 'next/og'
 import { LawCard, type LawCardData } from '@/components/cards/law-card'
 import { mapLawToCard, lawDecisiveVoteId } from '@/lib/votecard'
+import { fetchLawStage } from '@/lib/law-stage'
 import { getCardFonts } from '@/lib/og-fonts'
 import { isUuid } from '@/lib/utils'
 import type { LawStatus } from '@/lib/types'
@@ -68,7 +69,8 @@ export async function GET(request: Request) {
     }
   }
 
-  const data = law ? mapLawToCard(law, breakdown, forChamber, seatsByParty) : SAMPLE
+  const stage = law ? await fetchLawStage(law.law_id) : null
+  const data = law ? mapLawToCard(law, breakdown, forChamber, seatsByParty, stage) : SAMPLE
   const fonts = await getCardFonts()
   // Render at 2× (2160px) — a 1080px PNG looks soft on hi-dpi screens.
   return new ImageResponse(

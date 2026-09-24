@@ -1,6 +1,7 @@
 import { ImageResponse } from 'next/og'
 import { SummaryCard, type SummaryCardData } from '@/components/cards/summary-card'
 import { mapLawToCard } from '@/lib/votecard'
+import { fetchLawStage } from '@/lib/law-stage'
 import { getCardFonts } from '@/lib/og-fonts'
 import { isUuid, plainSummary } from '@/lib/utils'
 import type { LawStatus } from '@/lib/types'
@@ -55,12 +56,13 @@ async function renderCard(request: Request): Promise<Response> {
   let data = SAMPLE
   if (law) {
     // headline lives on laws, not the law_status view — fetch it alongside
-    const [mapped, initiator, headlineRow] = await Promise.all([
-      Promise.resolve(mapLawToCard(law, [], null)),
+    const [stage, initiator, headlineRow] = await Promise.all([
+      fetchLawStage(law.law_id),
       initiatorLine(law.law_id),
       fetch(`${U}/rest/v1/laws?id=eq.${law.law_id}&select=headline`, { headers: SB })
         .then(r => r.json()).then(rows => rows?.[0]?.headline as string | null).catch(() => null),
     ])
+    const mapped = mapLawToCard(law, [], null, null, stage)
     data = {
       lawCode: mapped.lawCode,
       lawTitle: law.title,

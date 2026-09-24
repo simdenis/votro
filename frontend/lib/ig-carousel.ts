@@ -6,9 +6,10 @@
 
 import { createHash } from 'node:crypto'
 import type { LawStatus } from '@/lib/types'
+import { tacitChambers, type LawStage } from '@/lib/law-stage'
 
 /** Mirror of CARD_V in scraper/instagram_poster.py — bump both together. */
-export const CARD_V = '11'
+export const CARD_V = '12'
 
 /** Deterministic static filename for an og-card suffix (poster contract). */
 export function slideName(suffix: string): string {
@@ -22,7 +23,7 @@ export type Slide = { suffix: string; static: string; label: string }
  *  devVote = the chamber vote with the most deviations, or null.
  *  hasHeadline → prepend the catchy cover slide and drop the headline from the
  *  summary card (nohl) so the phrase isn't repeated. */
-export function lawSlides(law: LawStatus, devVote: string | null, hasHeadline = false): Slide[] {
+export function lawSlides(law: LawStatus, devVote: string | null, hasHeadline = false, stage: LawStage | null = null): Slide[] {
   const v = `&v=${CARD_V}`
   const slides: Slide[] = []
   if (hasHeadline) {
@@ -32,9 +33,10 @@ export function lawSlides(law: LawStatus, devVote: string | null, hasHeadline = 
     suffix: `og/summarycard?id=${law.law_id}${hasHeadline ? '&nohl=1' : ''}${v}`,
     static: '', label: 'rezumat',
   })
-  const passed = Boolean(law.presidential_status)
-  for (const [key, voteField] of [['senate', 'senate_vote_id'], ['camera', 'camera_vote_id']] as const) {
-    if (passed && !law[voteField]) {
+  // tacit chambers (art. 75) — registry stage aware, see lib/law-stage
+  const tacit = tacitChambers(law, stage)
+  for (const key of ['senate', 'camera'] as const) {
+    if (tacit[key]) {
       slides.push({ suffix: `og/tacitcard?id=${law.law_id}&chamber=${key}${v}`, static: '', label: `tacit ${key === 'senate' ? 'Senat' : 'Cameră'}` })
     }
   }

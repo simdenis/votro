@@ -4,6 +4,7 @@ import type { SenatorCardData } from '@/components/cards/senator-card'
 import type { LawCardData, JourneyStep } from '@/components/cards/law-card'
 import { trueAbsent, type PoliticianStats, type LawStatus } from '@/lib/types'
 import { formatDate, capFirst } from '@/lib/utils'
+import { passedParliament, tacitChambers, type LawStage } from '@/lib/law-stage'
 
 interface BreakdownRow { party_abbr: string; vote_choice: string; count: number }
 
@@ -120,11 +121,17 @@ export function mapLawToCard(
   breakdownRows: BreakdownRow[] = [],
   forChamber: 'camera' | 'senate' | null = null,
   seatsByParty: Record<string, number> | null = null,
+  stage: LawStage | null = null,
 ): LawCardData {
   const promulgat = law.presidential_status === 'promulgat'
-  const senateDone = law.senate_outcome === 'adoptat' || !!law.presidential_status
-  const cameraDone = law.camera_outcome === 'adoptat' || !!law.presidential_status
+  // registry stage (lib/law-stage) covers tacit chambers and the weeks between
+  // the decisional vote and the presidential decision — vote rows alone miss both
+  const passed = passedParliament(law, stage)
+  const tacit = tacitChambers(law, stage)
+  const senateDone = law.senate_outcome === 'adoptat' || passed
+  const cameraDone = law.camera_outcome === 'adoptat' || passed
   const rejected = law.senate_outcome === 'respins' || law.camera_outcome === 'respins'
+    || stage?.stage === 'respins_definitiv'
 
   let statusLabel = 'ÎN DEZBATERE'
   let statusColor = '#171A1F'
@@ -161,10 +168,8 @@ export function mapLawToCard(
   // chamber shows its outcome color only up to the displayed slide's vote —
   // the other chamber's later vote stays gray and gets revealed on its slide.
   const outcomes = {
-    senate: (law.senate_outcome as 'adoptat' | 'respins' | null)
-      ?? (law.senate_vote_id ? null : law.presidential_status ? 'adoptat' as const : null), // tacit pass
-    camera: (law.camera_outcome as 'adoptat' | 'respins' | null)
-      ?? (law.camera_vote_id ? null : law.presidential_status ? 'adoptat' as const : null),
+    senate: (law.senate_outcome as 'adoptat' | 'respins' | null) ?? (tacit.senate ? 'adoptat' as const : null),
+    camera: (law.camera_outcome as 'adoptat' | 'respins' | null) ?? (tacit.camera ? 'adoptat' as const : null),
   }
   const voteDates = { senate: law.senate_vote_date ?? '', camera: law.camera_vote_date ?? '' }
   const shownDate = decisive ? voteDates[decisive.chamber] : ''
@@ -182,7 +187,7 @@ export function mapLawToCard(
     statusColor,
     dateLine,
     // just the two chambers — the badge carries the final outcome
-    journey: [step('senate', 'Senat'), step('camera', 'Cameră')],
+    journey: [step('senate', tacit.senate ? 'Senat · tacit' : 'Senat'), step('camera', tacit.camera ? 'Cameră · tacit' : 'Cameră')],
     voteChamber: decisive ? (isCam ? 'CAMERA DEPUTAȚILOR' : 'SENAT') : null,
     votesFor: decisive ? (isCam ? law.camera_for : law.senate_for) : null,
     votesAgainst: decisive ? (isCam ? law.camera_against : law.senate_against) : null,

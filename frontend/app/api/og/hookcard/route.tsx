@@ -5,6 +5,7 @@ import { getCardFonts } from '@/lib/og-fonts'
 import { isUuid } from '@/lib/utils'
 import type { LawStatus } from '@/lib/types'
 import { withEdgeCache } from '@/lib/og-edge-cache'
+import { fetchLawStage } from '@/lib/law-stage'
 
 // 1080×1350 carousel cover — the catchy headline (laws.headline), huge.
 // /api/og/hookcard?id=<law_id>. No headline → 404 (the manifest only adds this
@@ -22,15 +23,16 @@ async function render(req: Request): Promise<Response> {
   const id = isUuid(new URL(req.url).searchParams.get('id')) ? new URL(req.url).searchParams.get('id') : null
   if (!id) return new Response('bad id', { status: 400 })
 
-  const [law, headlineRow] = await Promise.all([
+  const [law, headlineRow, stage] = await Promise.all([
     fetch(`${U}/rest/v1/law_status?law_id=eq.${id}&select=*&limit=1`, { headers: SB })
       .then(r => r.json()).then(rows => rows?.[0] as LawStatus | undefined),
     fetch(`${U}/rest/v1/laws?id=eq.${id}&select=headline`, { headers: SB })
       .then(r => r.json()).then(rows => rows?.[0]?.headline as string | null).catch(() => null),
+    fetchLawStage(id),
   ])
   if (!law || !headlineRow) return new Response('no headline', { status: 404 })
 
-  const mapped = mapLawToCard(law, [], null)
+  const mapped = mapLawToCard(law, [], null, null, stage)
   const data: HookCardData = {
     headline: headlineRow,
     lawCode: mapped.lawCode,

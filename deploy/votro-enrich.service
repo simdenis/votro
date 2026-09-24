@@ -1,0 +1,14 @@
+[Unit]
+Description=VotRO hourly AI enrichment (summaries, categories, interest scores)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Environment=REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+Environment=SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
+Type=oneshot
+User=votro
+WorkingDirectory=/opt/votro
+ExecStart=/opt/votro/deploy/run_daily.sh --enrich
+# Incremental and small (--limit); a batch of 40 summaries is ~15 min on a busy day.
+TimeoutStartSec=40min

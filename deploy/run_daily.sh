@@ -15,7 +15,9 @@ LOG_DIR="${VOTRO_LOG_DIR:-/var/log/votro}"
 PY="$REPO_DIR/scraper/.venv/bin/python"
 
 FAST=0
+ENRICH=0
 if [ "${1:-}" = "--fast" ]; then FAST=1; shift; fi
+if [ "${1:-}" = "--enrich" ]; then ENRICH=1; shift; fi
 
 mkdir -p "$LOG_DIR"
 LOG="$LOG_DIR/scrape-$(date -u '+%Y%m%d').log"
@@ -38,6 +40,28 @@ export CRON_SECRET
 # slot, and whenever the fast run won the race the whole enrichment pipeline was
 # silently skipped for that half-day (12 times Jul–Sep 2026, twice on 09-19). Wait
 # for the fast run to finish instead — it takes ~40 s, 10 min at its timeout.
+# --enrich: the three incremental AI steps only (summaries → categories →
+# interest scores), hourly during plenary hours so a law voted at 11:00 has a
+# score and a headline for the admin/story picker before the 17:00 full run
+# (the scores used to arrive up to 8 h after the vote). Its own lock: it never
+# touches votes, so the fast scrape must not wait on it; the full run takes
+# this lock too so the two never score the same batch twice. No heartbeat —
+# scrape_meta is about the vote pipeline.
+exec 8>"$LOG_DIR/.enrich.lock"
+if [ "$ENRICH" = 1 ]; then
+  if ! flock -n 8; then
+    log "=== Skipped (enrich) — another run holds the enrich lock ==="
+    exit 0
+  fi
+  git pull --ff-only >>"$LOG" 2>&1 || log "WARN: git pull failed — running existing code"
+  log "=== Enrich: summaries / categories / scores (hourly) ==="
+  "$PY" scraper/gemini_summarizer.py --limit 40 >>"$LOG" 2>&1 || log "WARN: enrich summarizer failed"
+  "$PY" scraper/categorize_laws.py --limit 40 >>"$LOG" 2>&1 || log "WARN: enrich categorizer failed"
+  "$PY" scraper/interest_scorer.py --limit 60 >>"$LOG" 2>&1 || log "WARN: enrich scorer failed"
+  log "=== Done (enrich) ==="
+  exit 0
+fi
+
 exec 9>"$LOG_DIR/.scrape.lock"
 if [ "$FAST" = 1 ]; then
   if ! flock -n 9; then
@@ -47,6 +71,10 @@ if [ "$FAST" = 1 ]; then
 elif ! flock -w 900 9; then
   log "=== Skipped (full) — lock still held after 15 min ==="
   exit 0
+fi
+# full run: also hold the enrich lock (an hourly enrich takes ≤ ~20 min)
+if ! flock -w 1500 8; then
+  log "WARN: enrich lock still held after 25 min — continuing anyway"
 fi
 
 # Heartbeat on EVERY exit (trap), not just a clean finish. Otherwise a crash in

@@ -333,7 +333,7 @@ def post_carousel(cfg: Config, image_urls: list[str], caption: str) -> str:
 # Bump after card design changes — og images are CDN-cached immutable per URL.
 # KEEP IN SYNC with frontend/lib/ig-carousel.ts (admin page derives the same
 # slide manifest + static hashes from it).
-CARD_V = "11"
+CARD_V = "12"
 
 
 def _initiator_line(cfg: Config, law_id: str) -> str | None:
@@ -407,11 +407,20 @@ def _law_slides(cfg: Config, law_id: str, hook: str | None = None) -> tuple[list
         suffixes.append(f"og/hookcard?id={law_id}&v={CARD_V}")
     suffixes.append(f"og/summarycard?id={law_id}"
                     + ("&nohl=1" if has_headline else "") + f"&v={CARD_V}")
-    passed = bool(law.get("presidential_status"))
     # Tacit slide right after the summary: a chamber the law passed without a
-    # plenary vote gets the "nimeni nu a votat" card.
+    # plenary vote gets the "nimeni nu a votat" card. Mirrors
+    # frontend/lib/law-stage.ts tacitChambers(): the registry stage (initiatives)
+    # knows a tacit first chamber long before any presidential status exists.
+    stage_rows = _sb_get(cfg, "initiatives", {
+        "law_id": f"eq.{law_id}", "select": "stage,chamber_first", "limit": "1"})
+    stage = (stage_rows[0].get("stage") if stage_rows else None) or ""
+    first = {"senate": "senate", "deputies": "camera"}.get(
+        (stage_rows[0].get("chamber_first") if stage_rows else None) or "")
+    passed = bool(law.get("presidential_status")) or stage in ("adoptat_final", "la_ccr")
+    first_done = passed or stage in ("la_decizionala", "adoptat_prima")
     for key, vote_field in (("senate", "senate_vote_id"), ("camera", "camera_vote_id")):
-        if passed and not law.get(vote_field):
+        tacit = not law.get(vote_field) and (passed or (first == key and first_done))
+        if tacit:
             suffixes.append(f"og/tacitcard?id={law_id}&chamber={key}&v={CARD_V}")
     chambers = []  # (date, chamber_key, vote_id)
     if law.get("senate_vote_id"):

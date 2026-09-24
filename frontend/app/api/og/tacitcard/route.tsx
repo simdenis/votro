@@ -1,12 +1,13 @@
 import { ImageResponse } from 'next/og'
 import { TacitCard, type TacitCardData } from '@/components/cards/tacit-card'
+import { fetchLawStage, tacitChambers } from '@/lib/law-stage'
 import { getCardFonts } from '@/lib/og-fonts'
 import { capFirst, isUuid } from '@/lib/utils'
 import { activeSeats } from '@/lib/seats'
 import { formatDate } from '@/lib/utils'
 
 // 1080×1350 (4:5) tacit-adoption card. A chamber qualifies when the law moved past
-// Parliament (presidential_status set) yet has no plenary vote there.
+// it (registry stage / presidential status — lib/law-stage) yet has no plenary vote there.
 // URL: /api/og/tacitcard?id=<law_id>[&chamber=senate|camera]
 
 
@@ -27,9 +28,9 @@ export async function GET(request: Request) {
 
   let data: TacitCardData
   if (law) {
-    const passed = !!law.presidential_status
-    const senateTacit = passed && !law.senate_vote_id
-    const cameraTacit = passed && !law.camera_vote_id
+    const tacit = tacitChambers(law, await fetchLawStage(law.law_id))
+    const senateTacit = tacit.senate
+    const cameraTacit = tacit.camera
     const chamber: 'senate' | 'deputies' =
       chamberParam === 'camera' && cameraTacit ? 'deputies'
       : chamberParam === 'senate' && senateTacit ? 'senate'

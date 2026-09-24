@@ -101,6 +101,9 @@ async function fetchCandidates() {
     db.from('law_initiators').select('law_id, role_raw, party_raw').in('law_id', topIds),
   ])
   const statusByLaw = new Map((statuses ?? []).map(s => [s.law_id, s as LawStatus]))
+  const { data: stageRows } = await db.from('initiatives').select('law_id, stage, chamber_first').in('law_id', topIds)
+  const stageByLaw = new Map((stageRows ?? []).map(r => [r.law_id as string,
+    { stage: r.stage as string | null, chamber_first: r.chamber_first as 'senate' | 'deputies' | null }]))
   const voteIds = (statuses ?? [])
     .flatMap(s => [s.senate_vote_id, s.camera_vote_id])
     .filter((v): v is string => Boolean(v))
@@ -120,7 +123,7 @@ async function fetchCandidates() {
       (initiators ?? []).filter(r => r.law_id === l.id))
     return {
       ...l,
-      slides: status ? lawSlides(status, devVote, Boolean(l.headline)) : ([] as Slide[]),
+      slides: status ? lawSlides(status, devVote, Boolean(l.headline), stageByLaw.get(l.id) ?? null) : ([] as Slide[]),
       carouselCaption: status ? lawCarouselCaption(status, { initiator, devCount, headline: l.headline }) : null,
     }
   })

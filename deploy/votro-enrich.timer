@@ -1,0 +1,12 @@
+[Unit]
+Description=Run the VotRO AI enrichment hourly during plenary hours
+
+[Timer]
+# Romanian local time. :20 past the hour — after the :00/:15 fast scrapes have
+# stored the sitting's votes, so the new laws get a summary + score within the
+# hour instead of at the 17:00 full run.
+OnCalendar=*-*-* 10..20:20:00 Europe/Bucharest
+RandomizedDelaySec=60
+
+[Install]
+WantedBy=timers.target

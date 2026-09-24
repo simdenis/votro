@@ -40,7 +40,8 @@ export async function GET(req: Request) {
 
   const initiator = initiatorLineFromRows(lawRow?.[0]?.initiator_type ?? null, initiators ?? [])
   // suffix already starts with "og/" → /api/<suffix>, NOT /api/og/<suffix>
-  const slides = lawSlides(status, devVote, Boolean(headline))
+  const { data: stageRows } = await db.from('initiatives').select('stage, chamber_first').eq('law_id', id).limit(1)
+  const slides = lawSlides(status, devVote, Boolean(headline), (stageRows?.[0] as { stage: string | null; chamber_first: 'senate' | 'deputies' | null } | undefined) ?? null)
     .map(s => ({ url: `${SITE}/api/${s.suffix}`, label: s.label }))
   const caption = lawCarouselCaption(status, { initiator, devCount, headline })
   return Response.json({ slides, caption })

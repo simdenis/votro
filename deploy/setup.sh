@@ -50,8 +50,10 @@ install -m644 "$REPO_DIR/deploy/votro-scrape.service"      /etc/systemd/system/
 install -m644 "$REPO_DIR/deploy/votro-scrape.timer"        /etc/systemd/system/
 install -m644 "$REPO_DIR/deploy/votro-scrape-fast.service" /etc/systemd/system/
 install -m644 "$REPO_DIR/deploy/votro-scrape-fast.timer"   /etc/systemd/system/
+install -m644 "$REPO_DIR/deploy/votro-enrich.service"      /etc/systemd/system/
+install -m644 "$REPO_DIR/deploy/votro-enrich.timer"        /etc/systemd/system/
 systemctl daemon-reload
-systemctl enable --now votro-scrape.timer votro-scrape-fast.timer
+systemctl enable --now votro-scrape.timer votro-scrape-fast.timer votro-enrich.timer
 
 echo
 echo "Done. Next:"
