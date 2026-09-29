@@ -1,0 +1,145 @@
+{
+  "version": 1,
+  "updated": "2026-09-29",
+  "timezone": "Europe/Bucharest",
+  "sessions": [
+    { "from": "02-01", "to": "06-30" },
+    { "from": "09-01", "to": "12-31" }
+  ],
+  "notes": [
+    "Weekdays are ISO (1 = Monday … 7 = Sunday). Times are Romanian local.",
+    "Nothing here publishes anything: the schedule drives the /admin calendar and the 09:00 «azi pe IG» email. A human presses publish.",
+    "Format mix follows the account's own numbers (Jul–Sep 2026): explainers and contested-vote carousels reach 900+, plain single-law summaries stay under 250. One explainer a week is the growth slot.",
+    "Every ranking that names people (absence stories, monthly card) keeps the three guards: seated the whole window, no context_note, ≥ 5 votes held (≥ 30 per chamber for a weekly story)."
+  ],
+  "slots": [
+    {
+      "id": "recap-week",
+      "title": "Ce a votat Parlamentul săptămâna trecută",
+      "format": "feed",
+      "time": "18:00",
+      "weekday": 1,
+      "in_recess": "skip",
+      "section": "sect-week",
+      "card": "og/weekcover?kind=votate",
+      "why": "Ancora săptămânală. Recapul din 19 sept a adus 910 reach și 5 urmăritori noi."
+    },
+    {
+      "id": "story-sitting",
+      "title": "Story: voturile finale de azi",
+      "format": "story",
+      "time": "după ședință",
+      "weekday": [1, 2, 3],
+      "in_recess": "skip",
+      "section": "sect-today",
+      "why": "Ședințele de plen sunt luni–miercuri. Story = fără caption, 24h; nu intră în grilă."
+    },
+    {
+      "id": "story-switch",
+      "title": "Story: schimbare de partid (când apare)",
+      "format": "story",
+      "time": "în ziua anunțului",
+      "weekday": [1, 2, 3, 4, 5],
+      "in_recess": "keep",
+      "section": "sect-today",
+      "event": "switch",
+      "why": "Traseismul e evenimențial (două mutări pe 1 sept, una în iunie). Se postează în ziua anunțului, nu pe calendar."
+    },
+    {
+      "id": "law-finished-1",
+      "title": "Carusel: o lege terminată (vot decizional sau promulgare)",
+      "format": "feed",
+      "time": "18:00",
+      "weekday": 2,
+      "in_recess": "replace:backlog",
+      "section": "sect-promulgate",
+      "why": "Regula feed-ului: doar legi terminate. Alege după scorul de interes, nu după dată."
+    },
+    {
+      "id": "tacit-countdown",
+      "title": "Pe cale să treacă tacit (≤ 7 zile)",
+      "format": "feed",
+      "time": "18:00",
+      "weekday": 3,
+      "in_recess": "skip",
+      "section": "sect-tacit",
+      "card": "og/tacitlist",
+      "min_score": 60,
+      "why": "Doar când există un proiect cu scor ≥ 60 care expiră în 7 zile. Altfel slotul rămâne gol — nu forța."
+    },
+    {
+      "id": "explainer",
+      "title": "Explainer sau vot contestat («cum funcționează» / cine a rupt rândurile)",
+      "format": "feed",
+      "time": "20:00",
+      "weekday": 4,
+      "in_recess": "keep",
+      "section": "sect-week",
+      "why": "Slotul de creștere: «0 voturi împotrivă» a făcut 932 reach, 13 salvări, 7 urmăritori; «AUR în bloc» a avut 27 de distribuiri. Joi seara e fereastra cu cea mai mare interacțiune."
+    },
+    {
+      "id": "passed-week",
+      "title": "Trecute de Parlament / promulgate săptămâna asta",
+      "format": "feed",
+      "time": "18:00",
+      "weekday": 5,
+      "in_recess": "skip",
+      "section": "sect-promulgate",
+      "card": "og/weekcover?kind=parlament",
+      "why": "Închide săptămâna cu lista celor ajunse la Președinte sau promulgate."
+    },
+    {
+      "id": "story-absents-week",
+      "title": "Story: absenții săptămânii",
+      "format": "story",
+      "time": "12:00",
+      "weekday": 6,
+      "in_recess": "skip",
+      "section": "sect-absents",
+      "min_votes_per_chamber": 30,
+      "why": "Aceleași date ca newsletterul de sâmbătă. Numai în săptămânile cu ≥ 30 de voturi pe cameră, cu cele trei garduri."
+    },
+    {
+      "id": "backlog",
+      "title": "«Știai că?» — o lege din arhivă",
+      "format": "feed",
+      "time": "18:00",
+      "weekday": 2,
+      "in_recess": "only",
+      "section": "sect-promulgate",
+      "why": "În vacanța parlamentară (iulie, august, ianuarie) ține ritmul cu legi vechi dar relevante."
+    },
+    {
+      "id": "absents-month",
+      "title": "Top absențe luna trecută",
+      "format": "feed",
+      "time": "18:00",
+      "day_of_month": 1,
+      "in_recess": "keep",
+      "section": "sect-absents",
+      "why": "Emailul de aprobare vine la 09:00 pe 1 ale lunii. Publică după ce verifici alertele."
+    },
+    {
+      "id": "switchers-month",
+      "title": "Traseiști luna trecută",
+      "format": "feed",
+      "time": "18:00",
+      "day_of_month": 2,
+      "in_recess": "keep",
+      "section": "sect-switchers",
+      "card": "og/switchcard",
+      "why": "Se sare automat când luna a avut zero mutări."
+    },
+    {
+      "id": "matrix-quarter",
+      "title": "Matricea partidelor (cine votează cu cine)",
+      "format": "feed",
+      "time": "18:00",
+      "day_of_month": 5,
+      "months": [1, 4, 7, 10],
+      "in_recess": "keep",
+      "section": "sect-matrix",
+      "why": "Trimestrial. Cardul din 20 iul a avut 322 reach — bun ca evergreen, nu ca știre."
+    }
+  ]
+}

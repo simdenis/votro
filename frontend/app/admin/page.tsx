@@ -1,6 +1,7 @@
 import { getDB } from '@/lib/supabase'
 import { PublishCard, CarouselPublishCard, ManualPublish, PeriodCard, WeekSelectionCard, SwitchMonthCard } from '@/components/admin/publish-panel'
 import { AbsenceResearch } from '@/components/admin/absence-research'
+import { PostingCalendar } from '@/components/admin/calendar'
 import { AdminLogin, LogoutButton } from '@/components/admin/admin-login'
 import { isAdmin } from '@/lib/admin-auth'
 import { lawSlides, lawCarouselCaption, initiatorLineFromRows, CARD_V, type Slide } from '@/lib/ig-carousel'
@@ -199,6 +200,33 @@ async function fetchWeekLaws(): Promise<WeekLaw[]> {
 // Not window-bound like the candidates above: a law can sit weeks between the
 // second chamber's vote and promulgation, and that whole time it's postable.
 
+/** Final votes of the previous calendar week (Mon–Sun), one row per law, for
+ *  the Monday «ce a votat Parlamentul săptămâna trecută» carousel — the same
+ *  window the weekcover ?kind=votate cover prints. */
+async function fetchPrevWeekVotes() {
+  const db = getDB()
+  const now = new Date()
+  const dow = now.getUTCDay() || 7
+  const monday = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - (dow - 1) - 7))
+  const sunday = new Date(monday.getTime() + 6 * 86400_000)
+  const iso = (d: Date) => d.toISOString().slice(0, 10)
+  const { data } = await db.from('votes')
+    .select('law_id, chamber, vote_date, for_count, against_count, outcome, laws(id, code, title, headline, summary, interest_score)')
+    .eq('vote_type', 'vot final').gte('vote_date', iso(monday)).lte('vote_date', iso(sunday))
+    .not('law_id', 'is', null).order('vote_date')
+  const byLaw = new Map<string, { id: string; code: string; title: string; desc: string; score: number }>()
+  for (const v of (data ?? []) as any[]) {
+    const l = v.laws
+    if (!l) continue
+    const ch = v.chamber === 'senate' ? 'Senat' : 'Cameră'
+    const tally = v.against_count == null ? `${v.for_count} pentru` : `${v.for_count}–${v.against_count}`
+    const line = `${l.headline || l.title} (${ch}, ${tally}${v.outcome === 'respins' ? ', respins' : ''})`
+    byLaw.set(l.id, { id: l.id, code: l.code, title: line, desc: l.summary || l.headline || l.title, score: l.interest_score ?? 0 })
+  }
+  return { range: `${monday.getUTCDate()}–${sunday.getUTCDate()} ${RO_MONTHS[sunday.getUTCMonth()]}`,
+           laws: [...byLaw.values()].sort((a, b) => b.score - a.score) }
+}
+
 async function fetchAwaitingPromulgation() {
   const db = getDB()
   const { data } = await db.from('law_status')
@@ -346,11 +374,11 @@ function monthOptions(): { value: string; label: string }[] {
 
 // ── page ─────────────────────────────────────────────────────────────────────
 
-function Section({ title, cadence, hint, children }: {
-  title: string; cadence: string; hint?: string; children: React.ReactNode
+function Section({ title, cadence, hint, id, children }: {
+  title: string; cadence: string; hint?: string; id?: string; children: React.ReactNode
 }) {
   return (
-    <section className="mt-10">
+    <section className="mt-10 scroll-mt-4" id={id}>
       <div className="flex items-baseline gap-2 flex-wrap">
         <h2 className="text-[15px] font-bold">{title}</h2>
         <span className="text-[10px] uppercase tracking-wider font-semibold text-faint border border-rim rounded px-1.5 py-px">{cadence}</span>
@@ -400,7 +428,7 @@ export default async function AdminPage({ searchParams }: {
   const cardBust = new Date().toISOString().slice(0, 13).replace(/[-:T]/g, '')
   const db = getDB()
 
-  const [candidates, weekLaws, tacit, monthlyAbs, recentSitting, allSwitchers, awaiting, { data: todayVotes }] = await Promise.all([
+  const [candidates, weekLaws, tacit, monthlyAbs, recentSitting, allSwitchers, awaiting, { data: todayVotes }, prevWeek] = await Promise.all([
     fetchCandidates(),
     fetchWeekLaws(),
     fetchTacit(),
@@ -410,6 +438,7 @@ export default async function AdminPage({ searchParams }: {
     fetchAwaitingPromulgation(),
     db.from('votes').select('law_id, chamber, outcome, laws(id, code, title)')
       .eq('vote_type', 'vot final').eq('vote_date', today).not('law_id', 'is', null),
+    fetchPrevWeekVotes(),
   ])
 
   const promulgated = candidates.filter(l => l.presidential_status === 'promulgat')
@@ -492,6 +521,8 @@ export default async function AdminPage({ searchParams }: {
         Nimic nu se postează singur.
       </p>
 
+      <PostingCalendar />
+
       {/* the "laws of the week" button — full list, nothing capped/missed */}
       <details className="mt-5 border border-rim rounded-xl overflow-hidden">
         <summary className="cursor-pointer select-none px-4 py-3 text-[13px] font-semibold bg-surface hover:bg-raised transition-colors">
@@ -522,7 +553,7 @@ export default async function AdminPage({ searchParams }: {
       )}
 
       {(todayVotes ?? []).length + todaySwitchers.length > 0 && (
-        <Section title="Astăzi" cadence="zilnic"
+        <Section id="sect-today" title="Astăzi" cadence="zilnic"
                  hint="Voturi finale de azi și schimbări de partid de azi — de regulă story (fără caption, 24h), dar ai și butonul de post.">
           <div className="flex flex-col gap-6">
             {(todayVotes ?? []).map((v: any) => (
@@ -544,7 +575,21 @@ export default async function AdminPage({ searchParams }: {
         </Section>
       )}
 
-      <Section title="Promulgate de Președinte" cadence="săptămânal"
+      <Section id="sect-week" title={`Ce a votat Parlamentul săptămâna trecută (${prevWeek.range})`} cadence="luni"
+               hint="Toate voturile finale din săptămâna calendaristică trecută, sortate după interes. Bifează ce intră în carusel — coperta e weekcover ?kind=votate.">
+        {prevWeek.laws.length === 0 ? (
+          <p className="text-[13px] text-faint">Niciun vot final săptămâna trecută.</p>
+        ) : (
+          <div className="border border-rim rounded-xl p-4">
+            <WeekSelectionCard site={SITE} coverKind="votate"
+              captionHeader={`🗳️ Ce a votat Parlamentul săptămâna trecută (${prevWeek.range})`}
+              captionOutro={`Un vot final nu înseamnă încă lege — urmează cealaltă cameră sau Președintele. Fiecare, explicată pe ${SITE} (link în bio)`}
+              laws={prevWeek.laws} />
+          </div>
+        )}
+      </Section>
+
+      <Section id="sect-promulgate" title="Promulgate de Președinte" cadence="săptămânal"
                hint={`Legi promulgate în ultimele ${CANDIDATE_DAYS} zile, sortate după interes. Fiecare carusel e gata de publicat — slide-urile se randează live.`}>
         <div className="flex flex-col gap-6">
           {promulgated.length === 0 && <p className="text-[13px] text-faint">Nicio promulgare recentă.</p>}
@@ -568,7 +613,7 @@ export default async function AdminPage({ searchParams }: {
         </Section>
       )}
 
-      <Section title="Trecute de ambele camere săptămâna asta" cadence="săptămânal"
+      <Section id="sect-parlament" title="Trecute de ambele camere săptămâna asta" cadence="săptămânal"
                hint="Votul final decisiv în ultimele 7 zile — acum la Președinte. Bifează ce vrei să incluzi → un carusel (coperta + un slide per lege).">
         <div className="border border-rim rounded-xl p-4">
           <WeekSelectionCard site={SITE} coverKind="parlament"
@@ -610,7 +655,7 @@ export default async function AdminPage({ searchParams }: {
         )}
       </Section>
 
-      <Section title="Pe cale să treacă tacit (≤ 7 zile)" cadence="săptămânal"
+      <Section id="sect-tacit" title="Pe cale să treacă tacit (≤ 7 zile)" cadence="săptămânal"
                hint="Termene constituționale care expiră în 7 zile — cele mai fierbinți primele (scor AI din expunerea de motive), la egalitate cel mai apropiat termen.">
         {tacit.length === 0 ? (
           <p className="text-[13px] text-faint">Niciun termen tacit în următoarele 7 zile.</p>
@@ -654,7 +699,7 @@ export default async function AdminPage({ searchParams }: {
         </Section>
       )}
 
-      <Section title="Absențe — clasament" cadence="lunar / mandat"
+      <Section id="sect-absents" title="Absențe — clasament" cadence="lunar / mandat"
                hint="Alege perioada: tot mandatul sau o lună anume. Fără membri ai Guvernului, fără cei cu notă de context, doar mandate întregi.">
         {monthlyAbs.missing ? (
           <p className="text-[13px] text-respins">Tabelul „politician_monthly_absences" lipsește — rulează migrația 036 în Supabase SQL editor.</p>
@@ -694,14 +739,14 @@ export default async function AdminPage({ searchParams }: {
         )}
       </Section>
 
-      <Section title="Traseiști — pe lună" cadence="lunar"
+      <Section id="sect-switchers" title="Traseiști — pe lună" cadence="lunar"
                hint="Alege luna — cardul arată cine a trecut la alt partid în luna aia (în paranteză, câți).">
         <div className="border border-rim rounded-xl p-4">
           <SwitchMonthCard site={SITE} months={switchMonths} hashtags={HASHTAGS} />
         </div>
       </Section>
 
-      <Section title="Matricea partidelor" cadence="lunar / mandat"
+      <Section id="sect-matrix" title="Matricea partidelor" cadence="lunar / mandat"
                hint="Cine votează cu cine, pe voturile disputate. Alege perioada: tot mandatul sau o lună anume.">
         <div className="border border-rim rounded-xl p-4">
           <PeriodCard site={SITE} kind="matrice" months={recentMonths} bust={cardBust} />

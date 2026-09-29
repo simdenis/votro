@@ -255,6 +255,19 @@ if [ "$(date -u +%d)" = "01" ] && [ ! -f "/tmp/.igpreview-sent-$(date -u +%Y%m)"
   fi
 fi
 
+# 09:00 RO (the morning full run): the «Azi pe IG» digest — the posting grid's
+# slots due today, the strongest candidates for each, admin deep-links and, on
+# Mondays, last week's post metrics. Email only; nothing is published.
+# Once-per-day marker like the newsletter; WARN-only like every email step.
+if [ "$(date -u +%H)" -lt 10 ] && [ ! -f "/tmp/.igdigest-sent-$(date -u +%Y%m%d)" ]; then
+  log "=== IG posting digest (azi pe IG) ==="
+  if "$PY" scraper/post_schedule.py --email >>"$LOG" 2>&1; then
+    touch "/tmp/.igdigest-sent-$(date -u +%Y%m%d)"
+  else
+    log "WARN: IG digest email failed"
+  fi
+fi
+
 # Mondays: extend the Instagram token. It is long-lived, which means 60 days,
 # and nothing renewed it — so it would have expired around late September and
 # the monthly absence card would have stopped arriving with no error anyone
