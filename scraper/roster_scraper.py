@@ -22,6 +22,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import datetime
 import logging
 import re
 import sys
@@ -352,6 +353,36 @@ class Roster:
         row["active"] = True
         return row
 
+    _SWITCH_MIN_GAP_DAYS = 14
+
+    def _record_switch(self, p: dict, new_party_id: str, new_abbr: Optional[str]) -> bool:
+        """Write a roster-observed party change into politician_party_history
+        (close the open segment, open a new one dated today) — the traseiști
+        page and the switch cards read that table, not politicians.party_id.
+        Same close-and-insert as the vote scrapers. Guard: skip when the latest
+        observation is younger than 14 days — the vote pages are the finer
+        source for people who vote, and this keeps the two sources from
+        flip-flopping the same member day after day. Returns False when skipped."""
+        today = datetime.date.today()
+        last = (self.db.table("politician_party_history").select("from_date, party_id")
+                .eq("politician_id", p["id"]).order("from_date", desc=True).limit(1).execute().data)
+        if last:
+            if last[0]["party_id"] == new_party_id:
+                return True  # history already knows; only politicians.party_id lagged
+            age = (today - datetime.date.fromisoformat(last[0]["from_date"])).days
+            if age < self._SWITCH_MIN_GAP_DAYS:
+                log.info("%s %s: roster says %s but last observation is %d day(s) old — waiting for the votes",
+                         p["first_name"], p["name"], new_abbr, age)
+                return False
+        self.db.table("politician_party_history").update(
+            {"to_date": (today - datetime.timedelta(days=1)).isoformat()}
+        ).eq("politician_id", p["id"]).is_("to_date", "null").execute()
+        self.db.table("politician_party_history").insert(
+            {"politician_id": p["id"], "party_id": new_party_id, "from_date": today.isoformat()}
+        ).execute()
+        log.info("%s %s: party switch recorded from the roster → %s (from %s)", p["first_name"], p["name"], new_abbr, today)
+        return True
+
     def run_chamber(self, chamber: str) -> bool:
         roster = senate_roster() if chamber == "senate" else camera_roster()
         if len(roster) < MIN_ROSTER[chamber]:
@@ -468,7 +499,38 @@ class Roster:
                     log.warning("no mandate_start parsed for %s", mem.display)
             time.sleep(_DELAY)
 
+        # Senate group labels: the list page has none, only the profile does
+        # («Grupul parlamentar: Grupul parlamentar PACE – Întâi România»). One
+        # fetch per current senator per run (~134 × 0.6 s). Without this a
+        # senator who moves groups and then stops voting is invisible: Ionel
+        # Carp joined PACE on 2026-09-01, cast no vote in September, and the DB
+        # still said PSD four weeks later (party is otherwise reconstructed
+        # from the last vote cast).
+        senate_groups: dict[str, str] = {}
+        if chamber == "senate":
+            for pid, mem in matched.items():
+                try:
+                    text = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", fetch(mem.profile_url)))
+                except requests.RequestException as e:
+                    log.warning("profile fetch failed for %s: %s", mem.display, e)
+                    time.sleep(_DELAY)
+                    continue
+                m = re.search(r"Grupul parlamentar:\s*(.{3,100})", text)
+                if m:
+                    senate_groups[pid] = m.group(1)
+                time.sleep(_DELAY)
+            log.info("senate: group label read for %d/%d current senators", len(senate_groups), len(matched))
+
         if self.dry_run:
+            for p in pols:
+                mem = matched.get(p["id"])
+                if not mem:
+                    continue
+                label = mem.group if chamber == "deputies" else senate_groups.get(p["id"])
+                abbr = party_override(p["name"], p["first_name"]) or group_to_abbr(label)
+                new_pid = self._party_id(abbr)
+                if new_pid and new_pid != p.get("party_id"):
+                    log.info("DRY RUN: %s %s would move to %s (roster group %r)", p["first_name"], p["name"], abbr, label)
             log.info("DRY RUN — no writes")
             return True
 
@@ -502,9 +564,12 @@ class Roster:
             # full run, while camera_scraper writes it back on the next vote —
             # the label then flip-flops with whichever scraper ran last.
             pinned = party_override(p["name"], p["first_name"])
-            new_abbr = pinned or (group_to_abbr(mem.group) if mem else None)
+            label = (mem.group if chamber == "deputies" else senate_groups.get(p["id"])) if mem else None
+            new_abbr = pinned or group_to_abbr(label)
             new_party_id = self._party_id(new_abbr) if mem else None
             party_changed = bool(new_party_id) and new_party_id != p.get("party_id")
+            if party_changed and not self._record_switch(p, new_party_id, new_abbr):
+                party_changed = False  # too soon after the last observation — leave it to the votes
             if (p["active"] != should_be_active or new_county or new_start
                     or party_changed or new_ext or new_name):
                 update: dict = {"active": should_be_active}
