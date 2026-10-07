@@ -289,6 +289,11 @@ def post_story(cfg: Config, image_url: str) -> str:
     Monthly absences / traseiști go here since 2026-10-07 — the user wants
     people-naming rankings off the permanent feed."""
     cfg.require_publishing()
+    # Stories are 9:16. Every card is 4:5, so wrap it in the /api/og/story
+    # frame (branded 1080×1920 canvas, card centered) — same as the admin
+    # publish flow. Posting the bare card gave IG a 4:5 image (2026-10-07).
+    if "/api/og/story?" not in image_url:
+        image_url = f"{cfg.site_url}/api/og/story?src={_quote(image_url, safe='')}"
     r = requests.post(
         f"{GRAPH}/{cfg.version}/{cfg.ig_user_id}/media",
         params={"media_type": "STORIES", "image_url": image_url, "access_token": cfg.token},
