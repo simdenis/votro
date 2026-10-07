@@ -293,7 +293,22 @@ def post_story(cfg: Config, image_url: str) -> str:
     # frame (branded 1080×1920 canvas, card centered) — same as the admin
     # publish flow. Posting the bare card gave IG a 4:5 image (2026-10-07).
     if "/api/og/story?" not in image_url:
+        inner = image_url
         image_url = f"{cfg.site_url}/api/og/story?src={_quote(image_url, safe='')}"
+        # The frame embeds the card via a satori <img> fetch at render time. A
+        # cold/slow inner render leaves a BLANK frame (46 KB, no card) — and the
+        # story route is never cached, so IG's own fetch re-renders it. Warm the
+        # inner card first, then insist on a full frame before handing IG the URL.
+        for _ in range(2):
+            requests.get(inner, timeout=60)
+        for attempt in range(4):
+            r = requests.get(image_url, timeout=90)
+            if r.ok and len(r.content) > 90_000:
+                break
+            print(f"story frame came back {len(r.content)} bytes (blank?) — retry {attempt + 1}", file=sys.stderr)
+            time.sleep(5)
+        else:
+            raise RuntimeError("story frame renders blank — not publishing")
     r = requests.post(
         f"{GRAPH}/{cfg.version}/{cfg.ig_user_id}/media",
         params={"media_type": "STORIES", "image_url": image_url, "access_token": cfg.token},
