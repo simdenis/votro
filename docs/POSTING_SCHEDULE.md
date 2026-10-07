@@ -39,8 +39,9 @@ Concluzii:
 | Duminică | — | — | pauză | — |
 | oricând | ziua anunțului | story | Schimbare de partid | «Astăzi» (evenimențial, nu pe calendar) |
 
-Lunar: **1** — top absențe luna trecută (emailul de aprobare vine la 09:00);
-**2** — traseiști luna trecută (se sare la zero); **5 ian/apr/iul/oct** — matricea partidelor.
+Lunar, **ca story** (clasamentele cu nume nu stau permanent pe profil): **1** — top absențe
+luna trecută (emailul de aprobare vine la 09:00; `instagram_poster.py --story <url>`);
+**2** — traseiști luna trecută (se sare la zero). **5 ian/apr/iul/oct** — matricea partidelor, în feed.
 
 Vacanță parlamentară (iulie, august, ianuarie): rămân doar marți «Știai că?»
 (o lege din arhivă), joi explainer și cardurile lunare.

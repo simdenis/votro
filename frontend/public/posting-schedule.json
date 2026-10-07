@@ -1,10 +1,16 @@
 {
   "version": 1,
-  "updated": "2026-09-29",
+  "updated": "2026-10-07",
   "timezone": "Europe/Bucharest",
   "sessions": [
-    { "from": "02-01", "to": "06-30" },
-    { "from": "09-01", "to": "12-31" }
+    {
+      "from": "02-01",
+      "to": "06-30"
+    },
+    {
+      "from": "09-01",
+      "to": "12-31"
+    }
   ],
   "notes": [
     "Weekdays are ISO (1 = Monday … 7 = Sunday). Times are Romanian local.",
@@ -29,7 +35,11 @@
       "title": "Story: voturile finale de azi",
       "format": "story",
       "time": "după ședință",
-      "weekday": [1, 2, 3],
+      "weekday": [
+        1,
+        2,
+        3
+      ],
       "in_recess": "skip",
       "section": "sect-today",
       "why": "Ședințele de plen sunt luni–miercuri. Story = fără caption, 24h; nu intră în grilă."
@@ -39,7 +49,13 @@
       "title": "Story: schimbare de partid (când apare)",
       "format": "story",
       "time": "în ziua anunțului",
-      "weekday": [1, 2, 3, 4, 5],
+      "weekday": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
       "in_recess": "keep",
       "section": "sect-today",
       "event": "switch",
@@ -112,23 +128,23 @@
     {
       "id": "absents-month",
       "title": "Top absențe luna trecută",
-      "format": "feed",
-      "time": "18:00",
+      "format": "story",
+      "time": "12:00",
       "day_of_month": 1,
       "in_recess": "keep",
       "section": "sect-absents",
-      "why": "Emailul de aprobare vine la 09:00 pe 1 ale lunii. Publică după ce verifici alertele."
+      "why": "Emailul de aprobare vine la 09:00 pe 1 ale lunii. Publică după ce verifici alertele. Story, nu feed: clasamentele cu nume nu rămân permanent pe profil (decizie 2026-10-07)."
     },
     {
       "id": "switchers-month",
       "title": "Traseiști luna trecută",
-      "format": "feed",
-      "time": "18:00",
+      "format": "story",
+      "time": "12:00",
       "day_of_month": 2,
       "in_recess": "keep",
       "section": "sect-switchers",
       "card": "og/switchcard",
-      "why": "Se sare automat când luna a avut zero mutări."
+      "why": "Se sare automat când luna a avut zero mutări. Story, nu feed: clasamentele cu nume nu rămân permanent pe profil (decizie 2026-10-07)."
     },
     {
       "id": "matrix-quarter",
@@ -136,7 +152,12 @@
       "format": "feed",
       "time": "18:00",
       "day_of_month": 5,
-      "months": [1, 4, 7, 10],
+      "months": [
+        1,
+        4,
+        7,
+        10
+      ],
       "in_recess": "keep",
       "section": "sect-matrix",
       "why": "Trimestrial. Cardul din 20 iul a avut 322 reach — bun ca evergreen, nu ca știre."

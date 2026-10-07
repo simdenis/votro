@@ -284,6 +284,23 @@ def _publish(cfg: Config, creation_id: str) -> str:
     return r.json()["id"]
 
 
+def post_story(cfg: Config, image_url: str) -> str:
+    """Publish one image as a STORY (24 h, no caption). Returns media id.
+    Monthly absences / traseiști go here since 2026-10-07 — the user wants
+    people-naming rankings off the permanent feed."""
+    cfg.require_publishing()
+    r = requests.post(
+        f"{GRAPH}/{cfg.version}/{cfg.ig_user_id}/media",
+        params={"media_type": "STORIES", "image_url": image_url, "access_token": cfg.token},
+        timeout=_TIMEOUT,
+    )
+    if not r.ok:
+        raise RuntimeError(f"create story container failed ({r.status_code}): {r.text}")
+    creation_id = r.json()["id"]
+    _wait_ready(cfg, creation_id)
+    return _publish(cfg, creation_id)
+
+
 def post_image(cfg: Config, image_url: str, caption: str) -> str:
     """Create a container, wait for it to be ready, and publish. Returns media id."""
     cfg.require_publishing()
@@ -809,6 +826,7 @@ def main() -> None:
                          "Without a window, defaults to last calendar month (cron on the 1st).")
     ap.add_argument("--carousel", nargs="+", metavar="URL", help="publish a carousel from 2–10 image URLs (with --caption)")
     ap.add_argument("--image-url", help="post an arbitrary image URL (with --caption)")
+    ap.add_argument("--story", metavar="URL", help="publish one image URL as a story (24 h, no caption)")
     ap.add_argument("--caption", help="caption for --image-url / --carousel")
     ap.add_argument("--dry-run", action="store_true", help="print instead of publishing")
     args = ap.parse_args()
@@ -874,6 +892,12 @@ def main() -> None:
             print("caption:\n" + (args.caption or ""))
             return
         print("Published. media_id=" + post_carousel(cfg, args.carousel, args.caption or ""))
+        return
+    if args.story:
+        if args.dry_run:
+            print("story:", args.story)
+        else:
+            print("Published story. media_id=" + post_story(cfg, args.story))
         return
     if args.image_url:
         if args.dry_run:
