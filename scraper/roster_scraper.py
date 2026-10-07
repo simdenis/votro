@@ -508,17 +508,30 @@ class Roster:
         # from the last vote cast).
         senate_groups: dict[str, str] = {}
         if chamber == "senate":
-            for pid, mem in matched.items():
-                try:
-                    text = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", fetch(mem.profile_url)))
-                except requests.RequestException as e:
-                    log.warning("profile fetch failed for %s: %s", mem.display, e)
+            # Two passes: senat.ro drops ~5–8 of 134 profiles per run even after
+            # fetch()'s own retries (timeouts, near-empty pages). A second sweep
+            # over just the failures, a minute later, usually gets them all.
+            todo = list(matched.items())
+            for attempt in (1, 2):
+                failed: list[tuple[str, Member]] = []
+                for pid, mem in todo:
+                    try:
+                        text = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", fetch(mem.profile_url)))
+                    except requests.RequestException as e:
+                        log.warning("profile fetch failed for %s (pass %d): %s", mem.display, attempt, e)
+                        failed.append((pid, mem))
+                        time.sleep(_DELAY)
+                        continue
+                    m = re.search(r"Grupul parlamentar:\s*(.{3,100})", text)
+                    if m:
+                        senate_groups[pid] = m.group(1)
                     time.sleep(_DELAY)
-                    continue
-                m = re.search(r"Grupul parlamentar:\s*(.{3,100})", text)
-                if m:
-                    senate_groups[pid] = m.group(1)
-                time.sleep(_DELAY)
+                if not failed:
+                    break
+                todo = failed
+                if attempt == 1:
+                    log.info("senate: %d profile(s) failed — retrying them in 60 s", len(failed))
+                    time.sleep(60)
             log.info("senate: group label read for %d/%d current senators", len(senate_groups), len(matched))
 
         if self.dry_run:

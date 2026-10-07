@@ -2,6 +2,8 @@
 Description=VotRO daily parliamentary vote scrape
 After=network-online.target
 Wants=network-online.target
+# rc≠0 → one automatic re-run 30 min later (deploy/retry_once.sh, once per day)
+OnFailure=votro-scrape-retry.service
 
 [Service]
 # cdep.ro serves the wrong certSIGN intermediate; trust the system store (has Web CA G2) instead of certifi.

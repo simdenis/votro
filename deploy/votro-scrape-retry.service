@@ -1,0 +1,7 @@
+[Unit]
+Description=VotRO — one automatic retry of a failed full scrape (30 min later)
+
+[Service]
+Type=oneshot
+ExecStart=/opt/votro/deploy/retry_once.sh
+TimeoutStartSec=40min
