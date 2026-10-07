@@ -29,7 +29,10 @@ async function render(req: Request): Promise<Response> {
   const ok = (card.origin === SITE || card.origin === new URL(req.url).origin) && card.pathname.startsWith('/api/og/')
   if (!ok) return new Response('src must be an own /api/og card', { status: 400 })
   // force a fresh card render (bypass its per-colo edge cache) so names/data are current
-  const embedSrc = `${src}${src.includes('?') ? '&' : '?'}_=${Date.now()}`
+  // card.toString() re-encodes what the query decoded (a space in &label=,
+  // «+» in base64url payloads) — the raw src broke the shamecard signature
+  card.searchParams.set('_', String(Date.now()))
+  const embedSrc = card.toString()
 
   // Render at 1× (1080×1920). Stories display ~1080px wide, and embedding +
   // rescaling the full-res card PNG onto a 2× canvas blew the CPU cap (1102).

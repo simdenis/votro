@@ -97,7 +97,12 @@ async function renderCard(req: Request): Promise<Response> {
       subtitle: `absențe la voturile din plen · ${label} · Senat + Cameră`,
       entries: await monthEntries(month),
     }
-  } else if (d && await verifySig(d, sp.get('sig'), process.env.CARD_SIGN_SECRET)) {
+  } else if (d && !(await verifySig(d, sp.get('sig'), process.env.CARD_SIGN_SECRET))) {
+    // A payload with a bad/missing signature must FAIL, never fall back to the
+    // all-time card: the story frame once mangled a signed URL and the fallback
+    // (a brand-new deputy at 100% of 14 votes) went out as a story (2026-10-07).
+    return new Response('bad signature', { status: 403 })
+  } else if (d) {
     // interval mode: render the poster's precomputed, signed ranking. `d` is
     // base64url (NOT percent-encoded JSON): URL normalization decodes %23 → '#'
     // en route, which turns the rest of the query into a fragment and drops
