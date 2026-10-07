@@ -181,7 +181,10 @@ class InitiativeScraper:
                 "cdep_code": f"PLx{code.group(1)}/{code.group(4)}",
                 "cdep_idp": int(link.group(1)),
                 "title": _repair_mojibake(_text(cells[2]))[:600] or None,
-                "registered_date": f"{code.group(4)}-{code.group(3)}-{code.group(2)}",
+                # cdep prints «Pl-x N/01.01.1990» when the registration date is
+                # missing — a placeholder, not a date (23 rows on 2026-10-04)
+                "registered_date": (f"{code.group(4)}-{code.group(3)}-{code.group(2)}"
+                                    if int(code.group(4)) >= 2000 else None),
                 "stage_raw": stage_raw or None,
                 "stage_date": f"{stage_date[2]}-{stage_date[1]}-{stage_date[0]}" if stage_date else None,
             })
@@ -317,7 +320,8 @@ def build_row(cdep: dict | None, fisa: dict | None, senat: dict | None) -> dict:
         if stage is None or (STAGE_RANK.get(s, 1), d or "") > (STAGE_RANK.get(stage, 1), stage_date or ""):
             stage, stage_date = s, d
 
-    reg_dates = [d for d in ((cdep or {}).get("registered_date"), (senat or {}).get("registered_date")) if d]
+    reg_dates = [d for d in ((cdep or {}).get("registered_date"), (senat or {}).get("registered_date"))
+                 if d and d >= "2000-01-01"]
     stage_raw = (senat or {}).get("stadiu") or (cdep or {}).get("stage_raw")
     if cdep and cdep.get("stage_raw") and stage and normalize_stage(
             cdep["stage_raw"], decisional=chamber_first == "senate",
@@ -567,7 +571,7 @@ def run(args: argparse.Namespace) -> int:
             merged += 1
         # registration never moves later — a run that saw only the cdep leg must
         # not overwrite the earlier senat-registry date (and vice versa)
-        if prev and prev.get("registered_date") and (
+        if prev and prev.get("registered_date") and prev["registered_date"] >= "2000-01-01" and (
                 not r.get("registered_date") or prev["registered_date"] < r["registered_date"]):
             payload["registered_date"] = prev["registered_date"]
         if prev and prev.get("committee_since") and payload.get("committee_since") is None \
