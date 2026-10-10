@@ -113,14 +113,21 @@ fi
 # (a stale scraper once re-introduced wrong PL-x→L law links). Non-fatal.
 git pull --ff-only >>"$LOG" 2>&1 || log "WARN: git pull failed — running existing code"
 
+# A chamber failing in a FAST cycle (cdep dropping the connection mid-scrape,
+# senat.ro timing out) is retried by the next cycle 15 min later; it must not
+# flip the heartbeat to rc=1 and email an alert — one cdep blip on 2026-10-09
+# did exactly that. Only the full run's failures are alert-worthy.
+chamber_failed() {  # $1 = label
+  if [ "$FAST" = 1 ]; then log "WARN: $1 scrape failed this fast cycle — next cycle retries"; else rc=1; log "$1 scrape FAILED"; fi
+}
 for TARGET in "${DATES[@]}"; do
   if [ "$CDEP_OK" = 1 ]; then
     log "=== Camera Deputatilor — $TARGET ==="
-    "$PY" scraper/camera_scraper.py --date "$TARGET" >>"$LOG" 2>&1 || { rc=1; log "Camera scrape FAILED ($TARGET)"; }
+    "$PY" scraper/camera_scraper.py --date "$TARGET" >>"$LOG" 2>&1 || chamber_failed "Camera ($TARGET)"
   fi
 
   log "=== Senat — $TARGET ==="
-  "$PY" scraper/senat_scraper.py --date "$TARGET" >>"$LOG" 2>&1 || { rc=1; log "Senat scrape FAILED ($TARGET)"; }
+  "$PY" scraper/senat_scraper.py --date "$TARGET" >>"$LOG" 2>&1 || chamber_failed "Senat ($TARGET)"
 done
 
 # Merge Camera-registry duplicates (PLx…) into their Senate L laws. Needs
