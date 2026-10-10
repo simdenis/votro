@@ -72,9 +72,45 @@ def permalink(cfg: ig.Config, media_id: str) -> str | None:
         return None
 
 
-def notify(subject: str, text: str) -> None:
-    """Email (Resend, always) + Telegram (when TELEGRAM_BOT_TOKEN/CHAT_ID are set)."""
+def ig_dm(cfg: ig.Config, text: str) -> bool:
+    """Instagram DM to the owner (IG_PING_USERNAME, e.g. siminiucdenis) from
+    @la.butoane. Instagram only lets a business account message someone who
+    wrote to it first, and only within 24 h of their last message — so this
+    works as long as the owner replies to the pings now and then; otherwise it
+    fails quietly and the email goes out instead."""
+    who = os.environ.get("IG_PING_USERNAME")
+    if not who:
+        return False
+    try:
+        conv = requests.get(f"https://graph.instagram.com/{cfg.version}/me/conversations",
+                            params={"platform": "instagram", "fields": "participants", "access_token": cfg.token},
+                            timeout=30).json()
+        rid = None
+        for c in conv.get("data", []):
+            for p in (c.get("participants") or {}).get("data", []):
+                if p.get("username", "").lower() == who.lower():
+                    rid = p["id"]
+        if not rid:
+            print(f"ig dm: no conversation with @{who} yet — they must DM the account first", file=sys.stderr)
+            return False
+        r = requests.post(f"https://graph.instagram.com/{cfg.version}/me/messages",
+                          json={"recipient": {"id": rid}, "message": {"text": text[:950]}},
+                          params={"access_token": cfg.token}, timeout=30)
+        if not r.ok:
+            print(f"ig dm failed ({r.status_code}): {r.text[:200]}", file=sys.stderr)
+            return False
+        return True
+    except Exception as e:
+        print(f"ig dm error: {e}", file=sys.stderr)
+        return False
+
+
+def notify(subject: str, text: str, cfg: ig.Config | None = None) -> None:
+    """Instagram DM first (when IG_PING_USERNAME is set and the 24 h window is
+    open), then email (Resend) and Telegram (when configured)."""
     sent = []
+    if cfg and ig_dm(cfg, f"{subject}\n{text}"):
+        sent.append("instagram dm")
     key, to = os.environ.get("RESEND_API_KEY"), os.environ.get("IG_PREVIEW_EMAIL")
     if key and to:
         try:
@@ -345,7 +381,7 @@ def main() -> None:
             results = HANDLERS[sid](cfg, db, day, args.dry_run, rows)
         except Exception as e:
             traceback.print_exc()
-            notify(f"[LaButoane] ✗ postare eșuată: {s['title']}", f"{day} · {sid}\n{type(e).__name__}: {str(e)[:400]}")
+            notify(f"[LaButoane] ✗ postare eșuată: {s['title']}", f"{day} · {sid}\n{type(e).__name__}: {str(e)[:400]}", cfg)
             continue
         for mid, kind, title, key in results:
             if already(rows, day, sid, key):
@@ -353,7 +389,7 @@ def main() -> None:
             record(day, sid, key, mid, kind, title)
             rows.append({"date": day, "slot": sid, "key": key})
             link = permalink(cfg, mid) if kind == "feed" else "story (24 h) — vezi în app"
-            notify(f"[LaButoane] ✓ postat: {title}"[:120], f"{kind} · {s['title']}\n{link}")
+            notify(f"[LaButoane] ✓ postat: {title}"[:120], f"{kind} · {s['title']}\n{link}", cfg)
             posted += 1
     print(f"done: {posted} post(s)")
 
