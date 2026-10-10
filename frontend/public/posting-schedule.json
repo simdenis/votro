@@ -38,11 +38,15 @@
       "weekday": [
         1,
         2,
-        3
+        3,
+        4,
+        5,
+        6,
+        7
       ],
-      "in_recess": "skip",
+      "in_recess": "keep",
       "section": "sect-today",
-      "why": "Ședințele de plen sunt luni–miercuri. Story = fără caption, 24h; nu intră în grilă."
+      "why": "Rulează zilnic la 20:05 și se sare singur când nu au fost voturi finale; plenul e de obicei luni–miercuri, dar Camera votează uneori joi și sesiunile extraordinare cad oriunde."
     },
     {
       "id": "story-switch",

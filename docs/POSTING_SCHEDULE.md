@@ -33,7 +33,7 @@ Concluzii:
 | Zi | Ora | Format | Slot | Sursa în /admin |
 |---|---|---|---|---|
 | Luni | 18:00 | feed | Ce a votat Parlamentul săptămâna trecută | «Ce a votat Parlamentul săptămâna trecută» (weekcover `kind=votate`) |
-| Luni–Mie | după ședință | story | Voturile finale de azi | «Astăzi» |
+| zilnic | 20:05 | story | Voturile finale de azi (se sare singur când nu sunt voturi) | «Astăzi» |
 | Marți | 18:00 | feed | Carusel: o lege terminată (vot decizional / promulgare), după scor de interes | «Promulgate» / «Trecute de ambele camere» |
 | Miercuri | 18:00 | feed | Pe cale să treacă tacit — **doar** dacă există un proiect cu scor ≥ 60 în 7 zile | «Pe cale să treacă tacit» |
 | Joi | 20:00 | feed | **Explainer sau vot contestat** — slotul de creștere | recap + deck-urile cu slide «devieri» |
