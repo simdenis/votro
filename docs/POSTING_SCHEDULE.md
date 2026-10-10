@@ -1,8 +1,11 @@
 # Grila de postare Instagram — @la.butoane
 
 *Propusă și implementată 2026-09-29. Sursa de adevăr pentru calendar:
-`frontend/public/posting-schedule.json` (citit de `/admin` și de
-`scraper/post_schedule.py`). Nimic din grilă nu publică singur.*
+`frontend/public/posting-schedule.json` (citit de `/admin`, `scraper/post_schedule.py`
+și `scraper/auto_post.py`). **Din 2026-10-10 autopilotul de pe VPS publică singur**
+(12:05 / 18:05 / 20:05 RO) tot ce e în grilă în afară de explainerul de joi și matricea
+trimestrială, și trimite un ping (email + Telegram, dacă e configurat) după fiecare postare.
+Registrul postărilor: `/var/log/votro/ig_posts.jsonl`.*
 
 ## Ce spun datele contului (19 postări, iul–sep 2026, 400 urmăritori)
 

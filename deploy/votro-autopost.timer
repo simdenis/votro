@@ -1,0 +1,13 @@
+[Unit]
+Description=VotRO Instagram autopilot — 12:05 / 18:05 / 20:05 Romanian time
+
+[Timer]
+# 12:05 → noon stories (monthly rankings, Saturday absences); 18:05 → the
+# feed slots; 20:05 → stories with today's final votes (the plenary is over).
+OnCalendar=*-*-* 12:05:00 Europe/Bucharest
+OnCalendar=*-*-* 18:05:00 Europe/Bucharest
+OnCalendar=*-*-* 20:05:00 Europe/Bucharest
+Persistent=true
+
+[Install]
+WantedBy=timers.target

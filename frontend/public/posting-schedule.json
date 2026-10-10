@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": "2026-10-07",
+  "updated": "2026-10-10",
   "timezone": "Europe/Bucharest",
   "sessions": [
     {
@@ -14,7 +14,7 @@
   ],
   "notes": [
     "Weekdays are ISO (1 = Monday … 7 = Sunday). Times are Romanian local.",
-    "Nothing here publishes anything: the schedule drives the /admin calendar and the 09:00 «azi pe IG» email. A human presses publish.",
+    "Since 2026-10-10 the VPS autopilot (scraper/auto_post.py, 12:05/18:05/20:05 RO) PUBLISHES every slot except the Thursday explainer and the quarterly matrix, and emails/Telegrams the owner after each post. Before that date nothing auto-published.",
     "Format mix follows the account's own numbers (Jul–Sep 2026): explainers and contested-vote carousels reach 900+, plain single-law summaries stay under 250. One explainer a week is the growth slot.",
     "Every ranking that names people (absence stories, monthly card) keeps the three guards: seated the whole window, no context_note, ≥ 5 votes held (≥ 30 per chamber for a weekly story)."
   ],

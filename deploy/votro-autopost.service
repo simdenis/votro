@@ -1,0 +1,12 @@
+[Unit]
+Description=VotRO Instagram autopilot — publishes the grid's slots due now, pings the owner
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=votro
+WorkingDirectory=/opt/votro
+Environment=VOTRO_LOG_DIR=/var/log/votro
+ExecStart=/opt/votro/scraper/.venv/bin/python scraper/auto_post.py
+TimeoutStartSec=30min
