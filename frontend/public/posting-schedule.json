@@ -144,11 +144,11 @@
       "title": "Traseiști luna trecută",
       "format": "story",
       "time": "12:00",
-      "day_of_month": 2,
+      "day_of_month": 8,
       "in_recess": "keep",
       "section": "sect-switchers",
       "card": "og/switchcard",
-      "why": "Se sare automat când luna a avut zero mutări. Story, nu feed: clasamentele cu nume nu rămân permanent pe profil (decizie 2026-10-07)."
+      "why": "Pe 8, o săptămână după cardul de absențe, ca să nu se calce. Se sare automat când luna a avut zero mutări. Story, nu feed."
     },
     {
       "id": "matrix-quarter",
