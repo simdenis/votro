@@ -128,8 +128,11 @@ export function mapLawToCard(
   // the decisional vote and the presidential decision — vote rows alone miss both
   const passed = passedParliament(law, stage)
   const tacit = tacitChambers(law, stage)
-  const senateDone = law.senate_outcome === 'adoptat' || passed
   const cameraDone = law.camera_outcome === 'adoptat' || passed
+  // PHCD = the Chamber's own resolution: final after its single Camera vote,
+  // it never goes to the Senate (PHCD64/2026 showed ÎN DEZBATERE + Adoptată)
+  const ownResolution = /^PH\s?CD/i.test(law.code ?? '')
+  const senateDone = law.senate_outcome === 'adoptat' || passed || (ownResolution && cameraDone)
   const rejected = law.senate_outcome === 'respins' || law.camera_outcome === 'respins'
     || stage?.stage === 'respins_definitiv'
 

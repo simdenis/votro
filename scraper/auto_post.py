@@ -142,15 +142,18 @@ class Blocked(Exception):
     """post_check refused the post; main() pings the owner and moves on."""
 
 
-def vet(cfg: ig.Config, dry: bool, kind: str, urls: list[str], caption: str, title: str, facts: dict) -> None:
-    """Run post_check on exactly what IG will fetch (stories: the 9:16 frame).
-    Doubles as the pre-warm. Raises Blocked on a mechanical failure, or on an
-    AI failure in enforce mode; in log mode an AI failure only pings."""
+def vet(cfg: ig.Config, dry: bool, kind: str, urls: list[str], caption: str, title: str, facts: dict,
+        texts: list[dict] | None = None) -> None:
+    """Run post_check: the slides IG will fetch (stories: the 9:16 frame) must
+    load — doubles as the pre-warm — and the text going onto them (`texts`,
+    one dict per slide) is read by Claude with the caption. Raises Blocked on
+    a mechanical failure, or on an AI failure in enforce mode; in log mode an
+    AI failure only pings."""
     if dry and not CHECK_IN_DRY:
         return
     if kind == "story":
         urls = [u if "/api/og/story?" in u else f"{cfg.site_url}/api/og/story?src={ig._quote(u, safe='')}" for u in urls]
-    v = post_check.review(kind, urls, caption, facts)
+    v = post_check.review(kind, urls, caption, texts or [], facts)
     if v.ok:
         print(f"  check ok{' (AI off)' if v.unchecked else ''}")
         return
@@ -161,6 +164,18 @@ def vet(cfg: ig.Config, dry: bool, kind: str, urls: list[str], caption: str, tit
     if not dry:
         notify(f"[LaButoane] ⚠ verificarea ar fi blocat: {title}"[:120],
                f"{why}\n\nMod log: postarea a plecat oricum. Dacă e o alarmă falsă, nu face nimic.", cfg)
+
+
+def law_texts(db: DB, law_ids: list[str]) -> list[dict]:
+    """What a law card shows, straight from the DB (law_status + headline), in
+    the order given — the text the check reads instead of the rendered image."""
+    if not law_ids:
+        return []
+    ids = ",".join(law_ids)
+    st = {r["law_id"]: r for r in db.get("law_status", select="law_id,code,title,summary",
+                                         law_id=f"in.({ids})", limit="50")}
+    hl = {r["id"]: r.get("headline") for r in db.get("laws", select="id,headline", id=f"in.({ids})", limit="50")}
+    return [{**{k: v for k, v in st.get(i, {}).items() if k != "law_id"}, "headline": hl.get(i)} for i in law_ids]
 
 
 # ── helpers ─────────────────────────────────────────────────────────────────
@@ -201,7 +216,7 @@ def week_final_votes(db: DB, monday: dt.date, sunday: dt.date) -> list[dict]:
 
 # ── slot handlers (each returns (media_id, kind, title, key) or None) ───────
 def do_story_sitting(cfg, db, day, dry):
-    votes = db.get("votes", select="id,chamber,for_count,against_count,outcome,laws(code,headline,interest_score)",
+    votes = db.get("votes", select="id,chamber,for_count,against_count,outcome,laws(id,code,headline,interest_score)",
                    vote_type="eq.vot final", law_id="not.is.null", vote_date=f"eq.{day}", limit="200")
     votes = [v for v in votes if v.get("laws")]
     if not votes:
@@ -215,7 +230,8 @@ def do_story_sitting(cfg, db, day, dry):
             vet(cfg, dry, "story", [url], "", title,
                 {"date": day, "law": v["laws"]["code"], "headline": v["laws"].get("headline"),
                  "chamber": chamber_ro(v["chamber"]), "for": v["for_count"], "against": v["against_count"],
-                 "outcome": v["outcome"]})
+                 "outcome": v["outcome"]},
+                [{"slide": "vote card", **law_texts(db, [v["laws"]["id"]])[0]}] if v["laws"].get("id") else None)
         except Blocked as e:  # one bad card must not stop the other stories
             notify("[LaButoane] ✗ blocat de verificare: story vot", str(e), cfg); continue
         if dry:
@@ -270,8 +286,10 @@ def do_recap_week(cfg, db, day, dry):
     title = f"recap {rng}: {len(adopted)} adoptate, {len(rejected)} respinse"
     # vet() also pre-warms: IG's fetcher 400s on a cold render
     vet(cfg, dry, "feed", slides, caption, title,
-        {"week": rng, "adopted": len(adopted), "rejected": len(rejected),
-         "slides_after_cover": [v["laws"]["code"] for v in slides_laws[:9]]})
+        {"week": f"{monday} – {sunday}", "adopted": len(adopted), "rejected": len(rejected),
+         "slides_after_cover": [v["laws"]["code"] for v in slides_laws[:9]]},
+        [{"slide": 1, "card": "cover", "count_shown": len(adopted), "label": "adoptate", "week": f"{monday} – {sunday}"}]
+        + [{"slide": i, **t} for i, t in enumerate(law_texts(db, [v["laws"]["id"] for v in slides_laws[:9]]), 2)])
     if dry:
         print("  would carousel:", *slides, sep="\n    "); print(caption[:400]); return []
     mid = ig.post_carousel(cfg, slides, caption) if len(slides) > 1 else ig.post_image(cfg, slides[0], caption)
@@ -291,7 +309,8 @@ def do_law_finished(cfg, db, day, dry, rows):
         title = f"lege: {l['code']} — {l.get('headline') or l['title'][:80]}"
         suffixes, caption = ig._law_slides(cfg, l["id"])
         vet(cfg, dry, "feed", [ig._slide_url(cfg, s, False) for s in suffixes], caption, title,
-            {"law": l["code"], "headline": l.get("headline"), "presidential_status": l.get("presidential_status")})
+            {"law": l["code"], "headline": l.get("headline"), "presidential_status": l.get("presidential_status")},
+            [{"slides": [x.split("?")[0] for x in suffixes], **law_texts(db, [l["id"]])[0]}])
         if dry:
             print(f"  would post law carousel: {l['code']} ({l.get('interest_score')}) {l.get('headline')}"); return []
         mid = ig.post_law(cfg, l["id"])
@@ -311,7 +330,8 @@ def do_tacit(cfg, db, day, dry):
     lines += ["", "Lista completă: la-butoane.ro/tacite (link în bio)", "", HASHTAGS]
     title = f"tacit: {len(bills)} proiecte"
     vet(cfg, dry, "feed", [url], "\n".join(lines), title,
-        {"date": day, "bills": [{"code": b["code"], "deadline": b["tacit_deadline"]} for b in bills]})
+        {"date": day, "bills": [{"code": b["code"], "deadline": b["tacit_deadline"]} for b in bills]},
+        [{"slide": 1, "card": "tacit list", "rows": [{"code": b["code"], "deadline": b["tacit_deadline"], "summary": b.get("summary")} for b in bills]}])
     if dry:
         print("  would post:", url); return []
     return [(ig.post_image(cfg, url, "\n".join(lines)), "feed", title, day)]
@@ -331,7 +351,9 @@ def do_passed_week(cfg, db, day, dry):
     lines += ["", "Fiecare, explicată pe la-butoane.ro (link în bio)", "", HASHTAGS]
     title = f"trecute de Parlament: {len(laws)} legi"
     vet(cfg, dry, "feed", slides, "\n".join(lines), title,
-        {"week_ending": day, "laws": len(laws), "slides_after_cover": [l["code"] for l in laws[:9]]})
+        {"week_ending": day, "laws": len(laws), "slides_after_cover": [l["code"] for l in laws[:9]]},
+        [{"slide": 1, "card": "cover", "count_shown": len(laws)}]
+        + [{"slide": i, **t} for i, t in enumerate(law_texts(db, [l["id"] for l in laws[:9]]), 2)])
     if dry:
         print("  would carousel:", *slides, sep="\n    "); return []
     mid = ig.post_carousel(cfg, slides, "\n".join(lines)) if len(slides) > 1 else ig.post_image(cfg, slides[0], "\n".join(lines))
