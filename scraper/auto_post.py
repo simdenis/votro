@@ -30,6 +30,7 @@ import requests
 from dotenv import load_dotenv
 
 import instagram_poster as ig
+import post_check
 from post_schedule import DB, WEEKDAYS_RO, due, finished_laws, load_schedule, tacit_soon
 
 HASHTAGS = "#parlament #transparență #românia #politică #laButoane"
@@ -38,6 +39,7 @@ LEDGER = Path(os.environ.get("VOTRO_LOG_DIR", "/var/log/votro")) / "ig_posts.jso
 # needs the frame's URL re-encoding fix (og/story card.toString()) live, or the
 # card falls back to all-time. Flip once the frontend deploy is confirmed.
 WEEKLY_ABSENTS_ENABLED = os.environ.get("AUTOPOST_WEEKLY_ABSENTS") == "1"
+CHECK_IN_DRY = False  # --dry-run --check runs post_check too (costs an API call per post)
 
 
 # ── ledger ──────────────────────────────────────────────────────────────────
@@ -135,6 +137,32 @@ def notify(subject: str, text: str, cfg: ig.Config | None = None) -> None:
     print(f"notified via {', '.join(sent) or 'nothing (no channel configured)'}")
 
 
+# ── pre-publish check ───────────────────────────────────────────────────────
+class Blocked(Exception):
+    """post_check refused the post; main() pings the owner and moves on."""
+
+
+def vet(cfg: ig.Config, dry: bool, kind: str, urls: list[str], caption: str, title: str, facts: dict) -> None:
+    """Run post_check on exactly what IG will fetch (stories: the 9:16 frame).
+    Doubles as the pre-warm. Raises Blocked on a mechanical failure, or on an
+    AI failure in enforce mode; in log mode an AI failure only pings."""
+    if dry and not CHECK_IN_DRY:
+        return
+    if kind == "story":
+        urls = [u if "/api/og/story?" in u else f"{cfg.site_url}/api/og/story?src={ig._quote(u, safe='')}" for u in urls]
+    v = post_check.review(kind, urls, caption, facts)
+    if v.ok:
+        print(f"  check ok{' (AI off)' if v.unchecked else ''}")
+        return
+    why = "\n".join("• " + p for p in v.problems)
+    if v.mechanical or post_check.mode() == "enforce":
+        raise Blocked(f"{title}\n{why}")
+    print("  check would block (log mode, publishing anyway):", why, sep="\n")
+    if not dry:
+        notify(f"[LaButoane] ⚠ verificarea ar fi blocat: {title}"[:120],
+               f"{why}\n\nMod log: postarea a plecat oricum. Dacă e o alarmă falsă, nu face nimic.", cfg)
+
+
 # ── helpers ─────────────────────────────────────────────────────────────────
 def ro_now() -> dt.datetime:
     try:
@@ -183,6 +211,13 @@ def do_story_sitting(cfg, db, day, dry):
     for v in votes[:5]:
         url = f"{cfg.site_url}/api/og/votecard?vote={v['id']}&v={ig.CARD_V}"
         title = f"story vot: {v['laws']['code']} · {chamber_ro(v['chamber'])} {tally(v)} {v['outcome']}"
+        try:
+            vet(cfg, dry, "story", [url], "", title,
+                {"date": day, "law": v["laws"]["code"], "headline": v["laws"].get("headline"),
+                 "chamber": chamber_ro(v["chamber"]), "for": v["for_count"], "against": v["against_count"],
+                 "outcome": v["outcome"]})
+        except Blocked as e:  # one bad card must not stop the other stories
+            notify("[LaButoane] ✗ blocat de verificare: story vot", str(e), cfg); continue
         if dry:
             print("  would story:", url); continue
         out.append((ig.post_story(cfg, url), "story", title, v["id"]))
@@ -194,9 +229,11 @@ def do_story_switch(cfg, db, day, dry):
     if not rows:
         return []
     url = f"{cfg.site_url}/api/og/switchcard?month={day[:7]}&v={len(rows)}{day}"
+    title = f"story traseiști: {len(rows)} schimbare/schimbări azi"
+    vet(cfg, dry, "story", [url], "", title, {"month": day[:7], "switches_today": len(rows)})
     if dry:
         print("  would story:", url); return []
-    return [(ig.post_story(cfg, url), "story", f"story traseiști: {len(rows)} schimbare/schimbări azi", day)]
+    return [(ig.post_story(cfg, url), "story", title, day)]
 
 
 def do_recap_week(cfg, db, day, dry):
@@ -230,12 +267,15 @@ def do_recap_week(cfg, db, day, dry):
             l = v["laws"]; lines.append(f"• {l['code']} — {l.get('headline') or l['title'][:90]} ({chamber_ro(v['chamber'])}, {v['for_count']}–{v['against_count']}–{v['abstention_count']})")
     lines += ["", "Un vot final nu înseamnă încă lege — urmează cealaltă cameră sau Președintele. Fiecare, explicată pe la-butoane.ro (link în bio)", "", HASHTAGS]
     caption = "\n".join(lines)
+    title = f"recap {rng}: {len(adopted)} adoptate, {len(rejected)} respinse"
+    # vet() also pre-warms: IG's fetcher 400s on a cold render
+    vet(cfg, dry, "feed", slides, caption, title,
+        {"week": rng, "adopted": len(adopted), "rejected": len(rejected),
+         "slides_after_cover": [v["laws"]["code"] for v in slides_laws[:9]]})
     if dry:
         print("  would carousel:", *slides, sep="\n    "); print(caption[:400]); return []
-    for u in slides:
-        requests.get(u, timeout=90)  # pre-warm: IG's fetcher 400s on a cold render
     mid = ig.post_carousel(cfg, slides, caption) if len(slides) > 1 else ig.post_image(cfg, slides[0], caption)
-    return [(mid, "feed", f"recap {rng}: {len(adopted)} adoptate, {len(rejected)} respinse", f"{monday}")]
+    return [(mid, "feed", title, f"{monday}")]
 
 
 def ig_month(d: dt.date) -> str:
@@ -248,12 +288,14 @@ def do_law_finished(cfg, db, day, dry, rows):
     for l in finished_laws(db, d - dt.timedelta(days=10)):
         if l["id"] in done or (l.get("interest_score") or 0) < 50:
             continue
+        title = f"lege: {l['code']} — {l.get('headline') or l['title'][:80]}"
+        suffixes, caption = ig._law_slides(cfg, l["id"])
+        vet(cfg, dry, "feed", [ig._slide_url(cfg, s, False) for s in suffixes], caption, title,
+            {"law": l["code"], "headline": l.get("headline"), "presidential_status": l.get("presidential_status")})
         if dry:
             print(f"  would post law carousel: {l['code']} ({l.get('interest_score')}) {l.get('headline')}"); return []
-        for u in [ig._slide_url(cfg, s, False) for s in ig._law_slides(cfg, l["id"])[0]]:
-            requests.get(u, timeout=90)
         mid = ig.post_law(cfg, l["id"])
-        return [(mid, "feed", f"lege: {l['code']} — {l.get('headline') or l['title'][:80]}", l["id"])] if mid else []
+        return [(mid, "feed", title, l["id"])] if mid else []
     return []
 
 
@@ -267,10 +309,12 @@ def do_tacit(cfg, db, day, dry):
     for i, b in enumerate(bills, 1):
         lines.append(f"{i}. {(b.get('summary') or b['code'])[:140]} ({b['code']}) — termen {b['tacit_deadline']}")
     lines += ["", "Lista completă: la-butoane.ro/tacite (link în bio)", "", HASHTAGS]
+    title = f"tacit: {len(bills)} proiecte"
+    vet(cfg, dry, "feed", [url], "\n".join(lines), title,
+        {"date": day, "bills": [{"code": b["code"], "deadline": b["tacit_deadline"]} for b in bills]})
     if dry:
         print("  would post:", url); return []
-    requests.get(url, timeout=90)
-    return [(ig.post_image(cfg, url, "\n".join(lines)), "feed", f"tacit: {len(bills)} proiecte", day)]
+    return [(ig.post_image(cfg, url, "\n".join(lines)), "feed", title, day)]
 
 
 def do_passed_week(cfg, db, day, dry):
@@ -285,12 +329,13 @@ def do_passed_week(cfg, db, day, dry):
         st = {"promulgat": "promulgată", "retrimis": "retrimisă la Parlament", "sesizat_ccr": "contestată la CCR"}.get(l.get("presidential_status") or "", "la Președinte")
         lines.append(f"• {l['code']} — {l.get('headline') or l['title'][:90]} ({st})")
     lines += ["", "Fiecare, explicată pe la-butoane.ro (link în bio)", "", HASHTAGS]
+    title = f"trecute de Parlament: {len(laws)} legi"
+    vet(cfg, dry, "feed", slides, "\n".join(lines), title,
+        {"week_ending": day, "laws": len(laws), "slides_after_cover": [l["code"] for l in laws[:9]]})
     if dry:
         print("  would carousel:", *slides, sep="\n    "); return []
-    for u in slides:
-        requests.get(u, timeout=90)
     mid = ig.post_carousel(cfg, slides, "\n".join(lines)) if len(slides) > 1 else ig.post_image(cfg, slides[0], "\n".join(lines))
-    return [(mid, "feed", f"trecute de Parlament: {len(laws)} legi", f"{d}")]
+    return [(mid, "feed", title, f"{d}")]
 
 
 def do_absents_week(cfg, db, day, dry):
@@ -302,6 +347,8 @@ def do_absents_week(cfg, db, day, dry):
     url, _caption, warnings = ig._shame_interval(cfg, str(monday), str(d - dt.timedelta(days=1)))
     if warnings:
         print("  skipped — sanity warnings:", *warnings, sep="\n    "); return []
+    vet(cfg, dry, "story", [url], "", "absenții săptămânii",
+        {"window": f"{monday} – {d - dt.timedelta(days=1)}", "ranking": "absențe la voturile din plen, săptămâna curentă"})
     if dry:
         print("  would story:", url[:120]); return []
     return [(ig.post_story(cfg, url), "story", "absenții săptămânii", str(monday))]
@@ -310,6 +357,7 @@ def do_absents_week(cfg, db, day, dry):
 def do_absents_month(cfg, db, day, dry):
     prev = (dt.date.fromisoformat(day).replace(day=1) - dt.timedelta(days=1)).strftime("%Y-%m")
     url = f"{cfg.site_url}/api/og/shamecard?month={prev}&v={day}"
+    vet(cfg, dry, "story", [url], "", f"absențe {prev}", {"month": prev, "ranking": "absențe la voturile din plen, luna trecută"})
     if dry:
         print("  would story:", url); return []
     return [(ig.post_story(cfg, url), "story", f"absențe {prev}", prev)]
@@ -322,6 +370,7 @@ def do_switchers_month(cfg, db, day, dry):
     if not rows:
         print("  no switches last month — skip"); return []
     url = f"{cfg.site_url}/api/og/switchcard?month={prev}&v={len(rows)}"
+    vet(cfg, dry, "story", [url], "", f"traseiști {prev}", {"month": prev, "switches": len(rows)})
     if dry:
         print("  would story:", url); return []
     return [(ig.post_story(cfg, url), "story", f"traseiști {prev}: {len(rows)}", prev)]
@@ -349,7 +398,10 @@ def main() -> None:
     ap.add_argument("--slot", help="only this slot id")
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--force", action="store_true", help="ignore the time-of-day gate")
+    ap.add_argument("--check", action="store_true", help="with --dry-run: run the pre-publish check too")
     args = ap.parse_args()
+    global CHECK_IN_DRY
+    CHECK_IN_DRY = args.check
 
     now = ro_now()
     day = args.date or now.date().isoformat()
@@ -379,6 +431,12 @@ def main() -> None:
         print(f"- {sid}: {s['title']}")
         try:
             results = HANDLERS[sid](cfg, db, day, args.dry_run, rows)
+        except Blocked as e:
+            print(f"  blocked by check:\n{e}")
+            if not args.dry_run:
+                notify(f"[LaButoane] ✗ blocat de verificare: {s['title']}"[:120],
+                       f"{day} · {sid}\n{e}\n\nNu s-a postat. Rulează din nou la următorul slot; altfel postează din /admin.", cfg)
+            continue
         except Exception as e:
             traceback.print_exc()
             notify(f"[LaButoane] ✗ postare eșuată: {s['title']}", f"{day} · {sid}\n{type(e).__name__}: {str(e)[:400]}", cfg)
