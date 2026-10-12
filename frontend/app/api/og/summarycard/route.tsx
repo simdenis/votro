@@ -75,6 +75,12 @@ async function renderCard(request: Request): Promise<Response> {
       statusColor: mapped.statusColor,
       dateLine: mapped.dateLine,
       initiatorLine: initiator,
+      // the footer names what the summary was read from — and nothing when
+      // the hero is just the official title (PHCD64/2026 claimed an EM it never had)
+      sourceLine: !law.summary ? null
+        : law.summary_source === 'text' ? 'rezumat AI · sursă: textul proiectului'
+        : law.summary_source === 'title' ? 'rezumat AI pe baza titlului oficial'
+        : undefined,
     }
   }
 

@@ -16,6 +16,8 @@ export interface SummaryCardData {
   dateLine: string | null
   /** e.g. "Inițiativă: Guvernul României" / "Inițiativă: 64 de parlamentari AUR" */
   initiatorLine?: string | null
+  /** footer attribution; null = no summary behind the card, say nothing */
+  sourceLine?: string | null
 }
 
 const C = {
@@ -109,7 +111,9 @@ export function SummaryCard({ data }: { data: SummaryCardData }) {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 64px', borderTopWidth: 1, borderTopStyle: 'solid', borderTopColor: C.hair }}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 16 }}>
           <div style={{ display: 'flex', fontFamily: MONO, fontSize: 14, fontWeight: 500, color: '#171A1F' }}>@la.butoane</div>
-          <div style={{ display: 'flex', fontFamily: MONO, fontSize: 12, color: '#6E7480' }}>rezumat AI al argumentelor inițiatorilor · sursă: expunerea de motive</div>
+          {data.sourceLine !== null && (
+            <div style={{ display: 'flex', fontFamily: MONO, fontSize: 12, color: '#6E7480' }}>{data.sourceLine ?? 'rezumat AI al argumentelor inițiatorilor · sursă: expunerea de motive'}</div>
+          )}
         </div>
         {/* logo lives bottom-right — the IG profile picture already brands the top */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
