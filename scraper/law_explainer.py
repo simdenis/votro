@@ -214,34 +214,43 @@ class Sink:
 
 
 def run_batch(client, laws: list[dict], sink: Sink, chunk: int) -> None:
-    """Message Batches API: half the price, results within hours. Sent in chunks so
-    one batch stays well under the request-size cap (each carries the PDFs)."""
+    """Message Batches API: half the price, results within hours. Every chunk is
+    submitted first (each batch carries its PDFs, so one stays under the 256 MB
+    cap), then all of them are collected — the chunks run in parallel."""
     by_id = {law["id"]: law for law in laws}
+    sources: dict[str, str] = {}
+    batch_ids: list[str] = []
     for i in range(0, len(laws), chunk):
-        reqs, sources = [], {}
+        reqs = []
         for law in laws[i:i + chunk]:
             built = build_request(law["code"], law["title"])
             if built:
                 reqs.append({"custom_id": law["id"], "params": built[0]})
                 sources[law["id"]] = built[1]
-        if not reqs:
-            continue
-        batch = client.messages.batches.create(requests=reqs)
-        log.info("batch %s: %d law(s) submitted", batch.id, len(reqs))
-        while client.messages.batches.retrieve(batch.id).processing_status != "ended":
-            time.sleep(60)
-        for item in client.messages.batches.results(batch.id):
-            law = by_id[item.custom_id]
-            if item.result.type != "succeeded":
-                log.warning("%s: batch result %s", law["code"], item.result.type)
+        if reqs:
+            batch = client.messages.batches.create(requests=reqs)
+            batch_ids.append(batch.id)
+            log.info("batch %s: %d law(s) submitted", batch.id, len(reqs))
+    pending = list(batch_ids)
+    while pending:
+        time.sleep(60)
+        for bid in list(pending):
+            if client.messages.batches.retrieve(bid).processing_status != "ended":
                 continue
-            try:
-                res = parse(law["code"], item.result.message, sources[item.custom_id])
-            except Exception as e:
-                log.warning("%s: %s: %s", law["code"], type(e).__name__, str(e)[:200])
-                continue
-            if res:
-                sink.write(law, res)
+            pending.remove(bid)
+            for item in client.messages.batches.results(bid):
+                law = by_id[item.custom_id]
+                if item.result.type != "succeeded":
+                    log.warning("%s: batch result %s", law["code"], item.result.type)
+                    continue
+                try:
+                    res = parse(law["code"], item.result.message, sources[item.custom_id])
+                except Exception as e:
+                    log.warning("%s: %s: %s", law["code"], type(e).__name__, str(e)[:200])
+                    continue
+                if res:
+                    sink.write(law, res)
+            log.info("batch %s collected · %d batch(es) left", bid, len(pending))
 
 
 def main() -> None:
