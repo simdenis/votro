@@ -126,7 +126,16 @@ _HAIKU_SCHEMA = {
 }
 
 
-def haiku_scores(client, laws: list[dict]) -> dict[str, dict]:
+_SLOP_HEADLINE = re.compile(r":|—|^(Schimbări|Modificări|Reguli noi|Noi reguli|Lege nouă)")
+_RETRY_MODEL = "claude-sonnet-5-5"
+
+
+def slop_headline(h: str | None) -> bool:
+    """A headline that breaks the prompt's style rules (colon, em dash, empty opener)."""
+    return bool(h and _SLOP_HEADLINE.search(h))
+
+
+def haiku_scores(client, laws: list[dict], model: str = _HAIKU_MODEL) -> dict[str, dict]:
     import anthropic
 
     lines = []
@@ -136,7 +145,7 @@ def haiku_scores(client, laws: list[dict]) -> dict[str, dict]:
         lines.append(f"- {l['code']} | {cat} | {l['title'][:400]}" + (f" | Rezumat: {summary}" if summary else ""))
     try:
         resp = client.messages.create(
-            model=_HAIKU_MODEL,
+            model=model,
             max_tokens=4000,
             output_config={"format": {"type": "json_schema", "schema": _HAIKU_SCHEMA}},
             messages=[{"role": "user", "content": PROMPT + "\n".join(lines)}],
@@ -296,6 +305,16 @@ def main() -> None:
                     return
                 log.info("all Gemini keys rate-limited — continuing with %s", _HAIKU_MODEL)
                 scores = haiku_scores(haiku, batch)
+        # a headline that ignores the style rules gets one retry on a stronger model
+        redo = [l for l in batch if slop_headline((scores.get(l["code"]) or {}).get("headline"))]
+        if redo and haiku is not None:
+            retry = haiku_scores(haiku, redo, _RETRY_MODEL)
+            for l in redo:
+                h = (retry.get(l["code"]) or {}).get("headline")
+                if h and not slop_headline(h):
+                    scores[l["code"]]["headline"] = h
+                else:
+                    scores[l["code"]]["headline"] = None  # no headline beats a sloppy one; the card falls back
         for l in batch:
             hit = scores.get(l["code"])
             if hit:
