@@ -5,7 +5,7 @@ Two layers:
    200 PNG/JPEG of the right size (feed 1080×1350, story 1080×1920) and big
    enough not to be a blank render (a story frame whose inner card failed comes
    back ~46 KB). Doubles as the pre-warm IG's fetcher needs.
-2. Claude Haiku on the TEXT that goes onto the cards — headline, title,
+2. Claude (Sonnet 5.5) on the TEXT that goes onto the cards — headline, title,
    summary, code, status fields from the DB, per slide — plus the caption and
    the facts the post was built from → {ok, problems}. Catches contradictions
    (caption vs slide data, status vs outcome), placeholder text, garbled
@@ -31,7 +31,7 @@ from pathlib import Path
 
 import requests
 
-MODEL = os.environ.get("POST_CHECK_MODEL", "claude-haiku-4-5")
+MODEL = os.environ.get("POST_CHECK_MODEL", "claude-sonnet-5-5")  # Haiku flagged by-design recap patterns every run
 LOG = Path(os.environ.get("VOTRO_LOG_DIR", "/var/log/votro")) / "post_checks.jsonl"
 SIZES = {"feed": (1080, 1350), "story": (1080, 1920)}
 MIN_BYTES = {"feed": 20_000, "story": 90_000}
