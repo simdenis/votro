@@ -1,8 +1,11 @@
 // 1080×1350 (4:5) tacit-adoption card — "nobody voted this law".
 // The hero visual is the parliament arc rendered entirely in absent-gray:
 // a plenary vote that never happened. Amber = the brand's tacit/abstain hue.
+// v2: the explanation is the second thing read (38px, was 24); the chip moved
+// down to sit with the law it labels.
 
 import { computeArcDots } from './vote-card'
+import { C, F, T, CardHeader, CardFooter, StatusChip, clip } from './kit'
 
 export interface TacitCardData {
   lawCode: string
@@ -15,91 +18,55 @@ export interface TacitCardData {
   dateLine: string | null
 }
 
-const C = {
-  bg: '#FFFFFF',
-  text: '#171A1F',
-  amber: '#E3A23C',
-  amberDark: '#B27A24',
-  hair: '#E7E9EC',
-  gray500: '#6E7480',
-}
-const SERIF = 'Plex Display'   // IBM Plex Sans 700 (see og-fonts)
-const SANS = 'IBM Plex Sans'
-const MONO = 'IBM Plex Mono'
-
 /** Shrink the title as it grows so it always fits. */
 function titleFont(len: number): number {
-  if (len <= 90) return 30
-  if (len <= 160) return 26
-  if (len <= 260) return 22
-  if (len <= 380) return 19
-  return 16
+  if (len <= 90) return 34
+  if (len <= 160) return 30
+  return 28
 }
 
 export function TacitCard({ data }: { data: TacitCardData }) {
   // every seat absent — the whole arc is gray
   const dots = computeArcDots(0, 0, 0, 0, data.seats)
+  const where = data.chamber === 'SENAT' ? 'Senat' : 'Camera Deputaților'
+  const title = clip(data.lawTitle, 200)
 
   return (
-    <div style={{ width: 1080, height: 1350, display: 'flex', flexDirection: 'column', background: C.bg, color: C.text, fontFamily: SANS }}>
-      {/* no logo header on IG post slides — the profile picture already shows it */}
-      <div style={{ display: 'flex', alignItems: 'center', padding: '36px 64px 22px' }}>
-        <div style={{ display: 'flex', fontFamily: MONO, fontSize: 16, letterSpacing: 2.5, textTransform: 'uppercase', color: C.gray500 }}>{`ADOPTARE TACITĂ · ${data.year}`}</div>
-      </div>
-      <div style={{ display: 'flex', height: 1, margin: '0 64px', background: C.hair }} />
+    <div style={{ width: 1080, height: 1350, display: 'flex', flexDirection: 'column', background: C.bg, color: C.ink, fontFamily: F.sans }}>
+      <CardHeader kicker={`Adoptare tacită · ${where}`} right={`${data.year}`} />
 
-      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, padding: '40px 64px 0' }}>
-        {/* Hook */}
-        <div style={{ fontFamily: SERIF, fontSize: 66, lineHeight: 1.04, letterSpacing: '-0.5px', color: C.text }}>
+      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, padding: '44px 64px 36px' }}>
+        <div style={{ fontFamily: F.display, fontSize: 70, lineHeight: 1.04, letterSpacing: '-0.5px', color: C.ink, flexShrink: 0 }}>
           Nimeni nu a votat această lege.
         </div>
-        <div style={{ display: 'flex', fontSize: 24, lineHeight: 1.45, color: C.gray500, marginTop: 20, maxWidth: 900 }}>
-          {`Termenul constituțional a expirat fără vot în ${data.chamber === 'SENAT' ? 'Senat' : 'Camera Deputaților'}, așa că legea a fost considerată adoptată (art. 75).`}
+        <div style={{ fontSize: T.lead, lineHeight: 1.36, color: C.slate, marginTop: 24, flexShrink: 0 }}>
+          {`Termenul constituțional a expirat fără vot în ${where}, așa că legea a fost considerată adoptată (art. 75).`}
         </div>
 
         {/* The vote that never happened — a full arc of absent-gray seats */}
-        <div style={{ display: 'flex', width: '100%', height: 300, justifyContent: 'center', marginTop: 40 }}>
-          <svg width={927} height={300} viewBox="0 0 952 308">
-            {dots.map((d, i) => (
-              <circle key={i} cx={d.x} cy={d.y} r={6} fill="#D8DBE0" />
-            ))}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: 34, flexShrink: 0 }}>
+          <svg width={840} height={272} viewBox="0 0 952 308">
+            {dots.map((d, i) => <circle key={i} cx={d.x} cy={d.y} r={6} fill={C.absent} />)}
           </svg>
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'center', fontFamily: MONO, fontSize: 14, letterSpacing: 1.5, color: C.gray500, marginTop: 2 }}>
-          {`${data.seats} DE MANDATE · 0 VOTURI`}
-        </div>
-
-        {/* Badge + date */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 22, marginTop: 34 }}>
-          <div style={{ display: 'flex', background: C.amber, color: '#FFFFFF', fontSize: 18, fontWeight: 600, letterSpacing: 4, textTransform: 'uppercase', padding: '11px 30px', borderRadius: 3, boxShadow: `0 5px 0 ${C.amberDark}` }}>
-            ADOPTATĂ TACIT
+          <div style={{ display: 'flex', fontFamily: F.mono, fontSize: T.fine, letterSpacing: 2, color: C.muted, marginTop: 10 }}>
+            {`${data.seats} DE MANDATE · 0 VOTURI`}
           </div>
-          {data.dateLine && <div style={{ display: 'flex', fontSize: 17, color: C.text, opacity: 0.8 }}>{data.dateLine}</div>}
         </div>
 
-        <div style={{ display: 'flex', flex: 1, minHeight: 12 }} />
+        <div style={{ display: 'flex', flexGrow: 1, minHeight: 24 }} />
 
-        {/* The law itself */}
-        <div style={{ display: 'flex', height: 1, background: C.hair, marginBottom: 16 }} />
-        <div style={{ display: 'flex', fontFamily: MONO, fontSize: 14, letterSpacing: 2, color: C.gray500, marginBottom: 8 }}>{data.lawCode}</div>
-        <div style={{ display: 'flex', fontSize: titleFont(data.lawTitle.length), lineHeight: 1.35, color: C.text, opacity: 0.85, marginBottom: 28 }}>
-          {data.lawTitle}
+        {/* The law itself, labelled */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 18, flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 22 }}>
+            <StatusChip label="Adoptată tacit" tone="tacit" />
+            {data.dateLine ? <div style={{ display: 'flex', fontSize: T.small, color: C.slate }}>{data.dateLine}</div> : null}
+          </div>
+          <div style={{ display: 'flex', fontFamily: F.mono, fontSize: T.small, fontWeight: 500, letterSpacing: 2, color: C.ink, marginTop: 8 }}>{data.lawCode}</div>
+          <div style={{ fontSize: titleFont(title.length), lineHeight: 1.32, color: C.ink }}>{title}</div>
         </div>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 64px', borderTopWidth: 1, borderTopStyle: 'solid', borderTopColor: C.hair }}>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 16 }}>
-          <div style={{ display: 'flex', fontFamily: MONO, fontSize: 14, fontWeight: 500, color: '#171A1F' }}>@la.butoane</div>
-          <div style={{ display: 'flex', fontFamily: MONO, fontSize: 12, color: '#6E7480' }}>surse: cdep.ro / senat.ro</div>
-        </div>
-        {/* logo lives bottom-right — the IG profile picture already brands the top */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <svg width="34" height="34" viewBox="0 0 64 64"><rect width="64" height="64" rx="15" fill="#171A1F" /><rect x="11" y="11" width="18" height="18" rx="6" fill="#2EA871" /><rect x="35" y="11" width="18" height="18" rx="6" fill="#E3A23C" /><rect x="11" y="35" width="18" height="18" rx="6" fill="#EE7B5E" /><rect x="35" y="35" width="18" height="18" rx="6" fill="#4E86D8" /></svg>
-          <div style={{ display: 'flex', alignItems: 'baseline', fontSize: 26, letterSpacing: '-0.015em', color: '#171A1F' }}>
-            <span style={{ fontWeight: 400 }}>La</span><span style={{ fontWeight: 700 }}>Butoane</span>
-          </div>
-        </div>
-      </div>
+      <CardFooter />
     </div>
   )
 }
