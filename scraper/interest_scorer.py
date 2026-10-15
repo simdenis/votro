@@ -245,10 +245,11 @@ def main() -> None:
     ap.add_argument("--limit", type=int, default=600, help="max laws this run")
     ap.add_argument("--redo", metavar="CODE", help="re-score one law by code")
     ap.add_argument("--dry-run", action="store_true", help="print, don't write")
+    ap.add_argument("--haiku", action="store_true", help="skip Gemini, score on Claude Haiku (needs ANTHROPIC_API_KEY)")
     args = ap.parse_args()
 
-    keys = [k.strip() for k in os.environ.get("GEMINI_API_KEY", "").split(",") if k.strip()]
-    if not keys:
+    keys = [] if args.haiku else [k.strip() for k in os.environ.get("GEMINI_API_KEY", "").split(",") if k.strip()]
+    if not keys and not (args.haiku and os.environ.get("ANTHROPIC_API_KEY")):
         log.info("GEMINI_API_KEY not set — skipping interest scoring")
         return
     url, sb_key = os.environ.get("SUPABASE_URL", ""), os.environ.get("SUPABASE_KEY", "")
