@@ -1,4 +1,5 @@
 import { ImageResponse } from 'next/og'
+import { getCardFonts } from '@/lib/og-fonts'
 import { isUuid } from '@/lib/utils'
 
 
@@ -28,6 +29,8 @@ export async function GET(request: Request) {
   const agaC   = vote?.against_count ?? 0
   const absC   = vote?.abstention_count ?? 0
 
+  // same faces as every IG card — without them satori fell back to its default sans
+  const fonts = await getCardFonts()
   return new ImageResponse(
     (
       <div
@@ -36,7 +39,7 @@ export async function GET(request: Request) {
           background: '#FFFFFF',
           display: 'flex', flexDirection: 'column',
           padding: '56px 64px',
-          fontFamily: 'sans-serif',
+          fontFamily: 'IBM Plex Sans',
         }}
       >
         {/* LaButoane wordmark */}
@@ -45,7 +48,7 @@ export async function GET(request: Request) {
         </div>
 
         {/* Law code */}
-        <div style={{ fontSize: 52, fontWeight: 900, color: '#171A1F', letterSpacing: '-1px', marginBottom: 16 }}>
+        <div style={{ fontSize: 52, fontWeight: 700, color: '#171A1F', letterSpacing: '-1px', marginBottom: 16 }}>
           {code}
         </div>
 
@@ -57,15 +60,15 @@ export async function GET(request: Request) {
         {/* Counts row */}
         <div style={{ display: 'flex', gap: 48, alignItems: 'flex-end' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <span style={{ fontSize: 48, fontWeight: 900, color: '#2EA871' }}>{forC}</span>
+            <span style={{ fontSize: 48, fontWeight: 700, color: '#2EA871' }}>{forC}</span>
             <span style={{ fontSize: 14, color: '#8A8F98', textTransform: 'uppercase', letterSpacing: 2 }}>PENTRU</span>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <span style={{ fontSize: 48, fontWeight: 900, color: '#D64545' }}>{agaC}</span>
+            <span style={{ fontSize: 48, fontWeight: 700, color: '#C25539' }}>{agaC}</span>
             <span style={{ fontSize: 14, color: '#8A8F98', textTransform: 'uppercase', letterSpacing: 2 }}>ÎMPOTRIVĂ</span>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <span style={{ fontSize: 48, fontWeight: 900, color: '#8A8F98' }}>{absC}</span>
+            <span style={{ fontSize: 48, fontWeight: 700, color: '#B27A24' }}>{absC}</span>
             <span style={{ fontSize: 14, color: '#8A8F98', textTransform: 'uppercase', letterSpacing: 2 }}>ABȚINERI</span>
           </div>
           {outcome && (
@@ -75,9 +78,9 @@ export async function GET(request: Request) {
                 padding: '10px 24px',
                 borderRadius: 8,
                 background: outcome === 'adoptat' ? '#E7F5EE' : '#FBEAE7',
-                color: outcome === 'adoptat' ? '#1F7A51' : '#C0392B',
+                color: outcome === 'adoptat' ? '#1F7A51' : '#C25539',
                 fontSize: 20,
-                fontWeight: 900,
+                fontWeight: 700,
                 textTransform: 'uppercase',
                 letterSpacing: 3,
               }}
@@ -88,6 +91,6 @@ export async function GET(request: Request) {
         </div>
       </div>
     ),
-    { width: 1200, height: 630 },
+    { width: 1200, height: 630, fonts },
   )
 }

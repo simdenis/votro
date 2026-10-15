@@ -1,6 +1,12 @@
 import { ImageResponse } from 'next/og'
 import { getCardFonts } from '@/lib/og-fonts'
 import { withEdgeCache } from '@/lib/og-edge-cache'
+import { WeekCoverCard } from '@/components/cards/week-cover'
+import { isUuid } from '@/lib/utils'
+
+const U = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const K = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+const SB = { apikey: K, Authorization: `Bearer ${K}` }
 
 // 1080×1350 cover for the weekly digest carousel — slide 1, then a summary
 // card per law. /api/og/weekcover?n=<count>[&kind=votate]
@@ -40,6 +46,27 @@ async function render(req: Request): Promise<Response> {
     : 'Ce s-a făcut lege săptămâna asta'
   const kicker = votate ? 'Săptămâna trecută' : 'Săptămâna aceasta'
 
+  // v2: ?ids=<law>,<law>… (slide order) → the cover lists every law's title,
+  // so a carousel is understood from slide 1. Without ids: the classic cover.
+  const ids = (sp.get('ids') ?? '').split(',').filter(isUuid).slice(0, 12)
+  if (ids.length) {
+    const rows = ((await fetch(`${U}/rest/v1/laws?id=in.(${ids.join(',')})&select=id,code,headline,title,explainer`, { headers: SB })
+      .then(r => r.json()).catch(() => [])) ?? []) as { id: string; code: string; headline: string | null; title: string; explainer: { titlu?: string } | null }[]
+    const byId = new Map(rows.map(r => [r.id, r]))
+    const items = ids.map(i => byId.get(i)).filter((r): r is NonNullable<typeof r> => Boolean(r))
+      .map(r => ({ code: r.code, headline: r.explainer?.titlu ?? r.headline ?? r.title }))
+    const v2Range = `${from.getDate()} ${RO_MONTHS[from.getMonth()]} – ${to.getDate()} ${RO_MONTHS[to.getMonth()]} ${to.getFullYear()}`
+    const fonts = await getCardFonts()
+    return new ImageResponse(
+      (
+        <div style={{ display: 'flex', width: 1080, height: 1350 }}>
+          <WeekCoverCard data={{ kind: votate ? 'votate' : parlament ? 'parlament' : 'promulgate', range: v2Range, items, count: n }} />
+        </div>
+      ),
+      { width: 1080, height: 1350, fonts },
+    )
+  }
+
   const fonts = await getCardFonts()
   return new ImageResponse(
     (
@@ -51,8 +78,7 @@ async function render(req: Request): Promise<Response> {
           </div>
 
           <div style={{ display: 'flex', flex: 1, alignItems: 'center', padding: '0 72px' }}>
-            <div style={{ display: 'flex', width: 10, alignSelf: 'stretch', margin: '110px 0', borderRadius: 6, background: C.for, flexShrink: 0 }} />
-            <div style={{ display: 'flex', flexDirection: 'column', flex: 1, paddingLeft: 44 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
               <div style={{ fontFamily: SERIF, fontSize: 82, lineHeight: 1.04, color: C.text }}>{title}</div>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 16, marginTop: 34 }}>
                 <div style={{ display: 'flex', fontFamily: SERIF, fontSize: 72, color: C.for }}>{`${n}`}</div>
@@ -61,17 +87,6 @@ async function render(req: Request): Promise<Response> {
             </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 72px 24px' }}>
-            <div style={{ display: 'flex', fontSize: 24, color: C.text, opacity: 0.65 }}>Le vezi pe rând 👉</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: C.for, borderRadius: 999, padding: '11px 24px' }}>
-              <div style={{ display: 'flex', fontSize: 20, fontWeight: 700, color: '#fff', letterSpacing: 1 }}>Glisează</div>
-              <svg width="46" height="22" viewBox="0 0 46 22" fill="none">
-                <path d="M4 4l7 7-7 7" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" opacity="0.45" />
-                <path d="M18 4l7 7-7 7" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" opacity="0.75" />
-                <path d="M32 4l7 7-7 7" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </div>
-          </div>
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 72px', borderTopWidth: 1, borderTopStyle: 'solid', borderTopColor: C.hair }}>
             <div style={{ display: 'flex', fontFamily: MONO, fontSize: 15, fontWeight: 500, color: C.text }}>@la.butoane</div>

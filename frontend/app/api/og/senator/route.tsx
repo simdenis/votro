@@ -1,4 +1,5 @@
 import { ImageResponse } from 'next/og'
+import { getCardFonts } from '@/lib/og-fonts'
 import { hasPartyLine, isUuid } from '@/lib/utils'
 
 
@@ -30,6 +31,8 @@ export async function GET(request: Request) {
   const totalV    = s?.total_votes ?? 0
   const isHighDev = devPct != null && devPct > 10
 
+  // same faces as every IG card — without them satori fell back to its default sans
+  const fonts = await getCardFonts()
   return new ImageResponse(
     (
       <div
@@ -38,7 +41,7 @@ export async function GET(request: Request) {
           background: '#FFFFFF',
           display: 'flex', flexDirection: 'column',
           padding: '56px 64px',
-          fontFamily: 'sans-serif',
+          fontFamily: 'IBM Plex Sans',
         }}
       >
         {/* Party badge */}
@@ -48,7 +51,7 @@ export async function GET(request: Request) {
               display: 'flex', alignSelf: 'flex-start',
               padding: '6px 18px', borderRadius: 999,
               background: color, color: color === '#ffdd00' ? '#000' : '#fff',
-              fontSize: 20, fontWeight: 900, letterSpacing: 1,
+              fontSize: 20, fontWeight: 700, letterSpacing: 1,
               marginBottom: 24,
             }}
           >
@@ -59,7 +62,7 @@ export async function GET(request: Request) {
         {/* Name */}
         <div
           style={{
-            fontSize: 64, fontWeight: 900, color: '#171A1F',
+            fontSize: 64, fontWeight: 700, color: '#171A1F',
             letterSpacing: '-2px', lineHeight: 1.1, marginBottom: 'auto',
           }}
         >
@@ -69,12 +72,12 @@ export async function GET(request: Request) {
         {/* Stats row */}
         <div style={{ display: 'flex', gap: 56, alignItems: 'flex-end' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <span style={{ fontSize: 48, fontWeight: 900, color: '#171A1F' }}>{totalV}</span>
+            <span style={{ fontSize: 48, fontWeight: 700, color: '#171A1F' }}>{totalV}</span>
             <span style={{ fontSize: 14, color: '#8A8F98', textTransform: 'uppercase', letterSpacing: 2 }}>VOTURI</span>
           </div>
           {devPct != null && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <span style={{ fontSize: 48, fontWeight: 900, color: isHighDev ? '#E3A23C' : '#171A1F' }}>
+              <span style={{ fontSize: 48, fontWeight: 700, color: isHighDev ? '#E3A23C' : '#171A1F' }}>
                 {devPct.toFixed(1)}%
               </span>
               <span style={{ fontSize: 14, color: '#8A8F98', textTransform: 'uppercase', letterSpacing: 2 }}>DEVIERE</span>
@@ -86,6 +89,6 @@ export async function GET(request: Request) {
         </div>
       </div>
     ),
-    { width: 1200, height: 630 },
+    { width: 1200, height: 630, fonts },
   )
 }

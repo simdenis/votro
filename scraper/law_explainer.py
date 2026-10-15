@@ -32,7 +32,9 @@ import io
 import json
 import logging
 import os
+import re
 import sys
+import time
 
 import requests
 from dotenv import load_dotenv
@@ -60,7 +62,8 @@ PROMPT = (
     "- INTERZIS să înceapă cu: Schimbări, Modificări, Reguli noi, Noi reguli, Lege nouă, Legea, Proiectul\n"
     "- INTERZIS orice evaluare: «mai bine», «mai multă protecție», «în sfârșit», «important», «controversat»\n"
     "- bun: «Consilierii locali pot fi și consilieri ai primarului»; rău: «Schimbări la legea anticorupție»\n"
-    "- titlul nu poate afirma ce «neclar» spune că nu reiese din documente (de ex. cine anume e vizat)\n\n"
+    "- titlul nu poate afirma ce «neclar» spune că nu reiese din documente (de ex. cine anume e vizat)\n"
+    "- o singură propoziție, FĂRĂ două puncte (nu «Elevii: admiterea fără concurs», ci «Elevii intră la liceu fără concurs»)\n\n"
     "REZUMAT — ce vede omul obișnuit: 2–3 propoziții scurte, STRICT maximum 60 de cuvinte în total. Spune ce se "
     "schimbă concret în viața cuiva, ca și cum i-ai explica unui vecin: cine, ce poate / trebuie / primește, cât, de "
     "când. Cifrele și termenele concrete din lege sunt binevenite. FĂRĂ numere de articole, alineate sau litere, fără "
@@ -75,7 +78,9 @@ PROMPT = (
     "NECLAR — ce nu se poate explica din documente (o regulă lăsată pe seama unui ordin, o trimitere la un articol "
     "necitat), pe scurt; altfel null.\n\n"
     "Fiecare afirmație trebuie să se poată verifica în documente. Limbaj simplu, neutru, propoziții scurte, "
-    "diacritice corecte (ș ț cu virgulă), fără markdown."
+    "diacritice corecte (ș ț cu virgulă), fără markdown. Scrie ca un jurnalist, nu ca un asistent: FĂRĂ cratimă "
+    "lungă (—), fără punct și virgulă, fără construcții de tipul «nu doar X, ci Y» sau «nu e X, e Y», fără "
+    "enumerări de trei adjective, fără cuvinte goale («esențial», «important», «semnificativ», «modern»)."
 )
 
 SCHEMA = {
@@ -137,7 +142,8 @@ def documents(code: str) -> tuple[str | None, bytes | None, bytes | None]:
     return form, text, em
 
 
-def explain(client, code: str, title: str) -> dict | None:
+def build_request(code: str, title: str) -> tuple[dict, str] | None:
+    """Messages params for one law + the explainer_source it will record; None when senat.ro has no text."""
     form, text, em = documents(code)
     if not text:
         log.warning("%s: no law text on senat.ro — skipped", code)
@@ -150,22 +156,92 @@ def explain(client, code: str, title: str) -> dict | None:
                      {"type": "document", "source": {"type": "base64", "media_type": "application/pdf",
                                                      "data": base64.standard_b64encode(em).decode()}}]
     content.append({"type": "text", "text": PROMPT.format(form=TEXT_LABEL[form]) + f"\n\nTitlul oficial: {title}"})
-    r = client.beta.messages.create(
-        model=MODEL, max_tokens=16000,
-        betas=["server-side-fallback-2026-07-01"], fallbacks="default",
-        output_config={"effort": "medium", "format": {"type": "json_schema", "schema": SCHEMA}},
-        messages=[{"role": "user", "content": content}],
-    )
-    if r.stop_reason == "refusal":
+    params = {"model": MODEL, "max_tokens": 16000,
+              "output_config": {"effort": "medium", "format": {"type": "json_schema", "schema": SCHEMA}},
+              "messages": [{"role": "user", "content": content}]}
+    return params, form + ("+em" if em else "")
+
+
+def _plain(t: str | None) -> str | None:
+    """Belt and braces for the prompt's style rules: no em dashes, no semicolons."""
+    if t is None:
+        return None
+    t = re.sub(r"\s*—\s*|\s+–\s+", ", ", t.strip())          # spaced en dash = em dash; 2025–2026 stays
+    t = re.sub(r"\s*;\s*(\w)", lambda m: ". " + m.group(1).upper(), t)
+    return t.replace(",,", ",")
+
+
+def parse(code: str, message, source: str) -> dict | None:
+    if message.stop_reason == "refusal":
         log.warning("%s: refused", code)
         return None
-    data = json.loads(next(b.text for b in r.content if b.type == "text"))
-    data["titlu"] = data["titlu"].strip().rstrip(".")
-    if data["titlu"].startswith(BANNED_OPENERS) or not data["ce_se_schimba"]:
+    data = json.loads(next(b.text for b in message.content if b.type == "text"))
+    for k in ("titlu", "rezumat", "pe_cine_afecteaza", "de_cand", "neclar"):
+        data[k] = _plain(data.get(k))
+    data["ce_se_schimba"] = [{"inainte": _plain(c.get("inainte")), "acum": _plain(c["acum"])} for c in data["ce_se_schimba"]]
+    data["titlu"] = data["titlu"].rstrip(".")
+    if data["titlu"].startswith(BANNED_OPENERS) or ":" in data["titlu"] or not data["ce_se_schimba"]:
         log.warning("%s: off-spec answer (%r) — skipped", code, data["titlu"])
         return None
-    return {"explainer": data, "explainer_source": form + ("+em" if em else ""),
-            "explainer_model": MODEL, "tokens": r.usage.input_tokens + r.usage.output_tokens}
+    return {"explainer": data, "explainer_source": source, "explainer_model": MODEL,
+            "explainer_checked_at": dt.datetime.now(dt.timezone.utc).isoformat()}
+
+
+def explain(client, code: str, title: str) -> dict | None:
+    built = build_request(code, title)
+    if not built:
+        return None
+    params, source = built
+    r = client.beta.messages.create(**params, betas=["server-side-fallback-2026-07-01"], fallbacks="default")
+    return parse(code, r, source)
+
+
+class Sink:
+    """Where results go: the DB (unless --dry-run) and an optional .jsonl."""
+
+    def __init__(self, args, U: str, H: dict):
+        self.args, self.U, self.H, self.done = args, U, H, 0
+
+    def write(self, law: dict, res: dict) -> None:
+        if self.args.out:
+            with open(self.args.out, "a", encoding="utf-8") as f:
+                f.write(json.dumps({"code": law["code"], **res}, ensure_ascii=False) + "\n")
+        if not self.args.dry_run:
+            requests.patch(f"{self.U}/rest/v1/laws", params={"id": f"eq.{law['id']}"}, json=res,
+                           headers={**self.H, "Prefer": "return=minimal"}, timeout=30).raise_for_status()
+        self.done += 1
+        log.info("%s → %s", law["code"], res["explainer"]["titlu"])
+
+
+def run_batch(client, laws: list[dict], sink: Sink, chunk: int) -> None:
+    """Message Batches API: half the price, results within hours. Sent in chunks so
+    one batch stays well under the request-size cap (each carries the PDFs)."""
+    by_id = {law["id"]: law for law in laws}
+    for i in range(0, len(laws), chunk):
+        reqs, sources = [], {}
+        for law in laws[i:i + chunk]:
+            built = build_request(law["code"], law["title"])
+            if built:
+                reqs.append({"custom_id": law["id"], "params": built[0]})
+                sources[law["id"]] = built[1]
+        if not reqs:
+            continue
+        batch = client.messages.batches.create(requests=reqs)
+        log.info("batch %s: %d law(s) submitted", batch.id, len(reqs))
+        while client.messages.batches.retrieve(batch.id).processing_status != "ended":
+            time.sleep(60)
+        for item in client.messages.batches.results(batch.id):
+            law = by_id[item.custom_id]
+            if item.result.type != "succeeded":
+                log.warning("%s: batch result %s", law["code"], item.result.type)
+                continue
+            try:
+                res = parse(law["code"], item.result.message, sources[item.custom_id])
+            except Exception as e:
+                log.warning("%s: %s: %s", law["code"], type(e).__name__, str(e)[:200])
+                continue
+            if res:
+                sink.write(law, res)
 
 
 def main() -> None:
@@ -179,6 +255,8 @@ def main() -> None:
     ap.add_argument("--force", action="store_true", help="redo laws that already have an explainer")
     ap.add_argument("--dry-run", action="store_true", help="don't write to the DB")
     ap.add_argument("--out", help="also append every result to this .jsonl")
+    ap.add_argument("--batch", action="store_true", help="use the Message Batches API (half price, slower)")
+    ap.add_argument("--chunk", type=int, default=100, help="laws per batch")
     args = ap.parse_args()
 
     import anthropic
@@ -194,29 +272,21 @@ def main() -> None:
         if not args.force:
             q["explainer"] = "is.null"
     laws = requests.get(f"{U}/rest/v1/laws", params=q, headers=H, timeout=30).json()
-    log.info("%d law(s) to explain with %s", len(laws), MODEL)
+    log.info("%d law(s) to explain with %s%s", len(laws), MODEL, " (batch)" if args.batch else "")
 
-    done = tokens = 0
-    for law in laws:
-        try:
-            res = explain(client, law["code"], law["title"])
-        except Exception as e:  # one bad law must not stop the batch
-            log.warning("%s: %s: %s", law["code"], type(e).__name__, str(e)[:200])
-            continue
-        if not res:
-            continue
-        tokens += res.pop("tokens")
-        res["explainer_checked_at"] = dt.datetime.now(dt.timezone.utc).isoformat()
-        if args.out:
-            with open(args.out, "a", encoding="utf-8") as f:
-                f.write(json.dumps({"code": law["code"], **res}, ensure_ascii=False) + "\n")
-        if not args.dry_run:
-            requests.patch(f"{U}/rest/v1/laws", params={"id": f"eq.{law['id']}"}, json=res,
-                           headers={**H, "Prefer": "return=minimal"}, timeout=30).raise_for_status()
-        done += 1
-        log.info("%s → %s", law["code"], res["explainer"]["titlu"])
-    log.info("explained %d/%d · %d tokens", done, len(laws), tokens)
-
+    sink = Sink(args, U, H)
+    if args.batch:
+        run_batch(client, laws, sink, args.chunk)
+    else:
+        for law in laws:
+            try:
+                res = explain(client, law["code"], law["title"])
+            except Exception as e:  # one bad law must not stop the run
+                log.warning("%s: %s: %s", law["code"], type(e).__name__, str(e)[:200])
+                continue
+            if res:
+                sink.write(law, res)
+    log.info("explained %d/%d", sink.done, len(laws))
 
 if __name__ == "__main__":
     sys.exit(main())

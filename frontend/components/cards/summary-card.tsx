@@ -88,7 +88,6 @@ export function SummaryCard({ data }: { data: SummaryCardData }) {
         {/* The plain-language summary, slightly above vertical center */}
         <div style={{ display: 'flex', flexGrow: 1, minHeight: 24 }} />
         <div style={{ display: 'flex', flexShrink: 0 }}>
-          <div style={{ display: 'flex', width: 5, borderRadius: 3, background: catColor, marginRight: 30, flexShrink: 0 }} />
           <div style={{ display: 'flex', fontFamily: SERIF, fontSize: summaryFont(data.summary.length), lineHeight: 1.24, color: C.text }}>
             {data.summary}
           </div>

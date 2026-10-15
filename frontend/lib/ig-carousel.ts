@@ -9,7 +9,7 @@ import type { LawStatus } from '@/lib/types'
 import { tacitChambers, type LawStage } from '@/lib/law-stage'
 
 /** Mirror of CARD_V in scraper/instagram_poster.py — bump both together. */
-export const CARD_V = '15'
+export const CARD_V = '16'
 
 /** Deterministic static filename for an og-card suffix (poster contract). */
 export function slideName(suffix: string): string {
@@ -83,10 +83,10 @@ export function initiatorLineFromRows(
 /** Port of the --law caption (minus the optional --hook first line). */
 export function lawCarouselCaption(
   law: LawStatus,
-  { initiator, devCount, headline }: { initiator: string | null; devCount: number; headline?: string | null },
+  { initiator, devCount, headline, body }: { initiator: string | null; devCount: number; headline?: string | null; body?: string | null },
 ): string {
   const outcome = ({
-    promulgat: 'PROMULGATĂ ✅', retrimis: 'RETRIMISĂ ÎN PARLAMENT ↩️', sesizat_ccr: 'TRIMISĂ LA CCR ⚖️',
+    promulgat: 'Promulgată.', retrimis: 'Retrimisă în Parlament de Președinte.', sesizat_ccr: 'Trimisă la Curtea Constituțională.',
   } as Record<string, string>)[law.presidential_status ?? ''] ?? ''
   const passed = Boolean(law.presidential_status)
   const voted = [law.senate_vote_id, law.camera_vote_id].filter(Boolean).length
@@ -95,19 +95,20 @@ export function lawCarouselCaption(
   const lines = headline?.trim()
     ? [headline.trim(), '', `${law.code} · ${(law.title ?? '').trim()}`]
     : [`${law.code} · ${(law.title ?? '').trim()}`]
-  if (law.summary) lines.push('', law.summary.trim())
+  // body = the final-text explainer's rezumat when there is one (same as instagram_poster)
+  const text = body?.trim() || law.summary?.trim()
+  if (text) lines.push('', text)
   if (initiator) lines.push('', initiator)
   if (outcome) lines.push('', outcome)
   if (tacit) {
     const missing = !law.senate_vote_id ? 'Senat' : 'Camera Deputaților'
-    lines.push('', `⚠️ Adoptată tacit de ${missing}: termenul constituțional a expirat fără vot (art. 75).`)
+    lines.push('', `Adoptată tacit de ${missing}. Termenul constituțional a expirat fără vot (art. 75).`)
   }
   if (devCount) {
     lines.push('', devCount === 1
-      ? '⚡ 1 parlamentar a votat împotriva propriului partid (ultimul slide).'
-      : `⚡ ${devCount} parlamentari au votat împotriva propriului partid (ultimul slide).`)
+      ? 'Un parlamentar a votat împotriva propriului partid (ultimul slide).'
+      : `${devCount} parlamentari au votat împotriva propriului partid (ultimul slide).`)
   }
-  lines.push('', 'Voturile individuale, pe site: link în bio.', '',
-             '#parlament #transparență #românia #politică #laButoane')
+  lines.push('', 'Voturile individuale sunt pe site, link în bio.', '', '#parlament #laButoane')
   return lines.join('\n')
 }

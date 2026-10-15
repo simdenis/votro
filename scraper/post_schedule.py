@@ -105,7 +105,7 @@ def finished_laws(db: DB, since: dt.date) -> list[dict]:
     laws = []
     idl = sorted(ids)
     for i in range(0, len(idl), 80):
-        laws += db.get("laws", select="id,code,headline,title,interest_score,presidential_status,presidential_date",
+        laws += db.get("laws", select="id,code,headline,explainer,title,interest_score,presidential_status,presidential_date",
                        id=f"in.({','.join(idl[i:i + 80])})")
     laws.sort(key=lambda l: -(l["interest_score"] or 0))
     return laws

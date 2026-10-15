@@ -26,8 +26,9 @@ async function render(req: Request): Promise<Response> {
   const [law, headlineRow, stage] = await Promise.all([
     fetch(`${U}/rest/v1/law_status?law_id=eq.${id}&select=*&limit=1`, { headers: SB })
       .then(r => r.json()).then(rows => rows?.[0] as LawStatus | undefined),
-    fetch(`${U}/rest/v1/laws?id=eq.${id}&select=headline`, { headers: SB })
-      .then(r => r.json()).then(rows => rows?.[0]?.headline as string | null).catch(() => null),
+    // final-text explainer title first (law_explainer.py), else the draft-based headline
+    fetch(`${U}/rest/v1/laws?id=eq.${id}&select=headline,explainer`, { headers: SB })
+      .then(r => r.json()).then(rows => (rows?.[0]?.explainer?.titlu ?? rows?.[0]?.headline) as string | null).catch(() => null),
     fetchLawStage(id),
   ])
   if (!law || !headlineRow) return new Response('no headline', { status: 404 })

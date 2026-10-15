@@ -45,7 +45,7 @@ export function ShameCard({ data }: { data: ShameCardData }) {
       <div style={{ display: 'flex', height: 1, margin: '0 64px', background: C.hair }} />
 
       <div style={{ display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'center', padding: '20px 64px' }}>
-        <div style={{ fontFamily: SERIF, fontSize: compact ? 54 : 64, lineHeight: 1.05, color: C.against }}>Absențe — clasament</div>
+        <div style={{ fontFamily: SERIF, fontSize: compact ? 54 : 64, lineHeight: 1.05, color: C.against }}>Cine a lipsit cel mai mult</div>
         <div style={{ display: 'flex', fontSize: compact ? 19 : 21, opacity: 0.55, marginTop: 10, marginBottom: compact ? 20 : 40 }}>
           {data.subtitle ?? DEFAULT_SUBTITLE}
         </div>

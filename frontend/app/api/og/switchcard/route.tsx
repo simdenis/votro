@@ -65,7 +65,7 @@ export async function GET(req: Request) {
 
           <div style={{ display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'center', padding: '20px 64px' }}>
             <div style={{ fontFamily: SERIF, fontSize: 58, lineHeight: 1.05, color: C.accent }}>
-              {all ? `${total} ${chamberNoun} și-au schimbat partidul` : 'Traseism — cine a schimbat partidul'}
+              {all ? `${total} ${chamberNoun} și-au schimbat partidul` : 'Cine a schimbat partidul'}
             </div>
             <div style={{ display: 'flex', fontSize: 20, opacity: 0.55, marginTop: 10, marginBottom: 34 }}>
               {all

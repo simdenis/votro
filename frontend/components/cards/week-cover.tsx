@@ -12,6 +12,8 @@ export interface WeekCoverCardData {
   range: string
   /** in slide order; the cover shows up to 9 */
   items: WeekCoverItem[]
+  /** the count in the caption, when it is more than the laws shown (a law voted twice, >9 laws) */
+  count?: number
 }
 
 const COPY = {
@@ -22,8 +24,9 @@ const COPY = {
 
 export function WeekCoverCard({ data }: { data: WeekCoverCardData }) {
   const k = COPY[data.kind]
-  const n = data.items.length
   const shown = data.items.slice(0, 9)
+  const n = Math.max(data.count ?? 0, data.items.length)
+  const more = n - shown.length
   const rowSize = shown.length > 7 ? 28 : 32
 
   return (
@@ -45,20 +48,15 @@ export function WeekCoverCard({ data }: { data: WeekCoverCardData }) {
               <div style={{ display: 'flex', fontSize: rowSize, lineHeight: 1.25, color: C.ink }}>{clip(it.headline, 58)}</div>
             </div>
           ))}
+          {more > 0 ? (
+            <div style={{ display: 'flex', padding: '14px 0 0 62px', borderTopWidth: 1, borderTopStyle: 'solid', borderTopColor: C.hair, fontSize: rowSize, color: C.muted }}>
+              {`și încă ${more} în descriere`}
+            </div>
+          ) : null}
         </div>
 
         <div style={{ display: 'flex', flexGrow: 1, minHeight: 20 }} />
 
-        <div style={{ display: 'flex', justifyContent: 'flex-end', flexShrink: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: C.forDark, borderRadius: 999, padding: '14px 30px' }}>
-            <div style={{ display: 'flex', fontSize: 26, fontWeight: 700, color: '#fff', letterSpacing: 1 }}>Glisează</div>
-            <svg width="46" height="22" viewBox="0 0 46 22" fill="none">
-              <path d="M4 4l7 7-7 7" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" opacity="0.45" />
-              <path d="M18 4l7 7-7 7" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" opacity="0.75" />
-              <path d="M32 4l7 7-7 7" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </div>
-        </div>
       </div>
 
       <CardFooter />

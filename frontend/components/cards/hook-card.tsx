@@ -38,10 +38,9 @@ export function HookCard({ data }: { data: HookCardData }) {
         )}
       </div>
 
-      {/* the hook — vertically centered, with a thick category accent bar */}
+      {/* the hook, vertically centered; the category colour lives on its label, not a side bar */}
       <div style={{ display: 'flex', flex: 1, alignItems: 'center', padding: '0 72px' }}>
-        <div style={{ display: 'flex', width: 10, alignSelf: 'stretch', margin: '90px 0', borderRadius: 6, background: accent, flexShrink: 0 }} />
-        <div style={{ display: 'flex', flexDirection: 'column', flex: 1, paddingLeft: 44 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
           <div style={{ fontFamily: SERIF, fontSize: hookFont(data.headline.length), lineHeight: 1.04, color: C.text }}>{data.headline}</div>
         </div>
       </div>
@@ -52,16 +51,6 @@ export function HookCard({ data }: { data: HookCardData }) {
           <div style={{ display: 'flex', background: data.statusColor, color: '#fff', fontSize: 15, fontWeight: 600, letterSpacing: 3, textTransform: 'uppercase', padding: '8px 20px', borderRadius: 3 }}>
             {data.statusLabel}
           </div>
-        </div>
-        {/* swipe affordance — the eye-catch that says "there's more" */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: accent, borderRadius: 999, padding: '11px 24px' }}>
-          <div style={{ display: 'flex', fontSize: 20, fontWeight: 700, color: '#fff', letterSpacing: 1 }}>Glisează</div>
-          {/* three chevrons — "→" isn't in the Plex subset; SVG reads as motion */}
-          <svg width="46" height="22" viewBox="0 0 46 22" fill="none">
-            <path d="M4 4l7 7-7 7" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" opacity="0.45" />
-            <path d="M18 4l7 7-7 7" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" opacity="0.75" />
-            <path d="M32 4l7 7-7 7" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
         </div>
       </div>
 

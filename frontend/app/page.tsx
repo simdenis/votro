@@ -353,7 +353,7 @@ export default async function Dashboard() {
             {(absSenators.length > 0 || absDeputies.length > 0) && (
               <>
                 <h2 className="font-serif text-[16px] font-normal text-foreground border-b-2 border-respins/60 pb-[5px] mb-1">
-                  Absențe — clasament
+                  Cine lipsește cel mai mult
                 </h2>
                 <p className="text-[11px] text-faint mb-2">
                   % din voturile de plen ținute în camera sa de la validarea mandatului ·

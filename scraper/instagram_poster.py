@@ -127,7 +127,7 @@ def build_vote_caption(cfg: Config, vote: dict) -> str:
     title = (law.get("title") or vote.get("description") or "").strip()
     chamber = "Camera Deputaților" if vote.get("chamber") == "deputies" else "Senat"
     outcome = vote.get("outcome")
-    verdict = {"adoptat": "ADOPTAT ✅", "respins": "RESPINS ❌"}.get(outcome, "")
+    verdict = {"adoptat": "Adoptat.", "respins": "Respins."}.get(outcome, "")
     fc, ac, bc = vote.get("for_count") or 0, vote.get("against_count") or 0, vote.get("abstention_count") or 0
     link = f"{cfg.site_url}/voturi/{vote['id']}"
 
@@ -144,11 +144,11 @@ def build_vote_caption(cfg: Config, vote: dict) -> str:
     if verdict:
         lines += ["", verdict]
     lines += [
-        f"🟢 {fc} pentru   🔴 {ac} împotrivă   🟣 {bc} abțineri",
+        f"{fc} pentru, {ac} împotrivă, {bc} abțineri",
         "",
         f"Detalii și voturi individuale: {link}",
         "",
-        "#parlament #politicaRomânească #laButoane #transparență #românia",
+        "#parlament #laButoane",
     ]
     return "\n".join(lines)
 
@@ -284,6 +284,11 @@ def _publish(cfg: Config, creation_id: str) -> str:
     return r.json()["id"]
 
 
+def is_native_story(url: str) -> bool:
+    """9:16 renders that go up as-is; everything else is a 4:5 card for the story frame."""
+    return "/api/og/story?" in url or "/api/og/votestory?" in url
+
+
 def post_story(cfg: Config, image_url: str) -> str:
     """Publish one image as a STORY (24 h, no caption). Returns media id.
     Monthly absences / traseiști go here since 2026-10-07 — the user wants
@@ -292,7 +297,7 @@ def post_story(cfg: Config, image_url: str) -> str:
     # Stories are 9:16. Every card is 4:5, so wrap it in the /api/og/story
     # frame (branded 1080×1920 canvas, card centered) — same as the admin
     # publish flow. Posting the bare card gave IG a 4:5 image (2026-10-07).
-    if "/api/og/story?" not in image_url:
+    if not is_native_story(image_url):
         inner = image_url
         image_url = f"{cfg.site_url}/api/og/story?src={_quote(image_url, safe='')}"
         # The frame embeds the card via a satori <img> fetch at render time. A
@@ -370,7 +375,7 @@ def post_carousel(cfg: Config, image_urls: list[str], caption: str) -> str:
 # Bump after card design changes — og images are CDN-cached immutable per URL.
 # KEEP IN SYNC with frontend/lib/ig-carousel.ts (admin page derives the same
 # slide manifest + static hashes from it).
-CARD_V = "15"
+CARD_V = "16"
 
 
 def _initiator_line(cfg: Config, law_id: str) -> str | None:
@@ -437,8 +442,11 @@ def _law_slides(cfg: Config, law_id: str, hook: str | None = None) -> tuple[list
     # A catchy headline (laws.headline) → a hook COVER slide first, and the
     # summary card drops the headline (nohl) so it isn't repeated. Must match
     # frontend/lib/ig-carousel.ts lawSlides() suffix-for-suffix (shared hashes).
-    has_headline = bool(_sb_get(cfg, "laws", {
-        "id": f"eq.{law_id}", "select": "headline", "limit": "1"})[0].get("headline"))
+    lrow = _sb_get(cfg, "laws", {"id": f"eq.{law_id}", "select": "headline,explainer", "limit": "1"})[0]
+    explainer = lrow.get("explainer") or {}
+    # the final-text explainer (law_explainer.py) beats the draft-based headline
+    has_headline = bool(explainer.get("titlu") or lrow.get("headline"))
+    hook = hook or explainer.get("titlu")
     suffixes = []
     if has_headline:
         suffixes.append(f"og/hookcard?id={law_id}&v={CARD_V}")
@@ -482,14 +490,15 @@ def _law_slides(cfg: Config, law_id: str, hook: str | None = None) -> tuple[list
     # Caption
     tacit = passed and len(chambers) < 2
     outcome = {
-        "promulgat": "PROMULGATĂ ✅", "retrimis": "RETRIMISĂ ÎN PARLAMENT ↩️",
-        "sesizat_ccr": "TRIMISĂ LA CCR ⚖️",
+        "promulgat": "Promulgată.", "retrimis": "Retrimisă în Parlament de Președinte.",
+        "sesizat_ccr": "Trimisă la Curtea Constituțională.",
     }.get(law.get("presidential_status") or "", "")
     lines = [f"{law['code']} · {(law.get('title') or '').strip()}"]
     if hook:
         lines = [hook.strip(), ""] + lines
-    if law.get("summary"):
-        lines += ["", law["summary"].strip()]
+    body = explainer.get("rezumat") or law.get("summary")
+    if body:
+        lines += ["", body.strip()]
     ini = _initiator_line(cfg, law_id)
     if ini:
         lines += ["", ini]
@@ -497,14 +506,14 @@ def _law_slides(cfg: Config, law_id: str, hook: str | None = None) -> tuple[list
         lines += ["", outcome]
     if tacit:
         missing = "Senat" if not law.get("senate_vote_id") else "Camera Deputaților"
-        lines += ["", f"⚠️ Adoptată tacit de {missing}: termenul constituțional a expirat fără vot (art. 75)."]
+        lines += ["", f"Adoptată tacit de {missing}. Termenul constituțional a expirat fără vot (art. 75)."]
     if dev_count:
         lines += ["", (
-            "⚡ 1 parlamentar a votat împotriva propriului partid (ultimul slide)." if dev_count == 1
-            else f"⚡ {dev_count} parlamentari au votat împotriva propriului partid (ultimul slide)."
+            "Un parlamentar a votat împotriva propriului partid (ultimul slide)." if dev_count == 1
+            else f"{dev_count} parlamentari au votat împotriva propriului partid (ultimul slide)."
         )]
-    lines += ["", "Voturile individuale, pe site: link în bio.", "",
-              "#parlament #transparență #românia #politică #laButoane"]
+    lines += ["", "Voturile individuale sunt pe site, link în bio.", "",
+              "#parlament #laButoane"]
     return suffixes, "\n".join(lines)
 
 
@@ -674,14 +683,14 @@ def _shame_interval(cfg: Config, dfrom: str, dto: str) -> tuple[str, str, list[s
     # fragment and silently dropping &sig. b64url survives every decode layer.
     payload = _b64.urlsafe_b64encode(d.encode()).decode().rstrip("=")
     image_url = f"{cfg.site_url}/api/og/shamecard?d={payload}&label={_quote(label)}&sig={_sign_card(payload)}"
-    lines = [f"🔴 Absențe — {label}: cei mai absenți parlamentari", "",
+    lines = [f"Cei mai absenți parlamentari în {label}", "",
              f"Absențe la voturile din plen în {label}:", ""]
-    lines += [f"{i+1}. {e['name']} ({e['party']}, {e['chamber']}) — {e['pct']}% absențe ({e['absent']}/{e['held']} voturi)"
+    lines += [f"{i+1}. {e['name']} ({e['party']}, {e['chamber']}), {e['pct']}% absențe ({e['absent']}/{e['held']} voturi)"
               for i, e in enumerate(top)]
     lines += ["", "Doar parlamentarii activi toată perioada, fără cei cu notă de context (concediu/delegație). "
               "Membrii Guvernului nu sunt incluși.",
               "", f"Toată lista: {cfg.site_url}", "",
-              "#parlament #absenteism #laButoane #transparență #românia"]
+              "#parlament #laButoane"]
     return image_url, "\n".join(lines), warnings
 
 
@@ -777,13 +786,13 @@ def post_shame(cfg: Config, dry_run: bool = False,
                                 f"{s['first_name']} {s['name']}", s["party_abbr"], chamber))
         entries.sort(reverse=True)
         top = entries[:5]
-        lines = ["🔴 Absențe — top 5: cei mai absenți parlamentari", "",
+        lines = ["Cei mai absenți parlamentari din legislatură", "",
                  "Absențe la voturile din plen, de la începutul legislaturii (20 decembrie 2024):", ""]
-        lines += [f"{i+1}. {name} ({party}, {chamber}) — {pct}% absențe"
+        lines += [f"{i+1}. {name} ({party}, {chamber}), {pct}% absențe"
                   for i, (pct, name, party, chamber) in enumerate(top)]
-        lines += ["", "Membrii Guvernului nu sunt incluși — ei nu votează în plen.",
+        lines += ["", "Membrii Guvernului nu sunt incluși. Ei nu votează în plen.",
                   "", f"Toată lista: {cfg.site_url}", "",
-                  "#parlament #absenteism #laButoane #transparență #românia"]
+                  "#parlament #laButoane"]
         caption = "\n".join(lines)
         image_url = f"{cfg.site_url}/api/og/shamecard"
 

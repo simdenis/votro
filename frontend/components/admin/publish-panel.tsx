@@ -393,15 +393,15 @@ export function PeriodCard({ site, kind, months, bust }: {
   const path = kind === 'absente' ? 'shamecard' : 'matrix'
   const image = `${site}/api/og/${path}${q}${bust ? `${q ? '&' : '?'}r=${bust}` : ''}`
 
-  const HT = '#parlament #transparență #românia #laButoane'
+  const HT = '#parlament #laButoane'
   const defaultCaption = kind === 'absente'
-    ? [`🔴 Absențe — ${mode === 'all' ? 'clasament (tot mandatul)' : label}: cei mai absenți parlamentari`, '',
+    ? [`Cei mai absenți parlamentari ${mode === 'all' ? 'din legislatură' : `în ${label}`}`, '',
        mode === 'all' ? 'Absențe la voturile din plen, de la validarea mandatului (dec. 2024).' : `Absențe la voturile din plen în ${label}.`, '',
        'Doar parlamentari activi; fără membrii Guvernului și fără cei cu notă de context.', '',
-       `Toată lista: ${site}`, '', `#absenteism ${HT}`].join('\n')
-    : [`🤝 Cine votează cu cine — ${label}`, '',
+       `Toată lista: ${site}`, '', HT].join('\n')
+    : [`Cine votează cu cine, ${label}`, '',
        'Procentul de voturi disputate în care partidele au votat la fel, două câte două. Voturile aproape unanime sunt excluse.', '',
-       `Matricea interactivă: ${site}/analize`, '', `#politică ${HT}`].join('\n')
+       `Matricea interactivă: ${site}/analize`, '', HT].join('\n')
 
   const [caption, setCaption] = useState(defaultCaption)
   // reset caption + preview when the period changes (new content)
@@ -448,7 +448,7 @@ export function SwitchMonthCard({ site, months, hashtags }: {
   const data = months.find(m => m.value === month) ?? months[0]
   const image = `${site}/api/og/switchcard?month=${month}&v=${data?.entries.length ?? 0}`
   const defaultCaption = data && data.entries.length ? [
-    `🔄 Traseism — ${data.label}`, '',
+    `Cine a schimbat partidul, ${data.label}`, '',
     ...data.entries.map(e => `• ${e.name} (${e.chamber}): ${e.from} → ${e.to}`),
     '', `Parcursul fiecăruia: ${site}/traseisti`, '', hashtags,
   ].join('\n') : ''
@@ -507,11 +507,11 @@ export function WeekSelectionCard({ site, laws, coverKind, captionHeader, captio
        ...chosen.map(l => `${site}/api/og/summarycard?id=${l.id}`)]
     : []
   const autoCaption = [
-    captionHeader ?? '📋 Legile promulgate săptămâna aceasta', '',
+    captionHeader ?? 'Legile promulgate săptămâna aceasta', '',
     // full plain-language summary per law (blank line between for readability)
-    ...chosen.flatMap(l => [`${l.code} — ${l.desc || l.title}`, '']).slice(0, -1),
-    '', captionOutro ?? `Fiecare, explicată pe ${site} (link în bio)`, '',
-    '#parlament #legi #laButoane #transparență #românia',
+    ...chosen.flatMap(l => [`${l.desc || l.title} (${l.code})`, '']).slice(0, -1),
+    '', captionOutro ?? `Fiecare e explicată pe ${site}, link în bio.`, '',
+    '#parlament #laButoane',
   ].join('\n')
   const caption = edited ?? autoCaption
 

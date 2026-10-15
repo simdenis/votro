@@ -59,9 +59,13 @@ async function renderCard(request: Request): Promise<Response> {
     const [stage, initiator, headlineRow] = await Promise.all([
       fetchLawStage(law.law_id),
       initiatorLine(law.law_id),
-      fetch(`${U}/rest/v1/laws?id=eq.${law.law_id}&select=headline`, { headers: SB })
-        .then(r => r.json()).then(rows => rows?.[0]?.headline as string | null).catch(() => null),
+      fetch(`${U}/rest/v1/laws?id=eq.${law.law_id}&select=headline,explainer`, { headers: SB })
+        .then(r => r.json()).then(rows => rows?.[0] as { headline: string | null; explainer: { titlu?: string; rezumat?: string } | null } | undefined)
+        .catch(() => undefined),
     ])
+    // the final-text explainer (law_explainer.py) beats the draft-based headline/summary
+    const ex = headlineRow?.explainer ?? null
+    const exSummary = ex?.rezumat?.trim() || null
     const mapped = mapLawToCard(law, [], null, null, stage)
     data = {
       lawCode: mapped.lawCode,
@@ -69,15 +73,16 @@ async function renderCard(request: Request): Promise<Response> {
       category: law.law_category,
       year: mapped.year,
       // no AI summary yet → the official title as hero, never another law's card
-      summary: law.summary ? plainSummary(law.summary) : law.title,
-      headline: noHeadline ? null : headlineRow,
+      summary: exSummary ?? (law.summary ? plainSummary(law.summary) : law.title),
+      headline: noHeadline ? null : (ex?.titlu ?? headlineRow?.headline ?? null),
       statusLabel: mapped.statusLabel,
       statusColor: mapped.statusColor,
       dateLine: mapped.dateLine,
       initiatorLine: initiator,
       // the footer names what the summary was read from — and nothing when
       // the hero is just the official title (PHCD64/2026 claimed an EM it never had)
-      sourceLine: !law.summary ? null
+      sourceLine: exSummary ? 'rezumat AI · sursă: textul final al legii'
+        : !law.summary ? null
         : law.summary_source === 'text' ? 'rezumat AI · sursă: textul proiectului'
         : law.summary_source === 'title' ? 'rezumat AI pe baza titlului oficial'
         : undefined,

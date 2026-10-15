@@ -22,12 +22,13 @@ export async function GET(req: Request) {
   const db = getDB()
   const [{ data: statuses }, { data: lawRow }, { data: initiators }] = await Promise.all([
     db.from('law_status').select('*').eq('law_id', id).limit(1),
-    db.from('laws').select('headline, initiator_type').eq('id', id).limit(1),
+    db.from('laws').select('headline, explainer, initiator_type').eq('id', id).limit(1),
     db.from('law_initiators').select('role_raw, party_raw').eq('law_id', id),
   ])
   const status = statuses?.[0] as LawStatus | undefined
   if (!status) return Response.json({ error: 'law not found' }, { status: 404 })
-  const headline = (lawRow?.[0]?.headline as string | null) ?? null
+  const explainer = (lawRow?.[0]?.explainer ?? null) as { titlu?: string; rezumat?: string } | null
+  const headline = explainer?.titlu ?? (lawRow?.[0]?.headline as string | null) ?? null
 
   const voteIds = [status.senate_vote_id, status.camera_vote_id].filter((v): v is string => Boolean(v))
   const { data: devRows } = voteIds.length
@@ -43,6 +44,6 @@ export async function GET(req: Request) {
   const { data: stageRows } = await db.from('initiatives').select('stage, chamber_first').eq('law_id', id).limit(1)
   const slides = lawSlides(status, devVote, Boolean(headline), (stageRows?.[0] as { stage: string | null; chamber_first: 'senate' | 'deputies' | null } | undefined) ?? null)
     .map(s => ({ url: `${SITE}/api/${s.suffix}`, label: s.label }))
-  const caption = lawCarouselCaption(status, { initiator, devCount, headline })
+  const caption = lawCarouselCaption(status, { initiator, devCount, headline, body: explainer?.rezumat })
   return Response.json({ slides, caption })
 }

@@ -33,7 +33,7 @@ import instagram_poster as ig
 import post_check
 from post_schedule import DB, WEEKDAYS_RO, due, finished_laws, load_schedule, tacit_soon
 
-HASHTAGS = "#parlament #transparență #românia #politică #laButoane"
+HASHTAGS = "#parlament #laButoane"
 LEDGER = Path(os.environ.get("VOTRO_LOG_DIR", "/var/log/votro")) / "ig_posts.jsonl"
 # the weekly absence story embeds a SIGNED shamecard in the story frame; that
 # needs the frame's URL re-encoding fix (og/story card.toString()) live, or the
@@ -152,7 +152,7 @@ def vet(cfg: ig.Config, dry: bool, kind: str, urls: list[str], caption: str, tit
     if dry and not CHECK_IN_DRY:
         return
     if kind == "story":
-        urls = [u if "/api/og/story?" in u else f"{cfg.site_url}/api/og/story?src={ig._quote(u, safe='')}" for u in urls]
+        urls = [u if ig.is_native_story(u) else f"{cfg.site_url}/api/og/story?src={ig._quote(u, safe='')}" for u in urls]
     v = post_check.review(kind, urls, caption, texts or [], facts)
     if v.ok:
         print(f"  check ok{' (AI off)' if v.unchecked else ''}")
@@ -208,7 +208,7 @@ def tally(v: dict) -> str:
 
 
 def week_final_votes(db: DB, monday: dt.date, sunday: dt.date) -> list[dict]:
-    rows = db.get("votes", select="id,vote_date,chamber,for_count,against_count,abstention_count,outcome,laws(id,code,title,headline,interest_score)",
+    rows = db.get("votes", select="id,vote_date,chamber,for_count,against_count,abstention_count,outcome,laws(id,code,title,headline,explainer,interest_score)",
                   vote_type="eq.vot final", law_id="not.is.null",
                   **{"and": f"(vote_date.gte.{monday},vote_date.lte.{sunday})"}, order="vote_date", limit="500")
     return [r for r in rows if r.get("laws")]
@@ -224,7 +224,7 @@ def do_story_sitting(cfg, db, day, dry):
     votes.sort(key=lambda v: -((v["laws"].get("interest_score") or 0)))
     out = []
     for v in votes[:5]:
-        url = f"{cfg.site_url}/api/og/votecard?vote={v['id']}&v={ig.CARD_V}"
+        url = f"{cfg.site_url}/api/og/votestory?vote={v['id']}&v={ig.CARD_V}"
         title = f"story vot: {v['laws']['code']} · {chamber_ro(v['chamber'])} {tally(v)} {v['outcome']}"
         try:
             vet(cfg, dry, "story", [url], "", title,
@@ -267,33 +267,44 @@ def do_recap_week(cfg, db, day, dry):
         if v["laws"]["id"] in seen:
             continue
         seen.add(v["laws"]["id"]); slides_laws.append(v)
-    slides = [f"{cfg.site_url}/api/og/weekcover?kind=votate&n={len(adopted)}&v={ig.CARD_V}{day}"] + \
-             [f"{cfg.site_url}/api/og/summarycard?id={v['laws']['id']}&v={ig.CARD_V}" for v in slides_laws[:9]]
+    shown = slides_laws[:9]
+    # v2: the cover lists every law (ids, slide order); each slide says what happened that week
+    slides = [f"{cfg.site_url}/api/og/weekcover?kind=votate&n={len(slides_laws)}&ids={','.join(v['laws']['id'] for v in shown)}&v={ig.CARD_V}{day}"] + \
+             [f"{cfg.site_url}/api/og/recapcard?id={v['laws']['id']}&kind=votate&pos={i}/{len(shown) + 1}"
+              f"&ch={v['chamber']}&out={v['outcome']}&t={v['for_count']}-{v['against_count']}&d={v['vote_date']}&v={ig.CARD_V}"
+              for i, v in enumerate(shown, 2)]
     rng = f"{monday.day} {ig_month(monday)} – {sunday.day} {ig_month(sunday)}"
     chambers = {v["chamber"] for v in votes}
-    lines = [f"🗳️ Ce a votat Parlamentul săptămâna trecută ({rng})", ""]
+    lines = [f"Ce a votat Parlamentul săptămâna trecută ({rng})", ""]
     if len(chambers) == 1:
         lines.append(f"Doar {'Senatul' if 'senate' in chambers else 'Camera Deputaților'} a avut voturi finale. ")
     lines.append(f"{len(adopted)} adoptate:" if adopted else "Niciun vot final adoptat.")
     for v in adopted:
-        l = v["laws"]; lines.append(f"• {l['code']} — {l.get('headline') or l['title'][:90]} ({chamber_ro(v['chamber'])}, {tally(v)})")
+        l = v["laws"]; lines.append(f"• {law_line(l)} ({l['code']}, {chamber_ro(v['chamber'])}, {tally(v)})")
     if rejected:
         lines += ["", f"{len(rejected)} respinse:"]
         for v in rejected:
-            l = v["laws"]; lines.append(f"• {l['code']} — {l.get('headline') or l['title'][:90]} ({chamber_ro(v['chamber'])}, {v['for_count']}–{v['against_count']}–{v['abstention_count']})")
-    lines += ["", "Un vot final nu înseamnă încă lege — urmează cealaltă cameră sau Președintele. Fiecare, explicată pe la-butoane.ro (link în bio)", "", HASHTAGS]
+            l = v["laws"]; lines.append(f"• {law_line(l)} ({l['code']}, {chamber_ro(v['chamber'])}, {v['for_count']}–{v['against_count']}–{v['abstention_count']})")
+    lines += ["", "Un vot final nu înseamnă încă lege. Urmează cealaltă cameră sau Președintele. Fiecare e explicată pe la-butoane.ro, link în bio.", "", HASHTAGS]
     caption = "\n".join(lines)
     title = f"recap {rng}: {len(adopted)} adoptate, {len(rejected)} respinse"
     # vet() also pre-warms: IG's fetcher 400s on a cold render
     vet(cfg, dry, "feed", slides, caption, title,
         {"week": f"{monday} – {sunday}", "adopted": len(adopted), "rejected": len(rejected),
          "slides_after_cover": [v["laws"]["code"] for v in slides_laws[:9]]},
-        [{"slide": 1, "card": "cover", "count_shown": len(adopted), "label": "adoptate", "week": f"{monday} – {sunday}"}]
+        [{"slide": 1, "card": "cover", "laws_listed": len(slides_laws), "label": "legi cu vot final adoptat", "week": f"{monday} – {sunday}"}]
         + [{"slide": i, **t} for i, t in enumerate(law_texts(db, [v["laws"]["id"] for v in slides_laws[:9]]), 2)])
     if dry:
         print("  would carousel:", *slides, sep="\n    "); print(caption[:400]); return []
     mid = ig.post_carousel(cfg, slides, caption) if len(slides) > 1 else ig.post_image(cfg, slides[0], caption)
     return [(mid, "feed", title, f"{monday}")]
+
+
+def law_line(l: dict) -> str:
+    """How a law reads in a caption list: the explainer's title (read from the
+    final text), else the AI headline, else the start of the official title."""
+    ex = l.get("explainer") or {}
+    return ex.get("titlu") or l.get("headline") or l["title"][:90]
 
 
 def ig_month(d: dt.date) -> str:
@@ -323,11 +334,11 @@ def do_tacit(cfg, db, day, dry):
     if not bills:
         return []
     url = f"{cfg.site_url}/api/og/tacitlist?d={day}&v={ig.CARD_V}"
-    lines = ["⏳ Legi pe cale să treacă TACIT — fără niciun vot", "",
+    lines = ["Legi care pot trece tacit, fără niciun vot", "",
              "Dacă termenul constituțional expiră fără vot, proiectul e considerat adoptat automat de prima cameră (art. 75). Expiră în următoarele 7 zile:", ""]
     for i, b in enumerate(bills, 1):
-        lines.append(f"{i}. {(b.get('summary') or b['code'])[:140]} ({b['code']}) — termen {b['tacit_deadline']}")
-    lines += ["", "Lista completă: la-butoane.ro/tacite (link în bio)", "", HASHTAGS]
+        lines.append(f"{i}. {(b.get('summary') or b['code'])[:140]} ({b['code']}), termen {b['tacit_deadline']}")
+    lines += ["", "Lista completă e pe la-butoane.ro/tacite, link în bio.", "", HASHTAGS]
     title = f"tacit: {len(bills)} proiecte"
     vet(cfg, dry, "feed", [url], "\n".join(lines), title,
         {"date": day, "bills": [{"code": b["code"], "deadline": b["tacit_deadline"]} for b in bills]},
@@ -342,13 +353,15 @@ def do_passed_week(cfg, db, day, dry):
     laws = finished_laws(db, d - dt.timedelta(days=7))
     if not laws:
         return []
-    slides = [f"{cfg.site_url}/api/og/weekcover?kind=parlament&n={len(laws)}&v={ig.CARD_V}{day}"] + \
-             [f"{cfg.site_url}/api/og/summarycard?id={l['id']}&v={ig.CARD_V}" for l in laws[:9]]
-    lines = ["🏛️ Trecute de Parlament săptămâna asta — acum la Președinte sau deja promulgate", ""]
+    shown = laws[:9]
+    slides = [f"{cfg.site_url}/api/og/weekcover?kind=parlament&n={len(laws)}&ids={','.join(l['id'] for l in shown)}&v={ig.CARD_V}{day}"] + \
+             [f"{cfg.site_url}/api/og/recapcard?id={l['id']}&kind=parlament&pos={i}/{len(shown) + 1}&v={ig.CARD_V}"
+              for i, l in enumerate(shown, 2)]
+    lines = ["Trecute de Parlament săptămâna asta, acum la Președinte sau deja promulgate", ""]
     for l in laws:
         st = {"promulgat": "promulgată", "retrimis": "retrimisă la Parlament", "sesizat_ccr": "contestată la CCR"}.get(l.get("presidential_status") or "", "la Președinte")
-        lines.append(f"• {l['code']} — {l.get('headline') or l['title'][:90]} ({st})")
-    lines += ["", "Fiecare, explicată pe la-butoane.ro (link în bio)", "", HASHTAGS]
+        lines.append(f"• {law_line(l)} ({l['code']}, {st})")
+    lines += ["", "Fiecare e explicată pe la-butoane.ro, link în bio.", "", HASHTAGS]
     title = f"trecute de Parlament: {len(laws)} legi"
     vet(cfg, dry, "feed", slides, "\n".join(lines), title,
         {"week_ending": day, "laws": len(laws), "slides_after_cover": [l["code"] for l in laws[:9]]},

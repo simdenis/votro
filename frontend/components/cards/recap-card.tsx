@@ -62,7 +62,6 @@ export function RecapCard({ data }: { data: RecapCardData }) {
 
         {body ? (
           <div style={{ display: 'flex', flexShrink: 0 }}>
-            <div style={{ display: 'flex', width: 6, borderRadius: 3, background: cat, marginRight: 28, flexShrink: 0 }} />
             <div style={{ fontSize: summarySize(body.length), lineHeight: 1.38, color: C.slate }}>{body}</div>
           </div>
         ) : (

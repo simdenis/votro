@@ -26,14 +26,14 @@ export const metadata = {
 
 const SITE = (process.env.NEXT_PUBLIC_SITE_URL || 'https://la-butoane.ro').replace(/\/$/, '')
 const CANDIDATE_DAYS = 14
-const HASHTAGS = '#parlament #transparență #românia #politică #laButoane'
+const HASHTAGS = '#parlament #laButoane'
 
 const RO_MONTHS = ['ianuarie', 'februarie', 'martie', 'aprilie', 'mai', 'iunie',
                    'iulie', 'august', 'septembrie', 'octombrie', 'noiembrie', 'decembrie']
 const RO_MONTHS_S = ['ian', 'feb', 'mar', 'apr', 'mai', 'iun', 'iul', 'aug', 'sep', 'oct', 'noi', 'dec']
 
 const STATUS_LINE: Record<string, string> = {
-  promulgat: 'Promulgată — urmează publicarea în Monitorul Oficial.',
+  promulgat: 'Promulgată. Urmează publicarea în Monitorul Oficial.',
   retrimis: 'Retrimisă de Președinte în Parlament pentru reexaminare.',
   sesizat_ccr: 'Contestată la Curtea Constituțională.',
 }
@@ -81,7 +81,7 @@ async function fetchCandidates() {
 
   const { data: laws } = await getDB()
     .from('laws')
-    .select('id, code, title, summary, headline, presidential_status, presidential_date, interest_score, interest_reason, initiator_type')
+    .select('id, code, title, summary, headline, explainer, presidential_status, presidential_date, interest_score, interest_reason, initiator_type')
     .in('id', ids)
   // top 12 by interest (Workers Paid → 30s CPU, no longer the Free 10ms squeeze);
   // the rest are in the "Legile săptămânii" list.
@@ -124,8 +124,8 @@ async function fetchCandidates() {
       (initiators ?? []).filter(r => r.law_id === l.id))
     return {
       ...l,
-      slides: status ? lawSlides(status, devVote, Boolean(l.headline), stageByLaw.get(l.id) ?? null) : ([] as Slide[]),
-      carouselCaption: status ? lawCarouselCaption(status, { initiator, devCount, headline: l.headline }) : null,
+      slides: status ? lawSlides(status, devVote, Boolean(l.explainer?.titlu || l.headline), stageByLaw.get(l.id) ?? null) : ([] as Slide[]),
+      carouselCaption: status ? lawCarouselCaption(status, { initiator, devCount, headline: l.explainer?.titlu ?? l.headline, body: l.explainer?.rezumat }) : null,
     }
   })
 }
@@ -134,7 +134,7 @@ type Candidate = Awaited<ReturnType<typeof fetchCandidates>>[number]
 
 function lawCaption(l: Candidate): string {
   // lead with the catchy AI headline when present — the hook people read
-  const lines = [l.headline ? `📋 ${l.headline}` : `📋 ${l.code} — pe scurt`, '']
+  const lines = [l.headline ? l.headline : `${l.code}, pe scurt`, '']
   if (l.summary) lines.push(l.summary.length > 500 ? l.summary.slice(0, 497).trimEnd() + '…' : l.summary, '')
   if (l.presidential_status && STATUS_LINE[l.presidential_status]) {
     lines.push(STATUS_LINE[l.presidential_status], '')
@@ -143,7 +143,7 @@ function lawCaption(l: Candidate): string {
     const oc = l.lastVote.outcome === 'respins' ? 'Respinsă' : 'Adoptată'
     lines.push(`${oc} în ${ch}: ${l.lastVote.for_count ?? 0} pentru, ${l.lastVote.against_count ?? 0} împotrivă.`, '')
   }
-  lines.push(`Cum a votat fiecare parlamentar: ${SITE}/legi/${l.id} (link în bio)`, '', HASHTAGS)
+  lines.push(`Cum a votat fiecare parlamentar: ${SITE}/legi/${l.id}, link în bio.`, '', HASHTAGS)
   return lines.join('\n')
 }
 
@@ -483,14 +483,14 @@ export default async function AdminPage({ searchParams }: {
     .map(l => ({ id: l.id, code: l.code, title: l.headline || l.title, desc: l.summary || l.headline || l.title }))
 
   const tacitCaption = tacit.length ? [
-    '⏳ Legi pe cale să treacă TACIT — fără niciun vot', '',
+    'Legi care pot trece tacit, fără niciun vot', '',
     'Dacă termenul constituțional expiră fără vot, proiectul e considerat adoptat automat (art. 75). Termene care expiră în următoarele 7 zile:', '',
-    ...tacit.map((b, i) => `${i + 1}. ${b.summary || b.title || b.code} (${b.code}, ${b.chamber === 'senate' ? 'Senat' : 'Cameră'}) — termen ${roDate(b.tacit_deadline)}`),
+    ...tacit.map((b, i) => `${i + 1}. ${b.summary || b.title || b.code} (${b.code}, ${b.chamber === 'senate' ? 'Senat' : 'Cameră'}), termen ${roDate(b.tacit_deadline)}`),
     '', `Lista completă: ${SITE}/tacite`, '', HASHTAGS,
   ].join('\n') : ''
 
   const switchCaption = monthSwitchers.length ? [
-    `🔄 Traseism — ${RO_MONTHS[new Date().getMonth()]} ${new Date().getFullYear()}`, '',
+    `Cine a schimbat partidul, ${RO_MONTHS[new Date().getMonth()]} ${new Date().getFullYear()}`, '',
     ...monthSwitchers.map(s => {
       const from = s.segments[s.segments.length - 2], to = s.segments[s.segments.length - 1]
       return `• ${s.first_name} ${s.name} (${s.chamber === 'senate' ? 'Senat' : 'Cameră'}): ${from?.abbreviation ?? '?'} → ${to?.abbreviation ?? '?'}`
@@ -501,7 +501,7 @@ export default async function AdminPage({ searchParams }: {
   // Cumulative "de la alegeri" — the launch stat (origin → current party).
   const switchNoun = allSwitchers.some((s: Switcher) => s.chamber === 'senate') ? 'parlamentari' : 'deputați'
   const switchAllCaption = allSwitchers.length ? [
-    `🔄 ${allSwitchers.length} ${switchNoun} și-au schimbat partidul de la alegeri`, '',
+    `${allSwitchers.length} ${switchNoun} și-au schimbat partidul de la alegeri`, '',
     ...allSwitchers.slice(0, 12).map(s => {
       const from = s.segments[0], to = s.segments[s.segments.length - 1]
       return `• ${s.first_name} ${s.name}: ${from?.abbreviation ?? '?'} → ${to?.abbreviation ?? '?'}`
@@ -526,7 +526,7 @@ export default async function AdminPage({ searchParams }: {
       {/* the "laws of the week" button — full list, nothing capped/missed */}
       <details className="mt-5 border border-rim rounded-xl overflow-hidden">
         <summary className="cursor-pointer select-none px-4 py-3 text-[13px] font-semibold bg-surface hover:bg-raised transition-colors">
-          📋 Legile săptămânii — tot ce a mișcat în ultimele 7 zile ({weekLaws.length})
+          Legile săptămânii, tot ce a mișcat în ultimele 7 zile ({weekLaws.length})
         </summary>
         <div className="divide-y divide-rim border-t border-rim">
           {weekLaws.length === 0 && <p className="px-4 py-3 text-[12px] text-faint">Nimic în ultimele 7 zile (recess).</p>}
@@ -582,7 +582,7 @@ export default async function AdminPage({ searchParams }: {
         ) : (
           <div className="border border-rim rounded-xl p-4">
             <WeekSelectionCard site={SITE} coverKind="votate"
-              captionHeader={`🗳️ Ce a votat Parlamentul săptămâna trecută (${prevWeek.range})`}
+              captionHeader={`Ce a votat Parlamentul săptămâna trecută (${prevWeek.range})`}
               captionOutro={`Un vot final nu înseamnă încă lege — urmează cealaltă cameră sau Președintele. Fiecare, explicată pe ${SITE} (link în bio)`}
               laws={prevWeek.laws} />
           </div>
@@ -617,7 +617,7 @@ export default async function AdminPage({ searchParams }: {
                hint="Votul final decisiv în ultimele 7 zile — acum la Președinte. Bifează ce vrei să incluzi → un carusel (coperta + un slide per lege).">
         <div className="border border-rim rounded-xl p-4">
           <WeekSelectionCard site={SITE} coverKind="parlament"
-            captionHeader="🏛️ Trecute de Parlament săptămâna asta — acum la Președinte, spre promulgare"
+            captionHeader="Trecute de Parlament săptămâna asta, acum la Președinte pentru promulgare"
             captionOutro={`Pot fi promulgate, retrimise sau contestate la CCR. Fiecare, explicată pe ${SITE} (link în bio)`}
             laws={awaiting
               .filter(l => l.lastVote >= new Date(Date.now() - 7 * 86400_000).toISOString().slice(0, 10))
@@ -644,10 +644,10 @@ export default async function AdminPage({ searchParams }: {
                 <p className="text-[12.5px] text-muted mb-3">{(l.headline || l.title).length > 160 ? (l.headline || l.title).slice(0, 157) + '…' : (l.headline || l.title)}</p>
                 <PublishCard image={`${SITE}/api/og/summarycard?id=${l.law_id}&v=${CARD_V}`}
                              initialCaption={[
-                               l.headline ? `📋 ${l.headline}` : `📋 ${l.code} — pe scurt`, '',
+                               l.headline ? l.headline : `${l.code}, pe scurt`, '',
                                ...(l.summary ? [l.summary.length > 500 ? l.summary.slice(0, 497).trimEnd() + '…' : l.summary, ''] : []),
                                `Adoptată de ambele camere (Senat ${l.senate_for ?? '–'}–${l.senate_against ?? '–'}, Cameră ${l.camera_for ?? '–'}–${l.camera_against ?? '–'}). Urmează promulgarea sau, eventual, retrimiterea/CCR.`, '',
-                               `Cum a votat fiecare parlamentar: ${SITE}/legi/${l.law_id} (link în bio)`, '', HASHTAGS,
+                               `Cum a votat fiecare parlamentar: ${SITE}/legi/${l.law_id}, link în bio.`, '', HASHTAGS,
                              ].join('\n')} />
               </div>
             ))}

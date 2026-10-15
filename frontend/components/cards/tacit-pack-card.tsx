@@ -60,7 +60,7 @@ export function TacitPackCover({ meta, targetLine }: { meta: TacitPackMeta; targ
           legi ale justiției pot trece tacit de Cameră
         </div>
         <div style={{ display: 'flex', fontSize: 24, lineHeight: 1.5, color: C.faint, marginTop: 26, maxWidth: 900 }}>
-          {`Termenul constituțional expiră ${meta.deadlineLabel} — în ${meta.daysLeft} ${meta.daysLeft === 1 ? 'zi' : 'zile'}. Fără vot până atunci, sunt considerate adoptate și merg mai departe la Senat, fără ca vreun deputat să fi apăsat vreun buton (art. 75).`}
+          {`Termenul constituțional expiră ${meta.deadlineLabel}, peste ${meta.daysLeft} ${meta.daysLeft === 1 ? 'zi' : 'zile'}. Fără vot până atunci, sunt considerate adoptate și merg mai departe la Senat, fără ca vreun deputat să fi apăsat vreun buton (art. 75).`}
         </div>
         <div style={{ display: 'flex', height: 1, margin: '34px 0', background: C.hair, maxWidth: 900 }} />
         <div style={{ display: 'flex', fontFamily: MONO, fontSize: 18, lineHeight: 1.7, color: C.text, maxWidth: 900 }}>

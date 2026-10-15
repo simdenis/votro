@@ -36,7 +36,7 @@ async function recentFor(id: string): Promise<{ label: string; rows: RecentVoteR
   })
   const deviations = rows.filter(v => v.party_line_deviation)
   return deviations.length > 0
-    ? { label: 'Devieri recente — a votat altfel decât partidul', rows: deviations.slice(0, 3).map(toRow) }
+    ? { label: 'A votat altfel decât partidul, recent', rows: deviations.slice(0, 3).map(toRow) }
     : { label: 'Ultimele voturi', rows: rows.slice(0, 3).map(toRow) }
 }
 
@@ -44,10 +44,10 @@ const SAMPLE: SenatorCardData = {
   fullName: 'Maria Popescu', partyAbbr: 'PSD', partyColor: '#e8112d', chamberLabel: 'SENATOR', year: 2026,
   totalVotes: 312, votesFor: 240, votesAgainst: 30, votesAbstain: 12, votesAbsent: 30,
   loyaltyPct: 92, deviations: 24, deviationPct: 8, noLine: false,
-  recentLabel: 'Devieri recente — a votat altfel decât partidul',
+  recentLabel: 'A votat altfel decât partidul, recent',
   recent: [
     { lawCode: 'L 412/2026', date: '12.06.2026', title: 'Lege privind transparența deciziilor parlamentare', choice: 'against' },
-    { lawCode: 'L 388/2026', date: '03.06.2026', title: 'Modificarea Codului fiscal — TVA redus pentru alimente de bază', choice: 'abstention' },
+    { lawCode: 'L 388/2026', date: '03.06.2026', title: 'Modificarea Codului fiscal, TVA redus pentru alimente de bază', choice: 'abstention' },
     { lawCode: 'L 341/2026', date: '21.05.2026', title: 'Statutul personalului didactic auxiliar', choice: 'for' },
   ],
 }
