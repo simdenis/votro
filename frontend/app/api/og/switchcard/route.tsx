@@ -2,6 +2,7 @@ import { ImageResponse } from 'next/og'
 import { getSwitchers } from '@/lib/switchers'
 import { getCardFonts } from '@/lib/og-fonts'
 import { textOnColor } from '@/lib/utils'
+import { CardHeader, CardFooter } from '@/components/cards/kit'
 
 // 1080×1350 "traseiști" card — genuine party switchers (lib/switchers rules)
 // whose latest switch happened in ?month=YYYY-MM (default: current month).
@@ -19,7 +20,7 @@ function Pill({ abbr, color }: { abbr: string; color: string | null }) {
   const bg = color ?? '#9e9e9e'
   return (
     <div style={{
-      display: 'flex', background: bg, color: textOnColor(bg), fontSize: 20, fontWeight: 700,
+      display: 'flex', background: bg, color: textOnColor(bg), fontSize: 24, fontWeight: 700,
       padding: '4px 12px', borderRadius: 8, textTransform: 'uppercase',
     }}>{abbr}</div>
   )
@@ -56,18 +57,13 @@ export async function GET(req: Request) {
     (
       <div style={{ display: 'flex', width: 1080, height: 1350 }}>
         <div style={{ width: 1080, height: 1350, display: 'flex', flexDirection: 'column', background: C.bg, color: C.text, fontFamily: SANS }}>
-          <div style={{ display: 'flex', alignItems: 'center', padding: '36px 64px 22px' }}>
-            <div style={{ display: 'flex', fontFamily: MONO, fontSize: 16, letterSpacing: 2.5, textTransform: 'uppercase', color: C.faint }}>
-              {all ? 'LEGISLATURA 2024–2028' : `${RO_MONTHS[m - 1]} ${y}`}
-            </div>
-          </div>
-          <div style={{ display: 'flex', height: 1, margin: '0 64px', background: C.hair }} />
+          <CardHeader kicker={all ? 'Legislatura 2024–2028' : `${RO_MONTHS[m - 1]} ${y}`} />
 
           <div style={{ display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'center', padding: '20px 64px' }}>
             <div style={{ fontFamily: SERIF, fontSize: 58, lineHeight: 1.05, color: C.accent }}>
               {all ? `${total} ${chamberNoun} și-au schimbat partidul` : 'Cine a schimbat partidul'}
             </div>
-            <div style={{ display: 'flex', fontSize: 20, opacity: 0.55, marginTop: 10, marginBottom: 34 }}>
+            <div style={{ display: 'flex', fontSize: 24, opacity: 0.55, marginTop: 10, marginBottom: 34 }}>
               {all
                 ? (pages > 1 ? `de la alegeri · ${from0 + 1}–${from0 + switchers.length} din ${total} (origine → partid actual)` : 'de la alegeri, în această legislatură (origine → partid actual)')
                 : `parlamentari care au trecut la alt partid în ${RO_MONTHS[m - 1]} ${y}`}
@@ -89,7 +85,7 @@ export async function GET(req: Request) {
                   }}>
                     <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
                       <div style={{ display: 'flex', fontSize: 30, fontWeight: 700 }}>{`${s.first_name} ${s.name}`}</div>
-                      <div style={{ display: 'flex', fontSize: 17, opacity: 0.5, marginTop: 2 }}>
+                      <div style={{ display: 'flex', fontSize: 22, opacity: 0.5, marginTop: 2 }}>
                         {s.chamber === 'senate' ? 'SENAT' : 'CAMERĂ'}
                       </div>
                     </div>
@@ -110,23 +106,12 @@ export async function GET(req: Request) {
               </div>
             )}
 
-            <div style={{ display: 'flex', fontSize: 16, opacity: 0.7, marginTop: 30 }}>
-              Doar schimbări confirmate de listele oficiale de membri — nu grupări de o zi din erori de vot.
+            <div style={{ display: 'flex', fontSize: 24, opacity: 0.7, marginTop: 30 }}>
+              Doar schimbări confirmate de listele oficiale de membri, nu grupări de o zi din erori de vot.
             </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 64px 32px' }}>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 16 }}>
-              <div style={{ display: 'flex', fontFamily: MONO, fontSize: 14, fontWeight: 500, color: '#171A1F' }}>@la.butoane</div>
-              <div style={{ display: 'flex', fontFamily: MONO, fontSize: 12, color: C.faint }}>surse: senat.ro · cdep.ro</div>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <svg width="34" height="34" viewBox="0 0 64 64"><rect width="64" height="64" rx="15" fill="#171A1F" /><rect x="11" y="11" width="18" height="18" rx="6" fill="#2EA871" /><rect x="35" y="11" width="18" height="18" rx="6" fill="#E3A23C" /><rect x="11" y="35" width="18" height="18" rx="6" fill="#EE7B5E" /><rect x="35" y="35" width="18" height="18" rx="6" fill="#4E86D8" /></svg>
-              <div style={{ display: 'flex', alignItems: 'baseline', fontSize: 26, letterSpacing: '-0.015em', color: '#171A1F' }}>
-                <span style={{ fontWeight: 400 }}>La</span><span style={{ fontWeight: 700 }}>Butoane</span>
-              </div>
-            </div>
-          </div>
+          <CardFooter source={"surse: senat.ro · cdep.ro"} />
         </div>
       </div>
     ),

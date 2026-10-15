@@ -29,7 +29,7 @@ export function TacitListCard({ data }: { data: TacitListCardData }) {
         <div style={{ fontFamily: SERIF, fontSize: compact ? 50 : 58, lineHeight: 1.05, color: C.warn }}>Pe cale să treacă tacit</div>
         <div style={{ display: 'flex', fontSize: 24, opacity: 0.55, marginTop: 10, marginBottom: compact ? 18 : 32 }}>
           {/* "≤" is missing from the Plex subset (renders blank) — spell it out */}
-          termenul constituțional expiră în cel mult 7 zile — fără vot, sunt adoptate automat (art. 75)
+          termenul constituțional expiră în cel mult 7 zile. Fără vot, sunt adoptate automat (art. 75)
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column' }}>
