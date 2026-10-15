@@ -4,6 +4,7 @@
 // Amber = the brand's tacit hue; colors stay functional.
 
 import { computeArcDots } from './vote-card'
+import { CardHeader, CardFooter } from './kit'
 
 export interface EduCardData {
   slide: number
@@ -34,24 +35,9 @@ function Frame({ children, kicker }: { children: React.ReactNode; kicker: string
   return (
     <div style={{ width: 1080, height: 1350, display: 'flex', flexDirection: 'column', background: C.bg, color: C.text, fontFamily: SANS }}>
       {/* no logo header on IG post slides — the profile picture already shows it */}
-      <div style={{ display: 'flex', alignItems: 'center', padding: '36px 64px 22px' }}>
-        <div style={{ display: 'flex', fontFamily: MONO, fontSize: 16, letterSpacing: 2.5, textTransform: 'uppercase', color: C.gray500 }}>{kicker}</div>
-      </div>
-      <div style={{ display: 'flex', height: 1, margin: '0 64px', background: C.hair }} />
+      <CardHeader kicker={kicker} />
       {children}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 64px', borderTopWidth: 1, borderTopStyle: 'solid', borderTopColor: C.hair }}>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 16 }}>
-          <div style={{ display: 'flex', fontFamily: MONO, fontSize: 14, fontWeight: 500, color: '#171A1F' }}>@la.butoane</div>
-          <div style={{ display: 'flex', fontFamily: MONO, fontSize: 12, color: '#6E7480' }}>Constituția României, art. 74-77</div>
-        </div>
-        {/* logo lives bottom-right — the IG profile picture already brands the top */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <svg width="34" height="34" viewBox="0 0 64 64"><rect width="64" height="64" rx="15" fill="#171A1F" /><rect x="11" y="11" width="18" height="18" rx="6" fill="#2EA871" /><rect x="35" y="11" width="18" height="18" rx="6" fill="#E3A23C" /><rect x="11" y="35" width="18" height="18" rx="6" fill="#EE7B5E" /><rect x="35" y="35" width="18" height="18" rx="6" fill="#4E86D8" /></svg>
-          <div style={{ display: 'flex', alignItems: 'baseline', fontSize: 26, letterSpacing: '-0.015em', color: '#171A1F' }}>
-            <span style={{ fontWeight: 400 }}>La</span><span style={{ fontWeight: 700 }}>Butoane</span>
-          </div>
-        </div>
-      </div>
+      <CardFooter source={"Constituția României, art. 74-77"} />
     </div>
   )
 }
@@ -66,9 +52,9 @@ function ProgressStrip({ active }: { active: number }) {
             display: 'flex', alignItems: 'center', gap: 8, padding: '9px 16px', borderRadius: 999,
             background: i === active ? C.text : C.raised,
             color: i === active ? '#FFFFFF' : C.gray500,
-            fontSize: 17, fontWeight: i === active ? 600 : 500,
+            fontSize: 24, fontWeight: i === active ? 600 : 500,
           }}>
-            <span style={{ fontFamily: MONO, fontSize: 14 }}>{String(i + 1)}</span>
+            <span style={{ fontFamily: MONO, fontSize: 22 }}>{String(i + 1)}</span>
             <span>{s}</span>
           </div>
           {i < 3 && (
@@ -100,7 +86,7 @@ function StepSlide({ n, title, intro, rows, note }: {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'center', padding: '0 64px' }}>
       <ProgressStrip active={n - 1} />
-      <div style={{ display: 'flex', fontFamily: MONO, fontSize: 17, letterSpacing: 3, textTransform: 'uppercase', color: C.amberDark, marginBottom: 12 }}>
+      <div style={{ display: 'flex', fontFamily: MONO, fontSize: 24, letterSpacing: 3, textTransform: 'uppercase', color: C.amberDark, marginBottom: 12 }}>
         {`Pasul ${n} din 4`}
       </div>
       <div style={{ fontFamily: SERIF, fontSize: 58, lineHeight: 1.06, marginBottom: 16 }}>{title}</div>
@@ -216,7 +202,7 @@ export function EduCard({ data }: { data: EduCardData }) {
   return (
     <Frame kicker="CUM FUNCȚIONEAZĂ · 6/6">
       <div style={{ display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'center', padding: '0 64px' }}>
-        <div style={{ display: 'flex', fontFamily: MONO, fontSize: 17, letterSpacing: 3, textTransform: 'uppercase', color: C.amberDark, marginBottom: 12 }}>
+        <div style={{ display: 'flex', fontFamily: MONO, fontSize: 24, letterSpacing: 3, textTransform: 'uppercase', color: C.amberDark, marginBottom: 12 }}>
           Excepția de la pasul 2
         </div>
         <div style={{ fontFamily: SERIF, fontSize: 58, lineHeight: 1.06, marginBottom: 16 }}>Adoptarea tacită</div>
@@ -232,7 +218,7 @@ export function EduCard({ data }: { data: EduCardData }) {
             ))}
           </svg>
         </div>
-        <div style={{ display: 'flex', justifyContent: 'center', fontFamily: MONO, fontSize: 14, letterSpacing: 1.5, color: C.gray500, marginTop: 2 }}>
+        <div style={{ display: 'flex', justifyContent: 'center', fontFamily: MONO, fontSize: 22, letterSpacing: 1.5, color: C.gray500, marginTop: 2 }}>
           0 VOTURI · TRECE ORICUM
         </div>
 

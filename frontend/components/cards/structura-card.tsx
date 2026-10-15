@@ -1,3 +1,4 @@
+import { CardHeader, CardFooter } from './kit'
 // 1080×1350 (4:5) structure carousel (post #3) — how each chamber is
 // composed, party by party. The hero visual is the hemicycle colored in
 // party wedges (left → right, largest party first), like the classic
@@ -72,24 +73,9 @@ function Frame({ children, kicker }: { children: React.ReactNode; kicker: string
   return (
     <div style={{ width: 1080, height: 1350, display: 'flex', flexDirection: 'column', background: C.bg, color: C.text, fontFamily: SANS }}>
       {/* no logo header on IG post slides — the profile picture already shows it */}
-      <div style={{ display: 'flex', alignItems: 'center', padding: '36px 64px 22px' }}>
-        <div style={{ display: 'flex', fontFamily: MONO, fontSize: 16, letterSpacing: 2.5, textTransform: 'uppercase', color: C.gray500 }}>{kicker}</div>
-      </div>
-      <div style={{ display: 'flex', height: 1, margin: '0 64px', background: C.hair }} />
+      <CardHeader kicker={kicker} />
       {children}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 64px', borderTopWidth: 1, borderTopStyle: 'solid', borderTopColor: C.hair }}>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 16 }}>
-          <div style={{ display: 'flex', fontFamily: MONO, fontSize: 14, fontWeight: 500, color: '#171A1F' }}>@la.butoane</div>
-          <div style={{ display: 'flex', fontFamily: MONO, fontSize: 12, color: '#6E7480' }}>surse: senat.ro · cdep.ro</div>
-        </div>
-        {/* logo lives bottom-right — the IG profile picture already brands the top */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <svg width="34" height="34" viewBox="0 0 64 64"><rect width="64" height="64" rx="15" fill="#171A1F" /><rect x="11" y="11" width="18" height="18" rx="6" fill="#2EA871" /><rect x="35" y="11" width="18" height="18" rx="6" fill="#E3A23C" /><rect x="11" y="35" width="18" height="18" rx="6" fill="#EE7B5E" /><rect x="35" y="35" width="18" height="18" rx="6" fill="#4E86D8" /></svg>
-          <div style={{ display: 'flex', alignItems: 'baseline', fontSize: 26, letterSpacing: '-0.015em', color: '#171A1F' }}>
-            <span style={{ fontWeight: 400 }}>La</span><span style={{ fontWeight: 700 }}>Butoane</span>
-          </div>
-        </div>
-      </div>
+      <CardFooter source={"surse: senat.ro · cdep.ro"} />
     </div>
   )
 }
@@ -119,7 +105,7 @@ function ChamberSlide({ title, parties, note }: { title: string; parties: PartyS
       <div style={{ display: 'flex', flexDirection: 'column', marginTop: 34 }}>
         {parties.map(p => (
           <div key={p.abbr} style={{ display: 'flex', alignItems: 'center', height: rowH }}>
-            <div style={{ display: 'flex', width: 92, justifyContent: 'center', background: p.color, color: textOn(p.color), fontSize: 16, fontWeight: 700, padding: '5px 0', borderRadius: 4 }}>
+            <div style={{ display: 'flex', width: 92, justifyContent: 'center', background: p.color, color: textOn(p.color), fontSize: 24, fontWeight: 700, padding: '5px 0', borderRadius: 4 }}>
               {p.abbr}
             </div>
             <div style={{ display: 'flex', flexGrow: 1, flexShrink: 1, flexBasis: 0, alignItems: 'center', margin: '0 18px' }}>
@@ -131,7 +117,7 @@ function ChamberSlide({ title, parties, note }: { title: string; parties: PartyS
       </div>
 
       {note && (
-        <div style={{ display: 'flex', fontSize: 17, color: C.gray500, marginTop: 22 }}>{note}</div>
+        <div style={{ display: 'flex', fontSize: 24, color: C.gray500, marginTop: 22 }}>{note}</div>
       )}
     </div>
   )

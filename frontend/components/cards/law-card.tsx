@@ -3,6 +3,7 @@
 import type { PartyVote } from './vote-card'
 import { computeArcDots } from './vote-card'
 import { categoryColor } from '@/lib/category-colors'
+import { CardHeader, CardFooter, clip } from './kit'
 
 /** outcome is null when the chamber hasn't voted yet OR its vote comes later
  *  in the carousel than the displayed slide (revealed chronologically). */
@@ -45,9 +46,7 @@ function titleFont(len: number): number {
   if (len <= 120) return 47
   if (len <= 180) return 41
   if (len <= 260) return 36
-  if (len <= 360) return 31
-  if (len <= 500) return 26
-  return 22
+  return 31  // longer titles are clipped to 260 characters (kit clip)
 }
 
 export function LawCard({ data }: { data: LawCardData }) {
@@ -57,25 +56,22 @@ export function LawCard({ data }: { data: LawCardData }) {
   return (
     <div style={{ width: 1080, height: 1350, display: 'flex', flexDirection: 'column', background: C.bg, color: C.text, fontFamily: SANS }}>
 
-      <div style={{ display: 'flex', alignItems: 'center', padding: '36px 64px 22px' }}>
-        <div style={{ display: 'flex', fontFamily: MONO, fontSize: 16, letterSpacing: 2.5, textTransform: 'uppercase', color: '#6E7480' }}>{`LEGE · ${data.year}`}</div>
-      </div>
-      <div style={{ display: 'flex', height: 1, margin: '0 64px', background: C.hair }} />
+      <CardHeader kicker={`LEGE · ${data.year}`} />
 
       <div style={{ display: 'flex', flexDirection: 'column', flex: 1, padding: '40px 64px 0' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 14 }}>
-          <div style={{ display: 'flex', fontSize: 15, fontWeight: 500, color: C.navy, letterSpacing: 4, textTransform: 'uppercase' }}>{data.lawCode}</div>
+          <div style={{ display: 'flex', fontSize: 22, fontWeight: 500, color: C.navy, letterSpacing: 4, textTransform: 'uppercase' }}>{data.lawCode}</div>
           {data.category && (
-            <div style={{ display: 'flex', fontSize: 14, fontWeight: 600, color: categoryColor(data.category) ?? '#6E7480', textTransform: 'uppercase', letterSpacing: 1.5 }}>{data.category}</div>
+            <div style={{ display: 'flex', fontSize: 22, fontWeight: 600, color: categoryColor(data.category) ?? '#6E7480', textTransform: 'uppercase', letterSpacing: 1.5 }}>{data.category}</div>
           )}
         </div>
-        <div style={{ fontFamily: SERIF, fontSize: titleFont(data.lawTitle.length), lineHeight: 1.14, color: C.text, marginBottom: 28 }}>{data.lawTitle}</div>
+        <div style={{ fontFamily: SERIF, fontSize: titleFont(clip(data.lawTitle, 200).length), lineHeight: 1.14, color: C.text, marginBottom: 28 }}>{clip(data.lawTitle, 200)}</div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 22 }}>
-          <div style={{ display: 'flex', background: data.statusColor, color: '#fff', fontSize: 18, fontWeight: 600, letterSpacing: 4, textTransform: 'uppercase', padding: '11px 30px', borderRadius: 3 }}>
+          <div style={{ display: 'flex', background: data.statusColor, color: '#fff', fontSize: 24, fontWeight: 600, letterSpacing: 4, textTransform: 'uppercase', padding: '11px 30px', borderRadius: 3 }}>
             {data.statusLabel}
           </div>
-          {data.dateLine && <div style={{ display: 'flex', fontSize: 17, color: C.text, opacity: 0.8 }}>{data.dateLine}</div>}
+          {data.dateLine && <div style={{ display: 'flex', fontSize: 24, color: C.text, opacity: 0.8 }}>{data.dateLine}</div>}
         </div>
 
         {/* Equal flexible spacers above/below keep the arc vertically centered
@@ -88,7 +84,9 @@ export function LawCard({ data }: { data: LawCardData }) {
           const f = data.votesFor ?? 0, a = data.votesAgainst ?? 0, ab = data.votesAbstain ?? 0
           const absent = data.parties.reduce((s, p) => s + p.absent, 0)
           const dots = computeArcDots(f, a, ab, 0, absent)
-          const arcH = data.lawTitle.length > 220 || data.parties.length > 6 ? 340 : 420
+          const long = data.lawTitle.length > 140, many = data.parties.length > 6
+          // both at once (an OUG approval voted by nine groups) leaves room for a smaller arc only
+          const arcH = long && many ? 250 : long || many ? 340 : 420
           const arcW = Math.round(952 * (arcH / 308))
           return (
             <div style={{ display: 'flex', width: '100%', height: arcH, justifyContent: 'center' }}>
@@ -108,7 +106,7 @@ export function LawCard({ data }: { data: LawCardData }) {
           <div style={{ display: 'flex', flexDirection: 'column', marginBottom: 24 }}>
             <div style={{ display: 'flex', height: 1, background: C.hair, marginBottom: 14 }} />
             <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 10 }}>
-              <div style={{ display: 'flex', fontSize: 14, fontWeight: 600, color: C.navy, letterSpacing: 4, textTransform: 'uppercase', opacity: 0.85 }}>
+              <div style={{ display: 'flex', fontSize: 22, fontWeight: 600, color: C.navy, letterSpacing: 4, textTransform: 'uppercase', opacity: 0.85 }}>
                 {`Vot pe partide${data.voteChamber ? ` · ${data.voteChamber}` : ''}`}
               </div>
               {/* colored-dot legend with counts — the color key for arc + bars */}
@@ -126,7 +124,7 @@ export function LawCard({ data }: { data: LawCardData }) {
                   count != null ? (
                     <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                       <div style={{ display: 'flex', width: 12, height: 12, borderRadius: 6, background: color }} />
-                      <div style={{ display: 'flex', fontSize: 17, color: '#6E7480' }}>{`${count} ${label}`}</div>
+                      <div style={{ display: 'flex', fontSize: 24, color: '#6E7480' }}>{`${count} ${label}`}</div>
                     </div>
                   ) : null,
                 )}
@@ -140,14 +138,14 @@ export function LawCard({ data }: { data: LawCardData }) {
                 const t = p.for + p.against + p.abstain + p.absent
                 return (
                   <div key={p.name} style={{ display: 'flex', alignItems: 'center', height: rowH }}>
-                    <div style={{ display: 'flex', width: 76, justifyContent: 'flex-end', fontSize: 16, fontWeight: 600, color: C.text, opacity: 0.75, paddingRight: 10 }}>{p.name}</div>
+                    <div style={{ display: 'flex', width: 76, justifyContent: 'flex-end', fontSize: 24, fontWeight: 600, color: C.text, opacity: 0.75, paddingRight: 10 }}>{p.name}</div>
                     <div style={{ display: 'flex', flexGrow: 1, flexShrink: 1, flexBasis: 0, height: barH, borderRadius: 2, overflow: 'hidden', background: C.hair }}>
                       {seg(p.for, C.for)}
                       {seg(p.against, C.against)}
                       {seg(p.abstain, C.abstain)}
                       {seg(p.absent, C.absentDot)}
                     </div>
-                    <div style={{ display: 'flex', width: 46, fontSize: 15, color: C.text, opacity: 0.8, paddingLeft: 8 }}>{t}</div>
+                    <div style={{ display: 'flex', width: 46, fontSize: 22, color: C.text, opacity: 0.8, paddingLeft: 8 }}>{t}</div>
                   </div>
                 )
               })
@@ -166,7 +164,7 @@ export function LawCard({ data }: { data: LawCardData }) {
               : '#9AA0AA'
             return (
               <div key={s.label} style={{ display: 'flex', alignItems: 'center', flexGrow: i === data.journey.length - 1 ? 0 : 1, flexShrink: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 17, fontWeight: s.active ? 700 : 600, letterSpacing: 1.5, textTransform: 'uppercase', color }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 24, fontWeight: s.active ? 700 : 600, letterSpacing: 1.5, textTransform: 'uppercase', color }}>
                   {s.label}
                   {s.outcome === 'adoptat' ? (
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round">
@@ -189,19 +187,7 @@ export function LawCard({ data }: { data: LawCardData }) {
         </div>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 64px', borderTopWidth: 1, borderTopStyle: 'solid', borderTopColor: C.hair }}>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 16 }}>
-          <div style={{ display: 'flex', fontFamily: MONO, fontSize: 14, fontWeight: 500, color: '#171A1F' }}>@la.butoane</div>
-          <div style={{ display: 'flex', fontFamily: MONO, fontSize: 12, color: '#6E7480' }}>surse: cdep.ro / senat.ro</div>
-        </div>
-        {/* logo lives bottom-right — the IG profile picture already brands the top */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <svg width="34" height="34" viewBox="0 0 64 64"><rect width="64" height="64" rx="15" fill="#171A1F" /><rect x="11" y="11" width="18" height="18" rx="6" fill="#2EA871" /><rect x="35" y="11" width="18" height="18" rx="6" fill="#E3A23C" /><rect x="11" y="35" width="18" height="18" rx="6" fill="#EE7B5E" /><rect x="35" y="35" width="18" height="18" rx="6" fill="#4E86D8" /></svg>
-          <div style={{ display: 'flex', alignItems: 'baseline', fontSize: 26, letterSpacing: '-0.015em', color: '#171A1F' }}>
-            <span style={{ fontWeight: 400 }}>La</span><span style={{ fontWeight: 700 }}>Butoane</span>
-          </div>
-        </div>
-      </div>
+      <CardFooter source={"surse: senat.ro · cdep.ro"} />
     </div>
   )
 }

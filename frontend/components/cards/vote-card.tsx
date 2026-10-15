@@ -1,4 +1,5 @@
 import { countNoun } from '@/lib/utils'
+import { CardHeader, CardFooter, clip } from './kit'
 
 // ── Data model (handoff) ──────────────────────────────────────────────────────
 export interface PartyVote {
@@ -52,9 +53,7 @@ function titleFont(len: number): number {
   if (len <= 70) return 46
   if (len <= 130) return 36
   if (len <= 200) return 30
-  if (len <= 300) return 26
-  if (len <= 450) return 22
-  return 19
+  return 28  // longer titles are clipped to 200 characters (kit clip)
 }
 
 // ── Parliament arc (handoff algorithm) ─────────────────────────────────────────
@@ -122,15 +121,12 @@ export function VoteCard({ data }: { data: VoteCardData }) {
   return (
     <div style={{ width: 1080, height: 1350, display: 'flex', flexDirection: 'column', background: C.bg, color: C.text, fontFamily: SANS }}>
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', padding: '36px 64px 22px' }}>
-        <div style={{ display: 'flex', fontFamily: MONO, fontSize: 16, letterSpacing: 2.5, textTransform: 'uppercase', color: '#6E7480' }}>{`${data.chamber} · ${data.year}`}</div>
-      </div>
-      <div style={{ display: 'flex', height: 1, margin: '0 64px', background: C.hair }} />
+      <CardHeader kicker={`${data.chamber} · ${data.year}`} />
 
       {/* Content */}
       <div style={{ display: 'flex', flexDirection: 'column', flex: 1, padding: '36px 64px 0' }}>
-        <div style={{ display: 'flex', fontSize: 14, fontWeight: 500, color: C.navy, letterSpacing: 5, textTransform: 'uppercase', marginBottom: 12 }}>{data.lawCode}</div>
-        <div style={{ fontFamily: SERIF, fontSize: titleFont(data.lawTitle.length), lineHeight: 1.14, color: C.text, marginBottom: 18 }}>{data.lawTitle}</div>
+        <div style={{ display: 'flex', fontSize: 22, fontWeight: 500, color: C.navy, letterSpacing: 5, textTransform: 'uppercase', marginBottom: 12 }}>{data.lawCode}</div>
+        <div style={{ fontFamily: SERIF, fontSize: titleFont(clip(data.lawTitle, 200).length), lineHeight: 1.14, color: C.text, marginBottom: 18 }}>{clip(data.lawTitle, 200)}</div>
 
         {/* Spacer — splits the 4:5 slack with its twin below the stats row */}
         <div style={{ display: 'flex', flex: 1, minHeight: 4 }} />
@@ -153,10 +149,10 @@ export function VoteCard({ data }: { data: VoteCardData }) {
 
         {/* Badge + total */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 22, marginBottom: 20 }}>
-          <div style={{ display: 'flex', background: badgeBg, color: '#fff', fontSize: 18, fontWeight: 600, letterSpacing: 4, textTransform: 'uppercase', padding: '11px 30px', borderRadius: 3 }}>
+          <div style={{ display: 'flex', background: badgeBg, color: '#fff', fontSize: 24, fontWeight: 600, letterSpacing: 4, textTransform: 'uppercase', padding: '11px 30px', borderRadius: 3 }}>
             {data.result}
           </div>
-          <div style={{ display: 'flex', fontSize: 15, color: C.text, opacity: 0.8 }}>
+          <div style={{ display: 'flex', fontSize: 22, color: C.text, opacity: 0.8 }}>
             {[data.dateLabel, presenceLine].filter(Boolean).join('  ·  ')}
           </div>
         </div>
@@ -172,7 +168,7 @@ export function VoteCard({ data }: { data: VoteCardData }) {
               }}
             >
               <div style={{ display: 'flex', fontFamily: SERIF, fontSize: 38, lineHeight: 1, color: c.color }}>{c.value}</div>
-              <div style={{ display: 'flex', fontSize: 14, color: C.text, opacity: 0.75, textTransform: 'uppercase', letterSpacing: 2.5, marginTop: 6 }}>{c.label}</div>
+              <div style={{ display: 'flex', fontSize: 22, color: C.text, opacity: 0.75, textTransform: 'uppercase', letterSpacing: 2.5, marginTop: 6 }}>{c.label}</div>
             </div>
           ))}
         </div>
@@ -186,13 +182,13 @@ export function VoteCard({ data }: { data: VoteCardData }) {
         )}
         {data.parties.length > 0 && (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-            <div style={{ display: 'flex', fontSize: 14, fontWeight: 600, color: C.navy, letterSpacing: 4, textTransform: 'uppercase' }}>Vot pe partide</div>
+            <div style={{ display: 'flex', fontSize: 22, fontWeight: 600, color: C.navy, letterSpacing: 4, textTransform: 'uppercase' }}>Vot pe partide</div>
             {/* color legend — every hue carries one meaning */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
               {([['Pentru', C.for], ['Împotrivă', C.against], ['Abțineri', C.abstain], ['Absenți', C.absentDot]] as const).map(([label, color]) => (
                 <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                   <div style={{ display: 'flex', width: 12, height: 12, borderRadius: 6, background: color }} />
-                  <div style={{ display: 'flex', fontSize: 17, color: '#6E7480' }}>{label}</div>
+                  <div style={{ display: 'flex', fontSize: 24, color: '#6E7480' }}>{label}</div>
                 </div>
               ))}
             </div>
@@ -208,14 +204,14 @@ export function VoteCard({ data }: { data: VoteCardData }) {
             const t = p.for + p.against + p.abstain + p.absent
             return (
               <div key={p.name} style={{ display: 'flex', alignItems: 'center', height: rowH }}>
-                <div style={{ display: 'flex', width: 70, justifyContent: 'flex-end', fontSize: 16, fontWeight: 600, color: C.text, opacity: 0.75, paddingRight: 10 }}>{p.name}</div>
+                <div style={{ display: 'flex', width: 70, justifyContent: 'flex-end', fontSize: 24, fontWeight: 600, color: C.text, opacity: 0.75, paddingRight: 10 }}>{p.name}</div>
                 <div style={{ display: 'flex', flexGrow: 1, flexShrink: 1, flexBasis: 0, height: barH, borderRadius: 2, overflow: 'hidden', background: C.hair }}>
                   {seg(p.for, C.for)}
                   {seg(p.against, C.against)}
                   {seg(p.abstain, C.abstain)}
                   {seg(p.absent, C.absentDot)}
                 </div>
-                <div style={{ display: 'flex', width: 46, fontSize: 15, color: C.text, opacity: 0.8, paddingLeft: 8 }}>{t}</div>
+                <div style={{ display: 'flex', width: 46, fontSize: 22, color: C.text, opacity: 0.8, paddingLeft: 8 }}>{t}</div>
               </div>
             )
           })
@@ -223,19 +219,7 @@ export function VoteCard({ data }: { data: VoteCardData }) {
       </div>
 
       {/* Footer */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 64px', borderTopWidth: 1, borderTopStyle: 'solid', borderTopColor: C.hair }}>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 16 }}>
-          <div style={{ display: 'flex', fontFamily: MONO, fontSize: 14, fontWeight: 500, color: '#171A1F' }}>@la.butoane</div>
-          <div style={{ display: 'flex', fontFamily: MONO, fontSize: 12, color: '#6E7480' }}>{`sursă: ${data.source}`}</div>
-        </div>
-        {/* logo lives bottom-right — the IG profile picture already brands the top */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <svg width="34" height="34" viewBox="0 0 64 64"><rect width="64" height="64" rx="15" fill="#171A1F" /><rect x="11" y="11" width="18" height="18" rx="6" fill="#2EA871" /><rect x="35" y="11" width="18" height="18" rx="6" fill="#E3A23C" /><rect x="11" y="35" width="18" height="18" rx="6" fill="#EE7B5E" /><rect x="35" y="35" width="18" height="18" rx="6" fill="#4E86D8" /></svg>
-          <div style={{ display: 'flex', alignItems: 'baseline', fontSize: 26, letterSpacing: '-0.015em', color: '#171A1F' }}>
-            <span style={{ fontWeight: 400 }}>La</span><span style={{ fontWeight: 700 }}>Butoane</span>
-          </div>
-        </div>
-      </div>
+      <CardFooter source={`sursă: ${data.source}`} />
     </div>
   )
 }

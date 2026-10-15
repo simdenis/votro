@@ -8,6 +8,7 @@
 // senat.ro tallies, frozen on purpose (the post is about that sitting).
 
 import { computeArcDots } from './vote-card'
+import { CardHeader, CardFooter } from './kit'
 
 export interface MajorityCardData { slide: number }
 
@@ -23,23 +24,9 @@ const MONO = 'IBM Plex Mono'
 function Frame({ children, kicker }: { children: React.ReactNode; kicker: string }) {
   return (
     <div style={{ width: 1080, height: 1350, display: 'flex', flexDirection: 'column', background: C.bg, color: C.text, fontFamily: SANS }}>
-      <div style={{ display: 'flex', alignItems: 'center', padding: '36px 64px 22px' }}>
-        <div style={{ display: 'flex', fontFamily: MONO, fontSize: 16, letterSpacing: 2.5, textTransform: 'uppercase', color: C.gray500 }}>{kicker}</div>
-      </div>
-      <div style={{ display: 'flex', height: 1, margin: '0 64px', background: C.hair }} />
+      <CardHeader kicker={kicker} />
       {children}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 64px', borderTopWidth: 1, borderTopStyle: 'solid', borderTopColor: C.hair }}>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 16 }}>
-          <div style={{ display: 'flex', fontFamily: MONO, fontSize: 14, fontWeight: 500, color: '#171A1F' }}>@la.butoane</div>
-          <div style={{ display: 'flex', fontFamily: MONO, fontSize: 12, color: '#6E7480' }}>Constituția României, art. 76 · sursă: senat.ro</div>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <svg width="34" height="34" viewBox="0 0 64 64"><rect width="64" height="64" rx="15" fill="#171A1F" /><rect x="11" y="11" width="18" height="18" rx="6" fill="#2EA871" /><rect x="35" y="11" width="18" height="18" rx="6" fill="#E3A23C" /><rect x="11" y="35" width="18" height="18" rx="6" fill="#EE7B5E" /><rect x="35" y="35" width="18" height="18" rx="6" fill="#4E86D8" /></svg>
-          <div style={{ display: 'flex', alignItems: 'baseline', fontSize: 26, letterSpacing: '-0.015em', color: '#171A1F' }}>
-            <span style={{ fontWeight: 400 }}>La</span><span style={{ fontWeight: 700 }}>Butoane</span>
-          </div>
-        </div>
-      </div>
+      <CardFooter source={"Constituția României, art. 76 · sursă: senat.ro"} />
     </div>
   )
 }
@@ -57,7 +44,7 @@ function Tally({ f, a, ab }: { f: number; a: number; ab: number }) {
   const cell = (n: number, label: string, color: string) => (
     <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
       <div style={{ display: 'flex', fontFamily: SERIF, fontSize: 30, color }}>{String(n)}</div>
-      <div style={{ display: 'flex', fontFamily: MONO, fontSize: 13, letterSpacing: 1.5, color: C.gray500 }}>{label}</div>
+      <div style={{ display: 'flex', fontFamily: MONO, fontSize: 20, letterSpacing: 1.5, color: C.gray500 }}>{label}</div>
     </div>
   )
   return (
@@ -79,7 +66,7 @@ function SeatBar({ present, forN, abstainN, scaleSeats = 104 }: { present: numbe
   // HTML label, not SVG <text> (satori); the arrow glyph is not in the Plex subset either
   return (
     <div style={{ display: 'flex', position: 'relative', width: W, height: H + 44 }}>
-      <div style={{ display: 'flex', position: 'absolute', left: tx - 60, top: 0, width: 120, justifyContent: 'center', fontFamily: MONO, fontSize: 16, fontWeight: 600, letterSpacing: 1.5, color: C.text }}>
+      <div style={{ display: 'flex', position: 'absolute', left: tx - 110, top: 0, width: 220, justifyContent: 'center', fontFamily: MONO, fontSize: 24, fontWeight: 600, letterSpacing: 1.5, color: C.text }}>
         {`PRAG · ${threshold}`}
       </div>
       <svg width={W} height={H + 44} viewBox={`0 0 ${W} ${H + 44}`} style={{ position: 'absolute', left: 0, top: 0 }}>
@@ -104,7 +91,7 @@ function Arrow() {
 
 function Verdict({ ok }: { ok: boolean }) {
   return (
-    <div style={{ display: 'flex', padding: '9px 18px', borderRadius: 6, background: ok ? '#1F7A51' : C.against, color: '#FFFFFF', fontFamily: MONO, fontSize: 16, fontWeight: 600, letterSpacing: 2.5 }}>
+    <div style={{ display: 'flex', padding: '9px 18px', borderRadius: 6, background: ok ? '#1F7A51' : C.against, color: '#FFFFFF', fontFamily: MONO, fontSize: 24, fontWeight: 600, letterSpacing: 2.5 }}>
       {ok ? 'ADOPTATĂ' : 'RESPINSĂ'}
     </div>
   )
@@ -128,7 +115,7 @@ export function MajorityCard({ data }: { data: MajorityCardData }) {
               {dots.map((d, i) => <circle key={i} cx={Math.round(d.x * 100) / 100} cy={Math.round(d.y * 100) / 100} r={7} fill={d.color} />)}
             </svg>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'center', gap: 26, fontFamily: MONO, fontSize: 14, letterSpacing: 1.5, marginTop: 6 }}>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 26, fontFamily: MONO, fontSize: 22, letterSpacing: 1.5, marginTop: 6 }}>
             <div style={{ display: 'flex', color: C.for }}>44 PENTRU</div>
             <div style={{ display: 'flex', color: C.against }}>0 CONTRA</div>
             <div style={{ display: 'flex', color: C.amberDark }}>60 ABȚINERI</div>
@@ -147,7 +134,7 @@ export function MajorityCard({ data }: { data: MajorityCardData }) {
     return (
       <Frame kicker="CUM FUNCȚIONEAZĂ · 2/5">
         <div style={{ display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'center', padding: '0 64px' }}>
-          <div style={{ display: 'flex', fontFamily: MONO, fontSize: 17, letterSpacing: 3, textTransform: 'uppercase', color: C.amberDark, marginBottom: 12 }}>
+          <div style={{ display: 'flex', fontFamily: MONO, fontSize: 24, letterSpacing: 3, textTransform: 'uppercase', color: C.amberDark, marginBottom: 12 }}>
             Socoteala
           </div>
           <div style={{ fontFamily: SERIF, fontSize: 60, lineHeight: 1.06, marginBottom: 18 }}>Pragul nu e „mai mulți pentru decât contra”.</div>
@@ -157,23 +144,23 @@ export function MajorityCard({ data }: { data: MajorityCardData }) {
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: 40, marginBottom: 8 }}>
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               <div style={{ fontFamily: SERIF, fontSize: 84, lineHeight: 1, color: C.text }}>104</div>
-              <div style={{ display: 'flex', fontFamily: MONO, fontSize: 15, letterSpacing: 2, color: C.gray500, marginTop: 8 }}>PREZENȚI</div>
+              <div style={{ display: 'flex', fontFamily: MONO, fontSize: 22, letterSpacing: 2, color: C.gray500, marginTop: 8 }}>PREZENȚI</div>
             </div>
             <Arrow />
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               <div style={{ fontFamily: SERIF, fontSize: 84, lineHeight: 1, color: C.text }}>53</div>
-              <div style={{ display: 'flex', fontFamily: MONO, fontSize: 15, letterSpacing: 2, color: C.gray500, marginTop: 8 }}>VOTURI „PENTRU” NECESARE</div>
+              <div style={{ display: 'flex', fontFamily: MONO, fontSize: 22, letterSpacing: 2, color: C.gray500, marginTop: 8 }}>VOTURI „PENTRU” NECESARE</div>
             </div>
             <Arrow />
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               <div style={{ fontFamily: SERIF, fontSize: 84, lineHeight: 1, color: C.for }}>44</div>
-              <div style={{ display: 'flex', fontFamily: MONO, fontSize: 15, letterSpacing: 2, color: C.gray500, marginTop: 8 }}>AU FOST</div>
+              <div style={{ display: 'flex', fontFamily: MONO, fontSize: 22, letterSpacing: 2, color: C.gray500, marginTop: 8 }}>AU FOST</div>
             </div>
           </div>
           <div style={{ display: 'flex', marginTop: 28 }}>
             <SeatBar present={104} forN={44} abstainN={60} />
           </div>
-          <div style={{ display: 'flex', gap: 26, fontFamily: MONO, fontSize: 14, letterSpacing: 1.5, marginTop: 4 }}>
+          <div style={{ display: 'flex', gap: 26, fontFamily: MONO, fontSize: 22, letterSpacing: 1.5, marginTop: 4 }}>
             <div style={{ display: 'flex', color: C.for }}>44 PENTRU</div>
             <div style={{ display: 'flex', color: C.amberDark }}>60 ABȚINERI</div>
             <div style={{ display: 'flex', color: C.gray500 }}>0 CONTRA</div>
@@ -192,7 +179,7 @@ export function MajorityCard({ data }: { data: MajorityCardData }) {
     return (
       <Frame kicker="CUM FUNCȚIONEAZĂ · 3/5">
         <div style={{ display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'center', padding: '0 64px' }}>
-          <div style={{ display: 'flex', fontFamily: MONO, fontSize: 17, letterSpacing: 3, textTransform: 'uppercase', color: C.amberDark, marginBottom: 12 }}>
+          <div style={{ display: 'flex', fontFamily: MONO, fontSize: 24, letterSpacing: 3, textTransform: 'uppercase', color: C.amberDark, marginBottom: 12 }}>
             Paradoxul abținerii
           </div>
           <div style={{ fontFamily: SERIF, fontSize: 60, lineHeight: 1.06, marginBottom: 18 }}>Aceleași 44 de voturi ar fi trecut legea. Dacă 30 de abțineri deveneau absențe.</div>
@@ -202,14 +189,14 @@ export function MajorityCard({ data }: { data: MajorityCardData }) {
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 18, marginBottom: 6 }}>
             <div style={{ display: 'flex', fontSize: 24, fontWeight: 600, color: C.text }}>Ce s-a întâmplat</div>
-            <div style={{ display: 'flex', fontFamily: MONO, fontSize: 15, letterSpacing: 1.5, color: C.gray500 }}>104 PREZENȚI · 44 PENTRU · 60 ABȚINERI</div>
+            <div style={{ display: 'flex', fontFamily: MONO, fontSize: 22, letterSpacing: 1.5, color: C.gray500 }}>104 PREZENȚI · 44 PENTRU · 60 ABȚINERI</div>
           </div>
           <SeatBar present={104} forN={44} abstainN={60} />
           <div style={{ display: 'flex', marginTop: 6 }}><Verdict ok={false} /></div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 18, marginTop: 44, marginBottom: 6 }}>
             <div style={{ display: 'flex', fontSize: 24, fontWeight: 600, color: C.text }}>Dacă 30 dintre ei lipseau</div>
-            <div style={{ display: 'flex', fontFamily: MONO, fontSize: 15, letterSpacing: 1.5, color: C.gray500 }}>74 PREZENȚI · 44 PENTRU · 30 ABȚINERI</div>
+            <div style={{ display: 'flex', fontFamily: MONO, fontSize: 22, letterSpacing: 1.5, color: C.gray500 }}>74 PREZENȚI · 44 PENTRU · 30 ABȚINERI</div>
           </div>
           <SeatBar present={74} forN={44} abstainN={30} />
           <div style={{ display: 'flex', marginTop: 6 }}><Verdict ok={true} /></div>
@@ -223,7 +210,7 @@ export function MajorityCard({ data }: { data: MajorityCardData }) {
     return (
       <Frame kicker="CUM FUNCȚIONEAZĂ · 4/5">
         <div style={{ display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'center', padding: '0 64px' }}>
-          <div style={{ display: 'flex', fontFamily: MONO, fontSize: 17, letterSpacing: 3, textTransform: 'uppercase', color: C.amberDark, marginBottom: 12 }}>
+          <div style={{ display: 'flex', fontFamily: MONO, fontSize: 24, letterSpacing: 3, textTransform: 'uppercase', color: C.amberDark, marginBottom: 12 }}>
             Regula majorității
           </div>
           <div style={{ fontFamily: SERIF, fontSize: 56, lineHeight: 1.06, marginBottom: 16 }}>Nu contează câți sunt împotrivă. Contează câți sunt pentru.</div>
@@ -245,7 +232,7 @@ export function MajorityCard({ data }: { data: MajorityCardData }) {
   return (
     <Frame kicker="CUM FUNCȚIONEAZĂ · 5/5">
       <div style={{ display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'center', padding: '0 64px' }}>
-        <div style={{ display: 'flex', fontFamily: MONO, fontSize: 17, letterSpacing: 3, textTransform: 'uppercase', color: C.amberDark, marginBottom: 12 }}>
+        <div style={{ display: 'flex', fontFamily: MONO, fontSize: 24, letterSpacing: 3, textTransform: 'uppercase', color: C.amberDark, marginBottom: 12 }}>
           Senat · 21 septembrie 2026
         </div>
         <div style={{ fontFamily: SERIF, fontSize: 56, lineHeight: 1.06, marginBottom: 24 }}>Trei legi respinse fără majoritate, în aceeași zi.</div>
@@ -256,7 +243,7 @@ export function MajorityCard({ data }: { data: MajorityCardData }) {
         ].map(r => (
           <div key={r.code} style={{ display: 'flex', flexDirection: 'column', padding: '20px 0', borderBottomWidth: 1, borderBottomStyle: 'solid', borderBottomColor: C.hair }}>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 14 }}>
-              <div style={{ display: 'flex', fontFamily: MONO, fontSize: 15, letterSpacing: 1.5, color: C.gray500 }}>{r.code}</div>
+              <div style={{ display: 'flex', fontFamily: MONO, fontSize: 22, letterSpacing: 1.5, color: C.gray500 }}>{r.code}</div>
               <div style={{ display: 'flex', fontSize: 27, fontWeight: 600, color: C.text }}>{r.t}</div>
             </div>
             <Tally f={r.f} a={r.a} ab={r.ab} />

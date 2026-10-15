@@ -1,3 +1,4 @@
+import { CardHeader, CardFooter } from './kit'
 // 1080×1350 (4:5) Instagram card — who did not vote at a session opening.
 // Same brand language as ShameCard / VoteCard / WeekCard.
 //
@@ -46,10 +47,7 @@ export function SessionOpenCard({ data }: { data: SessionOpenCardData }) {
   return (
     <div style={{ width: 1080, height: 1350, display: 'flex', flexDirection: 'column', background: C.bg, color: C.text, fontFamily: SANS }}>
 
-      <div style={{ display: 'flex', alignItems: 'center', padding: '36px 64px 22px' }}>
-        <div style={{ display: 'flex', fontFamily: MONO, fontSize: 16, letterSpacing: 2.5, textTransform: 'uppercase', color: C.faint }}>{data.dateLabel}</div>
-      </div>
-      <div style={{ display: 'flex', height: 1, margin: '0 64px', background: C.hair }} />
+      <CardHeader kicker={data.dateLabel} />
 
       <div style={{ display: 'flex', flexDirection: 'column', flex: 1, padding: '34px 64px 20px' }}>
 
@@ -65,38 +63,26 @@ export function SessionOpenCard({ data }: { data: SessionOpenCardData }) {
         <div style={{ display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'center' }}>
           {data.parties.map((p, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'center', padding: compact ? '7px 0' : '11px 0' }}>
-              <div style={{ display: 'flex', width: 86, fontFamily: MONO, fontSize: compact ? 19 : 22, fontWeight: 500 }}>{p.abbr}</div>
+              <div style={{ display: 'flex', width: 86, fontFamily: MONO, fontSize: compact ? 22 : 24, fontWeight: 500 }}>{p.abbr}</div>
 
               {/* track + fill: percentage of the party's OWN seats */}
               <div style={{ display: 'flex', flex: 1, height: compact ? 22 : 28, background: C.track, borderRadius: 4, marginRight: 18 }}>
                 <div style={{ display: 'flex', width: `${p.pct}%`, height: '100%', background: p.color, borderRadius: 4 }} />
               </div>
 
-              <div style={{ display: 'flex', width: 96, fontFamily: MONO, fontSize: compact ? 15 : 17, color: C.faint }}>{`${p.absent}/${p.seats}`}</div>
+              <div style={{ display: 'flex', width: 96, fontFamily: MONO, fontSize: compact ? 20 : 22, color: C.faint }}>{`${p.absent}/${p.seats}`}</div>
               <div style={{ display: 'flex', width: 74, justifyContent: 'flex-end', alignItems: 'baseline' }}>
                 <div style={{ display: 'flex', fontFamily: SERIF, fontSize: compact ? 28 : 34 }}>{`${p.pct}`}</div>
-                <div style={{ display: 'flex', fontSize: compact ? 16 : 19, marginLeft: 3 }}>%</div>
+                <div style={{ display: 'flex', fontSize: compact ? 20 : 22, marginLeft: 3 }}>%</div>
               </div>
             </div>
           ))}
         </div>
 
-        <div style={{ display: 'flex', fontSize: 17, opacity: 0.7, marginTop: 16 }}>{data.note}</div>
+        <div style={{ display: 'flex', fontSize: 24, opacity: 0.7, marginTop: 16 }}>{data.note}</div>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 64px 32px' }}>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 16 }}>
-          <div style={{ display: 'flex', fontFamily: MONO, fontSize: 14, fontWeight: 500, color: C.text }}>@la.butoane</div>
-          <div style={{ display: 'flex', fontFamily: MONO, fontSize: 12, color: C.faint }}>surse: cdep.ro</div>
-        </div>
-        {/* logo bottom-right — the IG profile picture already brands the top */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <svg width="34" height="34" viewBox="0 0 64 64"><rect width="64" height="64" rx="15" fill="#171A1F" /><rect x="11" y="11" width="18" height="18" rx="6" fill="#2EA871" /><rect x="35" y="11" width="18" height="18" rx="6" fill="#E3A23C" /><rect x="11" y="35" width="18" height="18" rx="6" fill="#EE7B5E" /><rect x="35" y="35" width="18" height="18" rx="6" fill="#4E86D8" /></svg>
-          <div style={{ display: 'flex', alignItems: 'baseline', fontSize: 26, letterSpacing: '-0.015em', color: C.text }}>
-            <span style={{ fontWeight: 400 }}>La</span><span style={{ fontWeight: 700 }}>Butoane</span>
-          </div>
-        </div>
-      </div>
+      <CardFooter source={"sursă: cdep.ro"} />
     </div>
   )
 }

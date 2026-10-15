@@ -1,6 +1,7 @@
 // 1080×1350 (4:5) senator/deputy card — same brand language as VoteCard.
 
 import { countNoun } from '@/lib/utils'
+import { CardHeader, CardFooter } from './kit'
 
 export interface RecentVoteRow {
   lawCode: string
@@ -64,10 +65,7 @@ export function SenatorCard({ data }: { data: SenatorCardData }) {
   return (
     <div style={{ width: 1080, height: 1350, display: 'flex', flexDirection: 'column', background: C.bg, color: C.text, fontFamily: SANS }}>
 
-      <div style={{ display: 'flex', alignItems: 'center', padding: '36px 64px 22px' }}>
-        <div style={{ display: 'flex', fontFamily: MONO, fontSize: 16, letterSpacing: 2.5, textTransform: 'uppercase', color: '#6E7480' }}>{`${data.chamberLabel} · ${data.year}`}</div>
-      </div>
-      <div style={{ display: 'flex', height: 1, margin: '0 64px', background: C.hair }} />
+      <CardHeader kicker={`${data.chamberLabel} · ${data.year}`} />
 
       {/* justifyContent center — at 4:5 the content block floats mid-card */}
       <div style={{ display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'center', padding: '20px 64px' }}>
@@ -75,7 +73,7 @@ export function SenatorCard({ data }: { data: SenatorCardData }) {
         <div style={{ fontFamily: SERIF, fontSize: 60, lineHeight: 1.04, color: C.text, marginBottom: 18, maxHeight: 200, overflow: 'hidden' }}>{data.fullName}</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 44 }}>
           <div style={{ display: 'flex', background: data.partyColor, color: textOn(data.partyColor), fontSize: 20, fontWeight: 600, padding: '7px 18px', borderRadius: 4 }}>{data.partyAbbr}</div>
-          <div style={{ display: 'flex', fontSize: 17, opacity: 0.4 }}>{`a votat la ${data.votesFor + data.votesAgainst + data.votesAbstain} din ${data.totalVotes} ${countNoun(data.totalVotes, 'vot de plen', 'voturi de plen')}`}</div>
+          <div style={{ display: 'flex', fontSize: 24, opacity: 0.4 }}>{`a votat la ${data.votesFor + data.votesAgainst + data.votesAbstain} din ${data.totalVotes} ${countNoun(data.totalVotes, 'vot de plen', 'voturi de plen')}`}</div>
         </div>
 
         {/* Headline metric */}
@@ -83,8 +81,8 @@ export function SenatorCard({ data }: { data: SenatorCardData }) {
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: 28, marginBottom: 40 }}>
             <div style={{ display: 'flex', fontFamily: SERIF, fontSize: 120, lineHeight: 0.9, color: C.navy }}>{`${data.loyaltyPct}%`}</div>
             <div style={{ display: 'flex', flexDirection: 'column', paddingBottom: 14 }}>
-              <div style={{ display: 'flex', fontSize: 19, fontWeight: 500 }}>a votat cu partidul, din voturile exprimate</div>
-              <div style={{ display: 'flex', fontSize: 16, opacity: 0.7, marginTop: 4 }}>{`${data.deviations} ${countNoun(data.deviations, 'deviere', 'devieri')} · ${data.deviationPct === 0 && data.deviations > 0 ? '<1' : data.deviationPct ?? 0}% din voturile exprimate`}</div>
+              <div style={{ display: 'flex', fontSize: 24, fontWeight: 500 }}>a votat cu partidul, din voturile exprimate</div>
+              <div style={{ display: 'flex', fontSize: 24, opacity: 0.7, marginTop: 4 }}>{`${data.deviations} ${countNoun(data.deviations, 'deviere', 'devieri')} · ${data.deviationPct === 0 && data.deviations > 0 ? '<1' : data.deviationPct ?? 0}% din voturile exprimate`}</div>
             </div>
           </div>
         )}
@@ -102,7 +100,7 @@ export function SenatorCard({ data }: { data: SenatorCardData }) {
           {cols.map((c, i) => (
             <div key={c.label} style={{ display: 'flex', flexDirection: 'column', flex: 1, padding: '0 20px', borderLeftWidth: i > 0 ? 1 : 0, borderLeftStyle: 'solid', borderLeftColor: C.hair }}>
               <div style={{ display: 'flex', fontFamily: SERIF, fontSize: 44, lineHeight: 1, color: c.color }}>{c.value}</div>
-              <div style={{ display: 'flex', fontSize: 12, opacity: 0.3, textTransform: 'uppercase', letterSpacing: 2.5, marginTop: 6 }}>{c.label}</div>
+              <div style={{ display: 'flex', fontSize: 20, opacity: 0.3, textTransform: 'uppercase', letterSpacing: 2.5, marginTop: 6 }}>{c.label}</div>
             </div>
           ))}
         </div>
@@ -110,18 +108,18 @@ export function SenatorCard({ data }: { data: SenatorCardData }) {
         {/* Recent deviations / votes */}
         {(data.recent?.length ?? 0) > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', marginTop: 42 }}>
-            <div style={{ display: 'flex', fontSize: 13, opacity: 0.72, textTransform: 'uppercase', letterSpacing: 2.5, marginBottom: 14 }}>
+            <div style={{ display: 'flex', fontSize: 20, opacity: 0.72, textTransform: 'uppercase', letterSpacing: 2.5, marginBottom: 14 }}>
               {data.recentLabel ?? 'Ultimele voturi'}
             </div>
             {data.recent!.slice(0, 3).map((r, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '9px 0', borderTopWidth: i > 0 ? 1 : 0, borderTopStyle: 'solid', borderTopColor: C.hair }}>
-                <div style={{ display: 'flex', fontSize: 15, fontWeight: 700, color: C.navy, minWidth: 118 }}>{r.lawCode}</div>
-                {r.date && <div style={{ display: 'flex', fontSize: 13, opacity: 0.45, minWidth: 84 }}>{r.date}</div>}
-                <div style={{ display: 'flex', flex: 1, fontSize: 15, opacity: 0.62 }}>
+                <div style={{ display: 'flex', fontSize: 22, fontWeight: 700, color: C.navy, minWidth: 118 }}>{r.lawCode}</div>
+                {r.date && <div style={{ display: 'flex', fontSize: 20, opacity: 0.45, minWidth: 84 }}>{r.date}</div>}
+                <div style={{ display: 'flex', flex: 1, fontSize: 22, opacity: 0.62 }}>
                   {r.title.length > 56 ? r.title.slice(0, 56) + '…' : r.title}
                 </div>
                 <div style={{
-                  display: 'flex', fontSize: 13, fontWeight: 700,
+                  display: 'flex', fontSize: 20, fontWeight: 700,
                   color: r.choice === 'for' ? C.for : r.choice === 'against' ? C.against : r.choice === 'abstention' ? C.abstain : C.absentNum,
                 }}>
                   {r.choice === 'for' ? 'PENTRU' : r.choice === 'against' ? 'ÎMPOTRIVĂ' : r.choice === 'abstention' ? 'ABȚINERE' : 'ABSENT'}
@@ -132,19 +130,7 @@ export function SenatorCard({ data }: { data: SenatorCardData }) {
         )}
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 64px', borderTopWidth: 1, borderTopStyle: 'solid', borderTopColor: C.hair }}>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 16 }}>
-          <div style={{ display: 'flex', fontFamily: MONO, fontSize: 14, fontWeight: 500, color: '#171A1F' }}>@la.butoane</div>
-          <div style={{ display: 'flex', fontFamily: MONO, fontSize: 12, color: '#6E7480' }}>voturile sunt atribuite afilierii curente</div>
-        </div>
-        {/* logo lives bottom-right — the IG profile picture already brands the top */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <svg width="34" height="34" viewBox="0 0 64 64"><rect width="64" height="64" rx="15" fill="#171A1F" /><rect x="11" y="11" width="18" height="18" rx="6" fill="#2EA871" /><rect x="35" y="11" width="18" height="18" rx="6" fill="#E3A23C" /><rect x="11" y="35" width="18" height="18" rx="6" fill="#EE7B5E" /><rect x="35" y="35" width="18" height="18" rx="6" fill="#4E86D8" /></svg>
-          <div style={{ display: 'flex', alignItems: 'baseline', fontSize: 26, letterSpacing: '-0.015em', color: '#171A1F' }}>
-            <span style={{ fontWeight: 400 }}>La</span><span style={{ fontWeight: 700 }}>Butoane</span>
-          </div>
-        </div>
-      </div>
+      <CardFooter source={"voturile sunt atribuite afilierii curente"} />
     </div>
   )
 }
