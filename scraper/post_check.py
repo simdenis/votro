@@ -44,7 +44,7 @@ Fail the post only for a concrete defect in that text:
 - a headline that claims something the title/summary does not support
 - on a FEED post: a ranking or list of individually named MPs for absences or party switching (those may only run as stories)
 
-Legislative procedure, statuses and dates are checked elsewhere — do not judge them. Old cedilla letters (ş ţ) and empty optional fields are fine. Do not fail for style, wording, political content, or for data you cannot verify. When everything is consistent, ok is true and problems is empty. Write each problem in Romanian, short, naming the slide number."""
+Legislative procedure, statuses and dates are checked elsewhere — do not judge them. These are normal, never a defect: law codes from different years (L428/2024 next to L550/2026); PHCD/PLx codes; a cover that lists the first laws and says «și încă N în descriere» while the caption lists them all; a caption that lists more laws or votes than there are slides; a story with no caption. Do not comment on the format of law codes. Old cedilla letters (ş ţ) and empty optional fields are fine. Do not fail for style, wording, political content, or for data you cannot verify. When everything is consistent, ok is true and problems is empty. Write each problem in Romanian, short, naming the slide number."""
 
 SCHEMA = {
     "type": "object",
@@ -144,7 +144,8 @@ def review(kind: str, urls: list[str], caption: str, texts: list[dict], facts: d
     bad = [f"slide {i}: {p}" for i, u in enumerate(urls, 1) if (p := fetch(u, kind))]
     if bad:
         v = Verdict(False, bad, mechanical=True)
-    elif mode() == "off":
+    elif mode() == "off" or (not texts and not caption):
+        # nothing to read: a story card whose text is drawn from the DB by its route
         v = Verdict(True, unchecked=True)
     else:
         try:
