@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import datetime as dt
 import json
+import re
 import os
 import struct
 import sys
@@ -135,7 +136,15 @@ def _ai(kind: str, caption: str, texts: list[dict], facts: dict) -> Verdict:
     if resp.stop_reason == "refusal":
         return Verdict(False, ["verificarea AI a refuzat să evalueze postarea"], unchecked=True)
     data = json.loads(next(b.text for b in resp.content if b.type == "text"))
-    return Verdict(bool(data["ok"]), [str(p) for p in data.get("problems", [])])
+    # by design the caption lists every law and the cover only the first ones;
+    # Haiku flags that anyway, so that one class of note is dropped here
+    problems = [str(p) for p in data.get("problems", []) if not _BY_DESIGN.search(str(p))]
+    return Verdict(not problems, problems)
+
+
+_BY_DESIGN = re.compile(r"(nu (apar\w*|e|este) (pe|în) (niciun|nicio|slide)|doar \d+ (pe|în) slide|"
+                        r"caption (listează|enumeră|menționează) \d+|mai multe (legi|coduri) (în|decât)|"
+                        r"și încă|slide-urile (după cover )?conțin doar|lipsește .* din slide)", re.I)
 
 
 def review(kind: str, urls: list[str], caption: str, texts: list[dict], facts: dict) -> Verdict:

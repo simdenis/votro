@@ -293,7 +293,8 @@ def do_recap_week(cfg, db, day, dry):
         {"week": f"{monday} – {sunday}", "adopted": len(adopted), "rejected": len(rejected),
          "slides_after_cover": [v["laws"]["code"] for v in slides_laws[:9]]},
         [{"slide": 1, "card": "cover", "laws_listed": min(len(slides_laws), 9), "count": len(slides_laws), "label": "legi cu vot final adoptat", "week": f"{monday} – {sunday}",
-          "note": "the cover lists the first laws and says «și încă N în descriere» for the rest; the caption lists every vote"}]
+          "note": "the cover lists the first laws and says «și încă N în descriere» for the rest; the caption lists every vote",
+          "caption_only_by_design": [v["laws"]["code"] for v in slides_laws[9:]]}]
         + [{"slide": i, **t} for i, t in enumerate(law_texts(db, [v["laws"]["id"] for v in slides_laws[:9]]), 2)])
     if dry:
         print("  would carousel:", *slides, sep="\n    "); print(caption[:400]); return []
@@ -370,7 +371,8 @@ def do_passed_week(cfg, db, day, dry):
     vet(cfg, dry, "feed", slides, "\n".join(lines), title,
         {"week_ending": day, "laws": len(laws), "slides_after_cover": [l["code"] for l in laws[:9]]},
         [{"slide": 1, "card": "cover", "count": len(laws), "laws_listed": len(shown),
-          "note": "the cover lists the first laws and says «și încă N în descriere» for the rest; the caption lists all"}]
+          "note": "the cover lists the first laws and says «și încă N în descriere» for the rest; the caption lists all",
+          "caption_only_by_design": [l["code"] for l in laws[9:]]}]
         + [{"slide": i, **t} for i, t in enumerate(law_texts(db, [l["id"] for l in laws[:9]]), 2)])
     if dry:
         print("  would carousel:", *slides, sep="\n    "); return []
