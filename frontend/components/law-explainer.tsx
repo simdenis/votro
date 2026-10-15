@@ -1,6 +1,6 @@
 import type { LawExplainer as LawExplainerData } from '@/lib/types'
 
-/** «Pe înțelesul tuturor» — the plain-language explainer (scraper/law_explainer.py,
+/** «Pe scurt» — the plain-language explainer (scraper/law_explainer.py,
  *  migration 059). Read from the FINAL law text, so unlike the AiSummary it
  *  describes the law as promulgated, not the initiator's draft. Shown: a
  *  concrete title and a 2–3 sentence summary; the before/now detail and what
@@ -32,9 +32,9 @@ export function LawExplainer({ data, source, code }: { data: LawExplainerData; s
   const details = data.ce_se_schimba.length > 0 || data.neclar
 
   return (
-    <section aria-labelledby="pe-intelesul-tuturor" className="bg-surface border border-rim rounded-xl p-5">
+    <section aria-labelledby="pe-scurt" className="bg-surface border border-rim rounded-xl p-5">
       <div className="flex items-center gap-2 mb-2.5 flex-wrap">
-        <h2 id="pe-intelesul-tuturor" className="text-[11px] font-semibold uppercase tracking-widest text-muted">Pe înțelesul tuturor</h2>
+        <h2 id="pe-scurt" className="text-[11px] font-semibold uppercase tracking-widest text-muted">Pe scurt</h2>
         <span
           className="text-[9px] uppercase tracking-wide font-semibold text-muted bg-raised border border-rim rounded px-1.5 py-px"
           title="Text generat automat dintr-un model AI pe baza textului oficial al legii. Poate conține erori — verifică sursa."
