@@ -292,7 +292,8 @@ def do_recap_week(cfg, db, day, dry):
     vet(cfg, dry, "feed", slides, caption, title,
         {"week": f"{monday} – {sunday}", "adopted": len(adopted), "rejected": len(rejected),
          "slides_after_cover": [v["laws"]["code"] for v in slides_laws[:9]]},
-        [{"slide": 1, "card": "cover", "laws_listed": len(slides_laws), "label": "legi cu vot final adoptat", "week": f"{monday} – {sunday}"}]
+        [{"slide": 1, "card": "cover", "laws_listed": min(len(slides_laws), 9), "count": len(slides_laws), "label": "legi cu vot final adoptat", "week": f"{monday} – {sunday}",
+          "note": "the cover lists the first laws and says «și încă N în descriere» for the rest; the caption lists every vote"}]
         + [{"slide": i, **t} for i, t in enumerate(law_texts(db, [v["laws"]["id"] for v in slides_laws[:9]]), 2)])
     if dry:
         print("  would carousel:", *slides, sep="\n    "); print(caption[:400]); return []
@@ -304,7 +305,10 @@ def law_line(l: dict) -> str:
     """How a law reads in a caption list: the explainer's title (read from the
     final text), else the AI headline, else the start of the official title."""
     ex = l.get("explainer") or {}
-    return ex.get("titlu") or l.get("headline") or l["title"][:90]
+    if ex.get("titlu") or l.get("headline"):
+        return ex.get("titlu") or l["headline"]
+    t = l["title"].strip()
+    return t if len(t) <= 90 else t[:90].rsplit(" ", 1)[0].rstrip(",;:") + "…"
 
 
 def ig_month(d: dt.date) -> str:
@@ -365,7 +369,8 @@ def do_passed_week(cfg, db, day, dry):
     title = f"trecute de Parlament: {len(laws)} legi"
     vet(cfg, dry, "feed", slides, "\n".join(lines), title,
         {"week_ending": day, "laws": len(laws), "slides_after_cover": [l["code"] for l in laws[:9]]},
-        [{"slide": 1, "card": "cover", "count_shown": len(laws)}]
+        [{"slide": 1, "card": "cover", "count": len(laws), "laws_listed": len(shown),
+          "note": "the cover lists the first laws and says «și încă N în descriere» for the rest; the caption lists all"}]
         + [{"slide": i, **t} for i, t in enumerate(law_texts(db, [l["id"] for l in laws[:9]]), 2)])
     if dry:
         print("  would carousel:", *slides, sep="\n    "); return []
