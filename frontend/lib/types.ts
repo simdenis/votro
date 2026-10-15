@@ -6,6 +6,15 @@ export type CcrDecision = 'constitutional' | 'neconstitutional' | 'partial_necon
  *  bill text only, or just the official title. Null on pre-v2 summaries. */
 export type SummarySource = 'em+text' | 'em' | 'text' | 'title'
 
+/** laws.explainer (migration 059, scraper/law_explainer.py) */
+export interface LawExplainer {
+  titlu: string
+  ce_se_schimba: { inainte: string | null; acum: string }[]
+  pe_cine_afecteaza: string
+  de_cand: string | null
+  neclar: string | null
+}
+
 export interface LawStatus {
   law_id: string
   code: string

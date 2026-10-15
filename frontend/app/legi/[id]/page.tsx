@@ -8,13 +8,14 @@ import { activeSeats } from '@/lib/seats'
 import { OutcomeBadge } from '@/components/outcome-badge'
 import { PartyBreakdown } from '@/components/party-breakdown'
 import { AiSummary } from '@/components/ai-summary'
+import { LawExplainer } from '@/components/law-explainer'
 import { SeatArc } from '@/components/seat-arc'
 import { LawTimeline } from '@/components/law-timeline'
 import { BaseLawBadges } from '@/components/base-law-badge'
 import { CategoryBadge } from '@/components/category-badge'
 import { ReportMistake } from '@/components/report-mistake'
 import { FollowButton } from '@/components/follow-button'
-import type { LawStatus, PartyVoteBreakdown } from '@/lib/types'
+import type { LawStatus, PartyVoteBreakdown, LawExplainer as LawExplainerData } from '@/lib/types'
 
 export const revalidate = 3600
 // Enable on-demand ISR for this dynamic segment: without generateStaticParams,
@@ -98,7 +99,7 @@ export default async function LawDetail({ params }: { params: Promise<{ id: stri
     absentFor(law.camera_vote_id, 'deputies'),
     // law.law_id, NOT the route param — the param is usually a code slug
     // (L99-2026) and uuid columns reject it, silently hiding the initiators.
-    db.from('laws').select('initiator_type').eq('id', law.law_id).maybeSingle().then(r => r.data as { initiator_type: string | null } | null),
+    db.from('laws').select('initiator_type, explainer, explainer_source').eq('id', law.law_id).maybeSingle().then(r => r.data as { initiator_type: string | null; explainer: LawExplainerData | null; explainer_source: string | null } | null),
     db.from('law_initiators')
       .select('name_raw, party_raw, role_raw, politician_id, politicians(chamber)')
       .eq('law_id', law.law_id)
@@ -142,6 +143,12 @@ export default async function LawDetail({ params }: { params: Promise<{ id: stri
           <BaseLawBadges title={law.title} />
         </div>
         <h1 className="font-serif text-[30px] font-normal text-foreground leading-[1.12] tracking-[-0.01em]">{capFirst(law.title)}</h1>
+
+        {lawRow?.explainer && (
+          <div className="mt-5">
+            <LawExplainer data={lawRow.explainer} source={lawRow.explainer_source} code={law.code} />
+          </div>
+        )}
 
         {law.summary && (
           <div className="mt-5">
