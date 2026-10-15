@@ -189,6 +189,12 @@ log "=== Law categories (Claude Haiku) ==="
 log "=== Interest scores (Gemini) ==="
 "$PY" scraper/interest_scorer.py >>"$LOG" 2>&1 || { rc=1; log "Interest scorer FAILED"; }
 
+# Plain-language explainers for newly promulgated laws, from the final text
+# (Claude Sonnet, ~0.06 $/law; only laws without one, newest first). After the
+# decree scraper above, so a law promulgated today gets its explainer today.
+log "=== Law explainers (new promulgations) ==="
+"$PY" scraper/law_explainer.py --limit 15 >>"$LOG" 2>&1 || log "WARN: law explainer failed"
+
 # Active mandates + electoral county from the official member lists. Never
 # mass-deactivates on a broken parse (sanity floors inside).
 log "=== Roster (active mandates + county) ==="
