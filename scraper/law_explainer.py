@@ -43,6 +43,7 @@ import gemini_summarizer as g
 
 log = logging.getLogger("law-explainer")
 MODEL = os.environ.get("EXPLAINER_MODEL", "claude-sonnet-5-5")
+MAX_BYTES = 24_000_000  # base64 adds a third: 24 MB of PDF ≈ 32 MB on the wire
 MAX_PAGES = 60  # one request: ≤100 PDF pages and ≤200k tokens; scanned senat.ro pages ~3k tokens
 
 TEXT_FORMS = [("FP", "fp"), ("LP", "lp"), ("FS", "fs"), ("FG", "fg")]
@@ -139,6 +140,16 @@ def documents(code: str) -> tuple[str | None, bytes | None, bytes | None]:
         elif text:
             log.info("%s: %dp text — keeping its first %d pages", code, tn, MAX_PAGES)
             text, em = first_pages(text, MAX_PAGES), None
+    # bytes, not just pages: scanned EMs run 30-45 MB (the API takes ≤32 MB per PDF
+    # and ≤32 MB per request). The EM goes first; the law text is cut to fewer pages.
+    if em and len(em) + len(text or b"") > MAX_BYTES:
+        log.info("%s: EM is %d MB — dropping it", code, len(em) // 1_000_000)
+        em = None
+    for pages in (30, 15, 8):
+        if not text or len(text) <= MAX_BYTES:
+            break
+        log.info("%s: text is %d MB — keeping its first %d pages", code, len(text) // 1_000_000, pages)
+        text = first_pages(text, pages)
     return form, text, em
 
 
