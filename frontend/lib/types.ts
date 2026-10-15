@@ -9,6 +9,8 @@ export type SummarySource = 'em+text' | 'em' | 'text' | 'title'
 /** laws.explainer (migration 059, scraper/law_explainer.py) */
 export interface LawExplainer {
   titlu: string
+  /** 2–3 plain sentences; older rows (before the field existed) lack it */
+  rezumat?: string | null
   ce_se_schimba: { inainte: string | null; acum: string }[]
   pe_cine_afecteaza: string
   de_cand: string | null

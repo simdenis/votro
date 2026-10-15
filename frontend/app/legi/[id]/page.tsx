@@ -150,8 +150,8 @@ export default async function LawDetail({ params }: { params: Promise<{ id: stri
           </div>
         )}
 
-        {law.summary && (
-          <div className="mt-5">
+        {law.summary && (() => {
+          const summary = (
             <AiSummary
               summary={law.summary}
               isAi={law.summary_is_ai}
@@ -161,8 +161,21 @@ export default async function LawDetail({ params }: { params: Promise<{ id: stri
               summarySource={law.summary_source}
               billPdfUrl={law.bill_pdf_url}
             />
-          </div>
-        )}
+          )
+          // with an explainer of the final text on top, the draft's summary is
+          // background — folded, so two summaries never contradict each other
+          // in plain view (L470/2026: the draft postponed admission, the law doesn't)
+          return lawRow?.explainer ? (
+            <details className="mt-4">
+              <summary className="cursor-pointer select-none text-[13px] text-muted hover:text-foreground w-fit">
+                Proiectul inițial și motivarea inițiatorilor
+              </summary>
+              <div className="mt-3">{summary}</div>
+            </details>
+          ) : (
+            <div className="mt-5">{summary}</div>
+          )
+        })()}
 
         {law.em_url && !law.summary && (
           <a

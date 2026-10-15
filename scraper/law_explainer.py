@@ -5,8 +5,10 @@ literele i)–k) din art. 88» — which tells a reader nothing. The explainer r
 the FINAL text (the promulgated form, not the initiator's draft Parliament may
 have amended) and says what the rule was and what it is now:
 
-  {"titlu": "...", "ce_se_schimba": [{"inainte": ..., "acum": ...}],
+  {"titlu": "...", "rezumat": "...", "ce_se_schimba": [{"inainte": ..., "acum": ...}],
    "pe_cine_afecteaza": "...", "de_cand": ..., "neclar": ...}
+
+«titlu» + «rezumat» are what the page shows; the rest sits under «Detalii».
 
 Neutrality: «titlu» and «acum» come ONLY from the law text. The expunere de
 motive is the initiators' document about their draft — it may explain what the
@@ -38,7 +40,7 @@ from dotenv import load_dotenv
 import gemini_summarizer as g
 
 log = logging.getLogger("law-explainer")
-MODEL = os.environ.get("EXPLAINER_MODEL", "claude-opus-5-5")
+MODEL = os.environ.get("EXPLAINER_MODEL", "claude-sonnet-5-5")
 MAX_PAGES = 60  # one request: ≤100 PDF pages and ≤200k tokens; scanned senat.ro pages ~3k tokens
 
 TEXT_FORMS = [("FP", "fp"), ("LP", "lp"), ("FS", "fs"), ("FG", "fg")]
@@ -57,7 +59,13 @@ PROMPT = (
     "TITLU — maximum 10 cuvinte: cine + ce poate / trebuie / nu mai poate face. Concret, despre oameni, nu despre lege.\n"
     "- INTERZIS să înceapă cu: Schimbări, Modificări, Reguli noi, Noi reguli, Lege nouă, Legea, Proiectul\n"
     "- INTERZIS orice evaluare: «mai bine», «mai multă protecție», «în sfârșit», «important», «controversat»\n"
-    "- bun: «Consilierii locali pot fi și consilieri ai primarului»; rău: «Schimbări la legea anticorupție»\n\n"
+    "- bun: «Consilierii locali pot fi și consilieri ai primarului»; rău: «Schimbări la legea anticorupție»\n"
+    "- titlul nu poate afirma ce «neclar» spune că nu reiese din documente (de ex. cine anume e vizat)\n\n"
+    "REZUMAT — ce vede omul obișnuit: 2–3 propoziții scurte, STRICT maximum 60 de cuvinte în total. Spune ce se "
+    "schimbă concret în viața cuiva, ca și cum i-ai explica unui vecin: cine, ce poate / trebuie / primește, cât, de "
+    "când. Cifrele și termenele concrete din lege sunt binevenite. FĂRĂ numere de articole, alineate sau litere, fără "
+    "«prezenta lege», «se abrogă», «se modifică», fără jargon («prorogare» → «amânare», «degrevare» → «scutire»). "
+    "Nu repeta titlul.\n\n"
     "CE_SE_SCHIMBA — 1–3 schimbări, cele care contează cel mai mult pentru oameni, fiecare ca efect, nu ca trimitere "
     "la articol. «acum» = regula nouă în cuvinte simple (cine, ce, cât, până când). «inainte» = regula veche, DOAR dacă "
     "reiese din documente, altfel null. Nu scrie «se abrogă litera i)» — scrie ce spunea litera i) și ce dispare. "
@@ -74,6 +82,7 @@ SCHEMA = {
     "type": "object",
     "properties": {
         "titlu": {"type": "string"},
+        "rezumat": {"type": "string"},
         "ce_se_schimba": {"type": "array", "items": {
             "type": "object",
             "properties": {"inainte": {"type": ["string", "null"]}, "acum": {"type": "string"}},
@@ -82,7 +91,7 @@ SCHEMA = {
         "de_cand": {"type": ["string", "null"]},
         "neclar": {"type": ["string", "null"]},
     },
-    "required": ["titlu", "ce_se_schimba", "pe_cine_afecteaza", "de_cand", "neclar"],
+    "required": ["titlu", "rezumat", "ce_se_schimba", "pe_cine_afecteaza", "de_cand", "neclar"],
     "additionalProperties": False,
 }
 

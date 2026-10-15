@@ -1,10 +1,11 @@
 import type { LawExplainer as LawExplainerData } from '@/lib/types'
 
-/** «Ce se schimbă» — the plain-language explainer (scraper/law_explainer.py,
+/** «Pe înțelesul tuturor» — the plain-language explainer (scraper/law_explainer.py,
  *  migration 059). Read from the FINAL law text, so unlike the AiSummary it
- *  describes the law as promulgated, not the initiator's draft. Same
- *  credibility rules as AiSummary: tagged as generated, one-click report,
- *  the official PDF one click away. */
+ *  describes the law as promulgated, not the initiator's draft. Shown: a
+ *  concrete title and a 2–3 sentence summary; the before/now detail and what
+ *  the documents leave unclear sit behind «Detalii». Same credibility rules as
+ *  AiSummary: tagged as generated, one-click report, the official PDF linked. */
 
 const FORM_LABEL: Record<string, string> = {
   fp: 'forma promulgată',
@@ -28,12 +29,12 @@ export function LawExplainer({ data, source, code }: { data: LawExplainerData; s
   const reportHref =
     `mailto:siminiucdenis@gmail.com?subject=${encodeURIComponent(`Eroare explicație — ${code}`)}` +
     `&body=${encodeURIComponent(`Explicația afișată:\n„${data.titlu}"\n\nCe e greșit / imprecis:\n`)}`
+  const details = data.ce_se_schimba.length > 0 || data.neclar
 
   return (
-    <section aria-labelledby="ce-se-schimba" className="relative bg-surface border border-rim rounded-xl p-5 pl-6 overflow-hidden">
-      <span aria-hidden className="absolute inset-y-0 left-0 w-[3px] bg-[var(--color-for)]" />
-      <div className="flex items-center gap-2 mb-2 flex-wrap">
-        <h2 id="ce-se-schimba" className="text-[11px] font-semibold uppercase tracking-widest text-muted">Ce se schimbă</h2>
+    <section aria-labelledby="pe-intelesul-tuturor" className="bg-surface border border-rim rounded-xl p-5">
+      <div className="flex items-center gap-2 mb-2.5 flex-wrap">
+        <h2 id="pe-intelesul-tuturor" className="text-[11px] font-semibold uppercase tracking-widest text-muted">Pe înțelesul tuturor</h2>
         <span
           className="text-[9px] uppercase tracking-wide font-semibold text-muted bg-raised border border-rim rounded px-1.5 py-px"
           title="Text generat automat dintr-un model AI pe baza textului oficial al legii. Poate conține erori — verifică sursa."
@@ -42,43 +43,39 @@ export function LawExplainer({ data, source, code }: { data: LawExplainerData; s
         </span>
       </div>
 
-      <p className="font-serif text-[22px] leading-snug text-foreground text-balance">{data.titlu}</p>
+      <p className="font-serif text-[21px] leading-snug text-foreground text-balance">{data.titlu}</p>
+      {data.rezumat && <p className="mt-2.5 text-[16px] leading-relaxed text-foreground max-w-[65ch]">{data.rezumat}</p>}
 
-      <ul className="mt-4 space-y-3">
-        {data.ce_se_schimba.map((c, i) => (
-          <li key={i} className="text-[15px] leading-relaxed">
-            {c.inainte && (
-              <p className="text-muted">
-                <span className="text-[11px] font-semibold uppercase tracking-wider mr-1.5">Înainte</span>
-                {c.inainte}
-              </p>
-            )}
-            <p className="text-foreground">
-              <span className="text-[11px] font-semibold uppercase tracking-wider mr-1.5 text-[var(--color-for-dark)]">Acum</span>
-              {c.acum}
-            </p>
-          </li>
-        ))}
-      </ul>
-
-      <dl className="mt-4 grid gap-x-6 gap-y-2 text-[14px] sm:grid-cols-[auto_minmax(0,1fr)]">
-        <dt className="font-semibold text-foreground">Pe cine afectează</dt>
-        <dd className="text-muted min-w-0">{data.pe_cine_afecteaza}</dd>
+      <p className="mt-3 text-[13px] text-muted max-w-[65ch]">
+        <span className="font-semibold text-foreground">Afectează:</span> {data.pe_cine_afecteaza}
         {data.de_cand && (
           <>
-            <dt className="font-semibold text-foreground">De când</dt>
-            <dd className="text-muted min-w-0">{data.de_cand}</dd>
+            {' · '}
+            <span className="font-semibold text-foreground">Se aplică:</span> {data.de_cand}
           </>
         )}
-        {data.neclar && (
-          <>
-            <dt className="font-semibold text-foreground">Ce nu reiese clar</dt>
-            <dd className="text-muted min-w-0">{data.neclar}</dd>
-          </>
-        )}
-      </dl>
+      </p>
 
-      <div className="mt-3.5 pt-3 border-t border-rim flex items-center gap-x-4 gap-y-1.5 flex-wrap text-[11px] text-faint">
+      {details && (
+        <details className="mt-3 group">
+          <summary className="cursor-pointer select-none text-[13px] text-muted hover:text-foreground w-fit">
+            Detalii: ce era înainte și ce e acum
+          </summary>
+          <ul className="mt-3 space-y-3 border-l-2 border-rim pl-4">
+            {data.ce_se_schimba.map((c, i) => (
+              <li key={i} className="text-[14px] leading-relaxed">
+                {c.inainte && <p className="text-muted"><span className="font-semibold">Înainte:</span> {c.inainte}</p>}
+                <p className="text-foreground"><span className="font-semibold">Acum:</span> {c.acum}</p>
+              </li>
+            ))}
+          </ul>
+          {data.neclar && (
+            <p className="mt-3 text-[13px] text-muted max-w-[65ch]"><span className="font-semibold">Ce nu reiese din documente:</span> {data.neclar}</p>
+          )}
+        </details>
+      )}
+
+      <div className="mt-4 pt-3 border-t border-rim flex items-center gap-x-4 gap-y-1.5 flex-wrap text-[11px] text-faint">
         <a href={reportHref} className="hover:text-foreground underline underline-offset-2">Raportează o eroare</a>
         {pdf && (
           <a href={pdf} target="_blank" rel="noopener noreferrer" className="hover:text-foreground underline underline-offset-2">
