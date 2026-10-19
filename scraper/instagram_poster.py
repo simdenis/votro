@@ -326,10 +326,33 @@ def post_story(cfg: Config, image_url: str) -> str:
     return _publish(cfg, creation_id)
 
 
+IG_CAPTION_MAX = 2200  # Instagram rejects longer captions (error 2207010)
+
+
+def fit_caption(caption: str, limit: int = IG_CAPTION_MAX - 50) -> str:
+    """Keep a caption under Instagram's limit. Long lists lose their last list
+    items («•» / «N.» lines) first, with a line saying how many were cut; only
+    if that is not enough is the text cut at a line break."""
+    if len(caption) <= limit:
+        return caption
+    lines = caption.split("\n")
+    items = [i for i, l in enumerate(lines) if l.startswith("• ") or l[:3].rstrip(".").isdigit()]
+    dropped = 0
+    while items and len("\n".join(lines)) + 60 > limit:
+        lines.pop(items.pop())
+        dropped += 1
+    if dropped and items:
+        lines.insert(items[-1] + 1, f"…și încă {dropped}, toate pe la-butoane.ro")
+    out = "\n".join(lines)
+    if len(out) > limit:
+        out = out[:limit].rsplit("\n", 1)[0]
+    return out
+
+
 def post_image(cfg: Config, image_url: str, caption: str) -> str:
     """Create a container, wait for it to be ready, and publish. Returns media id."""
     cfg.require_publishing()
-    creation_id = _create_container(cfg, image_url, caption)
+    creation_id = _create_container(cfg, image_url, fit_caption(caption))
     _wait_ready(cfg, creation_id)
     return _publish(cfg, creation_id)
 
@@ -360,7 +383,7 @@ def post_carousel(cfg: Config, image_urls: list[str], caption: str) -> str:
         params={
             "media_type": "CAROUSEL",
             "children": ",".join(children),
-            "caption": caption,
+            "caption": fit_caption(caption),
             "access_token": cfg.token,
         },
         timeout=_TIMEOUT,

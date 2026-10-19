@@ -38,7 +38,11 @@ LEDGER = Path(os.environ.get("VOTRO_LOG_DIR", "/var/log/votro")) / "ig_posts.jso
 # the weekly absence story embeds a SIGNED shamecard in the story frame; that
 # needs the frame's URL re-encoding fix (og/story card.toString()) live, or the
 # card falls back to all-time. Flip once the frontend deploy is confirmed.
-WEEKLY_ABSENTS_ENABLED = os.environ.get("AUTOPOST_WEEKLY_ABSENTS") == "1"
+
+def weekly_absents_enabled() -> bool:
+    # read at call time: main() loads .env after import, so a module-level
+    # constant always saw it unset and the weekly story never ran
+    return os.environ.get("AUTOPOST_WEEKLY_ABSENTS") == "1"
 CHECK_IN_DRY = False  # --dry-run --check runs post_check too (costs an API call per post)
 
 
@@ -286,7 +290,7 @@ def do_recap_week(cfg, db, day, dry):
         for v in rejected:
             l = v["laws"]; lines.append(f"• {law_line(l)} ({l['code']}, {chamber_ro(v['chamber'])}, {v['for_count']}–{v['against_count']}–{v['abstention_count']})")
     lines += ["", "Un vot final nu înseamnă încă lege. Urmează cealaltă cameră sau Președintele. Fiecare e explicată pe la-butoane.ro, link în bio.", "", HASHTAGS]
-    caption = "\n".join(lines)
+    caption = ig.fit_caption("\n".join(lines))
     title = f"recap {rng}: {len(adopted)} adoptate, {len(rejected)} respinse"
     # vet() also pre-warms: IG's fetcher 400s on a cold render
     vet(cfg, dry, "feed", slides, caption, title,
@@ -383,7 +387,7 @@ def do_passed_week(cfg, db, day, dry):
 
 
 def do_absents_week(cfg, db, day, dry):
-    if not WEEKLY_ABSENTS_ENABLED:
+    if not weekly_absents_enabled():
         print("  weekly absence story disabled until the story-frame deploy is confirmed (AUTOPOST_WEEKLY_ABSENTS=1)")
         return []
     d = dt.date.fromisoformat(day)
