@@ -20,7 +20,7 @@ forma inițiatorului, plus EM. explainer_source records which text was read.
 
 Usage:
     python law_explainer.py [--limit N] [--code L469/2026] [--force] [--dry-run] [--out file.jsonl]
-Default scope: promulgated laws without an explainer, newest first.
+Default scope: promulgated laws, then laws passed by both chambers (at the President or returned), without an explainer.
 Env: ANTHROPIC_API_KEY, SUPABASE_URL, SUPABASE_KEY.
 """
 from __future__ import annotations
@@ -295,6 +295,20 @@ def main() -> None:
         if not args.force:
             q["explainer"] = "is.null"
     laws = requests.get(f"{U}/rest/v1/laws", params=q, headers=H, timeout=30).json()
+    if not args.code:
+        # also every law Parliament passed (both chambers, now with the President or
+        # returned): those are posted too, and the LP form is their final text
+        both = requests.get(f"{U}/rest/v1/law_status", headers=H, timeout=30, params={
+            "select": "law_id", "senate_outcome": "eq.adoptat", "camera_outcome": "eq.adoptat",
+            "presidential_status": "not.eq.promulgat", "code": "like.L*", "limit": "1000"}).json()
+        have = {l["id"] for l in laws}
+        extra = [r["law_id"] for r in both if r["law_id"] not in have]
+        for i in range(0, len(extra), 80):
+            more = requests.get(f"{U}/rest/v1/laws", headers=H, timeout=30, params={
+                "select": "id,code,title", "id": f"in.({','.join(extra[i:i + 80])})",
+                **({} if args.force else {"explainer": "is.null"})}).json()
+            laws += more
+        laws = laws[:args.limit]
     log.info("%d law(s) to explain with %s%s", len(laws), MODEL, " (batch)" if args.batch else "")
 
     sink = Sink(args, U, H)
