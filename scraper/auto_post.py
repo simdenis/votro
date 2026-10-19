@@ -31,7 +31,7 @@ from dotenv import load_dotenv
 
 import instagram_poster as ig
 import post_check
-from post_schedule import DB, WEEKDAYS_RO, due, finished_laws, load_schedule, tacit_soon
+from post_schedule import DB, WEEKDAYS_RO, contested_votes, due, finished_laws, load_schedule, tacit_soon
 
 HASHTAGS = "#parlament #laButoane"
 LEDGER = Path(os.environ.get("VOTRO_LOG_DIR", "/var/log/votro")) / "ig_posts.jsonl"
@@ -517,6 +517,70 @@ def do_rejected_week(cfg, db, day, dry, rows):
                               q)
 
 
+EVERGREEN = [
+    ("edu", 6, "Cum devine un proiect lege? Pas cu pas, de la idee până în Monitorul Oficial. Plus excepția prin care o lege trece fără niciun vot."),
+    ("majority", 5, "De ce poate pica o lege fără niciun vot împotrivă? Pragul pentru o lege ordinară e majoritatea celor prezenți, nu «mai mulți pentru decât contra»."),
+    ("structura", 4, "Cine stă la butoane? 464 de mandate, Senatul și Camera Deputaților, partid cu partid."),
+]
+
+
+def do_explainer(cfg, db, day, dry, rows):
+    """Thursday: the week's most contested vote that FINISHED a law (≥3 MPs voted
+    against their party line) as a carousel ending on the deviation slide; with
+    none, an evergreen explainer deck not posted in the last 8 weeks."""
+    d = dt.date.fromisoformat(day)
+    seen = posted_keys(rows, "explainer")
+    for v in contested_votes(db, d - dt.timedelta(days=7)):
+        law = v.get("laws") or {}
+        if v["deviations"] < 3:
+            break
+        vote_law = db.get("votes", select="law_id", id=f"eq.{v['id']}", limit="1")
+        law_id = vote_law[0]["law_id"] if vote_law else None
+        st = statuses(db, [law_id]).get(law_id) if law_id else None
+        other = (st or {}).get("camera_outcome" if v["chamber"] == "senate" else "senate_outcome")
+        if not law_id or not other or law_id in seen:
+            continue  # a one-chamber vote stays a story (feed = finished laws only)
+        meta = laws_by_id(db, [law_id])[law_id]
+        ex = meta.get("explainer") or {}
+        has_hook = bool(ex.get("titlu") or meta.get("headline"))
+        slides = ([f"{cfg.site_url}/api/og/hookcard?id={law_id}&v={ig.CARD_V}"] if has_hook else []) + [
+            f"{cfg.site_url}/api/og/summarycard?id={law_id}{'&nohl=1' if has_hook else ''}&v={ig.CARD_V}",
+            f"{cfg.site_url}/api/og/votecard?vote={v['id']}&v={ig.CARD_V}",
+            f"{cfg.site_url}/api/og/deviationcard?vote={v['id']}&v={ig.CARD_V}"]
+        n = v["deviations"]
+        lines = [law_line(meta), "",
+                 f"{n} parlamentari au votat altfel decât majoritatea propriului partid.", ""]
+        if ex.get("rezumat"):
+            lines += [ex["rezumat"], ""]
+        lines += [f"{chamber_ro(v['chamber'])}, {v['vote_date']}: {v['for_count']} pentru, {v['against_count']} împotrivă, "
+                  f"{v['abstention_count'] or 0} abțineri. Pe ultimul slide, cine a votat altfel.", "",
+                  f"Lege: {meta['code']}. Detalii pe la-butoane.ro, link în bio.", "", HASHTAGS]
+        caption = ig.fit_caption("\n".join(lines))
+        title = f"vot contestat: {meta['code']} ({n} devieri)"
+        vet(cfg, dry, "feed", slides, caption, title,
+            {"law": meta["code"], "deviations": n, "vote": {"for": v["for_count"], "against": v["against_count"]}},
+            [{"slide": "law", **law_texts(db, [law_id])[0]}])
+        if dry:
+            print("  would carousel:", *slides, sep="\n    "); return []
+        return [(ig.post_carousel(cfg, slides, caption), "feed", title, law_id)]
+
+    # evergreen fallback: the deck posted longest ago (never within 8 weeks)
+    recent = {r.get("key") for r in rows if r["slot"] == "explainer"
+              and r["date"] >= str(d - dt.timedelta(weeks=8))}
+    for deck, n, text in EVERGREEN:
+        if f"deck:{deck}" in recent:
+            continue
+        slides = [f"{cfg.site_url}/api/og/{deck}?slide={i}&v={ig.CARD_V}" for i in range(1, n + 1)]
+        caption = f"{text}\n\nToate voturile, explicate, pe la-butoane.ro. Link în bio.\n\n{HASHTAGS}"
+        title = f"explainer: {deck}"
+        vet(cfg, dry, "feed", slides, caption, title, {"deck": deck, "slides": n}, [])
+        if dry:
+            print("  would carousel:", *slides, sep="\n    "); return []
+        return [(ig.post_carousel(cfg, slides, caption), "feed", title, f"deck:{deck}")]
+    print("  every explainer deck ran in the last 8 weeks and no contested final vote: skip")
+    return []
+
+
 def do_absents_week(cfg, db, day, dry):
     if not weekly_absents_enabled():
         print("  weekly absence story disabled until the story-frame deploy is confirmed (AUTOPOST_WEEKLY_ABSENTS=1)")
@@ -562,6 +626,7 @@ HANDLERS = {
     "parliament-today": do_parliament_today,
     "president-today": do_president_today,
     "rejected-week": do_rejected_week,
+    "explainer": do_explainer,
     "law-finished-1": do_law_finished,
     "backlog": do_law_finished,
     "tacit-countdown": lambda c, d, day, dry, rows: do_tacit(c, d, day, dry),
@@ -569,7 +634,7 @@ HANDLERS = {
     "story-absents-week": lambda c, d, day, dry, rows: do_absents_week(c, d, day, dry),
     "absents-month": lambda c, d, day, dry, rows: do_absents_month(c, d, day, dry),
     "switchers-month": lambda c, d, day, dry, rows: do_switchers_month(c, d, day, dry),
-    # "explainer", "matrix-quarter": manual — the 09:00 digest reminds
+    # "matrix-quarter": manual — the 09:00 digest reminds
 }
 
 

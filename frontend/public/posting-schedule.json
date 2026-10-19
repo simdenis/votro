@@ -135,13 +135,13 @@
   },
   {
    "id": "explainer",
-   "title": "Explainer sau vot contestat («cum funcționează» / cine a rupt rândurile)",
+   "title": "Explainer automat: votul contestat al săptămânii sau un «cum funcționează»",
    "format": "feed",
    "time": "20:00",
    "weekday": 4,
    "in_recess": "keep",
    "section": "sect-week",
-   "why": "Slotul de creștere: «0 voturi împotrivă» a făcut 932 reach, 13 salvări, 7 urmăritori; «AUR în bloc» a avut 27 de distribuiri. Joi seara e fereastra cu cea mai mare interacțiune."
+   "why": "Automat. Votul care a terminat o lege cu cei mai mulți parlamentari care au votat altfel decât partidul (minim 3), cu slide-ul de devieri. Altfel, un explainer permanent (cum devine un proiect lege / pragul de majoritate / cine stă la butoane), niciunul mai des de o dată la 8 săptămâni."
   },
   {
    "id": "story-absents-week",
