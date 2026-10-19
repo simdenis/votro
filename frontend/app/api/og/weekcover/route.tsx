@@ -60,7 +60,7 @@ async function render(req: Request): Promise<Response> {
     return new ImageResponse(
       (
         <div style={{ display: 'flex', width: 1080, height: 1350 }}>
-          <WeekCoverCard data={{ kind: votate ? 'votate' : parlament ? 'parlament' : 'promulgate', range: v2Range, items, count: n }} />
+          <WeekCoverCard data={{ kind: (['votate', 'parlament', 'presedinte', 'respinse'] as const).find(k => k === kind) ?? 'promulgate', range: v2Range, items, count: n }} />
         </div>
       ),
       { width: 1080, height: 1350, fonts },

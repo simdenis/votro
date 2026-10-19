@@ -27,7 +27,12 @@ async function render(request: Request): Promise<Response> {
   const sp = new URL(request.url).searchParams
   const id = isUuid(sp.get('id')) ? sp.get('id')! : null
   if (!id) return new Response('law id required', { status: 400 })
-  const kind = sp.get('kind') === 'parlament' ? 'parlament' : 'votate'
+  // votate/respinse: the event is a vote (ch/out/t/d); parlament/presedinte: where the law stands with the President
+  const k = sp.get('kind') ?? 'votate'
+  const kind = k === 'parlament' || k === 'presedinte' ? 'parlament' : 'votate'
+  const KICKER: Record<string, string> = {
+    votate: 'Săptămâna trecută', parlament: 'Trecute de Parlament', presedinte: 'Decizia Președintelui', respinse: 'Respinse definitiv',
+  }
   const pos = (sp.get('pos') ?? '').replace(/[^0-9/]/g, '').replace('/', ' / ')
 
   const [lawRows, statusRows] = await Promise.all([
@@ -62,7 +67,7 @@ async function render(request: Request): Promise<Response> {
 
   const summary = ex?.rezumat?.trim() || (law.summary ? plainSummary(law.summary) : null)
   const data: RecapCardData = {
-    kicker: kind === 'votate' ? 'Săptămâna trecută' : 'Trecute de Parlament',
+    kicker: KICKER[k] ?? KICKER.votate,
     position: pos,
     lawCode: String(law.code).replace(/^([A-Z]+)/, '$1 '),
     category: law.law_category,

@@ -2,7 +2,7 @@ import { ImageResponse } from 'next/og'
 import { VoteStory, type VoteStoryData } from '@/components/cards/vote-story'
 import { mapVoteToCard } from '@/lib/votecard'
 import { getCardFonts } from '@/lib/og-fonts'
-import { isUuid } from '@/lib/utils'
+import { isUuid, plainSummary } from '@/lib/utils'
 import { activeSeats, activeSeatsByParty } from '@/lib/seats'
 import { withEdgeCache } from '@/lib/og-edge-cache'
 import { nextAfterVote } from '@/lib/next-step'
@@ -32,13 +32,14 @@ async function render(request: Request): Promise<Response> {
     get(`law_status?law_id=eq.${vote.law_id}&select=presidential_status,senate_outcome,camera_outcome&limit=1`),
   ])
   const card = mapVoteToCard(vote, breakdown ?? [], seats, seatsByParty)
-  const law = vote.laws as { headline: string | null; explainer: { titlu?: string } | null }
+  const law = vote.laws as { headline: string | null; summary: string | null; explainer: { titlu?: string; rezumat?: string } | null }
   const data: VoteStoryData = {
     chamberName: chamber === 'senate' ? 'Senat' : 'Camera Deputaților',
     dateLabel: card.dateLabel ?? '',
     lawCode: card.lawCode,
     headline: law.explainer?.titlu ?? law.headline ?? null,
     lawTitle: card.lawTitle,
+    summary: law.explainer?.rezumat ?? (law.summary ? plainSummary(law.summary) : null),
     result: card.result,
     votesFor: card.votesFor,
     votesAgainst: card.votesAgainst,

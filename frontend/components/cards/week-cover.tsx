@@ -7,7 +7,7 @@ import { C, F, T, CardHeader, CardFooter, clip } from './kit'
 export interface WeekCoverItem { code: string; headline: string }
 
 export interface WeekCoverCardData {
-  kind: 'votate' | 'parlament' | 'promulgate'
+  kind: 'votate' | 'parlament' | 'promulgate' | 'presedinte' | 'respinse'
   /** «5–11 octombrie 2026» */
   range: string
   /** in slide order; the cover shows up to 9 */
@@ -20,6 +20,8 @@ const COPY = {
   votate: { kicker: 'Săptămâna trecută', title: 'Ce a votat Parlamentul', one: 'vot final adoptat', many: 'voturi finale adoptate' },
   parlament: { kicker: 'Săptămâna aceasta', title: 'Ce a trecut de Parlament', one: 'lege trimisă la promulgare', many: 'legi trimise la promulgare' },
   promulgate: { kicker: 'Săptămâna aceasta', title: 'Ce s-a făcut lege', one: 'lege promulgată', many: 'legi promulgate' },
+  presedinte: { kicker: 'Cotroceni', title: 'Ce a decis Președintele', one: 'lege', many: 'legi' },
+  respinse: { kicker: 'Săptămâna aceasta', title: 'Respinse definitiv de Parlament', one: 'lege respinsă', many: 'legi respinse' },
 }
 
 export function WeekCoverCard({ data }: { data: WeekCoverCardData }) {
@@ -36,7 +38,7 @@ export function WeekCoverCard({ data }: { data: WeekCoverCardData }) {
       <div style={{ display: 'flex', flexDirection: 'column', flex: 1, padding: '44px 64px 34px' }}>
         <div style={{ fontFamily: F.display, fontSize: 76, lineHeight: 1.04, flexShrink: 0 }}>{k.title}</div>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 18, marginTop: 18, flexShrink: 0 }}>
-          <div style={{ display: 'flex', fontFamily: F.display, fontSize: 76, lineHeight: 1, color: C.forDark }}>{`${n}`}</div>
+          <div style={{ display: 'flex', fontFamily: F.display, fontSize: 76, lineHeight: 1, color: data.kind === 'respinse' ? C.againstDark : C.forDark }}>{`${n}`}</div>
           <div style={{ display: 'flex', fontSize: T.lead, color: C.slate }}>{n === 1 ? k.one : k.many}</div>
         </div>
 

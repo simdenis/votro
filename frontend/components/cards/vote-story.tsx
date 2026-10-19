@@ -14,6 +14,8 @@ export interface VoteStoryData {
   /** laws.headline — falls back to the official title */
   headline: string | null
   lawTitle: string
+  /** what the law does, 2–3 sentences (the explainer's rezumat, else the AI summary) */
+  summary?: string | null
   result: 'ADOPTAT' | 'RESPINS'
   votesFor: number
   votesAgainst: number
@@ -57,8 +59,11 @@ export function VoteStory({ data }: { data: VoteStoryData }) {
         {`Vot final · ${data.chamberName} · ${data.dateLabel}`}
       </div>
       <div style={{ fontFamily: F.display, fontSize: headlineSize(headline.length), lineHeight: 1.06, color: C.ink, marginTop: 26 }}>{headline}</div>
+      {data.summary ? (
+        <div style={{ fontSize: 34, lineHeight: 1.36, color: C.slate, marginTop: 26 }}>{clip(data.summary, 260)}</div>
+      ) : null}
       <div style={{ display: 'flex', fontSize: T.small, lineHeight: 1.35, color: C.muted, marginTop: 22 }}>
-        {`${data.lawCode} · ${clip(data.lawTitle, 110)}`}
+        {data.summary ? data.lawCode : `${data.lawCode} · ${clip(data.lawTitle, 110)}`}
       </div>
 
       <div style={{ display: 'flex', flexGrow: 1, minHeight: 40 }} />
@@ -79,7 +84,7 @@ export function VoteStory({ data }: { data: VoteStoryData }) {
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'center', marginTop: 44, flexShrink: 0 }}>
-        <svg width={936} height={303} viewBox="0 0 952 308">
+        <svg width={data.summary ? 760 : 936} height={data.summary ? 246 : 303} viewBox="0 0 952 308">
           {dots.map((d, i) => <circle key={i} cx={d.x} cy={d.y} r={6.5} fill={d.color} />)}
         </svg>
       </div>

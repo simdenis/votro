@@ -223,6 +223,10 @@ def do_story_sitting(cfg, db, day, dry):
     votes = db.get("votes", select="id,chamber,for_count,against_count,outcome,laws(id,code,headline,interest_score)",
                    vote_type="eq.vot final", law_id="not.is.null", vote_date=f"eq.{day}", limit="200")
     votes = [v for v in votes if v.get("laws")]
+    # stories are for votes in ONE chamber; a vote that finished a law (both chambers
+    # now voted) goes to the feed instead — «Trecute azi de Parlament» / «Respinse definitiv»
+    st = statuses(db, [v["laws"]["id"] for v in votes])
+    votes = [v for v in votes if not (st.get(v["laws"]["id"]) or {}).get("camera_outcome" if v["chamber"] == "senate" else "senate_outcome")]
     if not votes:
         return []
     votes.sort(key=lambda v: -((v["laws"].get("interest_score") or 0)))
@@ -321,10 +325,16 @@ def ig_month(d: dt.date) -> str:
     return ["ian", "feb", "mar", "apr", "mai", "iun", "iul", "aug", "sep", "oct", "nov", "dec"][d.month - 1]
 
 
+LAWS_PER_DAY = 2  # every interesting finished law gets its own carousel; the rest wait their turn
+
+
 def do_law_finished(cfg, db, day, dry, rows):
     d = dt.date.fromisoformat(day)
     done = posted_law_ids(rows)
-    for l in finished_laws(db, d - dt.timedelta(days=10)):
+    out = []
+    for l in finished_laws(db, d - dt.timedelta(days=21)):
+        if len(out) >= LAWS_PER_DAY:
+            break
         if l["id"] in done or (l.get("interest_score") or 0) < 50:
             continue
         title = f"lege: {l['code']} — {l.get('headline') or l['title'][:80]}"
@@ -333,10 +343,11 @@ def do_law_finished(cfg, db, day, dry, rows):
             {"law": l["code"], "headline": l.get("headline"), "presidential_status": l.get("presidential_status")},
             [{"slides": [x.split("?")[0] for x in suffixes], **law_texts(db, [l["id"]])[0]}])
         if dry:
-            print(f"  would post law carousel: {l['code']} ({l.get('interest_score')}) {l.get('headline')}"); return []
+            print(f"  would post law carousel: {l['code']} ({l.get('interest_score')}) {l.get('headline')}"); out.append(None); continue
         mid = ig.post_law(cfg, l["id"])
-        return [(mid, "feed", title, l["id"])] if mid else []
-    return []
+        if mid:
+            out.append((mid, "feed", title, l["id"]))
+    return [o for o in out if o]
 
 
 def do_tacit(cfg, db, day, dry):
@@ -386,6 +397,126 @@ def do_passed_week(cfg, db, day, dry):
     return [(mid, "feed", title, f"{d}")]
 
 
+def posted_keys(rows: list[dict], slot: str) -> set[str]:
+    """Every law id ever posted under `slot` (a carousel's key is its ids joined by commas)."""
+    return {k for r in rows if r["slot"] == slot for k in (r.get("key") or "").split(",") if k}
+
+
+def chunks(items: list, size: int = 9) -> list[list]:
+    """Split into the fewest carousels of ≤ size, as equal as possible (14 → 7 + 7, not 9 + 5)."""
+    if not items:
+        return []
+    n = -(-len(items) // size)
+    per = -(-len(items) // n)
+    return [items[i:i + per] for i in range(0, len(items), per)]
+
+
+def statuses(db: DB, law_ids: list[str]) -> dict[str, dict]:
+    out: dict[str, dict] = {}
+    for i in range(0, len(law_ids), 80):
+        for r in db.get("law_status", select="law_id,code,senate_outcome,senate_vote_date,camera_outcome,camera_vote_date,presidential_status,presidential_date",
+                        law_id=f"in.({','.join(law_ids[i:i + 80])})", limit="100"):
+            out[r["law_id"]] = r
+    return out
+
+
+def laws_by_id(db: DB, ids: list[str]) -> dict[str, dict]:
+    out: dict[str, dict] = {}
+    for i in range(0, len(ids), 80):
+        for r in db.get("laws", select="id,code,title,headline,explainer,interest_score,presidential_status,presidential_date",
+                        id=f"in.({','.join(ids[i:i + 80])})", limit="100"):
+            out[r["id"]] = r
+    return out
+
+
+def post_law_carousels(cfg, db, day, dry, slot: str, laws: list[dict], kind: str, header: str, footer: str,
+                       line, slide_q=lambda l: "") -> list:
+    """One carousel per ≤9 laws (split evenly): a cover listing them + one recap slide each."""
+    out = []
+    parts = chunks(laws)
+    for p_i, part in enumerate(parts, 1):
+        ids = [l["id"] for l in part]
+        tag = f" (partea {p_i} din {len(parts)})" if len(parts) > 1 else ""
+        slides = [f"{cfg.site_url}/api/og/weekcover?kind={kind}&n={len(part)}&ids={','.join(ids)}&v={ig.CARD_V}{day}"] + \
+                 [f"{cfg.site_url}/api/og/recapcard?id={l['id']}&kind={kind}&pos={i}/{len(part) + 1}{slide_q(l)}&v={ig.CARD_V}"
+                  for i, l in enumerate(part, 2)]
+        lines = [header + tag, ""] + [line(l) for l in part] + ["", footer, "", HASHTAGS]
+        caption = ig.fit_caption("\n".join(lines))
+        title = f"{header.lower()}{tag}: {len(part)} legi"
+        try:
+            vet(cfg, dry, "feed", slides, caption, title,
+                {"date": day, "laws": [l["code"] for l in part]},
+                [{"slide": 1, "card": "cover", "kind": kind, "cover_lists_codes": [l["code"] for l in part]}]
+                + [{"slide": i, **t} for i, t in enumerate(law_texts(db, ids), 2)])
+        except Blocked as e:
+            notify(f"[LaButoane] ✗ blocat de verificare: {title}"[:120], str(e), cfg); continue
+        if dry:
+            print("  would carousel:", *slides, sep="\n    "); print(caption[:300]); continue
+        out.append((ig.post_carousel(cfg, slides, caption), "feed", title, ",".join(ids)))
+    return out
+
+
+def do_parliament_today(cfg, db, day, dry, rows):
+    """Laws that passed BOTH chambers (the decisional vote happened in the last 3 days, not posted yet)."""
+    d = dt.date.fromisoformat(day)
+    votes = db.get("votes", select="law_id,chamber,vote_date", vote_type="eq.vot final", outcome="eq.adoptat",
+                   law_id="not.is.null", **{"and": f"(vote_date.gte.{d - dt.timedelta(days=2)},vote_date.lte.{day})"}, limit="300")
+    ids = sorted({v["law_id"] for v in votes} - posted_keys(rows, "parliament-today"))
+    st = statuses(db, ids)
+    done = [i for i in ids if st.get(i) and st[i]["senate_outcome"] == "adoptat" and st[i]["camera_outcome"] == "adoptat"
+            and not (st[i]["code"] or "").startswith("PH")]
+    if not done:
+        return []
+    laws = sorted(laws_by_id(db, done).values(), key=lambda l: -(l.get("interest_score") or 0))
+    return post_law_carousels(cfg, db, day, dry, "parliament-today", laws, "parlament",
+                              "Trecute azi de Parlament",
+                              "Au trecut de ambele camere. Urmează Președintele, care are 20 de zile să le promulge sau să le retrimită. Fiecare e explicată pe la-butoane.ro, link în bio.",
+                              lambda l: f"• {law_line(l)} ({l['code']})")
+
+
+def do_president_today(cfg, db, day, dry, rows):
+    """The President's decisions of the last 3 days (promulgated / returned / sent to the CCR), not posted yet."""
+    d = dt.date.fromisoformat(day)
+    laws = db.get("laws", select="id,code,title,headline,explainer,interest_score,presidential_status,presidential_date",
+                  presidential_status="in.(promulgat,retrimis,sesizat_ccr)", presidential_date=f"gte.{d - dt.timedelta(days=3)}", limit="100")
+    seen = posted_keys(rows, "president-today")
+    laws = sorted([l for l in laws if l["id"] not in seen], key=lambda l: -(l.get("interest_score") or 0))
+    if not laws:
+        return []
+    word = {"promulgat": "promulgată", "retrimis": "retrimisă Parlamentului", "sesizat_ccr": "trimisă la CCR"}
+    return post_law_carousels(cfg, db, day, dry, "president-today", laws, "presedinte",
+                              "Ce a decis Președintele",
+                              "O lege promulgată intră în vigoare după publicarea în Monitorul Oficial. Fiecare e explicată pe la-butoane.ro, link în bio.",
+                              lambda l: f"• {law_line(l)} ({l['code']}, {word[l['presidential_status']]})")
+
+
+def do_rejected_week(cfg, db, day, dry, rows):
+    """Laws rejected for good this week: the second chamber voted them down (Mon–today)."""
+    d = dt.date.fromisoformat(day)
+    monday = d - dt.timedelta(days=d.isoweekday() - 1)
+    votes = db.get("votes", select="law_id,chamber,vote_date,for_count,against_count", vote_type="eq.vot final", outcome="eq.respins",
+                   law_id="not.is.null", **{"and": f"(vote_date.gte.{monday},vote_date.lte.{day})"}, limit="200")
+    seen = posted_keys(rows, "rejected-week")
+    st = statuses(db, sorted({v["law_id"] for v in votes}))
+    final = {}
+    for v in votes:
+        s_ = st.get(v["law_id"]) or {}
+        other = s_.get("camera_outcome" if v["chamber"] == "senate" else "senate_outcome")
+        if other and v["law_id"] not in seen:  # the other chamber had voted already: this one decided
+            final[v["law_id"]] = v
+    if not final:
+        return []
+    meta = laws_by_id(db, list(final))
+    laws = sorted(meta.values(), key=lambda l: -(l.get("interest_score") or 0))
+    q = lambda l: (f"&ch={final[l['id']]['chamber']}&out=respins&t={final[l['id']]['for_count']}-{final[l['id']]['against_count']}"
+                   f"&d={final[l['id']]['vote_date']}")
+    return post_law_carousels(cfg, db, day, dry, "rejected-week", laws, "respinse",
+                              "Respinse definitiv de Parlament săptămâna asta",
+                              "Respinse de a doua cameră, după votul primei camere: nu mai pot deveni lege în forma asta. Detalii pe la-butoane.ro, link în bio.",
+                              lambda l: f"• {law_line(l)} ({l['code']}, {chamber_ro(final[l['id']]['chamber'])} {final[l['id']]['for_count']}–{final[l['id']]['against_count']})",
+                              q)
+
+
 def do_absents_week(cfg, db, day, dry):
     if not weekly_absents_enabled():
         print("  weekly absence story disabled until the story-frame deploy is confirmed (AUTOPOST_WEEKLY_ABSENTS=1)")
@@ -428,6 +559,9 @@ HANDLERS = {
     "story-sitting": lambda c, d, day, dry, rows: do_story_sitting(c, d, day, dry),
     "story-switch": lambda c, d, day, dry, rows: do_story_switch(c, d, day, dry),
     "recap-week": lambda c, d, day, dry, rows: do_recap_week(c, d, day, dry),
+    "parliament-today": do_parliament_today,
+    "president-today": do_president_today,
+    "rejected-week": do_rejected_week,
     "law-finished-1": do_law_finished,
     "backlog": do_law_finished,
     "tacit-countdown": lambda c, d, day, dry, rows: do_tacit(c, d, day, dry),
