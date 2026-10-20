@@ -185,6 +185,16 @@ def _admin_href(site: str, anchor: str) -> str:
     return f"{site}/api/admin/login?t={quote(f'{exp}.{sig}')}&next={quote(f'/admin#{anchor}', safe='')}"
 
 
+# Dated reminders for the morning digest: (from, what, count of rows still to
+# review). Shown every day from `from` while the count is > 0.
+REVIEWS = [
+    (dt.date(2027, 1, 15),
+     "Notele foștilor miniștri din Guvernul Bolojan îi țin afară din clasamentele de absențe. "
+     "Din noiembrie 2026 votează normal: șterge notele (politicians.context_note) ca absențele noi să conteze.",
+     lambda db: len(db.get("politicians", select="id", context_note="like.A fost *Guvernul Bolojan*", limit="50"))),
+]
+
+
 def build(day: dt.date) -> dict:
     """Everything the digest / --print needs, computed once."""
     schedule = load_schedule()
@@ -241,6 +251,12 @@ def build(day: dt.date) -> dict:
         ctx["slots"].append(item)
     if day.isoweekday() == 1:
         ctx["ig"] = ig_last_week(day)
+    ctx["reviews"] = []
+    for since, text, count in REVIEWS:
+        if day >= since:
+            n = count(db)
+            if n:
+                ctx["reviews"].append(f"{text} ({n} rămase)")
     return ctx
 
 
@@ -256,6 +272,8 @@ def print_day(ctx: dict) -> None:
             print(f"           · {ln}")
         if it.get("card"):
             print(f"           card: {it['card']}")
+    for r in ctx.get("reviews", []):
+        print(f"\n  DE REVIZUIT: {r}")
     for p in ctx.get("ig", []):
         print(f"  IG {p['date']} reach {p.get('reach', '?')} save {p.get('saved', '?')} share {p.get('shares', '?')} follow {p.get('follows', '?')} — {p['caption']}")
 
@@ -265,7 +283,10 @@ def email_html(ctx: dict) -> str:
     e = html.escape
     parts = [f'<div style="font-family:-apple-system,Segoe UI,sans-serif;max-width:620px;margin:0 auto;color:#171A1F;">',
              f'<h2 style="margin:24px 0 4px;">Azi pe IG — {WEEKDAYS_RO[d.isoweekday() - 1]} {d:%d.%m}</h2>',
-             f'<p style="color:#6E7480;margin:0 0 20px;">{"Sesiune parlamentară." if ctx["session"] else "Vacanță parlamentară — grila redusă."} Nimic nu se publică singur.</p>']
+             f'<p style="color:#6E7480;margin:0 0 20px;">{"Sesiune parlamentară." if ctx["session"] else "Vacanță parlamentară, grila redusă."} Sloturile automate se publică singure (primești «✓ postat»); cele manuale te așteaptă în admin.</p>']
+    for r in ctx.get("reviews", []):
+        parts.append(f'<div style="border:1px solid #E3A23C;background:#FDF6EA;border-radius:10px;padding:12px 16px;margin:0 0 14px;font-size:13px;">'
+                     f'<b>De revizuit:</b> {e(r)}</div>')
     if not ctx["slots"]:
         parts.append('<p>Nimic programat azi.</p>')
     for it in ctx["slots"]:
