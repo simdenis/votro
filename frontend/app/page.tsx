@@ -36,12 +36,14 @@ export default async function Dashboard() {
     db.from('parties').select('abbreviation, color, name'),
     db.from('politicians').select('party_id, parties(abbreviation)', { count: 'exact', head: false }).eq('active', true),
     // Absențe top 5 — lowest presence since mandate start, both chambers.
-    // Government members (gov_role) never vote in plen — structural absence.
+    // Government members (gov_role) never vote in plen — structural absence; a
+    // context_note (ex-ministers, medical leave, delegations) keeps them off this
+    // short list too, like on the cards: a teaser has no room for the ⓘ caveat.
     db.from('senator_stats').select('politician_id, name, first_name, party_abbr, party_color, presence_pct, chamber_votes, context_note')
-      .eq('active', true).is('gov_role', null)
+      .eq('active', true).is('gov_role', null).is('context_note', null)
       .order('presence_pct', { ascending: true }).limit(15),
     db.from('deputy_stats').select('politician_id, name, first_name, party_abbr, party_color, presence_pct, chamber_votes, context_note')
-      .eq('active', true).is('gov_role', null)
+      .eq('active', true).is('gov_role', null).is('context_note', null)
       .order('presence_pct', { ascending: true }).limit(15),
     // Legi tacite — soonest upcoming constitutional deadlines (art. 75). The one
     // thing that doesn't stop during recess, so it belongs on the homepage.
