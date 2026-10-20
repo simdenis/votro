@@ -14,9 +14,10 @@ Matching is token-based and order-free: gov.ro writes "Tánczos Barna"
 Andrei-Florin Gheorghiu — the surname tokens must all appear in the cabinet
 name AND at least one first-name token must too.
 
-Labels are add-only: gov_role marks anyone who served in the Government this
-legislature (ex-members keep it — their absence while in office was
-structural). A broken parse (<10 members) never touches labels.
+Daily runs are add-only. When the cabinet changes, run once with --sync (from a
+Romanian IP, after gov.ro shows the new cabinet): members who left lose
+gov_role and get a context_note naming the outgoing cabinet, which keeps their
+in-office absence out of every ranking. A broken parse (<10 members) never touches labels.
 
 gov.ro silently drops non-RO IPs (the EU VPS times out at TCP level — the
 inverse of cdep.ro's non-EU block). On unreachable it exits 0 with labels
@@ -75,6 +76,11 @@ def main() -> None:
     load_dotenv()
     ap = argparse.ArgumentParser(description="VotRO — government roles scraper")
     ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--sync", action="store_true",
+                    help="cabinet changed: MPs no longer in it lose gov_role and get a context_note instead "
+                         "(run by hand once gov.ro shows the new cabinet; the daily run stays add-only)")
+    ap.add_argument("--cabinet", default="Guvernul precedent",
+                    help="with --sync: how the context note names the outgoing cabinet, e.g. «Guvernul Bolojan (2025–2026)»")
     args = ap.parse_args()
 
     url, key = os.environ.get("SUPABASE_URL", ""), os.environ.get("SUPABASE_KEY", "")
@@ -97,7 +103,7 @@ def main() -> None:
     db = create_client(url, key)
     pols = (
         db.table("politicians")
-        .select("id, name, first_name, chamber, gov_role")
+        .select("id, name, first_name, chamber, gov_role, context_note")
         .eq("active", True)
         .execute()
         .data
@@ -132,6 +138,23 @@ def main() -> None:
             if not args.dry_run:
                 db.table("politicians").update({"gov_role": new_role}).eq("id", p["id"]).execute()
             changes += 1
+
+    # --sync: whoever still carries a label but is not in the cabinet any more left
+    # it. Clearing gov_role alone would dump the months they spent in office into
+    # the absence rankings (the Rogobete case); a context_note keeps them out of
+    # every ranking and shows the ⓘ caveat on the site instead. 20 Oct 2026: the
+    # Bolojan → Niculescu change was done this way.
+    if args.sync:
+        for p in pols:
+            if p.get("gov_role") and p["id"] not in matched:
+                note = (f"A fost {p['gov_role']} în {args.cabinet}. Cât a fost în funcție nu a votat în plen, "
+                        "deci absențele din acea perioadă sunt structurale.")
+                log.info("left the cabinet: %s %s (%s)", p["first_name"], p["name"], p["gov_role"])
+                if not args.dry_run:
+                    db.table("politicians").update(
+                        {"gov_role": None, **({} if p.get("context_note") else {"context_note": note})}
+                    ).eq("id", p["id"]).execute()
+                changes += 1
 
     log.info("done: %d MPs in government, %d label change(s)%s",
              len(matched), changes, " (dry-run)" if args.dry_run else "")

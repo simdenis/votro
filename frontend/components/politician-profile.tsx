@@ -82,7 +82,7 @@ export function PoliticianProfile({ stats, history, deviationRows, partyHistory,
             {stats.gov_role && (
               <span
                 className="text-[10px] uppercase font-semibold tracking-wide bg-sidebar text-white rounded-[3px] px-1.5 py-px"
-                title="În Guvern în această legislatură (actual sau fost) — în funcție nu votează în plen, deci absența e structurală, nu o alegere."
+                title="Membru al Guvernului actual: în funcție nu votează în plen, deci absența e structurală, nu o alegere."
               >
                 guvern · {stats.gov_role}
               </span>

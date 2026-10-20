@@ -159,7 +159,7 @@ export function PoliticianList({ title, basePath, people, switcherIds }: Props) 
                         {s.gov_role && (
                           <span
                             className="text-[10px] uppercase font-semibold tracking-wide bg-sidebar text-white rounded-[3px] px-1.5 py-px flex-shrink-0"
-                            title="În Guvern în această legislatură (actual sau fost) — în funcție nu votează în plen"
+                            title="Membru al Guvernului actual: în funcție nu votează în plen"
                           >
                             guvern · {s.gov_role}
                           </span>
@@ -184,7 +184,7 @@ export function PoliticianList({ title, basePath, people, switcherIds }: Props) 
                     </td>
                     <td className="py-3 pr-4 text-right">
                       {s.gov_role ? (
-                        <span className="text-[13px] text-faint" title="În Guvern în această legislatură — în funcție nu votează în plen, deci absența e structurală">—</span>
+                        <span className="text-[13px] text-faint" title="Membru al Guvernului actual: în funcție nu votează în plen, deci absența e structurală">—</span>
                       ) : (
                         <span className={`tabular-nums text-[13px] ${absence !== null && absence > 30 ? 'text-respins font-semibold' : 'text-muted'}`}>
                           {absence === null ? '—' : `${absence}%`}
