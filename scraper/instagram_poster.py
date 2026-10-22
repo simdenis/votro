@@ -273,15 +273,27 @@ def _wait_ready(cfg: Config, creation_id: str, tries: int = 10, delay: float = 2
     raise RuntimeError("container not ready in time")
 
 
+# Instagram sometimes answers a publish right after FINISHED with "Media Not
+# Found" (2207006) or "media not ready" (9007 / 2207027) — transient: the same
+# container publishes a few seconds later (the 21 Oct story failure).
+_RETRY_SUBCODES = {2207006, 2207027}
+
+
 def _publish(cfg: Config, creation_id: str) -> str:
-    r = requests.post(
-        f"{GRAPH}/{cfg.version}/{cfg.ig_user_id}/media_publish",
-        params={"creation_id": creation_id, "access_token": cfg.token},
-        timeout=_TIMEOUT,
-    )
-    if not r.ok:
+    for attempt in range(4):
+        r = requests.post(
+            f"{GRAPH}/{cfg.version}/{cfg.ig_user_id}/media_publish",
+            params={"creation_id": creation_id, "access_token": cfg.token},
+            timeout=_TIMEOUT,
+        )
+        if r.ok:
+            return r.json()["id"]
+        err = (r.json() if r.headers.get("content-type", "").startswith("application/json") else {}).get("error", {})
+        if attempt < 3 and (err.get("error_subcode") in _RETRY_SUBCODES or err.get("code") == 9007):
+            time.sleep(5 * (attempt + 1))
+            continue
         raise RuntimeError(f"publish failed ({r.status_code}): {r.text}")
-    return r.json()["id"]
+    raise RuntimeError("publish failed after retries")
 
 
 def is_native_story(url: str) -> bool:

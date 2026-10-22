@@ -244,7 +244,11 @@ def do_story_sitting(cfg, db, day, dry):
             notify("[LaButoane] ✗ blocat de verificare: story vot", str(e), cfg); continue
         if dry:
             print("  would story:", url); continue
-        out.append((ig.post_story(cfg, url), "story", title, v["id"]))
+        try:  # one failed story must not lose the ones already published (they'd go unrecorded)
+            out.append((ig.post_story(cfg, url), "story", title, v["id"]))
+        except Exception as e:
+            traceback.print_exc()
+            notify("[LaButoane] ✗ story eșuat: " + v["laws"]["code"], f"{day} · {title}\n{type(e).__name__}: {str(e)[:300]}", cfg)
     return out
 
 
@@ -358,7 +362,10 @@ def do_tacit(cfg, db, day, dry):
     lines = ["Legi care pot trece tacit, fără niciun vot", "",
              "Dacă termenul constituțional expiră fără vot, proiectul e considerat adoptat automat de prima cameră (art. 75). Expiră în următoarele 7 zile:", ""]
     for i, b in enumerate(bills, 1):
-        lines.append(f"{i}. {(b.get('summary') or b['code'])[:140]} ({b['code']}), termen {b['tacit_deadline']}")
+        text = (b.get("summary") or b["code"]).strip()
+        if len(text) > 140:  # cut at a word, never mid-word («susține un ex»)
+            text = text[:140].rsplit(" ", 1)[0].rstrip(",;:") + "…"
+        lines.append(f"{i}. {text} ({b['code']}), termen {b['tacit_deadline']}")
     lines += ["", "Lista completă e pe la-butoane.ro/tacite, link în bio.", "", HASHTAGS]
     title = f"tacit: {len(bills)} proiecte"
     vet(cfg, dry, "feed", [url], "\n".join(lines), title,
