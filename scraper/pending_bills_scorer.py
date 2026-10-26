@@ -81,6 +81,11 @@ class RateLimited(Exception):
     pass
 
 
+class Transient(Exception):
+    """Gemini timed out or answered 5xx («high demand»): try another model now,
+    and never stamp the bill as rated — the next run tries it again."""
+
+
 def _gemini(api_key: str, parts: list[dict]) -> dict | None:
     body = {
         "contents": [{"parts": parts}],
@@ -91,13 +96,18 @@ def _gemini(api_key: str, parts: list[dict]) -> dict | None:
         },
     }
     for wait_try in range(4):
-        r = requests.post(GEMINI_URL, params={"key": api_key}, json=body, timeout=_TIMEOUT)
+        try:
+            r = requests.post(GEMINI_URL, params={"key": api_key}, json=body, timeout=_TIMEOUT)
+        except requests.RequestException as e:  # a read timeout killed the 26 Oct run (rc=1)
+            raise Transient(f"{type(e).__name__}: {e}") from e
         if r.status_code != 429:
             break
         if wait_try == 3:
             raise RateLimited(r.text[:200])
         log.info("429 — waiting 60s for the rate-limit window (try %d)", wait_try + 1)
         time.sleep(60)
+    if r.status_code >= 500:
+        raise Transient(f"gemini {r.status_code}: {r.text[:120]}")
     if not r.ok:
         log.warning("gemini error %s: %s", r.status_code, r.text[:150])
         return None
@@ -264,6 +274,7 @@ def main() -> None:
         # Loop, not a single retry: the next key can be rate-limited too (a
         # depleted paid key 429s permanently), and an uncaught RateLimited on
         # the retry killed the whole run on 2026-07-30 with 0 of 23 bills rated.
+        transient = False
         while ki < len(keys):
             try:
                 res = rate_bill(keys[ki], b, b64, kind)
@@ -272,7 +283,19 @@ def main() -> None:
                 ki += 1
                 if ki < len(keys):
                     log.info("key %d exhausted — rotating", ki)
-        if ki >= len(keys):
+            except Transient as e:
+                log.warning("%s: Gemini %s", b["code"], e)
+                transient = True
+                break
+        if transient:
+            if haiku is None:
+                log.info("%s: skipped this run (not stamped)", b["code"])
+                continue
+            res = rate_bill_haiku(haiku, b, b64, kind)
+            if not res:
+                log.info("%s: no result on %s either — not stamped, next run retries", b["code"], _HAIKU_MODEL)
+                continue
+        elif ki >= len(keys):
             # Gemini is out for the day — finish the run on Haiku instead of
             # leaving the remaining bills unrated until the quota resets.
             if haiku is None:
