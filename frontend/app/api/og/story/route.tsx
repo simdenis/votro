@@ -1,5 +1,6 @@
 import { ImageResponse } from 'next/og'
 import { getCardFonts } from '@/lib/og-fonts'
+import { withEdgeCache } from '@/lib/og-edge-cache'
 
 // 1080×1920 (9:16) STORY frame for any card. Instead of redesigning every card
 // for stories, this wraps an existing 4:5 card image (rendered by its own
@@ -17,8 +18,12 @@ const SANS = 'IBM Plex Sans'
 // demand, so it must always reflect current data. Caching bit us — satori's
 // card fetch (from the worker's colo) served a stale per-colo copy with the old
 // all-caps names even after the data was fixed.
+// Exception: the autopilot passes &k=<post stamp>. That URL is new per post,
+// so it IS cached: the poster's warm-up render serves Instagram's fetch, which
+// otherwise re-rendered frame + card cold (~8 s) and timed out (2207052,
+// switchcard story 28 Oct).
 export async function GET(req: Request) {
-  return render(req)
+  return new URL(req.url).searchParams.get('k') ? withEdgeCache(req, () => render(req)) : render(req)
 }
 
 async function render(req: Request): Promise<Response> {
@@ -31,7 +36,7 @@ async function render(req: Request): Promise<Response> {
   // force a fresh card render (bypass its per-colo edge cache) so names/data are current
   // card.toString() re-encodes what the query decoded (a space in &label=,
   // «+» in base64url payloads) — the raw src broke the shamecard signature
-  card.searchParams.set('_', String(Date.now()))
+  card.searchParams.set('_', new URL(req.url).searchParams.get('k') || String(Date.now()))
   const embedSrc = card.toString()
 
   // Render at 1× (1080×1920). Stories display ~1080px wide, and embedding +

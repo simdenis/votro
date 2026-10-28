@@ -34,6 +34,23 @@ export function passedParliament(law: Pick<LawStatus, 'presidential_status'>, st
   return Boolean(law.presidential_status) || stage?.stage === 'adoptat_final' || stage?.stage === 'la_ccr'
 }
 
+/** The law is dead, not just rejected by one chamber. A first-chamber
+ *  rejection still goes to the decisional chamber, which can adopt it
+ *  (L256/2026: Senat respins in June, Camera 205–29 in October, the card
+ *  said RESPINSĂ next to «Adoptată»). So: the registry's verdict when there is
+ *  one, otherwise the LATER chamber vote decides. */
+export function lawRejected(
+  law: Pick<LawStatus, 'presidential_status' | 'senate_outcome' | 'camera_outcome' | 'senate_vote_date' | 'camera_vote_date'>,
+  stage?: LawStage | null,
+): boolean {
+  if (stage?.stage === 'respins_definitiv') return true
+  if (passedParliament(law, stage)) return false
+  const votes = [[law.senate_vote_date, law.senate_outcome], [law.camera_vote_date, law.camera_outcome]]
+    .filter(([, o]) => o)
+    .sort((a, b) => (a[0] ?? '').localeCompare(b[0] ?? ''))
+  return votes.length > 0 && votes[votes.length - 1][1] === 'respins'
+}
+
 /** Chambers that adopted the law without a plenary vote (tacit, art. 75).
  *  The first chamber is tacit when the law moved on to the decisional one
  *  without a vote row; the decisional chamber only when the law passed. */

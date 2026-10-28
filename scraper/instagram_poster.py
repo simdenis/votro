@@ -247,11 +247,7 @@ def verify_token(cfg: Config) -> dict:
 
 
 def _create_container(cfg: Config, image_url: str, caption: str) -> str:
-    r = requests.post(
-        f"{GRAPH}/{cfg.version}/{cfg.ig_user_id}/media",
-        params={"image_url": image_url, "caption": caption, "access_token": cfg.token},
-        timeout=_TIMEOUT,
-    )
+    r = _create_media(cfg, {"image_url": image_url, "caption": caption})
     if not r.ok:
         raise RuntimeError(f"create container failed ({r.status_code}): {r.text}")
     return r.json()["id"]
@@ -296,6 +292,24 @@ def _publish(cfg: Config, creation_id: str) -> str:
     raise RuntimeError("publish failed after retries")
 
 
+# 2207052 «media could not be fetched»: IG gave up on a slow render. The
+# attempt itself warms the card (edge cache), so a retry usually succeeds.
+_FETCH_SUBCODES = {2207052}
+
+
+def _create_media(cfg: Config, params: dict) -> requests.Response:
+    for attempt in range(3):
+        r = requests.post(f"{GRAPH}/{cfg.version}/{cfg.ig_user_id}/media",
+                          params={**params, "access_token": cfg.token}, timeout=_TIMEOUT)
+        err = {} if r.ok else (r.json() if r.headers.get("content-type", "").startswith("application/json") else {}).get("error", {})
+        if attempt < 2 and err.get("error_subcode") in _FETCH_SUBCODES:
+            print(f"IG could not fetch the image, retry {attempt + 1}", file=sys.stderr)
+            time.sleep(15)
+            continue
+        return r
+    return r
+
+
 def is_native_story(url: str) -> bool:
     """9:16 renders that go up as-is; everything else is a 4:5 card for the story frame."""
     return "/api/og/story?" in url or "/api/og/votestory?" in url
@@ -311,7 +325,9 @@ def post_story(cfg: Config, image_url: str) -> str:
     # publish flow. Posting the bare card gave IG a 4:5 image (2026-10-07).
     if not is_native_story(image_url):
         inner = image_url
-        image_url = f"{cfg.site_url}/api/og/story?src={_quote(image_url, safe='')}"
+        # &k: a per-post stamp the route edge-caches on, so IG's fetch gets the
+        # frame we warm below instead of a cold ~8 s re-render (2207052)
+        image_url = f"{cfg.site_url}/api/og/story?src={_quote(image_url, safe='')}&k={int(time.time())}"
         # The frame embeds the card via a satori <img> fetch at render time. A
         # cold/slow inner render leaves a BLANK frame (46 KB, no card) — and the
         # story route is never cached, so IG's own fetch re-renders it. Warm the
@@ -326,11 +342,7 @@ def post_story(cfg: Config, image_url: str) -> str:
             time.sleep(5)
         else:
             raise RuntimeError("story frame renders blank — not publishing")
-    r = requests.post(
-        f"{GRAPH}/{cfg.version}/{cfg.ig_user_id}/media",
-        params={"media_type": "STORIES", "image_url": image_url, "access_token": cfg.token},
-        timeout=_TIMEOUT,
-    )
+    r = _create_media(cfg, {"media_type": "STORIES", "image_url": image_url})
     if not r.ok:
         raise RuntimeError(f"create story container failed ({r.status_code}): {r.text}")
     creation_id = r.json()["id"]
@@ -370,11 +382,7 @@ def post_image(cfg: Config, image_url: str, caption: str) -> str:
 
 
 def _create_child(cfg: Config, image_url: str) -> str:
-    r = requests.post(
-        f"{GRAPH}/{cfg.version}/{cfg.ig_user_id}/media",
-        params={"image_url": image_url, "is_carousel_item": "true", "access_token": cfg.token},
-        timeout=_TIMEOUT,
-    )
+    r = _create_media(cfg, {"image_url": image_url, "is_carousel_item": "true"})
     if not r.ok:
         raise RuntimeError(f"create child container failed ({r.status_code}): {r.text}")
     return r.json()["id"]

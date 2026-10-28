@@ -4,7 +4,7 @@ import type { SenatorCardData } from '@/components/cards/senator-card'
 import type { LawCardData, JourneyStep } from '@/components/cards/law-card'
 import { trueAbsent, type PoliticianStats, type LawStatus } from '@/lib/types'
 import { formatDate, capFirst } from '@/lib/utils'
-import { passedParliament, tacitChambers, type LawStage } from '@/lib/law-stage'
+import { lawRejected, passedParliament, tacitChambers, type LawStage } from '@/lib/law-stage'
 
 interface BreakdownRow { party_abbr: string; vote_choice: string; count: number }
 
@@ -133,8 +133,7 @@ export function mapLawToCard(
   // it never goes to the Senate (PHCD64/2026 showed ÎN DEZBATERE + Adoptată)
   const ownResolution = /^PH\s?CD/i.test(law.code ?? '')
   const senateDone = law.senate_outcome === 'adoptat' || passed || (ownResolution && cameraDone)
-  const rejected = law.senate_outcome === 'respins' || law.camera_outcome === 'respins'
-    || stage?.stage === 'respins_definitiv'
+  const rejected = lawRejected(law, stage)
 
   let statusLabel = 'ÎN DEZBATERE'
   let statusColor = '#171A1F'
