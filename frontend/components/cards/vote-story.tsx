@@ -60,7 +60,9 @@ export function VoteStory({ data }: { data: VoteStoryData }) {
       </div>
       <div style={{ fontFamily: F.display, fontSize: headlineSize(headline.length), lineHeight: 1.06, color: C.ink, marginTop: 26 }}>{headline}</div>
       {data.summary ? (
-        <div style={{ fontSize: 34, lineHeight: 1.36, color: C.slate, marginTop: 26 }}>{clip(data.summary, 260)}</div>
+        // never clipped (3 in 4 explainer summaries ran past the old 260-char
+        // cut); long ones step the font down instead
+        <div style={{ fontSize: data.summary.length > 340 ? 29 : data.summary.length > 260 ? 31 : 34, lineHeight: 1.36, color: C.slate, marginTop: 26 }}>{data.summary}</div>
       ) : null}
       <div style={{ display: 'flex', fontSize: T.small, lineHeight: 1.35, color: C.muted, marginTop: 22 }}>
         {data.summary ? data.lawCode : `${data.lawCode} · ${clip(data.lawTitle, 110)}`}

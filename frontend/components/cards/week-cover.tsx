@@ -1,4 +1,4 @@
-import { C, F, T, CardHeader, CardFooter, clip } from './kit'
+import { C, F, T, CardHeader, CardFooter } from './kit'
 
 // Cover of a multi-law carousel. v2 lists what is inside — every law's headline
 // in slide order — so the post is understood from the cover alone and the
@@ -44,12 +44,29 @@ const COPY = {
   respinse: { kicker: 'Săptămâna aceasta', title: 'Respinse definitiv de Parlament', one: 'lege respinsă', many: 'legi respinse' },
 }
 
+// Headlines are never clipped (user, 30 Oct: «make sure they're not
+// chopped»); the row font shrinks until every headline fits whole. Satori has
+// no text measuring, so lines are estimated: Plex Sans measured ~0.45 em per
+// character on these covers; 0.5 leaves slack for word wrap.
+const ROWS_HEIGHT = 800          // px left for the list under the title block
+const TEXT_W = 952 - 62          // card width minus padding, minus the slide-number column
+const TAG_W = 170                // «trimisă la CCR» tag + gap, mixed President covers only
+function fitRowSize(headlines: string[], mixed: boolean, moreRow: boolean): number {
+  const width = TEXT_W - (mixed ? TAG_W : 0)
+  for (const size of [32, 30, 28, 26, 24, 22]) {
+    const perLine = Math.floor(width / (size * 0.5))
+    const lines = headlines.reduce((n, h) => n + Math.max(1, Math.ceil(h.length / perLine)), 0)
+    const height = lines * size * 1.25 + headlines.length * 29 + (moreRow ? size * 1.25 + 15 : 0)
+    if (height <= ROWS_HEIGHT) return size
+  }
+  return 20
+}
+
 export function WeekCoverCard({ data }: { data: WeekCoverCardData }) {
   const k = COPY[data.kind]
   const shown = data.items.slice(0, 9)
   const n = Math.max(data.count ?? 0, data.items.length)
   const more = n - shown.length
-  const rowSize = shown.length > 7 ? 28 : 32
   const pres = data.kind === 'presedinte'
   const statuses = data.items.map(it => it.presidential)
   const kinds = PRES_ORDER.filter(st => statuses.includes(st))
@@ -60,6 +77,7 @@ export function WeekCoverCard({ data }: { data: WeekCoverCardData }) {
     const c = statuses.filter(x => x === st).length
     return `${c} ${c === 1 ? PRES[st].one : PRES[st].many}`
   }).join(' · ')
+  const rowSize = fitRowSize(shown.map(it => it.headline), mixed, more > 0)
 
   return (
     <div style={{ width: 1080, height: 1350, display: 'flex', flexDirection: 'column', background: C.bg, color: C.ink, fontFamily: F.sans }}>
@@ -81,9 +99,9 @@ export function WeekCoverCard({ data }: { data: WeekCoverCardData }) {
             <div key={it.code} style={{ display: 'flex', alignItems: 'baseline', gap: 22, padding: '14px 0', borderTopWidth: 1, borderTopStyle: 'solid', borderTopColor: C.hair }}>
               {/* the slide this law is on — the cover is slide 1 */}
               <div style={{ display: 'flex', width: 40, flexShrink: 0, fontFamily: F.mono, fontSize: T.small, color: C.muted }}>{`${i + 2}`}</div>
-              <div style={{ display: 'flex', flex: 1, fontSize: rowSize, lineHeight: 1.25, color: C.ink }}>{clip(it.headline, mixed ? (shown.length > 5 ? 46 : 90) : 58)}</div>
+              <div style={{ display: 'flex', flex: 1, fontSize: rowSize, lineHeight: 1.25, color: C.ink }}>{it.headline}</div>
               {mixed && it.presidential && PRES[it.presidential] ? (
-                <div style={{ display: 'flex', flexShrink: 0, fontFamily: F.mono, fontSize: T.small, color: it.presidential === 'promulgat' ? C.forDark : C.againstDark }}>{PRES[it.presidential].one}</div>
+                <div style={{ display: 'flex', flexShrink: 0, fontFamily: F.mono, fontSize: Math.min(T.small, rowSize - 2), color: it.presidential === 'promulgat' ? C.forDark : C.againstDark }}>{PRES[it.presidential].one}</div>
               ) : null}
             </div>
           ))}
