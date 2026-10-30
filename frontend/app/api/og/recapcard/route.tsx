@@ -31,7 +31,7 @@ async function render(request: Request): Promise<Response> {
   const k = sp.get('kind') ?? 'votate'
   const kind = k === 'parlament' || k === 'presedinte' ? 'parlament' : 'votate'
   const KICKER: Record<string, string> = {
-    votate: 'Săptămâna trecută', parlament: 'Trecute de Parlament', presedinte: 'Decizia Președintelui', respinse: 'Respinse definitiv',
+    votate: 'Săptămâna trecută', parlament: 'Trecute de Parlament', presedinte: 'Cotroceni', respinse: 'Respinse definitiv',
   }
   const pos = (sp.get('pos') ?? '').replace(/[^0-9/]/g, '').replace('/', ' / ')
 

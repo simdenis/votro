@@ -50,11 +50,11 @@ async function render(req: Request): Promise<Response> {
   // so a carousel is understood from slide 1. Without ids: the classic cover.
   const ids = (sp.get('ids') ?? '').split(',').filter(isUuid).slice(0, 12)
   if (ids.length) {
-    const rows = ((await fetch(`${U}/rest/v1/laws?id=in.(${ids.join(',')})&select=id,code,headline,title,explainer`, { headers: SB })
-      .then(r => r.json()).catch(() => [])) ?? []) as { id: string; code: string; headline: string | null; title: string; explainer: { titlu?: string } | null }[]
+    const rows = ((await fetch(`${U}/rest/v1/laws?id=in.(${ids.join(',')})&select=id,code,headline,title,explainer,presidential_status`, { headers: SB })
+      .then(r => r.json()).catch(() => [])) ?? []) as { id: string; code: string; headline: string | null; title: string; explainer: { titlu?: string } | null; presidential_status: string | null }[]
     const byId = new Map(rows.map(r => [r.id, r]))
     const items = ids.map(i => byId.get(i)).filter((r): r is NonNullable<typeof r> => Boolean(r))
-      .map(r => ({ code: r.code, headline: r.explainer?.titlu ?? r.headline ?? r.title }))
+      .map(r => ({ code: r.code, headline: r.explainer?.titlu ?? r.headline ?? r.title, presidential: r.presidential_status }))
     const v2Range = `${from.getDate()} ${RO_MONTHS[from.getMonth()]} – ${to.getDate()} ${RO_MONTHS[to.getMonth()]} ${to.getFullYear()}`
     const fonts = await getCardFonts()
     return new ImageResponse(

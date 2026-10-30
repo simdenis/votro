@@ -481,6 +481,22 @@ def do_parliament_today(cfg, db, day, dry, rows):
                               lambda l: f"• {law_line(l)} ({l['code']})")
 
 
+# What the President did, said plainly (not «Ce a decis Președintele», user
+# 30 Oct). Mirrors presidentTitle() in frontend/components/cards/week-cover.tsx.
+_PRES = {"promulgat": ("a promulgat", "Promulgate de Președinte"),
+         "retrimis": ("a retrimis", "Retrimise Parlamentului de Președinte"),
+         "sesizat_ccr": ("a trimis la CCR", "Trimise de Președinte la CCR")}
+
+
+def president_header(laws: list[dict]) -> str:
+    kinds = [k for k in _PRES if any(l.get("presidential_status") == k for l in laws)]
+    if len(kinds) == 1:
+        return _PRES[kinds[0]][1]
+    verbs = [f"ce {_PRES[k][0]}" for k in kinds]
+    said = " și ".join(verbs) if len(verbs) == 2 else ", ".join(verbs[:-1]) + " și " + verbs[-1]
+    return said[0].upper() + said[1:] + " Președintele"
+
+
 def do_president_today(cfg, db, day, dry, rows):
     """The President's decisions of the last 3 days (promulgated / returned / sent to the CCR), not posted yet."""
     d = dt.date.fromisoformat(day)
@@ -492,7 +508,7 @@ def do_president_today(cfg, db, day, dry, rows):
         return []
     word = {"promulgat": "promulgată", "retrimis": "retrimisă Parlamentului", "sesizat_ccr": "trimisă la CCR"}
     return post_law_carousels(cfg, db, day, dry, "president-today", laws, "presedinte",
-                              "Ce a decis Președintele",
+                              president_header(laws),
                               "O lege promulgată intră în vigoare după publicarea în Monitorul Oficial. Fiecare e explicată pe la-butoane.ro, link în bio.",
                               lambda l: f"• {law_line(l)} ({l['code']}, {word[l['presidential_status']]})")
 
