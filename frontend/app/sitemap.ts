@@ -38,6 +38,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${base}/voturi`, changeFrequency: 'daily', priority: 0.9 },
     { url: `${base}/legi`, changeFrequency: 'daily', priority: 0.9 },
     { url: `${base}/tacite`, changeFrequency: 'daily', priority: 0.7 },
+    { url: `${base}/cine-propune`, changeFrequency: 'daily', priority: 0.6 },
+    { url: `${base}/cum-functioneaza`, changeFrequency: 'monthly', priority: 0.6 },
     { url: `${base}/initiative`, changeFrequency: 'daily', priority: 0.7 },
     { url: `${base}/parlamentarul-tau`, changeFrequency: 'weekly', priority: 0.7 },
     { url: `${base}/senatori`, changeFrequency: 'weekly', priority: 0.8 },

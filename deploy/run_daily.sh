@@ -215,6 +215,8 @@ log "=== Government roles (gov.ro) ==="
 # (initiators_checked_at IS NULL), retried, name-matched to politicians.
 log "=== Law initiators (senat.ro fisa) ==="
 "$PY" scraper/initiator_scraper.py >>"$LOG" 2>&1 || { rc=1; log "Initiator scrape FAILED"; }
+# /cine-propune reads one precomputed row (scrape_meta.initiator_stats)
+"$PY" scraper/initiator_stats.py >>"$LOG" 2>&1 || log "WARN: initiator stats failed"
 
 # Bills with running tacit-adoption terms (cdep "Verificare termene legale").
 log "=== Tacit deadlines ==="
