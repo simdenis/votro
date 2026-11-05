@@ -163,31 +163,6 @@ export default async function Dashboard() {
             caută după nume, după partid <span className="text-muted">(ex. „PSD")</span> sau după codul legii <span className="text-muted">(ex. „L230/2025")</span>
           </p>
         </form>
-
-        {/* Guided start — one primary path, lighter secondary options beneath, so
-            the homepage isn't equal-weight everywhere. */}
-        <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2.5">
-          <Link
-            href="/deputati"
-            className="btn-tactile inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-[14px] font-semibold text-white"
-            style={{ background: 'var(--sidebar-bg)' }}
-          >
-            Începe de la deputați →
-          </Link>
-          <span className="text-[13px] text-faint">sau explorează</span>
-          <nav className="flex flex-wrap gap-x-4 gap-y-1 text-[13.5px]">
-            {[
-              { href: '/legi', label: 'Legi' },
-              { href: '/voturi', label: 'Voturi recente' },
-              { href: '/parlamentarul-tau', label: 'Parlamentarul tău' },
-              { href: '/analize', label: 'Analize' },
-            ].map(l => (
-              <Link key={l.href} href={l.href} className="text-muted underline decoration-rim underline-offset-2 hover:text-foreground transition-colors">
-                {l.label}
-              </Link>
-            ))}
-          </nav>
-        </div>
         </div>
 
         {parliamentParties.length > 0 && (
