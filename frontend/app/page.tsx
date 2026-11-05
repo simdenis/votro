@@ -8,7 +8,6 @@ import { daysLeft } from '@/components/deadline-badge'
 import { ParliamentDonut } from '@/components/parliament-donut'
 import { CountyMap } from '@/components/county-map'
 import { NewsletterForm } from '@/components/newsletter-form'
-import { ApiBuilder } from '@/components/api-builder'
 
 // ISR: CDN-cache the homepage for 10 min instead of rendering from origin on
 // every hit — votes change daily at most, so freshness is unaffected while
@@ -121,18 +120,12 @@ export default async function Dashboard() {
       <header className="mb-9">
        <div className="flex flex-col lg:flex-row lg:items-start lg:gap-10">
         <div className="min-w-0 flex-1">
-        <p className="text-[11px] uppercase tracking-[0.18em] text-faint mb-2.5">
-          Parlamentul României · Legislatura 2024–2028
-        </p>
         <h1 className="font-serif text-[42px] font-normal tracking-[-0.01em] leading-[1.04] text-foreground">
           Cum votează Parlamentul?
         </h1>
-        {/* Above-the-fold clarity: what the site is, who it's for, why trust it —
-            one neutral sentence, no scroll required. */}
+        {/* One line above the fold; sources and neutrality live on /despre */}
         <p className="text-[15px] text-muted leading-relaxed mt-3.5 max-w-2xl">
-          Urmărește cum votează fiecare senator și deputat: legi, prezență la vot și devieri de la
-          linia de partid. Date din surse oficiale (senat.ro, cdep.ro), actualizate zilnic,
-          gratuit și neafiliat politic.
+          Cum votează fiecare senator și deputat. Date oficiale, actualizate zilnic.
         </p>
 
         {/* Search-anything: many visitors arrive wanting one person or one law.
@@ -159,9 +152,6 @@ export default async function Dashboard() {
               Caută
             </button>
           </div>
-          <p className="text-[11.5px] text-faint mt-1.5">
-            caută după nume, după partid <span className="text-muted">(ex. „PSD")</span> sau după codul legii <span className="text-muted">(ex. „L230/2025")</span>
-          </p>
         </form>
         </div>
 
@@ -224,14 +214,14 @@ export default async function Dashboard() {
                 Dacă prima cameră nu le dezbate în termenul din Constituție (art. 75), se consideră
                 adoptate automat, fără ca cineva să voteze{recess ? '. Termenele curg și în vacanță' : ''}.
               </p>
-              <div className="space-y-2">
+              <div className="divide-y divide-rim">
                 {tacitBills.map(b => {
                   const days = b.tacit_deadline ? daysLeft(b.tacit_deadline) : null
                   return (
                     <Link
                       key={b.id}
                       href={`/tacite/${lawSlug(b.code)}`}
-                      className="flex items-center justify-between gap-2 bg-surface border border-rim rounded-lg px-3 py-2.5 hover:bg-raised transition-colors"
+                      className="flex items-center justify-between gap-2 py-2.5 hover:bg-raised/60 transition-colors"
                     >
                       <span className="min-w-0">
                         <span className="block text-[13px] font-medium text-foreground line-clamp-2 leading-snug">{plainSummary(b.summary) || b.title || b.code}</span>
@@ -252,12 +242,12 @@ export default async function Dashboard() {
           <h2 className="font-serif text-[20px] font-normal text-foreground border-b-2 border-sidebar pb-[5px] mb-2">
             Legi promulgate recent
           </h2>
-          <div className="space-y-2">
+          <div className="divide-y divide-rim">
             {promLaws.map(l => (
               <Link
                 key={l.law_id}
                 href={`/legi/${lawSlug(l.code)}`}
-                className="block bg-surface border border-rim rounded-lg px-3 py-2.5 hover:bg-raised transition-colors"
+                className="block py-2.5 hover:bg-raised/60 transition-colors"
               >
                 {/* plain-language summary is the headline; official title/code below */}
                 <span className="block text-[13.5px] font-medium text-foreground leading-snug line-clamp-2">
@@ -286,12 +276,12 @@ export default async function Dashboard() {
                 Niciun vot final recent{recess ? `. Parlamentul e în vacanță până pe ${recess}.` : '.'}
               </p>
             ) : (
-              <div className="space-y-2">
+              <div className="divide-y divide-rim">
                 {recentVotes.map(v => (
                   <Link
                     key={v.id}
                     href={`/voturi/${v.id}`}
-                    className="block bg-surface border border-rim rounded-lg px-3 py-2.5 hover:bg-raised transition-colors"
+                    className="block py-2.5 hover:bg-raised/60 transition-colors"
                   >
                     {/* same pattern as the promulgated feed: plain-language
                         summary is the headline, official title only as fallback */}
@@ -311,7 +301,7 @@ export default async function Dashboard() {
 
         </section>
 
-        {/* Sidebar: find-your-MP map · top absences · open data · newsletter */}
+        {/* Sidebar: find-your-MP map · top absences (open data lives on /date, linked from the footer) */}
         <aside>
             {/* personal hook at the top of the sidebar — "find your MP"
                 converts a first-time visitor, an email form doesn't */}
@@ -346,15 +336,6 @@ export default async function Dashboard() {
               </>
             )}
 
-            {/* Ia datele — compact open-data builder, tucked under the absence
-                list; the full-width version used to live below the grid */}
-            <div className="mt-10">
-              <div className="flex items-baseline justify-between border-b-2 border-sidebar pb-[5px] mb-3">
-                <h2 className="font-serif text-[16px] font-normal text-foreground">Ia datele</h2>
-                <Link href="/date" className="text-[11px] text-muted hover:text-foreground transition-colors">API complet →</Link>
-              </div>
-              <ApiBuilder minimal />
-            </div>
           </aside>
       </div>
 
