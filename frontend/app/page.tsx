@@ -137,7 +137,7 @@ export default async function Dashboard() {
           {tacitBills.length > 0 && (
             <div className="mb-10">
               <div className="flex items-baseline justify-between border-b-2 border-respins/60 pb-[5px] mb-3">
-                <h2 className="font-serif text-[20px] font-normal text-foreground">Legi care pot trece fără vot</h2>
+                <h2 className="font-serif text-[20px] font-normal text-foreground">Legi care pot trece fără vot de prima cameră</h2>
                 <Link href="/tacite" className="text-[11px] text-muted hover:text-foreground transition-colors">Toate →</Link>
               </div>
               <div className="space-y-2">
