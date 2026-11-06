@@ -5,6 +5,7 @@ import { lawSlug, personSlug, plainSummary, todayRo, formatDate, recessUntil } f
 import { AbsenceTop } from '@/components/absence-top'
 import { daysLeft } from '@/components/deadline-badge'
 import { CountyMap } from '@/components/county-map'
+import { getCountyLeaders } from '@/lib/county-leaders'
 import { NewsletterForm } from '@/components/newsletter-form'
 
 // ISR: CDN-cache the homepage for 10 min instead of rendering from origin on
@@ -20,7 +21,7 @@ export default async function Dashboard() {
   // Romania's date, not UTC — after RO midnight (but before UTC midnight) the
   // UTC date is yesterday, which would keep just-expired tacit deadlines alive.
   const today = todayRo()
-  const [r2, r7, r8, r9, r10] = await Promise.all([
+  const [r2, r7, r8, r9, r10, leaders] = await Promise.all([
     // Recently promulgated laws — the "finished, now it's law" feed. More alive
     // than raw votes (which stop during recess) and reads in plain language.
     db.from('law_status')
@@ -46,6 +47,7 @@ export default async function Dashboard() {
     db.from('votes').select('vote_date')
       .eq('vote_type', 'vot final').not('law_id', 'is', null)
       .order('vote_date', { ascending: false }).limit(1),
+    getCountyLeaders(),
   ])
 
   type PromLaw = { law_id: string; code: string; title: string; summary: string | null; law_category: string | null; presidential_date: string | null }
@@ -215,7 +217,7 @@ export default async function Dashboard() {
             </div>
             <p className="text-[11px] text-faint mb-2">Apasă pe județul tău.</p>
             <div className="mb-10">
-              <CountyMap />
+              <CountyMap leaders={leaders} />
             </div>
 
             {/* Absențe — lowest plenary presence, split Senat / Cameră */}

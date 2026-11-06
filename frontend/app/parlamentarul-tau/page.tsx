@@ -4,6 +4,7 @@ import { getDB } from '@/lib/supabase'
 import { PartyBadge } from '@/components/party-badge'
 import { hasPartyLine , personSlug } from '@/lib/utils'
 import { CountyMap } from '@/components/county-map'
+import { getCountyLeaders } from '@/lib/county-leaders'
 import { ScrollIntoView } from '@/components/scroll-into-view'
 import type { PoliticianStats } from '@/lib/types'
 import { SectionNav, PARLAMENTARI_SECTIONS } from '@/components/section-nav'
@@ -72,13 +73,14 @@ export default async function ParlamentarulTauPage({
   const { judet } = await searchParams
   const db = getDB()
 
-  const [senRes, depRes] = await Promise.all([
+  const [senRes, depRes, leaders] = await Promise.all([
     judet
       ? db.from('senator_stats').select('*').eq('active', true).eq('county', judet).order('name')
       : Promise.resolve({ data: [] }),
     judet
       ? db.from('deputy_stats').select('*').eq('active', true).eq('county', judet).order('name')
       : Promise.resolve({ data: [] }),
+    getCountyLeaders(),
   ])
 
   const senators = (senRes.data as PoliticianStats[] | null) ?? []
@@ -98,7 +100,7 @@ export default async function ParlamentarulTauPage({
       </div>
 
       <div className="max-w-3xl">
-        <CountyMap selected={judet} />
+        <CountyMap selected={judet} leaders={leaders} />
         {judet && (
           <p className="text-center text-sm text-muted mt-4">
             Ai ales: <span className="font-semibold text-foreground">{judet}</span>
