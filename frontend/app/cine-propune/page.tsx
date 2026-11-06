@@ -82,7 +82,7 @@ export default async function CinePropunePage() {
               { title: 'Parlamentarii', total: parlTotal, out: parl },
             ].map(c => (
               <div key={c.title} className="bg-surface border border-rim rounded-xl p-5">
-                <div className="text-[11px] font-semibold uppercase tracking-widest text-muted">{c.title}</div>
+                <div className="text-[11px] font-semibold text-muted">{c.title}</div>
                 <div className="mt-2 flex items-baseline gap-2">
                   <span className="font-serif text-[40px] leading-none text-foreground">{pct(c.out.lege ?? 0, c.total)}%</span>
                   <span className="text-sm text-muted">au devenit lege</span>
@@ -103,7 +103,7 @@ export default async function CinePropunePage() {
                 </span>
               ))}
             </div>
-            <h2 className="text-sm font-semibold uppercase tracking-widest text-muted pt-2">Pe partide</h2>
+            <h2 className="text-sm font-semibold text-muted pt-2">Pe partide</h2>
             <ul className="divide-y divide-rim border-y border-rim">
               {parties.map(g => (
                 <li key={g.key}>
@@ -142,7 +142,7 @@ export default async function CinePropunePage() {
           </section>
 
           <section className="space-y-2 max-w-2xl text-[13px] text-muted leading-relaxed">
-            <h2 className="text-sm font-semibold uppercase tracking-widest text-muted">Cum citești cifrele</h2>
+            <h2 className="text-sm font-semibold text-muted">Cum citești cifrele</h2>
             <p>
               Un proiect semnat de parlamentari din mai multe partide apare la fiecare dintre ele, așa că
               rândurile partidelor nu se adună. «Doar de parlamentari» înseamnă că toți semnatarii identificați

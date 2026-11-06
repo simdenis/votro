@@ -144,7 +144,7 @@ export default async function VotesPage({
           )}
           <span className="text-muted">Pagina {page} din {totalPages}</span>
           {page < totalPages && (
-            <Link href={pageUrl(page + 1)} className="text-muted hover:text-foreground">Următor →</Link>
+            <Link href={pageUrl(page + 1)} className="text-muted hover:text-foreground">Următor</Link>
           )}
         </div>
       )}

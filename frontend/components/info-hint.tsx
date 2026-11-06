@@ -28,7 +28,7 @@ export function InfoHint({
         className="pointer-events-none invisible opacity-0 group-hover/ih:visible group-hover/ih:opacity-100 group-focus-within/ih:visible group-focus-within/ih:opacity-100 transition-opacity duration-150 absolute z-30 left-1/2 -translate-x-1/2 bottom-full mb-2 w-max max-w-[260px] rounded-lg border border-rim bg-surface shadow-lg px-3 py-2 text-left normal-case"
       >
         {title && (
-          <span className="block text-[10px] uppercase tracking-widest text-faint mb-1 whitespace-nowrap">{title}</span>
+          <span className="block text-[10px] text-faint mb-1 whitespace-nowrap">{title}</span>
         )}
         <span className="block text-xs text-muted leading-snug font-normal">{tip}</span>
       </span>

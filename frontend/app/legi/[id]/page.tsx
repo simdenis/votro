@@ -184,7 +184,7 @@ export default async function LawDetail({ params }: { params: Promise<{ id: stri
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1 mt-3 text-sm text-muted hover:text-foreground transition-colors"
           >
-            Citește expunerea de motive (PDF) →
+            Citește expunerea de motive (PDF)
           </a>
         )}
 
@@ -288,7 +288,7 @@ function ChamberSection({
     <div className={`rounded-xl border ${voteId ? borderColor : 'border-dashed border-rim'} overflow-hidden`}>
       {/* Chamber header */}
       <div className="flex items-center justify-between px-5 py-3 border-b border-rim bg-raised/50">
-        <span className="text-xs font-semibold uppercase tracking-widest text-muted">{chamber}</span>
+        <span className="text-xs font-semibold text-muted">{chamber}</span>
         {voteId
           ? <OutcomeBadge outcome={outcome} />
           : passed
@@ -318,7 +318,7 @@ function ChamberSection({
                   <div className="text-2xl font-extrabold tabular-nums leading-none" style={{ color }}>
                     {value ?? '—'}
                   </div>
-                  <div className="text-[10px] text-muted uppercase tracking-widest mt-1">{label}</div>
+                  <div className="text-[10px] text-muted mt-1">{label}</div>
                 </div>
               ))}
             </div>
@@ -359,7 +359,7 @@ function ChamberSection({
                 </div>
               </div>
               <div>
-                <p className="text-xs font-semibold uppercase tracking-widest text-muted mb-3">Poziție partide</p>
+                <p className="text-xs font-semibold text-muted mb-3">Poziție partide</p>
                 <PartyBreakdown rows={breakdown!} />
               </div>
             </div>
@@ -369,7 +369,7 @@ function ChamberSection({
             href={`/voturi/${voteId}`}
             className="inline-flex text-xs text-muted hover:text-foreground transition-colors"
           >
-            Vezi voturi individuale →
+            Vezi voturi individuale
           </Link>
         </div>
       )}

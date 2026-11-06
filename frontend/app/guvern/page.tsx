@@ -105,7 +105,7 @@ export default async function GuvernPage() {
         <section className="max-w-3xl space-y-4">
           <div className="flex items-baseline justify-between gap-3 border-b-2 border-sidebar pb-[5px]">
             <h2 className="font-serif text-[20px] font-normal text-foreground">Ce a propus Guvernul</h2>
-            <Link href="/cine-propune" className="text-[11px] text-muted hover:text-foreground transition-colors">Comparat cu partidele →</Link>
+            <Link href="/cine-propune" className="text-[11px] text-muted hover:text-foreground transition-colors">Comparat cu partidele</Link>
           </div>
           <div>
             <div className="flex items-baseline gap-2">
@@ -122,7 +122,7 @@ export default async function GuvernPage() {
             </div>
           </div>
           <div>
-            <h3 className="text-sm font-semibold uppercase tracking-widest text-muted mb-2">Cele mai recente</h3>
+            <h3 className="text-sm font-semibold text-muted mb-2">Cele mai recente</h3>
             <ul className="space-y-2">
               {gov.laws.slice(0, 10).map(l => (
                 <li key={l.id} className="flex items-baseline gap-3 text-[14px]">

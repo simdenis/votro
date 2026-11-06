@@ -178,7 +178,7 @@ export function PoliticianProfile({ stats, history, deviationRows, partyHistory,
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
         <div className="bg-surface border border-rim rounded-xl p-5">
-          <h2 className="text-xs font-semibold uppercase tracking-widest text-muted mb-4">
+          <h2 className="text-xs font-semibold text-muted mb-4">
             Comportament vot
             <span className="normal-case tracking-normal font-normal text-faint"> · din {denom} {countNoun(denom, 'vot de plen', 'voturi de plen')}</span>
           </h2>
@@ -206,7 +206,7 @@ export function PoliticianProfile({ stats, history, deviationRows, partyHistory,
         </div>
 
         <div className="bg-surface border border-rim rounded-xl p-5">
-          <h2 className="text-xs font-semibold uppercase tracking-widest text-muted mb-1">
+          <h2 className="text-xs font-semibold text-muted mb-1">
             Devieri de la linia de partid
           </h2>
           {noLine ? (

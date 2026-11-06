@@ -21,7 +21,7 @@ const STEPS = [
 ]
 
 function H2({ id, children }: { id: string; children: React.ReactNode }) {
-  return <h2 id={id} className="text-sm font-semibold uppercase tracking-widest text-muted scroll-mt-20">{children}</h2>
+  return <h2 id={id} className="text-sm font-semibold text-muted scroll-mt-20">{children}</h2>
 }
 function Art({ n }: { n: string }) {
   return <span className="text-muted whitespace-nowrap">{`(art. ${n})`}</span>

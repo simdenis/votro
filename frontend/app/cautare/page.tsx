@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 const LAW_LIMIT = 15   // rows shown
 const LAW_SCAN  = 1000 // rows ranked before cutting (PostgREST caps at 1000 anyway)
 
-/** Sortable rank for a law code: "L230/2026" → [2026, 230], "PHCD9/2026" →
+/** Sortable rank for a law code: "L230/2026" → [2026, 230], "PHCD9/2026"
  *  [2026, 9]. Newest year first, then highest number — i.e. most recent first.
  *  Codes that don't parse sort last rather than jumping to the top. */
 function codeRank(code: string | null): [number, number] {
@@ -118,7 +118,7 @@ export default async function SearchPage({
       {/* Politicians */}
       {politicians.length > 0 && (
         <section className="space-y-3">
-          <h2 className="text-xs font-semibold uppercase tracking-widest text-muted">
+          <h2 className="text-xs font-semibold text-muted">
             Parlamentari ({politicians.length})
           </h2>
           <div className="bg-surface border border-rim rounded-xl overflow-hidden divide-y divide-rim">
@@ -155,7 +155,7 @@ export default async function SearchPage({
       {/* Parties */}
       {parties.length > 0 && (
         <section className="space-y-3">
-          <h2 className="text-xs font-semibold uppercase tracking-widest text-muted">
+          <h2 className="text-xs font-semibold text-muted">
             Partide ({parties.length})
           </h2>
           <div className="bg-surface border border-rim rounded-xl overflow-hidden divide-y divide-rim">
@@ -179,7 +179,7 @@ export default async function SearchPage({
         <section className="space-y-3">
           {/* the list is capped at LAW_LIMIT rows — say so, or "Legi (15)" reads
               as "there are exactly 15", which for common words is badly wrong */}
-          <h2 className="text-xs font-semibold uppercase tracking-widest text-muted">
+          <h2 className="text-xs font-semibold text-muted">
             Legi ({lawTotal > laws.length ? `cele mai recente ${laws.length} din ${lawTotal}` : laws.length})
           </h2>
           <div className="bg-surface border border-rim rounded-xl overflow-hidden divide-y divide-rim">

@@ -48,7 +48,7 @@ export function PartyHistory({ history, currentParty }: Props) {
   const rendered = collapsed
   return (
     <div className="bg-surface border border-rim rounded-xl p-5">
-      <h2 className="text-xs font-semibold uppercase tracking-widest text-muted mb-5">
+      <h2 className="text-xs font-semibold text-muted mb-5">
         Parcurs politic
       </h2>
 

@@ -92,7 +92,7 @@ export default async function TacitBillPage({ params }: { params: Promise<{ id: 
         >
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <div>
-              <p className="text-[11px] uppercase tracking-widest text-muted font-semibold mb-1.5">
+              <p className="text-[11px] text-muted font-semibold mb-1.5">
                 {expired ? 'Termenul a expirat' : 'Devine lege fără vot pe'}
               </p>
               <p className="text-[20px] font-bold text-foreground">{formatDate(bill.tacit_deadline)}</p>
@@ -130,12 +130,12 @@ export default async function TacitBillPage({ params }: { params: Promise<{ id: 
       <div className="flex items-center gap-4 flex-wrap text-sm">
         {bill.source_url && (
           <a href={bill.source_url} target="_blank" rel="noopener noreferrer" className="text-info hover:underline">
-            Fișa oficială a proiectului (cdep.ro) →
+            Fișa oficială a proiectului (cdep.ro)
           </a>
         )}
         {bill.pdf_url && (
           <a href={bill.pdf_url} target="_blank" rel="noopener noreferrer" className="text-info hover:underline">
-            Textul proiectului (PDF) →
+            Textul proiectului (PDF)
           </a>
         )}
       </div>
@@ -144,7 +144,7 @@ export default async function TacitBillPage({ params }: { params: Promise<{ id: 
         Datele provin din lista oficială de termene a Camerei Deputaților, actualizată zilnic
         (ultima verificare: {formatDate(bill.scraped_at.slice(0, 10))}). Proiectele cu Senatul ca
         primă cameră nu au o listă publică echivalentă.{' '}
-        <Link href="/despre" className="underline underline-offset-2 hover:text-foreground">Cum funcționează adoptarea tacită →</Link>
+        <Link href="/despre" className="underline underline-offset-2 hover:text-foreground">Cum funcționează adoptarea tacită</Link>
       </p>
     </div>
   )

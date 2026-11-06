@@ -104,12 +104,12 @@ export default async function TacitePage() {
                       <span>{b.code} · Camera Deputaților</span>
                       {b.source_url && (
                         <a href={b.source_url} target="_blank" rel="noopener noreferrer" className="text-info hover:underline">
-                          sursa: fișa cdep.ro →
+                          sursa: fișa cdep.ro
                         </a>
                       )}
                       {b.pdf_url && (
                         <a href={b.pdf_url} target="_blank" rel="noopener noreferrer" className="text-info hover:underline">
-                          PDF proiect →
+                          PDF proiect
                         </a>
                       )}
                     </span>

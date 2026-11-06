@@ -27,7 +27,7 @@ export default function DatePage() {
       </div>
 
       <section className="space-y-3">
-        <h2 className="text-sm font-semibold uppercase tracking-widest text-muted">Constructor de interogări</h2>
+        <h2 className="text-sm font-semibold text-muted">Constructor de interogări</h2>
         <p className="text-sm text-foreground leading-relaxed">
           Alege ce vrei, completează câmpurile, și primești comanda gata de rulat — sau descarcă
           direct fișierul. Fără cont, fără cod.
@@ -36,7 +36,7 @@ export default function DatePage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-sm font-semibold uppercase tracking-widest text-muted">Acces rapid</h2>
+        <h2 className="text-sm font-semibold text-muted">Acces rapid</h2>
         <p className="text-sm text-foreground leading-relaxed">
           Endpoint-urile <code className="text-[12.5px] bg-raised px-1 rounded">/api/v1</code> sunt
           publice, fără cheie și memorate în cache — adaugă{' '}
@@ -65,7 +65,7 @@ curl "${SITE}/api/v1/laws?code=L230/2025"`}</Code>
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-sm font-semibold uppercase tracking-widest text-muted">Descărcare completă</h2>
+        <h2 className="text-sm font-semibold text-muted">Descărcare completă</h2>
         <p className="text-sm text-foreground leading-relaxed">
           Pentru analize pe tot setul, ia fișierul întreg — regenerat zilnic și servit din cache, deci
           nu apeși direct pe baza de date. Patru seturi:{' '}
@@ -82,7 +82,7 @@ curl "${SITE}/api/v1/export/legi"`}</Code>
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-sm font-semibold uppercase tracking-widest text-muted">Pentru jurnaliști</h2>
+        <h2 className="text-sm font-semibold text-muted">Pentru jurnaliști</h2>
         <p className="text-sm text-foreground leading-relaxed">
           Dacă lucrezi la un material și ai nevoie de un export anume, o verificare de metodologie
           sau context despre limitările datelor (adoptări tacite, absențe structurale ale

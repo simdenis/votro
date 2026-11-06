@@ -108,7 +108,7 @@ export function AbsenceTop({ senators, deputies }: { senators: Item[]; deputies:
             disabled={page === pages - 1}
             className="text-[11px] px-2 py-1 rounded-md border border-rim text-muted disabled:opacity-40 hover:text-foreground transition-colors"
           >
-            Următorii →
+            Următorii
           </button>
         </div>
       )}

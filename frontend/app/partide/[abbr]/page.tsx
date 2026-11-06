@@ -120,7 +120,7 @@ export default async function PartyPage({ params }: { params: Promise<{ abbr: st
         { label: 'Deputați',  members: deputies,  basePath: '/deputati' },
       ].map(({ label, members, basePath }) => (
         <div key={label}>
-          <h2 className="text-xs font-semibold uppercase tracking-widest text-muted mb-4">
+          <h2 className="text-xs font-semibold text-muted mb-4">
             {label} ({members?.length ?? 0})
           </h2>
           {!members?.length ? (
@@ -169,7 +169,7 @@ export default async function PartyPage({ params }: { params: Promise<{ abbr: st
       {/* Vote history — a "party position" only exists for real parties */}
       {!noLine && (
       <div>
-        <h2 className="text-xs font-semibold uppercase tracking-widest text-muted mb-4">
+        <h2 className="text-xs font-semibold text-muted mb-4">
           Poziție partid (ultimele 20 voturi) <InfoHint title="Poziție partid" tip={METRIC_TIPS.pozitie} />
         </h2>
         {!recentVotes?.length ? (

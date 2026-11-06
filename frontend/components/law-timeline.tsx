@@ -106,7 +106,7 @@ export function LawTimeline({ law }: { law: LawStatus }) {
 
   return (
     <div>
-      <h2 className="text-xs font-semibold uppercase tracking-widest text-muted mb-5">
+      <h2 className="text-xs font-semibold text-muted mb-5">
         Parcurs legislativ
       </h2>
       <div className="flex items-start gap-0">

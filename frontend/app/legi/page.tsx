@@ -311,7 +311,7 @@ export default async function LegiPage({
           )}
           <span className="text-muted">Pagina {page} din {totalPages}</span>
           {page < totalPages && (
-            <Link href={buildUrl({ page: page + 1 })} className="text-muted hover:text-foreground">Următor →</Link>
+            <Link href={buildUrl({ page: page + 1 })} className="text-muted hover:text-foreground">Următor</Link>
           )}
         </div>
       )}

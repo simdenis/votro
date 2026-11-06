@@ -270,7 +270,7 @@ export default async function InitiativePage({
                             rel="noopener noreferrer"
                             className="text-info hover:underline"
                           >
-                            fișa cdep.ro →
+                            fișa cdep.ro
                           </a>
                         )}
                         {r.senat_code && senatUrl(r.senat_code) && (
@@ -280,7 +280,7 @@ export default async function InitiativePage({
                             rel="noopener noreferrer"
                             className="text-info hover:underline"
                           >
-                            fișa senat.ro →
+                            fișa senat.ro
                           </a>
                         )}
                       </span>
@@ -310,7 +310,7 @@ export default async function InitiativePage({
                 href={`${buildUrl({})}${buildUrl({}).includes('?') ? '&' : '?'}tot=1`}
                 className="text-info hover:underline"
               >
-                Arată toate cele {filtered.length} inițiative →
+                Arată toate cele {filtered.length} inițiative
               </Link>
               <span className="text-muted"> (primele {CAP} afișate, cele mai vechi întâi)</span>
             </p>
@@ -331,7 +331,7 @@ export default async function InitiativePage({
         Oficial — până la votul final, regulile se aplică oricum; în discuție e doar confirmarea
         sau infirmarea lor de către Parlament.{' '}
         <Link href="/despre#metodologie-initiative" className="text-info hover:underline">
-          Metodologia completă →
+          Metodologia completă
         </Link>
       </p>
     </div>

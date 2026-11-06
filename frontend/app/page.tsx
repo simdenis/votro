@@ -112,9 +112,9 @@ export default async function Dashboard() {
         </div>
 
         {/* Newsletter in the hero's right column, where the Senate donut was */}
-        <div className="lg:w-[300px] lg:flex-shrink-0 mt-8 lg:mt-9 rounded-xl border border-rim bg-raised/60 p-4">
-          <h2 className="font-serif text-[16px] font-normal text-foreground">Parlamentul, pe email</h2>
-          <p className="text-[12px] text-muted mt-1 mb-3">
+        <div className="lg:w-[300px] lg:flex-shrink-0 mt-8 lg:mt-9">
+          <h2 className="font-serif text-[16px] font-normal text-foreground border-b-2 border-sidebar pb-[5px]">Parlamentul, pe email</h2>
+          <p className="text-[12px] text-muted mt-2 mb-3">
             Un rezumat scurt al voturilor, direct în inbox.{' '}
             <a href="/newsletter-exemplu" target="_blank" rel="noopener" className="underline decoration-rim underline-offset-2 hover:text-foreground">
               Vezi un exemplu
@@ -149,7 +149,7 @@ export default async function Dashboard() {
             <div className="mb-10">
               <div className="flex items-baseline justify-between border-b-2 border-respins/60 pb-[5px]">
                 <h2 className="font-serif text-[20px] font-normal text-foreground">Legi care pot trece fără vot de prima cameră</h2>
-                <Link href="/tacite" className="text-[11px] text-muted hover:text-foreground transition-colors">Toate →</Link>
+                <Link href="/tacite" className="text-[11px] text-muted hover:text-foreground transition-colors">Toate</Link>
               </div>
               <div>
                 {tacitBills.map(b => {
@@ -198,7 +198,7 @@ export default async function Dashboard() {
             ))}
           </div>
           <Link href="/legi?tab=promulgate" className="inline-block mt-5 text-[13px] text-muted hover:text-foreground transition-colors">
-            Toate legile →
+            Toate legile
           </Link>
 
         </section>
@@ -210,7 +210,7 @@ export default async function Dashboard() {
             <div className="flex items-baseline justify-between border-b-2 border-sidebar pb-[5px] mb-3">
               <h2 className="font-serif text-[16px] font-normal text-foreground">Cine te reprezintă?</h2>
               <Link href="/parlamentarul-tau" className="text-[11px] text-muted hover:text-foreground transition-colors">
-                Toți parlamentarii →
+                Toți parlamentarii
               </Link>
             </div>
             <p className="text-[11px] text-faint mb-2">Apasă pe județul tău.</p>
@@ -224,7 +224,7 @@ export default async function Dashboard() {
                 {/* caveats live on the methodology page; the link stays as the one pointer */}
                 <div className="flex items-baseline justify-between border-b-2 border-respins/60 pb-[5px] mb-3">
                   <h2 className="font-serif text-[16px] font-normal text-foreground">Cine lipsește cel mai mult</h2>
-                  <Link href="/despre#metodologie-absente" className="text-[11px] text-muted hover:text-foreground transition-colors">Metodologie →</Link>
+                  <Link href="/despre#metodologie-absente" className="text-[11px] text-muted hover:text-foreground transition-colors">Metodologie</Link>
                 </div>
                 <AbsenceTop senators={absSenators} deputies={absDeputies} />
               </>

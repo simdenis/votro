@@ -27,7 +27,7 @@ export function HoverNames({
       {children}
       <span className="pointer-events-none invisible group-hover/hn:visible absolute z-30 left-1/2 -translate-x-1/2 bottom-full mb-2 w-max max-w-[320px] rounded-lg border border-rim bg-surface shadow-lg px-3.5 py-3 text-left">
         {title && (
-          <span className="block text-[10px] uppercase tracking-widest text-faint mb-2 whitespace-nowrap">
+          <span className="block text-[10px] text-faint mb-2 whitespace-nowrap">
             {title}
           </span>
         )}

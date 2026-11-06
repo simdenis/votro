@@ -82,7 +82,7 @@ export function ApiBuilder({ siteUrl = '', minimal = false }: { siteUrl?: string
     <div className="bg-surface border border-rim rounded-xl p-4 space-y-3.5">
       {/* what */}
       <label className="block">
-        <span className="text-[11px] uppercase tracking-widest text-muted font-semibold">Ce vrei?</span>
+        <span className="text-[11px] text-muted font-semibold">Ce vrei?</span>
         <select value={preset} onChange={e => setPreset(e.target.value as Preset)} className={`${inputCls} w-full mt-1.5`}>
           {PRESETS.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
         </select>
@@ -125,7 +125,7 @@ export function ApiBuilder({ siteUrl = '', minimal = false }: { siteUrl?: string
       {!minimal && (
         <div>
           <div className="flex items-center justify-between mb-1.5">
-            <span className="text-[11px] uppercase tracking-widest text-muted font-semibold">Comandă</span>
+            <span className="text-[11px] text-muted font-semibold">Comandă</span>
             <button onClick={copy} className={`px-1.5 py-0.5 text-[11px] font-semibold transition-colors ${copied ? 'text-adoptat' : 'text-faint hover:text-foreground'}`}>
               {copied ? 'Copiat ✓' : 'Copiază'}
             </button>
@@ -137,7 +137,7 @@ export function ApiBuilder({ siteUrl = '', minimal = false }: { siteUrl?: string
       {/* output variants — the nominal law query is a table (a row per
           parlamentar), so CSV leads there; JSON leads elsewhere */}
       <div>
-        <span className="text-[11px] uppercase tracking-widest text-muted font-semibold">Descarcă</span>
+        <span className="text-[11px] text-muted font-semibold">Descarcă</span>
         <div className="flex flex-wrap gap-2 mt-1.5">
           {(preset === 'law_votes' || preset === 'mp_votes' ? ['csv', 'json'] as const : ['json', 'csv'] as const).map((fmt, i) => (
             <button key={fmt} onClick={() => { setFormat(fmt); download(fmt) }} disabled={busy}

@@ -40,7 +40,7 @@ export function VoteHistory({ rows }: { rows: VoteHistoryRow[] }) {
   return (
     <div>
       <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
-        <h2 className="text-xs font-semibold uppercase tracking-widest text-muted">Activitate recentă</h2>
+        <h2 className="text-xs font-semibold text-muted">Activitate recentă</h2>
         {rows.length > 0 && (
           <div className="flex items-center gap-2 flex-wrap">
             {categories.length > 0 && (

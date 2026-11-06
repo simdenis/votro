@@ -41,7 +41,7 @@ export function AiSummary({
   return (
     <div className="bg-surface border border-rim rounded-xl p-5">
       <div className="flex items-center gap-2 mb-2 flex-wrap">
-        <p className="text-[11px] font-semibold uppercase tracking-widest text-muted">
+        <p className="text-[11px] font-semibold text-muted">
           {motivare ? 'Ce face proiectul' : 'Pe scurt'}
         </p>
         {isAi && (
@@ -64,7 +64,7 @@ export function AiSummary({
       <p className="text-[15px] text-foreground leading-relaxed">{text}</p>
       {motivare && (
         <>
-          <p className="text-[11px] font-semibold uppercase tracking-widest text-muted mt-4 mb-2">
+          <p className="text-[11px] font-semibold text-muted mt-4 mb-2">
             Motivarea inițiatorilor
           </p>
           {/* the sponsors' own case for the bill, quoted from the expunere de

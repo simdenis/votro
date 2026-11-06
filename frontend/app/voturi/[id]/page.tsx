@@ -217,7 +217,7 @@ export default async function VoteDetail({
                 <div className="text-2xl font-extrabold tabular-nums leading-none" style={{ color }}>
                   {value ?? '—'}
                 </div>
-                <div className="text-[10px] text-muted uppercase tracking-widest mt-1">{label}</div>
+                <div className="text-[10px] text-muted mt-1">{label}</div>
               </div>
             ))}
           </div>
@@ -245,7 +245,7 @@ export default async function VoteDetail({
               rel="noopener noreferrer"
               className="text-xs text-muted hover:text-foreground transition-colors whitespace-nowrap"
             >
-              Sursă oficială: {vote.chamber === 'deputies' ? 'cdep.ro' : 'senat.ro'} →
+              Sursă oficială: {vote.chamber === 'deputies' ? 'cdep.ro' : 'senat.ro'}
             </a>
           )}
         </div>
@@ -271,8 +271,8 @@ export default async function VoteDetail({
 
           {/* Seat arc */}
           <div className="xl:col-start-1">
-            <h2 className="text-xs font-semibold uppercase tracking-widest text-muted mb-3">
-              Distribuție în plen — {vote.present_count ?? '—'} {memberNoun(vote.present_count ?? 2)} prezenți
+            <h2 className="text-xs font-semibold text-muted mb-3">
+              Distribuție în plen · {vote.present_count ?? '—'} {memberNoun(vote.present_count ?? 2)} prezenți
             </h2>
             <div className="bg-surface border border-rim rounded-xl p-4 flex flex-col items-center">
               <SeatArc
@@ -309,7 +309,7 @@ export default async function VoteDetail({
         {/* Party stance cards — right column on xl, second on mobile */}
         {breakdownRows.length > 0 && (
           <div className="xl:col-start-2 xl:row-start-1 xl:row-span-2">
-            <h2 className="text-xs font-semibold uppercase tracking-widest text-muted mb-3">
+            <h2 className="text-xs font-semibold text-muted mb-3">
               Poziție partide
             </h2>
             <PartyBreakdown rows={breakdownRows} voters={voters} />
@@ -319,7 +319,7 @@ export default async function VoteDetail({
           {/* Individual senator votes */}
           {individualVotes.length > 0 && (
             <div className="xl:col-start-1">
-              <h2 className="text-xs font-semibold uppercase tracking-widest text-muted mb-3">
+              <h2 className="text-xs font-semibold text-muted mb-3">
                 Voturi individuale
               </h2>
               {deviatorCount > 0 && (

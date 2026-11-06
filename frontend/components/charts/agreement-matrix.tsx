@@ -64,7 +64,7 @@ export function AgreementMatrix({ parties, months, monthLabels, buckets, contest
       {/* time window */}
       <div className="flex flex-col gap-2 bg-surface border border-rim rounded-lg p-3.5 max-w-md">
         <div className="flex items-baseline justify-between">
-          <span className="text-[11px] uppercase tracking-widest text-muted font-semibold">Perioadă</span>
+          <span className="text-[11px] text-muted font-semibold">Perioadă</span>
           <span className="text-[12.5px] font-medium text-foreground tabular-nums">{windowLabel}</span>
         </div>
         <label className="flex items-center gap-2 text-[11px] text-faint">
