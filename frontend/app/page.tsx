@@ -147,18 +147,18 @@ export default async function Dashboard() {
               when the plenary is quiet. Kept above the promulgated/vote feeds. */}
           {tacitBills.length > 0 && (
             <div className="mb-10">
-              <div className="flex items-baseline justify-between border-b-2 border-respins/60 pb-[5px] mb-3">
+              <div className="flex items-baseline justify-between border-b-2 border-respins/60 pb-[5px]">
                 <h2 className="font-serif text-[20px] font-normal text-foreground">Legi care pot trece fără vot de prima cameră</h2>
                 <Link href="/tacite" className="text-[11px] text-muted hover:text-foreground transition-colors">Toate →</Link>
               </div>
-              <div className="space-y-2">
+              <div>
                 {tacitBills.map(b => {
                   const days = b.tacit_deadline ? daysLeft(b.tacit_deadline) : null
                   return (
                     <Link
                       key={b.id}
                       href={`/tacite/${lawSlug(b.code)}`}
-                      className="flex items-center justify-between gap-2 bg-surface border border-rim rounded-lg px-3 py-2.5 hover:bg-raised transition-colors"
+                      className="flex items-center justify-between gap-2 py-2.5 border-b border-rim hover:bg-raised/60 transition-colors"
                     >
                       <span className="min-w-0">
                         <span className="block text-[13px] font-medium text-foreground line-clamp-2 leading-snug">{plainSummary(b.summary) || b.title || b.code}</span>
@@ -176,15 +176,15 @@ export default async function Dashboard() {
             </div>
           )}
 
-          <h2 className="font-serif text-[20px] font-normal text-foreground border-b-2 border-sidebar pb-[5px] mb-2">
+          <h2 className="font-serif text-[20px] font-normal text-foreground border-b-2 border-sidebar pb-[5px]">
             Legi promulgate recent
           </h2>
-          <div className="space-y-2">
+          <div>
             {promLaws.map(l => (
               <Link
                 key={l.law_id}
                 href={`/legi/${lawSlug(l.code)}`}
-                className="block bg-surface border border-rim rounded-lg px-3 py-2.5 hover:bg-raised transition-colors"
+                className="block py-2.5 border-b border-rim hover:bg-raised/60 transition-colors"
               >
                 {/* plain-language summary is the headline; official title/code below */}
                 <span className="block text-[13.5px] font-medium text-foreground leading-snug line-clamp-2">
