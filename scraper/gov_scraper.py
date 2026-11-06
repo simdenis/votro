@@ -8,6 +8,9 @@ absence average, and explains their 100% absence on lists and profiles.
 Migration 022 seeded the labels by hand; this scraper keeps them current when
 the cabinet changes.
 
+It also writes the current cabinet (every member, MP or not, in gov.ro order)
+to scrape_meta.cabinet for the /guvern page, replaced whole on each good parse.
+
 Matching is token-based and order-free: gov.ro writes "Tánczos Barna"
 (Hungarian order) while the roster has first_name="Barna" name="TÁNCZOS", and
 "Oana-Clara Gheorghiu" (vicepremier, not an MP) must NOT match the deputy
@@ -20,7 +23,7 @@ gov_role and get a context_note naming the outgoing cabinet, which keeps their
 in-office absence out of every ranking. A broken parse (<10 members) never touches labels.
 
 gov.ro silently drops non-RO IPs (the EU VPS times out at TCP level — the
-inverse of cdep.ro's non-EU block). On unreachable it exits 0 with labels
+inverse of cdep.ro's non-EU block; a run from the Mac reached it on 6 Nov 2026). On unreachable it exits 0 with labels
 untouched, so the daily VPS run stays green; run it from a Romanian IP when
 the government changes.
 
@@ -67,9 +70,9 @@ def _role(function: str) -> str:
     return "ministru"
 
 
-def parse_cabinet(html: str) -> list[tuple[str, str]]:
-    """[(name, role), ...] — one entry per cabinet member, PM included."""
-    return [(name.strip(), _role(func)) for name, func in _MEMBER.findall(html)]
+def parse_cabinet(html: str) -> list[tuple[str, str, str]]:
+    """[(name, role, function), ...] — one entry per cabinet member, PM included, in gov.ro order."""
+    return [(name.strip(), _role(func), " ".join(func.split())) for name, func in _MEMBER.findall(html)]
 
 
 def main() -> None:
@@ -103,19 +106,28 @@ def main() -> None:
     db = create_client(url, key)
     pols = (
         db.table("politicians")
-        .select("id, name, first_name, chamber, gov_role, context_note")
+        .select("id, name, first_name, chamber, gov_role, context_note, parties(abbreviation)")
         .eq("active", True)
         .execute()
         .data
     )
 
     matched: dict[str, str] = {}  # politician id → role
-    for cab_name, role in cabinet:
+    members: list[dict] = []  # the current cabinet as /guvern shows it
+    for cab_name, role, function in cabinet:
         cab_tokens = _tokens(cab_name)
         hits = [
             p for p in pols
             if _tokens(p["name"]) <= cab_tokens and _tokens(p["first_name"]) & cab_tokens
         ]
+        mp = hits[0] if len(hits) == 1 else None
+        members.append({
+            "name": cab_name, "role": role, "function": function,
+            "politician_id": mp["id"] if mp else None,
+            "first_name": mp["first_name"] if mp else None, "last_name": mp["name"] if mp else None,
+            "chamber": mp["chamber"] if mp else None,
+            "party": ((mp.get("parties") or {}).get("abbreviation")) if mp else None,
+        })
         if len(hits) > 1:
             log.warning("%s: ambiguous — matches %d MPs, skipping", cab_name, len(hits))
             continue
@@ -125,6 +137,20 @@ def main() -> None:
                      hits[0]["first_name"], hits[0]["name"], hits[0]["chamber"])
         else:
             log.info("%s (%s) → not an MP", cab_name, role)
+
+    # The current cabinet for /guvern, one JSON row in scrape_meta. Unlike gov_role
+    # (add-only, "served this legislature") this is replaced whole on every
+    # successful parse. Party only for MPs: gov.ro lists none, and we don't guess.
+    if not args.dry_run:
+        import datetime as dt
+        import json
+        now = dt.datetime.now(dt.timezone.utc).isoformat()
+        db.table("scrape_meta").upsert({
+            "key": "cabinet",
+            "value": json.dumps({"source": CABINET_URL, "fetched_at": now, "members": members}, ensure_ascii=False),
+            "updated_at": now,
+        }, on_conflict="key").execute()
+        log.info("cabinet written: %d members", len(members))
 
     # Add-only: gov_role means "served in Government during this legislature",
     # not "currently in cabinet". An ex-minister's plenary absence while in
