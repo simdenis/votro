@@ -63,7 +63,7 @@ export function AbsenceTop({ senators, deputies }: { senators: Item[]; deputies:
             <span className="flex items-center gap-1.5 text-[12.5px] font-medium text-foreground min-w-0">
               <span className="text-[10px] text-faint tabular-nums w-4 flex-shrink-0">{page * PAGE + i + 1}.</span>
               <span
-                className="text-[9px] uppercase font-bold px-1 py-px rounded flex-shrink-0"
+                className="text-[9px] uppercase font-bold px-1 py-px rounded-[2px] flex-shrink-0"
                 style={{ backgroundColor: s.party_color || '#9e9e9e', color: textOnColor(s.party_color || '#9e9e9e') }}
               >
                 {s.party_abbr}

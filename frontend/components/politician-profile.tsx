@@ -67,9 +67,8 @@ export function PoliticianProfile({ stats, history, deviationRows, partyHistory,
       {/* ── Header card ─────────────────────────────────── */}
       <div
         className="border-t border-rim py-4 flex items-center gap-4"
-        style={{ borderLeftWidth: 4, borderLeftColor: stats.party_color }}
       >
-        <div className="w-12 h-12 rounded-[4px] bg-raised flex items-center justify-center text-base font-extrabold text-muted flex-shrink-0 select-none">
+        <div className="w-12 h-12 rounded-[2px] bg-raised flex items-center justify-center text-base font-extrabold text-muted flex-shrink-0 select-none">
           {stats.first_name?.[0]}{stats.name?.[0]}
         </div>
 

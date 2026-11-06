@@ -167,7 +167,7 @@ export default async function VoteDetail({
     <div className="space-y-6">
 
       {/* ── Outcome hero banner ─────────────────────────── */}
-      <div className="bg-surface" style={{ borderLeft: `3px solid ${heroColor}`, paddingLeft: 16 }}>
+      <div className="bg-surface">
         {/* Breadcrumb */}
         <div className="flex items-center gap-1.5 text-xs text-muted mb-3">
           <Link href="/voturi" className="hover:text-foreground transition-colors">Voturi</Link>

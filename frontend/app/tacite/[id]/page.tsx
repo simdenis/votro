@@ -88,7 +88,6 @@ export default async function TacitBillPage({ params }: { params: Promise<{ id: 
       {bill.tacit_deadline && (
         <div
           className="border-t border-rim py-5"
-          style={{ borderLeftWidth: 4, borderLeftColor: expired ? 'var(--rim)' : d != null && d <= 10 ? 'var(--color-against)' : 'var(--sidebar-bg)' }}
         >
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <div>
