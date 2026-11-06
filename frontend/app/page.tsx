@@ -111,6 +111,17 @@ export default async function Dashboard() {
         </form>
         </div>
 
+        {/* Newsletter in the hero's right column, where the Senate donut was */}
+        <div className="lg:w-[300px] lg:flex-shrink-0 mt-8 lg:mt-9 rounded-xl border border-rim bg-raised/60 p-4">
+          <h2 className="font-serif text-[16px] font-normal text-foreground">Parlamentul, pe email</h2>
+          <p className="text-[12px] text-muted mt-1 mb-3">
+            Un rezumat scurt al voturilor, direct în inbox.{' '}
+            <a href="/newsletter-exemplu" target="_blank" rel="noopener" className="underline decoration-rim underline-offset-2 hover:text-foreground">
+              Vezi un exemplu
+            </a>
+          </p>
+          <NewsletterForm compact />
+        </div>
        </div>
       </header>
 
@@ -221,20 +232,6 @@ export default async function Dashboard() {
 
           </aside>
       </div>
-
-      {/* ── Newsletter ───────────────────────────────────── */}
-      <section className="mt-14 border-t-2 border-sidebar pt-8">
-        <h2 className="font-serif text-[20px] font-normal text-foreground mb-1.5">Parlamentul, pe email</h2>
-        <p className="text-[13px] text-muted mb-4 max-w-2xl">
-          Un rezumat scurt al voturilor, direct în inbox.{' '}
-          <a href="/newsletter-exemplu" target="_blank" rel="noopener" className="underline decoration-rim underline-offset-2 hover:text-foreground">
-            Vezi un exemplu →
-          </a>
-        </p>
-        <div className="max-w-md">
-          <NewsletterForm />
-        </div>
-      </section>
     </div>
   )
 }
