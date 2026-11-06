@@ -9,7 +9,7 @@ După fiecare trimitere, în `docs/outreach_targets.csv`: `status` = trimis, `la
 | Țintă | Canal | Cârligul |
 |---|---|---|
 | Edupedu.ro | răspuns în fir, M. Peticilă | follow-up: cronologia PL-x 464/2023 |
-| Consiliul Național al Elevilor | IG DM (+ email neverificat) | uniforma: cine a votat, ce urmează |
+| Consiliul Național al Elevilor | IG @consiliulelevilor sau email președinte | uniforma: cine a votat, ce urmează |
 | Funky Citizens | răspuns în fir, Ana Mocanu | follow-up: /cine-propune, Collab pe tacite |
 | Snoop.ro | redactia@snoop.ro | 11 schimbări de grup în octombrie |
 | Recorder | răspuns în fir, redactia@ | follow-up: legile justiției, L554 respinsă |
@@ -45,7 +45,7 @@ Denis
 
 ## 2. Consiliul Național al Elevilor
 
-**Canal:** IG DM către contul oficial CNE. Handle-ul nu l-am putut verifica automat: caută-l în aplicație și verifică bifa sau linkul de pe consiliulelevilor.ro. Emailul contact@consiliulelevilor.org apare doar în directoare de contacte, deci nu e verificat.
+**Canal:** IG DM către @consiliulelevilor (22K urmăritori; site-ul nu leagă contul, dar e singurul activ). Pe email: președintele, Mihnea-Adrian Haiduc, mihnea.haiduc@consiliulelevilor.ro (consiliulelevilor.ro/?page_id=6, verificat 6 noiembrie). Vechiul contact@consiliulelevilor.org nu e confirmat nicăieri.
 
 Salut,
 
@@ -243,3 +243,217 @@ Revin la mesajul din august cu ceva care se potrivește formatului vostru: https
 Dacă vreți să faceți un video pe una dintre ele, vă trimit datele.
 
 Denis
+
+---
+
+# Lotul 2: ținte noi (date verificate pe 6 noiembrie 2026)
+
+Adresele sunt de pe paginile de contact ale fiecăruia, verificate pe 6 noiembrie, dacă nu scrie altfel. Republica.ro nu are nicio adresă publică (pagina de contact e goală): le scrii pe Facebook sau sari peste ei. PHonline nu are email, doar formularul de pe phonline.ro/publicitate și pagina de Facebook.
+
+## 12. FSLI
+
+**Canal:** fsli@fsli.ro (fsli.ro/contact)
+**Subiect:** OUG 57/2023 pe salarizarea din învățământ, fără raport de trei ani
+
+Bună ziua,
+
+Sunt Denis, fac LaButoane (la-butoane.ro), site-ul cu voturile nominale din Parlament.
+
+Legea de aprobare a OUG 57/2023 (majorarea cu 1.300 de lei pentru personalul didactic, PL-x 464/2023) așteaptă la Camera Deputaților din iunie 2023. Termenul pentru raportul Comisiei pentru muncă era 14 septembrie 2023 și raportul nu e depus. De la 22 septembrie 2025 a fost pus de 39 de ori pe ordinea de zi a plenului, de 38 de ori «sub rezerva depunerii raportului».
+
+Tot la Cameră, patru propuneri de modificare a Legii 198/2023 au termen de adoptare tacită între 22 noiembrie și 4 decembrie: https://la-butoane.ro/tacite
+
+Vă pot trimite lunar stadiul inițiativelor pe salarizare și educație, cu link la fișa oficială pentru fiecare.
+
+Denis
+LaButoane · la-butoane.ro · @la.butoane
+
+---
+
+## 13. ANOSR
+
+**Canal:** office@anosr.ro (anosr.ro/contact; Instagram @anosr_ro)
+**Subiect:** Bursele pentru liceele tehnologice (L566/2026) așteaptă la Cameră
+
+Bună ziua,
+
+Sunt Denis, fac LaButoane (la-butoane.ro), site-ul cu voturile nominale din Parlament.
+
+L566/2026 introduce burse noi pentru elevii de la liceele tehnologice. Senatul a adoptat-o pe 16 septembrie cu 105 voturi pentru, niciunul împotrivă și o abținere. De pe 21 septembrie e la comisiile Camerei Deputaților, care decide.
+
+https://la-butoane.ro/legi/b9384671-0c42-40fb-a17a-279e6f27940d
+
+Pe pagina legii puteți cere un email automat când se mișcă ceva pe fișa ei. Dacă vă e util, vă scriu și eu în ziua în care Camera o pune pe ordinea de zi.
+
+Denis
+LaButoane · la-butoane.ro · @la.butoane
+
+---
+
+## 14. Context.ro
+
+**Canal:** contact@context.ro (din datele paginii context.ro; pagina de contact e doar formular)
+**Subiect:** Cine semnează legile și ce devine lege, ca date deschise
+
+Bună ziua,
+
+Sunt Denis, fac LaButoane (la-butoane.ro), site-ul cu voturile nominale din Parlament.
+
+Am legat fiecare proiect votat în plen de semnatarii lui. Din cele 957 de propuneri ale parlamentarilor, 170 au devenit lege. Din cele 360 de proiecte ale Guvernului, 246. Defalcarea pe partide: https://la-butoane.ro/cine-propune
+
+Din cei 19 membri ai Guvernului, 10 sunt deputați sau senatori: https://la-butoane.ro/guvern
+
+Toate datele se descarcă fără cont, în CSV sau JSON: https://la-butoane.ro/date. Dacă vă lipsește un câmp pentru o investigație, îl adăugăm.
+
+Denis
+LaButoane · la-butoane.ro · @la.butoane
+
+---
+
+## 15. PressOne
+
+**Canal:** contact@pressone.ro (pressone.ro/contact, «sugestii de materiale sau colaborări»)
+**Subiect:** Cum se face o lege, cu articolul din Constituție la fiecare pas
+
+Bună ziua,
+
+Sunt Denis, fac LaButoane (la-butoane.ro), site-ul cu voturile nominale din Parlament.
+
+Am scris drumul unei legi pas cu pas, cu articolul din Constituție la fiecare regulă: cine o propune, ce face fiecare cameră, când trece fără vot, ce poate face Președintele. https://la-butoane.ro/cum-functioneaza
+
+Un exemplu de acum: la Camera Deputaților, cinci proiecte au termen de adoptare tacită între 18 noiembrie și 4 decembrie. Dacă nu sunt votate până atunci, trec de Cameră fără vot. https://la-butoane.ro/tacite
+
+Dacă pregătiți un material explicativ, vă dau datele din spatele oricărei cifre.
+
+Denis
+LaButoane · la-butoane.ro · @la.butoane
+
+---
+
+## 16. Dela0
+
+**Canal:** vlad@dela0.ro (beta.dela0.ro/despre)
+**Subiect:** Ce s-a schimbat concret prin legile promulgate săptămâna asta
+
+Salut,
+
+Sunt Denis, fac LaButoane (la-butoane.ro), site-ul cu voturile nominale din Parlament.
+
+Pentru fiecare lege promulgată scriem ce se schimbă concret pentru oameni, din textul final al legii. Pe 3 noiembrie, de exemplu, s-a promulgat legea care lasă motocicletele să folosească benzile de autobuz: https://la-butoane.ro/legi?tab=promulgate
+
+Dacă vă ajută la explainere, vă pot trimite în fiecare luni legile promulgate săptămâna trecută, cu votul pe partide.
+
+Denis
+LaButoane · la-butoane.ro · @la.butoane
+
+---
+
+## 17. CeRe
+
+**Canal:** cere@cere.ong (cere.ong/contact)
+**Subiect:** O inițiativă cetățenească pe educație poate trece de Cameră fără vot pe 27 noiembrie
+
+Bună ziua,
+
+Sunt Denis, fac LaButoane (la-butoane.ro), site-ul cu voturile nominale din Parlament.
+
+BP593/2026 e o inițiativă cetățenească de modificare a Legii învățământului preuniversitar, care reduce numărul maxim de elevi pe clasă. Termenul ei de adoptare tacită la Camera Deputaților e 27 noiembrie. https://la-butoane.ro/tacite
+
+Pentru atelierele de participare avem și o pagină care explică drumul unei legi, cu articolul din Constituție la fiecare pas: https://la-butoane.ro/cum-functioneaza. E liberă de folosit, cu mențiunea sursei.
+
+Denis
+LaButoane · la-butoane.ro · @la.butoane
+
+---
+
+## 18. Declic
+
+**Canal:** contact@declic.ro (declic.ro/contact-asociatia-declic)
+**Subiect:** Votul nominal pentru orice lege, cu link direct
+
+> **De verificat înainte de trimitere:** termenul tacit pentru BP495/2026 (legea SRI) a fost 6 noiembrie. Vezi pe https://la-butoane.ro/tacite dacă a trecut fără vot sau a fost votat, și scrie fraza după ce arată pagina.
+
+Bună ziua,
+
+Sunt Denis, fac LaButoane (la-butoane.ro), site-ul cu voturile nominale din Parlament.
+
+Pentru campaniile voastre: fiecare lege are pe site o pagină cu votul fiecărui parlamentar, pe partide, cu link la votul oficial. Linkul se poate pune direct în petiție sau în emailul către semnatari.
+
+Un caz de acum: modificarea legii SRI (BP495/2026) avea termen de adoptare tacită la Cameră pe 6 noiembrie. [CE S-A ÎNTÂMPLAT, DUPĂ PAGINA DE MAI SUS]
+
+Dacă îmi spuneți ce legi urmăriți, vă scriu când se mișcă.
+
+Denis
+LaButoane · la-butoane.ro · @la.butoane
+
+---
+
+## 19. Corupția Ucide
+
+**Canal:** IG DM către @coruptia_ucide (15K urmăritori; nu e confirmat de un site oficial, iar @coruptiaucide și @coruptia.ucide sunt conturi aproape goale)
+
+> **De verificat înainte de trimitere:** 6 dintre schimbări sunt senatori trecuți la neafiliați în aceeași zi (26 octombrie), ca la Snoop.
+
+Salut,
+
+Sunt Denis de la @la.butoane, unde urmărim cum votează Parlamentul.
+
+În octombrie am înregistrat 11 schimbări de grup parlamentar, 3 deputați și 8 senatori, cu datele și votul fiecăruia înainte și după: https://la-butoane.ro/traseisti
+
+Cardurile noastre sunt libere de distribuit. Dacă vreți, vă trimit la începutul fiecărei luni lista lunii trecute.
+
+---
+
+## 20. Monitorul de Vaslui
+
+**Canal:** contact@monitoruldevaslui.ro (monitoruldevaslui.ro/contact)
+**Subiect:** Prezența la vot a parlamentarilor de Vaslui
+
+Bună ziua,
+
+Sunt Denis, fac LaButoane (la-butoane.ro), site-ul cu voturile nominale din Parlament.
+
+Pentru parlamentarii de Vaslui avem prezența la voturile din plen de la validarea mandatului. Fără membrii Guvernului, la Cameră procentele merg de la 45% la 88%, la Senat de la 85% la 98%. Lista, cu votul fiecăruia: https://la-butoane.ro/parlamentarul-tau?judet=Vaslui
+
+O absență nu înseamnă automat chiul (concediu medical, delegație). Metodologia e pe https://la-butoane.ro/despre#metodologie-absente. Vă pot trimite lunar cifrele pentru județ.
+
+Denis
+LaButoane · la-butoane.ro · @la.butoane
+
+---
+
+## 21. Ziarul Delta
+
+**Canal:** ziardelta@gmail.com (ziaruldelta.ro/contact)
+**Subiect:** Prezența la vot a parlamentarilor de Tulcea
+
+Bună ziua,
+
+Sunt Denis, fac LaButoane (la-butoane.ro), site-ul cu voturile nominale din Parlament.
+
+Avem prezența la voturile din plen de la validarea mandatului pentru parlamentarii de Tulcea. La Senat, Ionel Carp (neafiliat) are 57,8%, Ștefan Borțun (PNL) 73,6%. La Cameră, fără membrii Guvernului, procentele merg de la 66% la 93%. Lista, cu votul fiecăruia: https://la-butoane.ro/parlamentarul-tau?judet=Tulcea
+
+O absență nu înseamnă automat chiul (concediu medical, delegație). Metodologia: https://la-butoane.ro/despre#metodologie-absente
+
+Denis
+LaButoane · la-butoane.ro · @la.butoane
+
+---
+
+## 22. Știrile Transilvaniei
+
+**Canal:** newsroom@stiriletransilvaniei.eu, cu subiectul începând cu «Redacție» (stiriletransilvaniei.eu/contact)
+**Subiect:** Redacție: prezența la vot a parlamentarilor din Harghita și Cluj
+
+Bună ziua,
+
+Sunt Denis, fac LaButoane (la-butoane.ro), site-ul cu voturile nominale din Parlament.
+
+Avem prezența la voturile din plen de la validarea mandatului pentru fiecare parlamentar. În Harghita, senatorul István-Loránt Antal (UDMR) are 56,2%, iar la Cameră, fără membrii Guvernului, procentele merg de la 55% la 84%. În Cluj, deputații au între 70% și 90%.
+https://la-butoane.ro/parlamentarul-tau?judet=Harghita
+https://la-butoane.ro/parlamentarul-tau?judet=Cluj
+
+O absență nu înseamnă automat chiul (concediu medical, delegație). Metodologia: https://la-butoane.ro/despre#metodologie-absente
+
+Denis
+LaButoane · la-butoane.ro · @la.butoane
