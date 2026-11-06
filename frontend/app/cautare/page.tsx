@@ -121,7 +121,7 @@ export default async function SearchPage({
           <h2 className="text-xs font-semibold text-muted">
             Parlamentari ({politicians.length})
           </h2>
-          <div className="bg-surface border border-rim rounded-xl overflow-hidden divide-y divide-rim">
+          <div className="border-y border-rim overflow-hidden divide-y divide-rim">
             {politicians.map((p: any) => {
               const href = p.chamber === 'senate'
                 ? `/senatori/${personSlug(p.first_name, p.name)}`
@@ -158,7 +158,7 @@ export default async function SearchPage({
           <h2 className="text-xs font-semibold text-muted">
             Partide ({parties.length})
           </h2>
-          <div className="bg-surface border border-rim rounded-xl overflow-hidden divide-y divide-rim">
+          <div className="border-y border-rim overflow-hidden divide-y divide-rim">
             {parties.map((p: any) => (
               <Link
                 key={p.id}
@@ -182,7 +182,7 @@ export default async function SearchPage({
           <h2 className="text-xs font-semibold text-muted">
             Legi ({lawTotal > laws.length ? `cele mai recente ${laws.length} din ${lawTotal}` : laws.length})
           </h2>
-          <div className="bg-surface border border-rim rounded-xl overflow-hidden divide-y divide-rim">
+          <div className="border-y border-rim overflow-hidden divide-y divide-rim">
             {laws.map((l: any) => (
               <Link
                 key={l.id}

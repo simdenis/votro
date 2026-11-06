@@ -18,7 +18,7 @@ function fmt(d: string) {
 export function MandateEndedNote({ row }: { row: MandateRow | null }) {
   if (!row || row.active) return null
   return (
-    <div className="bg-surface border border-rim rounded-xl px-4 py-3 flex items-start gap-2.5 mb-6">
+    <div className="border-t border-rim py-3 flex items-start gap-2.5 mb-6">
       <span className="text-muted text-sm leading-none mt-0.5" aria-hidden>ⓘ</span>
       <p className="text-sm text-muted leading-relaxed">
         <span className="font-medium text-foreground">Mandat încheiat</span>

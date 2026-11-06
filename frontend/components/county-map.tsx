@@ -12,7 +12,7 @@ export function CountyMap({ selected }: { selected?: string }) {
 
   return (
     <div className="space-y-4">
-      <div className="bg-surface border border-rim rounded-2xl p-3 sm:p-5">
+      <div className="border-t border-rim py-3 sm:py-5">
         <svg
           viewBox={RO_MAP_VIEWBOX}
           className="w-full h-auto"

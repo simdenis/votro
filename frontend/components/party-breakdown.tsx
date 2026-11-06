@@ -63,7 +63,7 @@ export function PartyBreakdown({ rows, voters }: Props) {
           stance === 'for' ? 'var(--color-for)' : stance === 'against' ? 'var(--color-against)' : '#6666aa'
 
         return (
-          <div key={p.abbr} className="bg-surface border border-rim rounded-lg p-3">
+          <div key={p.abbr} className="border-t border-rim py-3">
             {/* Header row */}
             <div className="flex items-center justify-between mb-2">
               <PartyBadge abbreviation={p.abbr} color={p.color} />

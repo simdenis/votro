@@ -228,7 +228,7 @@ export default async function LawDetail({ params }: { params: Promise<{ id: stri
       </div>
 
       {/* Timeline */}
-      <div className="bg-surface border border-rim rounded-xl p-5">
+      <div className="border-t border-rim py-5">
         <LawTimeline law={law} />
       </div>
 
@@ -351,7 +351,7 @@ function ChamberSection({
                       : []),
                   ].map(({ color, label, value }) => (
                     <span key={label} className="flex items-center gap-1.5 text-xs text-muted">
-                      <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
+                      <span className="w-2 h-2 rounded-[2px] flex-shrink-0" style={{ backgroundColor: color }} />
                       {label}
                       <strong className="text-foreground tabular-nums">{value ?? '—'}</strong>
                     </span>

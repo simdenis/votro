@@ -35,7 +35,7 @@ export function HoverNames({
           {shown.map((p, i) => (
             <span key={i} className="flex items-center gap-1.5">
               <span
-                className="inline-block w-1.5 h-1.5 rounded-full flex-shrink-0"
+                className="inline-block w-1.5 h-1.5 rounded-[2px] flex-shrink-0"
                 style={{ backgroundColor: p.color ?? 'var(--muted)' }}
               />
               <span className="text-foreground">{p.name}</span>

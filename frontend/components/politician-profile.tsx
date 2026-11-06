@@ -66,10 +66,10 @@ export function PoliticianProfile({ stats, history, deviationRows, partyHistory,
 
       {/* ── Header card ─────────────────────────────────── */}
       <div
-        className="bg-surface border border-rim rounded-xl p-4 flex items-center gap-4"
+        className="border-t border-rim py-4 flex items-center gap-4"
         style={{ borderLeftWidth: 4, borderLeftColor: stats.party_color }}
       >
-        <div className="w-12 h-12 rounded-lg bg-raised border border-rim flex items-center justify-center text-base font-extrabold text-muted flex-shrink-0 select-none">
+        <div className="w-12 h-12 rounded-[4px] bg-raised flex items-center justify-center text-base font-extrabold text-muted flex-shrink-0 select-none">
           {stats.first_name?.[0]}{stats.name?.[0]}
         </div>
 
@@ -137,7 +137,7 @@ export function PoliticianProfile({ stats, history, deviationRows, partyHistory,
           concediu medical / delegație reads as truancy. Show the curator note
           when we have one, and always offer a contest path. */}
       {stats.context_note && (
-        <div className="bg-surface border border-rim rounded-xl px-4 py-3 flex items-start gap-2.5">
+        <div className="border-t border-rim py-3 flex items-start gap-2.5">
           <span className="text-muted text-sm leading-none mt-0.5" aria-hidden>ⓘ</span>
           <p className="text-sm text-muted leading-relaxed">
             <span className="font-medium text-foreground">Context absențe:</span> {stats.context_note}
@@ -177,7 +177,7 @@ export function PoliticianProfile({ stats, history, deviationRows, partyHistory,
       {/* ── Two-column analytics ────────────────────────── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-        <div className="bg-surface border border-rim rounded-xl p-5">
+        <div className="border-t border-rim py-5">
           <h2 className="text-xs font-semibold text-muted mb-4">
             Comportament vot
             <span className="normal-case tracking-normal font-normal text-faint"> · din {denom} {countNoun(denom, 'vot de plen', 'voturi de plen')}</span>
@@ -205,7 +205,7 @@ export function PoliticianProfile({ stats, history, deviationRows, partyHistory,
           </div>
         </div>
 
-        <div className="bg-surface border border-rim rounded-xl p-5">
+        <div className="border-t border-rim py-5">
           <h2 className="text-xs font-semibold text-muted mb-1">
             Devieri de la linia de partid
           </h2>

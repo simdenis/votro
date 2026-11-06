@@ -65,7 +65,7 @@ export function VoteHistory({ rows }: { rows: VoteHistoryRow[] }) {
         <p className="text-sm text-muted">Niciun vot pentru filtrul ales.</p>
       ) : (
         <>
-          <div className="bg-surface border border-rim rounded-xl overflow-hidden divide-y divide-rim">
+          <div className="border-y border-rim overflow-hidden divide-y divide-rim">
             {shown.map(row => (
               <Link
                 key={row.id}

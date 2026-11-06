@@ -6,7 +6,7 @@ export function Skeleton({ className, style }: { className?: string; style?: Rea
 
 export function StatsCardSkeleton() {
   return (
-    <div className="bg-surface border border-rim rounded-lg p-5 space-y-2">
+    <div className="border-t border-rim py-5 space-y-2">
       <Skeleton className="h-8 w-20" />
       <Skeleton className="h-4 w-32" />
     </div>

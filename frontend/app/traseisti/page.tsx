@@ -57,7 +57,7 @@ export default async function TraseistiPage() {
                       <Link
                         key={s.politician_id}
                         href={`${base}/${personSlug(s.first_name, s.name)}`}
-                        className="flex items-center gap-4 bg-surface border border-rim rounded-xl px-4 py-3 hover:bg-raised transition-colors"
+                        className="border-t border-rim flex items-center gap-4 py-3 transition-colors hover:bg-raised/60"
                       >
                         <span className="font-medium text-foreground min-w-0 flex-shrink-0 w-48 truncate">
                           {s.first_name} {s.name}

@@ -19,7 +19,7 @@ export function Feedback({
 
   const base = variant === 'button'
     ? 'inline-flex items-center gap-1.5 text-[13px] font-medium px-4 py-2 rounded-md border border-rim text-foreground hover:bg-surface transition-colors'
-    : 'inline-flex items-center gap-1 text-[12px] text-muted hover:text-foreground underline underline-offset-2 transition-colors'
+    : 'inline-flex items-center gap-1 text-[12px] text-muted hover:text-foreground transition-colors'
 
   // external Tally form opens in a new tab; a mailto should not
   const external = Boolean(FORM)
@@ -30,7 +30,7 @@ export function Feedback({
       {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
       className={`${base} ${className}`}
     >
-      <span aria-hidden>💡</span> {label}
+      {label}
     </a>
   )
 }

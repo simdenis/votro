@@ -81,7 +81,7 @@ export default async function CinePropunePage() {
               { title: 'Guvernul', total: gov?.total ?? 0, out: gov?.out ?? {} },
               { title: 'Parlamentarii', total: parlTotal, out: parl },
             ].map(c => (
-              <div key={c.title} className="bg-surface border border-rim rounded-xl p-5">
+              <div key={c.title} className="border-t border-rim py-5">
                 <div className="text-[11px] font-semibold text-muted">{c.title}</div>
                 <div className="mt-2 flex items-baseline gap-2">
                   <span className="font-serif text-[40px] leading-none text-foreground">{pct(c.out.lege ?? 0, c.total)}%</span>

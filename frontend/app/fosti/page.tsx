@@ -93,7 +93,7 @@ export default async function FostiPage() {
                       return (
                         <div
                           key={m.id}
-                          className="flex items-center gap-4 bg-surface border border-rim rounded-xl px-4 py-3"
+                          className="border-t border-rim flex items-center gap-4 py-3"
                         >
                           <Link
                             href={`${base}/${personSlug(m.first_name, m.name)}`}

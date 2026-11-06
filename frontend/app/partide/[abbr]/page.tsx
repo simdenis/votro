@@ -58,7 +58,7 @@ export default async function PartyPage({ params }: { params: Promise<{ abbr: st
     <div className="space-y-10">
       {/* Header */}
       <div
-        className="bg-surface border border-rim rounded-2xl shadow-sm p-5 flex items-center gap-5"
+        className="border-t border-rim py-5 flex items-center gap-5"
         style={{ borderLeftWidth: 6, borderLeftColor: cohesion.color }}
       >
         <div className="flex-1 min-w-0">

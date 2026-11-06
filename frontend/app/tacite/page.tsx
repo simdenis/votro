@@ -50,7 +50,7 @@ export default async function TacitePage() {
           cares about them today is exactly the one who wants the Saturday
           digest. The follow-per-law system only covers laws already voted, so
           the newsletter is the right subscription surface here. */}
-      <div className="bg-surface border border-rim rounded-xl px-4 py-3.5 max-w-2xl">
+      <div className="border-t border-rim py-3.5 max-w-2xl">
         <p className="text-[13px] font-medium text-foreground mb-2">
           Urmărim termenele astea pentru tine — sâmbăta, pe email, ce s-a votat și ce urmează să treacă tacit.
         </p>

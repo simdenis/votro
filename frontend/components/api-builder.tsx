@@ -79,7 +79,7 @@ export function ApiBuilder({ siteUrl = '', minimal = false }: { siteUrl?: string
   const inputCls = 'bg-surface border border-rim rounded-md px-2.5 py-1.5 text-[13px] text-foreground focus:outline-none focus:border-foreground/40'
 
   return (
-    <div className="bg-surface border border-rim rounded-xl p-4 space-y-3.5">
+    <div className="border-t border-rim py-4 space-y-3.5">
       {/* what */}
       <label className="block">
         <span className="text-[11px] text-muted font-semibold">Ce vrei?</span>

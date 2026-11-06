@@ -8,7 +8,7 @@ interface Props {
 export function StatsCard({ value, label, sub, accent }: Props) {
   return (
     <div
-      className="bg-surface border border-rim rounded-lg p-5"
+      className="border-t border-rim py-5"
       style={accent ? { borderTopColor: accent, borderTopWidth: '3px' } : undefined}
     >
       {/* key figure: bold + larger so it reads as the primary element. Kept in

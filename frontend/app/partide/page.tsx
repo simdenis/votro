@@ -54,7 +54,7 @@ export default async function PartiesPage() {
             <Link
               key={p.party_id}
               href={`/partide/${p.abbreviation}`}
-              className="border border-rim rounded-xl p-5 bg-surface hover:bg-raised transition-colors block"
+              className="border-t border-rim py-5 transition-colors block hover:bg-raised/60"
             >
               <div className="flex items-start justify-between mb-4">
                 <div>

@@ -39,7 +39,7 @@ export function AiSummary({
     `&body=${encodeURIComponent(`Rezumatul afișat:\n„${text}"\n\nCe e greșit / imprecis:\n`)}`
 
   return (
-    <div className="bg-surface border border-rim rounded-xl p-5">
+    <div className="border-t border-rim py-5">
       <div className="flex items-center gap-2 mb-2 flex-wrap">
         <p className="text-[11px] font-semibold text-muted">
           {motivare ? 'Ce face proiectul' : 'Pe scurt'}

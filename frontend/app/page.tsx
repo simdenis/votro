@@ -132,7 +132,7 @@ export default async function Dashboard() {
         {/* Recently promulgated laws — the "it's now law" feed, in plain language */}
         <section className="min-w-0">
           {recess && (
-            <div className="mb-6 rounded-lg border border-rim bg-raised/60 px-4 py-3">
+            <div className="border-t border-rim mb-6 py-3">
               <p className="text-[13.5px] text-foreground font-medium">Parlamentul e în vacanță</p>
               <p className="text-[12px] text-muted mt-0.5 leading-relaxed">
                 Sesiunea ordinară se reia pe {recess}, așa că nu se dau voturi noi

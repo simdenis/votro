@@ -43,7 +43,7 @@ export default function CumFunctioneazaPage() {
 
       <ol className="grid gap-2 sm:grid-cols-5">
         {STEPS.map(s => (
-          <li key={s.n} className="bg-surface border border-rim rounded-xl p-3.5">
+          <li key={s.n} className="border-t border-rim py-3.5">
             <div className="font-mono text-[12px] text-muted">{s.n}</div>
             <div className="mt-1 text-[14px] font-semibold text-foreground leading-snug">{s.title}</div>
             <div className="mt-1 text-[13px] text-muted leading-snug">{s.body}</div>

@@ -32,7 +32,7 @@ export function LawExplainer({ data, source, code }: { data: LawExplainerData; s
   const details = data.ce_se_schimba.length > 0 || data.neclar
 
   return (
-    <section aria-labelledby="pe-scurt" className="bg-surface border border-rim rounded-xl p-5">
+    <section aria-labelledby="pe-scurt" className="border-t border-rim py-5">
       <div className="flex items-center gap-2 mb-2.5 flex-wrap">
         <h2 id="pe-scurt" className="text-[11px] font-semibold text-muted">Pe scurt</h2>
         <span

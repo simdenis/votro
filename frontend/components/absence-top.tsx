@@ -58,7 +58,7 @@ export function AbsenceTop({ senators, deputies }: { senators: Item[]; deputies:
           <Link
             key={s.politician_id}
             href={s.href}
-            className="flex items-center justify-between gap-2 bg-surface border border-rim rounded-lg px-3 py-2 hover:bg-raised transition-colors"
+            className="border-t border-rim flex items-center justify-between gap-2 py-2 transition-colors hover:bg-raised/60"
           >
             <span className="flex items-center gap-1.5 text-[12.5px] font-medium text-foreground min-w-0">
               <span className="text-[10px] text-faint tabular-nums w-4 flex-shrink-0">{page * PAGE + i + 1}.</span>

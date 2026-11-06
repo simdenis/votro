@@ -205,7 +205,7 @@ export default async function VoteDetail({
 
           {/* Vote counts — boxed full-width row on small screens so long
               titles and the numbers never crowd or clip each other */}
-          <div className="flex gap-4 sm:gap-6 justify-between sm:justify-start w-full xl:w-auto xl:flex-shrink-0 border border-rim bg-raised/40 rounded-lg px-4 py-3 xl:border-0 xl:bg-transparent xl:p-0">
+          <div className="border-t border-rim flex gap-4 sm:gap-6 justify-between sm:justify-start w-full xl:w-auto xl:flex-shrink-0 py-3 xl:border-0 xl:bg-transparent xl:p-0">
             {[
               { label: 'Pentru',    value: vote.for_count ?? 0,        color: 'var(--color-for)' },
               { label: 'Împotrivă', value: vote.against_count ?? 0,    color: 'var(--color-against)' },
@@ -274,7 +274,7 @@ export default async function VoteDetail({
             <h2 className="text-xs font-semibold text-muted mb-3">
               Distribuție în plen · {vote.present_count ?? '—'} {memberNoun(vote.present_count ?? 2)} prezenți
             </h2>
-            <div className="bg-surface border border-rim rounded-xl p-4 flex flex-col items-center">
+            <div className="border-t border-rim py-4 flex flex-col items-center">
               <SeatArc
                 forCount={vote.for_count ?? 0}
                 againstCount={vote.against_count ?? 0}
@@ -297,7 +297,7 @@ export default async function VoteDetail({
                     : []),
                 ].map(({ color, label, value }) => (
                   <span key={label} className="flex items-center gap-1.5 text-sm text-muted">
-                    <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
+                    <span className="w-2 h-2 rounded-[2px] flex-shrink-0" style={{ backgroundColor: color }} />
                     {label}
                     <strong className="text-foreground tabular-nums">{value ?? '—'}</strong>
                   </span>
@@ -332,7 +332,7 @@ export default async function VoteDetail({
                   {deviatorCount === 1 ? 'a votat' : 'au votat'} împotriva liniei de partid.
                 </p>
               )}
-              <div className="bg-surface border border-rim rounded-xl overflow-hidden divide-y divide-rim">
+              <div className="border-y border-rim overflow-hidden divide-y divide-rim">
                 {individualVotes.map(sv => (
                   <Link
                     key={sv.id}

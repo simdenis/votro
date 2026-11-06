@@ -148,7 +148,7 @@ export function PoliticianList({ title, basePath, people, switcherIds }: Props) 
                     <td className="py-3 pr-4">
                       <Link href={`${basePath}/${personSlug(s.first_name, s.name)}`} className="flex items-center gap-3 group">
                         <span
-                          className="w-9 h-9 rounded-full flex items-center justify-center text-[12px] font-bold flex-shrink-0 select-none"
+                          className="w-9 h-9 rounded-[4px] flex items-center justify-center text-[12px] font-bold flex-shrink-0 select-none"
                           style={{ backgroundColor: s.party_color ?? '#9e9e9e', color: textOnColor(s.party_color ?? '#9e9e9e') }}
                         >
                           {initials}
