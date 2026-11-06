@@ -72,7 +72,7 @@ https://la-butoane.ro/legi/52849c37-38e5-4080-903f-a9d1bc3e5f73
 Bună Ana,
 
 Revin cu ceva nou: https://la-butoane.ro/cine-propune arată cine inițiază legile. Din cele 957 de propuneri ale parlamentarilor din baza noastră, 170 au devenit lege. Din cele 360 de proiecte ale Guvernului, 246.
-Ți-aș propune 20 de minute săptămâna viitoare și o idee concretă: un post Collab lunar cu termenele de adoptare tacită. Până pe 4 decembrie sunt șase la Cameră: https://la-butoane.ro/tacite
+Ți-aș propune 20 de minute săptămâna viitoare și o idee concretă: un post Collab lunar cu termenele de adoptare tacită. Între 18 noiembrie și 4 decembrie expiră termenul pentru cinci proiecte la Cameră: https://la-butoane.ro/tacite
 
 Denis
 
