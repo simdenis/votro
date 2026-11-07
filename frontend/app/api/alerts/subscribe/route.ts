@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { clientIp } from '@/lib/admin-auth'
+import { signupRpc } from '@/lib/signup-rpc'
 import { isUuid } from '@/lib/utils'
 
 // POST { email, targetType: 'law'|'politician', targetId } → create a pending
@@ -40,13 +41,9 @@ export async function POST(req: Request) {
   // status means we must NOT send another confirmation email.
   let result: { status?: string; token?: string }
   try {
-    const rpc = await fetch(`${U}/rest/v1/rpc/subscribe_alert`, {
-      method: 'POST', headers: SB,
-      body: JSON.stringify({
-        p_email: email.trim(), p_type: targetType, p_id: targetId,
-        p_ip: clientIp(req), p_key: process.env.SIGNUP_RPC_KEY,
-      }),
-    })
+    const rpc = await signupRpc('subscribe_alert',
+      { p_email: email.trim(), p_type: targetType, p_id: targetId, p_ip: clientIp(req) },
+      { p_email: email.trim(), p_type: targetType, p_id: targetId })
     if (!rpc.ok) return NextResponse.json({ error: 'Nu am putut salva abonarea.' }, { status: 502 })
     result = await rpc.json()
   } catch {

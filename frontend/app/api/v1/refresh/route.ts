@@ -1,3 +1,4 @@
+import { signupRpc } from '@/lib/signup-rpc'
 import { json, secretMatches } from '@/lib/api-v1'
 
 // Nightly cron target (called from the VPS daily flow, deploy/run_daily.sh).
@@ -19,12 +20,9 @@ function authed(req: Request): boolean {
 // Housekeeping RPCs (migrations 055/056/060 — need SIGNUP_RPC_KEY): drop stale unconfirmed alert/newsletter
 // signups. Piggy-backs on the nightly cron so no extra cron entry is needed.
 async function purge() {
-  const U = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const K = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  if (!U || !K) return
-  const hdrs = { apikey: K, Authorization: `Bearer ${K}`, 'Content-Type': 'application/json' }
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL) return
   await Promise.all(['purge_unconfirmed_alerts', 'purge_newsletter_pending'].map(fn =>
-    fetch(`${U}/rest/v1/rpc/${fn}`, { method: 'POST', headers: hdrs, body: JSON.stringify({ p_key: process.env.SIGNUP_RPC_KEY }) }).catch(() => {}),
+    signupRpc(fn, {}, {}).catch(() => {}),
   ))
 }
 

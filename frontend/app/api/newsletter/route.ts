@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { signupRpc } from '@/lib/signup-rpc'
 
 // Newsletter signup — double opt-in. POST stages the address (newsletter_request
 // RPC, needs the server-only SIGNUP_RPC_KEY — migration 060 — rate-limited) and emails a confirmation link; the address
@@ -38,10 +39,8 @@ export async function POST(request: Request) {
 
   let result: { status?: string; token?: string }
   try {
-    const rpc = await fetch(`${U}/rest/v1/rpc/newsletter_request`, {
-      method: 'POST', headers: SB,
-      body: JSON.stringify({ p_email: addr, p_ip: clientIp(request), p_key: process.env.SIGNUP_RPC_KEY }),
-    })
+    const rpc = await signupRpc('newsletter_request',
+      { p_email: addr, p_ip: clientIp(request) }, { p_email: addr, p_ip: clientIp(request) })
     if (!rpc.ok) return NextResponse.json({ error: 'Nu am putut salva abonarea. Încearcă din nou.' }, { status: 502 })
     result = await rpc.json()
   } catch {
