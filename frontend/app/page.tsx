@@ -221,9 +221,6 @@ export default async function Dashboard() {
                 converts a first-time visitor, an email form doesn't */}
             <div className="flex items-baseline justify-between border-b-2 border-sidebar pb-[5px] mb-3">
               <h2 className="font-serif text-[16px] font-normal text-foreground">Cine te reprezintă?</h2>
-              <Link href="/parlamentarul-tau" className="text-[11px] text-muted hover:text-foreground transition-colors">
-                Toți parlamentarii
-              </Link>
             </div>
             <p className="text-[11px] text-faint mb-2">Apasă pe județul tău.</p>
             <div className="mb-10">
