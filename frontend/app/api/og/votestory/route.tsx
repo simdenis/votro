@@ -47,6 +47,7 @@ async function render(request: Request): Promise<Response> {
     votesNotVoted: card.votesNotVoted,
     votesAbsent: card.votesAbsent,
     parties: card.parties,
+    rejection: card.rejection,
     nextLine: nextAfterVote(vote, lawStatus?.[0] ?? null, card.lawCode),
   }
 

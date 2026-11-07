@@ -2,7 +2,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
 import { KEEP_NON_PROCEDURAL } from '@/lib/vote-filters'
-import { formatDate } from '@/lib/utils'
+import { formatDate, isRejectionVote } from '@/lib/utils'
 import { OutcomeBadge } from '@/components/outcome-badge'
 import { MiniVoteBar } from '@/components/mini-vote-bar'
 import { VoteFilter } from '@/components/vote-filter'
@@ -30,7 +30,7 @@ export default async function VotesPage({
   const lawCols = 'laws(code, title, headline, law_category)'
   let q = db
     .from('votes')
-    .select(`id, vote_date, chamber, outcome, for_count, against_count, abstention_count, description, ${sp.category ? lawCols.replace('laws(', 'laws!inner(') : lawCols}`, { count: 'exact' })
+    .select(`id, vote_date, chamber, outcome, vote_type, for_count, against_count, abstention_count, description, ${sp.category ? lawCols.replace('laws(', 'laws!inner(') : lawCols}`, { count: 'exact' })
     .or(KEEP_NON_PROCEDURAL)
     .order('vote_date', { ascending: false })
     .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1)
@@ -128,6 +128,7 @@ export default async function VotesPage({
                       forCount={vote.for_count}
                       againstCount={vote.against_count}
                       abstentionCount={vote.abstention_count}
+                      rejection={isRejectionVote(vote.vote_type)}
                     />
                   </td>
                 </tr>

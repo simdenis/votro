@@ -23,6 +23,8 @@ export interface VoteStoryData {
   votesNotVoted: number
   votesAbsent: number
   parties: PartyVote[]
+  /** vote on a rejection report: «pentru» = for rejecting the bill */
+  rejection?: boolean
   /** one plain sentence: «Urmează Camera Deputaților.» / «Merge la Președinte pentru promulgare.» */
   nextLine?: string | null
 }
@@ -46,8 +48,8 @@ export function VoteStory({ data }: { data: VoteStoryData }) {
   const dots = computeArcDots(data.votesFor, data.votesAgainst, data.votesAbstain, data.votesNotVoted, data.votesAbsent)
   const lines = partyLines(data.parties)
   const tally = [
-    { n: data.votesFor, label: 'pentru', color: C.forDark },
-    { n: data.votesAgainst, label: 'împotrivă', color: C.againstDark },
+    { n: data.votesFor, label: data.rejection ? 'pentru respingere' : 'pentru', color: C.forDark },
+    { n: data.votesAgainst, label: data.rejection ? 'împotriva respingerii' : 'împotrivă', color: C.againstDark },
     { n: data.votesAbstain, label: 'abțineri', color: C.abstainDark },
   ]
 
@@ -96,7 +98,9 @@ export function VoteStory({ data }: { data: VoteStoryData }) {
         {ROWS.filter(r => lines[r.key].length > 0).map(r => (
           <div key={r.key} style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
             <div style={{ display: 'flex', width: 22, height: 22, borderRadius: 11, background: r.color, flexShrink: 0 }} />
-            <div style={{ display: 'flex', width: 200, fontSize: 32, fontWeight: 600, flexShrink: 0 }}>{r.label}</div>
+            <div style={{ display: 'flex', width: data.rejection ? 340 : 200, fontSize: 32, fontWeight: 600, flexShrink: 0 }}>
+              {data.rejection && r.key === 'for' ? 'Pentru respingere' : data.rejection && r.key === 'against' ? 'Contra respingerii' : r.label}
+            </div>
             <div style={{ display: 'flex', fontSize: 32, color: C.slate }}>{lines[r.key].join(', ')}</div>
           </div>
         ))}

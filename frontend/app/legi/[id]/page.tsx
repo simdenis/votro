@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
-import { formatDate, capFirst, isUuid, lawSlug, plainSummary, slugToCode, jsonLd } from '@/lib/utils'
+import { formatDate, capFirst, isUuid, lawSlug, plainSummary, slugToCode, jsonLd, isRejectionVote } from '@/lib/utils'
 import { activeSeats } from '@/lib/seats'
 import { OutcomeBadge } from '@/components/outcome-badge'
 import { PartyBreakdown } from '@/components/party-breakdown'
@@ -74,7 +74,7 @@ export default async function LawDetail({ params }: { params: Promise<{ id: stri
     if (!voteId) return null
     const { data } = await db
       .from('votes')
-      .select('present_count, for_count, against_count, abstention_count, not_voted_count')
+      .select('present_count, for_count, against_count, abstention_count, not_voted_count, vote_type')
       .eq('id', voteId)
       .maybeSingle()
     if (!data) return null
@@ -84,6 +84,7 @@ export default async function LawDetail({ params }: { params: Promise<{ id: stri
     return {
       absent: present > seats ? null : Math.max(0, seats - present),
       notVoted: data.not_voted_count ?? 0,
+      rejection: isRejectionVote(data.vote_type),
     }
   }
 
@@ -244,6 +245,7 @@ export default async function LawDetail({ params }: { params: Promise<{ id: stri
         breakdown={senateBreakdown}
         absentCount={senateAbsent?.absent ?? null}
         notVotedCount={senateAbsent?.notVoted ?? 0}
+        rejection={senateAbsent?.rejection ?? false}
         passed={!!law.presidential_status}
       />
 
@@ -258,6 +260,7 @@ export default async function LawDetail({ params }: { params: Promise<{ id: stri
         breakdown={cameraBreakdown}
         absentCount={cameraAbsent?.absent ?? null}
         notVotedCount={cameraAbsent?.notVoted ?? 0}
+        rejection={cameraAbsent?.rejection ?? false}
         passed={!!law.presidential_status}
       />
     </div>
@@ -266,7 +269,9 @@ export default async function LawDetail({ params }: { params: Promise<{ id: stri
 
 function ChamberSection({
   chamber, voteId, date, outcome, forCount, againstCount, abstentionCount, breakdown, passed, absentCount, notVotedCount,
+  rejection,
 }: {
+  rejection: boolean
   chamber: string
   voteId: string | null
   date: string | null
@@ -306,10 +311,15 @@ function ChamberSection({
         <div className="p-5 space-y-6">
           {/* Date + counts */}
           <div className="flex items-end gap-8 flex-wrap">
-            {date && <p className="text-xs text-muted">{formatDate(date)}</p>}
+            {date && (
+              <p className="text-xs text-muted">
+                {formatDate(date)}
+                {rejection && <> · vot pe raportul de respingere: «pentru» = pentru respingerea proiectului</>}
+              </p>
+            )}
             <div className="flex gap-6">
               {[
-                { label: 'Pentru',    value: forCount ?? 0,         color: 'var(--color-for)' },
+                { label: rejection ? 'Pentru respingere' : 'Pentru', value: forCount ?? 0, color: 'var(--color-for)' },
                 { label: 'Împotrivă', value: againstCount ?? 0,     color: 'var(--color-against)' },
                 { label: 'Abțineri',  value: abstentionCount ?? 0,  color: 'var(--color-abstention)' },
                 { label: 'Absenți',   value: absentCount,      color: 'var(--faint)' },
@@ -340,8 +350,8 @@ function ChamberSection({
                 />
                 <div className="flex gap-5 mt-2 flex-wrap justify-center">
                   {[
-                    { color: 'var(--color-for)', label: 'Pentru',    value: forCount ?? 0 },
-                    { color: 'var(--color-against)', label: 'Împotrivă', value: againstCount ?? 0 },
+                    { color: 'var(--color-for)', label: rejection ? 'Pentru respingere' : 'Pentru', value: forCount ?? 0 },
+                    { color: 'var(--color-against)', label: rejection ? 'Împotriva respingerii' : 'Împotrivă', value: againstCount ?? 0 },
                     { color: 'var(--color-abstention)', label: 'Abțineri',  value: abstentionCount ?? 0 },
                     ...(notVotedCount > 0
                       ? [{ color: 'var(--muted)', label: 'Prezenți, nu au votat', value: notVotedCount }]
@@ -360,7 +370,7 @@ function ChamberSection({
               </div>
               <div>
                 <p className="text-xs font-semibold text-muted mb-3">Poziție partide</p>
-                <PartyBreakdown rows={breakdown!} />
+                <PartyBreakdown rows={breakdown!} rejection={rejection} />
               </div>
             </div>
           )}

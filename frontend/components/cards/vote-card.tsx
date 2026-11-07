@@ -29,6 +29,8 @@ export interface VoteCardData {
   seats: number | null
   source: 'senat.ro' | 'cdep.ro'
   parties: PartyVote[]
+  /** vote on a rejection report: «pentru» = for rejecting the bill */
+  rejection?: boolean
 }
 
 // ── Tokens ─────────────────────────────────────────────────────────────────────
@@ -106,8 +108,8 @@ export function VoteCard({ data }: { data: VoteCardData }) {
     : `${participants} ${countNoun(participants, 'parlamentar', 'parlamentari')}`
 
   const cols: { value: number; label: string; color: string }[] = [
-    { value: data.votesFor, label: 'pentru', color: C.for },
-    { value: data.votesAgainst, label: 'împotrivă', color: C.against },
+    { value: data.votesFor, label: data.rejection ? 'pentru respingere' : 'pentru', color: C.for },
+    { value: data.votesAgainst, label: data.rejection ? 'împotriva respingerii' : 'împotrivă', color: C.against },
     { value: data.votesAbstain, label: 'abțineri', color: C.abstain },
     // present-but-not-voting only exists in Camera data
     ...(data.votesNotVoted > 0 ? [{ value: data.votesNotVoted, label: 'n-au votat', color: C.absentNum }] : []),
@@ -184,7 +186,7 @@ export function VoteCard({ data }: { data: VoteCardData }) {
             <div style={{ display: 'flex', fontSize: 22, fontWeight: 600, color: C.navy, letterSpacing: 4, textTransform: 'uppercase' }}>Vot pe partide</div>
             {/* color legend — every hue carries one meaning */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-              {([['Pentru', C.for], ['Împotrivă', C.against], ['Abțineri', C.abstain], ['Absenți', C.absentDot]] as const).map(([label, color]) => (
+              {([[data.rejection ? 'Pentru respingere' : 'Pentru', C.for], [data.rejection ? 'Împotriva respingerii' : 'Împotrivă', C.against], ['Abțineri', C.abstain], ['Absenți', C.absentDot]] as const).map(([label, color]) => (
                 <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                   <div style={{ display: 'flex', width: 12, height: 12, borderRadius: 6, background: color }} />
                   <div style={{ display: 'flex', fontSize: 24, color: '#6E7480' }}>{label}</div>

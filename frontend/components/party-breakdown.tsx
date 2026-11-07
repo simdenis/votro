@@ -16,6 +16,8 @@ interface Props {
   rows: PartyVoteBreakdown[]
   /** party -> vote_choice -> full names; enables hover lists on the counts */
   voters?: Record<string, Record<string, HoverPerson[]>>
+  /** vote on a rejection report: «pentru» = for rejecting the bill */
+  rejection?: boolean
 }
 
 // senat.ro labels unaffiliated senators "P" — the same as IND.
@@ -23,7 +25,9 @@ const foldAbbr = (a: string) => (a === 'P' ? 'IND' : a)
 // Groups with no common party line — shown as a tally, not a collective stance.
 const NO_STANCE = new Set(['IND', 'MIN'])
 
-export function PartyBreakdown({ rows, voters }: Props) {
+export function PartyBreakdown({ rows, voters, rejection = false }: Props) {
+  const forWord = rejection ? 'pentru respingere' : 'pentru'
+  const againstWord = rejection ? 'împotriva respingerii' : 'împotrivă'
   const byParty = new Map<string, PartyData>()
   for (const r of rows) {
     const abbr = foldAbbr(r.party_abbr)
@@ -58,7 +62,9 @@ export function PartyBreakdown({ rows, voters }: Props) {
         const stance: 'for' | 'against' | 'abstention' =
           p.for > p.against ? 'for' : p.against > p.for ? 'against' : 'abstention'
         const stanceLabel =
-          stance === 'for' ? '▲ Pro' : stance === 'against' ? '▼ Contra' : '— Neutru'
+          rejection
+            ? (stance === 'for' ? '▲ Pro respingere' : stance === 'against' ? '▼ Contra respingerii' : '— Neutru')
+            : (stance === 'for' ? '▲ Pro' : stance === 'against' ? '▼ Contra' : '— Neutru')
         const stanceColor =
           stance === 'for' ? 'var(--color-for)' : stance === 'against' ? 'var(--color-against)' : '#6666aa'
 
@@ -79,13 +85,13 @@ export function PartyBreakdown({ rows, voters }: Props) {
             {/* Counts — hover a number to see who */}
             <div className="flex gap-3 text-xs text-muted tabular-nums">
               {p.for > 0 && (
-                <HoverNames people={voters?.[p.abbr]?.for ?? []} title={`${p.abbr} — pentru`}>
-                  <span><span className="text-adoptat font-semibold">{p.for}</span> pentru</span>
+                <HoverNames people={voters?.[p.abbr]?.for ?? []} title={`${p.abbr} — ${forWord}`}>
+                  <span><span className="text-adoptat font-semibold">{p.for}</span> {forWord}</span>
                 </HoverNames>
               )}
               {p.against > 0 && (
-                <HoverNames people={voters?.[p.abbr]?.against ?? []} title={`${p.abbr} — împotrivă`}>
-                  <span><span className="text-respins font-semibold">{p.against}</span> împotrivă</span>
+                <HoverNames people={voters?.[p.abbr]?.against ?? []} title={`${p.abbr} — ${againstWord}`}>
+                  <span><span className="text-respins font-semibold">{p.against}</span> {againstWord}</span>
                 </HoverNames>
               )}
               {p.abstention > 0 && (

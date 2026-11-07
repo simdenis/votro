@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
-import { formatDate, choiceLabel, choiceColor, capFirst } from '@/lib/utils'
+import { formatDate, choiceLabel, choiceColor, capFirst, isRejectionVote } from '@/lib/utils'
 import { OutcomeBadge } from '@/components/outcome-badge'
 import type { VoteHistoryRow } from '@/lib/types'
 
@@ -93,7 +93,7 @@ export function VoteHistory({ rows }: { rows: VoteHistoryRow[] }) {
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
                   <span className="text-sm font-bold" style={{ color: choiceColor(row.vote_choice) }}>
-                    {choiceLabel(row.vote_choice)}
+                    {choiceLabel(row.vote_choice, isRejectionVote(row.votes.vote_type))}
                   </span>
                   <OutcomeBadge outcome={row.votes.outcome} />
                 </div>

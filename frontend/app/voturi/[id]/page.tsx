@@ -4,7 +4,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
 import { partyOf } from '@/lib/party'
-import { formatDate, choiceLabel, choiceColor, countNoun, capFirst, lawSlug , personSlug, CHAMBER_SEATS } from '@/lib/utils'
+import { formatDate, choiceLabel, choiceColor, countNoun, capFirst, lawSlug, personSlug, CHAMBER_SEATS, isRejectionVote } from '@/lib/utils'
 import { PartyBadge } from '@/components/party-badge'
 import { AiSummary } from '@/components/ai-summary'
 import { PartyBreakdown } from '@/components/party-breakdown'
@@ -44,7 +44,9 @@ export async function generateMetadata({
   const outcome = vote.outcome === 'adoptat' ? 'adoptat' : vote.outcome === 'respins' ? 'respins' : null
   const desc    = [
     `${vote.laws?.code ? `Proiectul ${vote.laws.code}` : 'Votul'}${outcome ? ` a fost ${outcome}` : ''} pe ${formatDate(vote.vote_date)}.`,
-    `${vote.for_count ?? 0} pentru, ${vote.against_count ?? 0} împotrivă, ${vote.abstention_count ?? 0} abțineri.`,
+    isRejectionVote(vote.vote_type)
+      ? `Vot pe raportul de respingere: ${vote.for_count ?? 0} pentru respingere, ${vote.against_count ?? 0} împotrivă, ${vote.abstention_count ?? 0} abțineri.`
+      : `${vote.for_count ?? 0} pentru, ${vote.against_count ?? 0} împotrivă, ${vote.abstention_count ?? 0} abțineri.`,
   ].join(' ')
   const ogImage = `${SITE_URL}/api/og/vote?id=${id}`
 
@@ -99,6 +101,7 @@ export default async function VoteDetail({
     + (vote.abstention_count ?? 0) + (vote.not_voted_count ?? 0)
   const jointSession = participants > seats
   const absentCount = jointSession ? null : Math.max(0, seats - participants)
+  const rejection = isRejectionVote(vote.vote_type)
 
   // The source only names *some* absentees individually (a roll call rarely lists
   // every empty seat). Fill the gap: any active member of this chamber with no
@@ -206,8 +209,8 @@ export default async function VoteDetail({
               titles and the numbers never crowd or clip each other */}
           <div className="border-t border-rim flex gap-4 sm:gap-6 justify-between sm:justify-start w-full xl:w-auto xl:flex-shrink-0 py-3 xl:border-0 xl:bg-transparent xl:p-0">
             {[
-              { label: 'Pentru',    value: vote.for_count ?? 0,        color: 'var(--color-for)' },
-              { label: 'Împotrivă', value: vote.against_count ?? 0,    color: 'var(--color-against)' },
+              { label: rejection ? 'Pentru respingere' : 'Pentru', value: vote.for_count ?? 0, color: 'var(--color-for)' },
+              { label: rejection ? 'Împotriva respingerii' : 'Împotrivă', value: vote.against_count ?? 0, color: 'var(--color-against)' },
               { label: 'Abțineri',  value: vote.abstention_count ?? 0, color: 'var(--color-abstention)' },
               // Absentees: seats − present. null on joint sessions (both chambers).
               { label: 'Absenți',   value: absentCount,           color: 'var(--muted)' },
@@ -222,12 +225,19 @@ export default async function VoteDetail({
           </div>
         </div>
 
+        {rejection && (
+          <p className="mt-3 text-sm text-muted max-w-[68ch]">
+            Senatul a votat raportul de respingere al comisiei, nu proiectul în sine. «Pentru» înseamnă aici
+            pentru respingerea proiectului, «împotrivă» înseamnă împotriva respingerii.
+          </p>
+        )}
+
         {/* Share row + official source */}
         <div className="mt-3 pt-3 border-t border-rim/50 flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-3 flex-wrap">
             <ShareButtons
               url={`${SITE_URL}/voturi/${vote.id}`}
-              tweet={`${vote.laws?.code ?? 'Vot de plen'} — ${(vote.laws?.title ?? vote.description ?? 'vot fără lege asociată').slice(0, 80)}. ${vote.outcome === 'adoptat' ? 'Adoptat' : vote.outcome === 'respins' ? 'Respins' : ''} cu ${vote.for_count ?? 0} pentru și ${vote.against_count ?? 0} împotrivă. ${SITE_URL}/voturi/${vote.id}`}
+              tweet={`${vote.laws?.code ?? 'Vot de plen'} — ${(vote.laws?.title ?? vote.description ?? 'vot fără lege asociată').slice(0, 80)}. ${vote.outcome === 'adoptat' ? 'Adoptat' : vote.outcome === 'respins' ? 'Respins' : ''} cu ${vote.for_count ?? 0} ${rejection ? 'pentru respingere' : 'pentru'} și ${vote.against_count ?? 0} împotrivă. ${SITE_URL}/voturi/${vote.id}`}
             />
             {deviatorCount > 0 && (
               <CardDownload
@@ -284,8 +294,8 @@ export default async function VoteDetail({
               />
               <div className="flex gap-4 mt-3 flex-wrap justify-center">
                 {[
-                  { color: 'var(--color-for)',        label: 'Pentru',    value: vote.for_count ?? 0 },
-                  { color: 'var(--color-against)',    label: 'Împotrivă', value: vote.against_count ?? 0 },
+                  { color: 'var(--color-for)',        label: rejection ? 'Pentru respingere' : 'Pentru', value: vote.for_count ?? 0 },
+                  { color: 'var(--color-against)',    label: rejection ? 'Împotriva respingerii' : 'Împotrivă', value: vote.against_count ?? 0 },
                   { color: 'var(--color-abstention)', label: 'Abțineri',  value: vote.abstention_count ?? 0 },
                   // grey dots in the arc — present but didn't press a button
                   ...((vote.not_voted_count ?? 0) > 0
@@ -311,7 +321,7 @@ export default async function VoteDetail({
             <h2 className="font-serif text-[20px] font-normal text-foreground border-b-2 border-sidebar pb-[5px] mb-3">
               Poziție partide
             </h2>
-            <PartyBreakdown rows={breakdownRows} voters={voters} />
+            <PartyBreakdown rows={breakdownRows} voters={voters} rejection={rejection} />
           </div>
         )}
 
@@ -355,10 +365,10 @@ export default async function VoteDetail({
                       noLink
                     />
                     <span
-                      className="text-sm font-bold w-20 text-right tabular-nums"
+                      className={`text-sm font-bold text-right tabular-nums ${rejection ? 'w-auto whitespace-nowrap' : 'w-20'}`}
                       style={{ color: choiceColor(sv.vote_choice) }}
                     >
-                      {choiceLabel(sv.vote_choice)}
+                      {choiceLabel(sv.vote_choice, rejection)}
                     </span>
                   </Link>
                 ))}

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { formatDateShort, choiceLabel, choiceColor, capFirst } from '@/lib/utils'
+import { formatDateShort, choiceLabel, choiceColor, capFirst, isRejectionVote } from '@/lib/utils'
 import type { VoteHistoryRow } from '@/lib/types'
 
 const INITIAL = 8
@@ -38,7 +38,7 @@ export function DeviationList({ rows, total }: { rows: VoteHistoryRow[]; total: 
               {capFirst(row.votes.laws?.title ?? row.votes.description ?? '') || 'Vot procedural (fără lege identificată)'}
             </span>
             <span className="text-xs font-bold flex-shrink-0" style={{ color: choiceColor(row.vote_choice) }}>
-              {choiceLabel(row.vote_choice)}
+              {choiceLabel(row.vote_choice, isRejectionVote(row.votes.vote_type))}
             </span>
           </div>
         ))}

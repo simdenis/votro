@@ -3,7 +3,7 @@ import type { VoteCardData, PartyVote } from '@/components/cards/vote-card'
 import type { SenatorCardData } from '@/components/cards/senator-card'
 import type { LawCardData, JourneyStep } from '@/components/cards/law-card'
 import { type PoliticianStats, type LawStatus } from '@/lib/types'
-import { formatDate, capFirst } from '@/lib/utils'
+import { formatDate, capFirst, isRejectionVote } from '@/lib/utils'
 import { lawRejected, passedParliament, tacitChambers, type LawStage } from '@/lib/law-stage'
 
 interface BreakdownRow { party_abbr: string; vote_choice: string; count: number }
@@ -45,6 +45,7 @@ export function mapVoteToCard(vote: any, rows: BreakdownRow[], seats: number | n
     year: vote.vote_date ? new Date(vote.vote_date).getFullYear() : 2026,
     dateLabel: vote.vote_date ? formatDate(vote.vote_date) : null,
     votesFor: forC,
+    rejection: isRejectionVote(vote.vote_type),
     votesAgainst: againstC,
     votesAbstain: abstainC,
     votesNotVoted: notVoted,

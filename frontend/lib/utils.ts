@@ -24,7 +24,17 @@ export function formatDateShort(dateStr: string): string {
   })
 }
 
-export function choiceLabel(choice: VoteChoice | string | null | undefined): string {
+/** Senate votes on a committee REJECTION report ("vot final (respingere)",
+ *  senat.ro: "raport de respingere"): «Pentru» there means FOR REJECTING the
+ *  bill. The tallies stay as senat.ro publishes them; only the labels change,
+ *  so nobody reads "72 pentru · Respins" as 72 votes for the law (L262/2026). */
+export function isRejectionVote(voteType: string | null | undefined): boolean {
+  return /respinger/i.test(voteType ?? '')
+}
+
+export function choiceLabel(choice: VoteChoice | string | null | undefined, rejection = false): string {
+  if (rejection && choice === 'for') return 'Pentru respingere'
+  if (rejection && choice === 'against') return 'Împotriva respingerii'
   const map: Record<string, string> = {
     for: 'Pentru',
     against: 'Împotrivă',

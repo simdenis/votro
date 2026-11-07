@@ -19,7 +19,7 @@ export interface RecapCardData {
   lawTitle: string
   summary: string | null
   /** what happened this week: «Adoptat de Senat», «Promulgată», «Respins de Cameră» */
-  event: { label: string; tone: Tone; tally?: string | null; date?: string | null }
+  event: { label: string; tone: Tone; tally?: string | null; date?: string | null; note?: string | null }
   /** «Urmează Camera Deputaților.» / «A intrat în vigoare.» / null */
   nextLine?: string | null
   /** footer attribution — the summary's real source (see SummaryCard.sourceLine) */
@@ -77,6 +77,7 @@ export function RecapCard({ data }: { data: RecapCardData }) {
             {data.event.tally ? <div style={{ display: 'flex', fontFamily: F.display, fontSize: 40, color: C.ink }}>{data.event.tally}</div> : null}
             {data.event.date ? <div style={{ display: 'flex', fontSize: T.small, color: C.muted }}>{data.event.date}</div> : null}
           </div>
+          {data.event.note ? <div style={{ display: 'flex', fontSize: T.small, lineHeight: 1.35, color: C.muted }}>{data.event.note}</div> : null}
           {data.nextLine ? <div style={{ display: 'flex', fontSize: T.body, lineHeight: 1.3, color: C.ink }}>{data.nextLine}</div> : null}
         </div>
       </div>

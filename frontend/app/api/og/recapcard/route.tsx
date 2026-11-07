@@ -1,7 +1,7 @@
 import { ImageResponse } from 'next/og'
 import { RecapCard, type RecapCardData } from '@/components/cards/recap-card'
 import { getCardFonts } from '@/lib/og-fonts'
-import { isUuid, plainSummary, capFirst } from '@/lib/utils'
+import { isUuid, plainSummary, capFirst, isRejectionVote } from '@/lib/utils'
 import { withEdgeCache } from '@/lib/og-edge-cache'
 import { nextAfterVote, nextAfterParliament } from '@/lib/next-step'
 import type { Tone } from '@/components/cards/kit'
@@ -49,10 +49,10 @@ async function render(request: Request): Promise<Response> {
   let next: string | null
   if (kind === 'votate') {
     const voteId = isUuid(sp.get('vote')) ? sp.get('vote') : null
-    const sel = 'select=chamber,outcome,for_count,against_count,vote_date'
+    const sel = 'select=chamber,outcome,vote_type,for_count,against_count,vote_date'
     const vRows = await get(voteId
       ? `votes?id=eq.${voteId}&law_id=eq.${id}&${sel}&limit=1`
-      : `votes?law_id=eq.${id}&vote_type=eq.vot%20final&outcome=in.(adoptat,respins)&${sel}&order=vote_date.desc&limit=1`)
+      : `votes?law_id=eq.${id}&vote_type=like.vot%20final*&outcome=in.(adoptat,respins)&${sel}&order=vote_date.desc&limit=1`)
     const v = vRows?.[0]
     if (!v) return new Response('vote not found', { status: 404 })
     const ch = v.chamber === 'senate' ? 'senate' : 'deputies'
@@ -63,6 +63,11 @@ async function render(request: Request): Promise<Response> {
       tone: (out === 'adoptat' ? 'for' : 'against') as Tone,
       tally: v.for_count != null && v.against_count != null ? `${v.for_count}–${v.against_count}` : null,
       date: shortDate(v.vote_date),
+      // «Pentru» on a rejection report = for rejecting: say so, or "72–31 ·
+      // Respins" reads as 72 votes for the law (L262/2026)
+      note: isRejectionVote(v.vote_type) && v.for_count != null
+        ? `Vot pe raportul de respingere: ${v.for_count} pentru respingere, ${v.against_count ?? 0} împotrivă.`
+        : null,
     }
     next = nextAfterVote({ chamber: ch, outcome: out }, statusRows?.[0] ?? null, law.code)
   } else {

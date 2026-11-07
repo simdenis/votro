@@ -344,6 +344,15 @@ class SenatScraper:
         )
         if vote_type_match:
             detail.vote_type = (vote_type_match.group(1) + (vote_type_match.group(2) or "")).lower()
+        else:
+            # Since 2026 the heading names the committee report instead:
+            # "L262/2026 raport de respingere". Same semantics as
+            # "vot final (respingere)" — «Pentru» is FOR REJECTING the bill —
+            # so store the same label every consumer already understands.
+            report = re.search(r"\braport(?:ul)? de (respingere|adoptare)\b", full_text, re.IGNORECASE)
+            if report:
+                detail.vote_type = ("vot final (respingere)" if report.group(1).lower() == "respingere"
+                                    else "vot final")
 
         # ── law title ─────────────────────────────────────────
         # The page uses <h5> for the bill description text.

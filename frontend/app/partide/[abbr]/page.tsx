@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
-import { formatDate, choiceLabel, choiceColor, pct, hasPartyLine, personSlug, dec1 } from '@/lib/utils'
+import { formatDate, choiceLabel, choiceColor, pct, hasPartyLine, personSlug, dec1, isRejectionVote } from '@/lib/utils'
 import { OutcomeBadge } from '@/components/outcome-badge'
 import { StatsCard } from '@/components/stats-card'
 import { DonutChart } from '@/components/donut-chart'
@@ -46,6 +46,13 @@ export default async function PartyPage({ params }: { params: Promise<{ abbr: st
   const senators    = r1.data as PoliticianStats[] | null
   const deputies    = r2.data as PoliticianStats[] | null
   const recentVotes = r3.data as PartyMajorityVote[] | null
+  // party_majority_votes has no vote_type; fetch it for the 20 rows shown so
+  // rejection-report votes read «Pentru respingere», not «Pentru».
+  const rejectionIds = new Set<string>()
+  if (recentVotes?.length) {
+    const { data: vt } = await db.from('votes').select('id, vote_type').in('id', recentVotes.map(v => v.vote_id))
+    for (const v of vt ?? []) if (isRejectionVote(v.vote_type)) rejectionIds.add(v.id)
+  }
   const absencePct  = (r4.data as { absence_pct: number | null } | null)?.absence_pct ?? null
 
   if (!cohesion) notFound()
@@ -200,7 +207,7 @@ export default async function PartyPage({ params }: { params: Promise<{ abbr: st
                       {formatDate(v.vote_date)}
                     </td>
                     <td className="py-2.5 px-3 font-semibold" style={{ color: choiceColor(v.majority_choice) }}>
-                      {choiceLabel(v.majority_choice)}
+                      {choiceLabel(v.majority_choice, rejectionIds.has(v.vote_id))}
                       <span className="text-abstention font-normal ml-2 tabular-nums">({v.majority_count})</span>
                     </td>
                     <td className="py-2.5 px-3 hidden md:table-cell">

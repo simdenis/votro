@@ -1,6 +1,6 @@
 import { ImageResponse } from 'next/og'
 import { getCardFonts } from '@/lib/og-fonts'
-import { isUuid } from '@/lib/utils'
+import { isUuid, isRejectionVote } from '@/lib/utils'
 
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -27,6 +27,7 @@ export async function GET(request: Request) {
   const outcome = vote?.outcome
   const forC   = vote?.for_count   ?? 0
   const agaC   = vote?.against_count ?? 0
+  const rejection = isRejectionVote(vote?.vote_type)
   const absC   = vote?.abstention_count ?? 0
 
   // same faces as every IG card — without them satori fell back to its default sans
@@ -61,11 +62,11 @@ export async function GET(request: Request) {
         <div style={{ display: 'flex', gap: 48, alignItems: 'flex-end' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             <span style={{ fontSize: 48, fontWeight: 700, color: '#2EA871' }}>{forC}</span>
-            <span style={{ fontSize: 14, color: '#8A8F98', textTransform: 'uppercase', letterSpacing: 2 }}>PENTRU</span>
+            <span style={{ fontSize: 14, color: '#8A8F98', textTransform: 'uppercase', letterSpacing: 2 }}>{rejection ? 'PENTRU RESPINGERE' : 'PENTRU'}</span>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             <span style={{ fontSize: 48, fontWeight: 700, color: '#C25539' }}>{agaC}</span>
-            <span style={{ fontSize: 14, color: '#8A8F98', textTransform: 'uppercase', letterSpacing: 2 }}>ÎMPOTRIVĂ</span>
+            <span style={{ fontSize: 14, color: '#8A8F98', textTransform: 'uppercase', letterSpacing: 2 }}>{rejection ? 'ÎMPOTRIVA RESPINGERII' : 'ÎMPOTRIVĂ'}</span>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             <span style={{ fontSize: 48, fontWeight: 700, color: '#B27A24' }}>{absC}</span>
