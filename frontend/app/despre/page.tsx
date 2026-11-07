@@ -114,13 +114,6 @@ export default function DesprePage() {
             </p>
           </Method>
 
-          <Method title="Ce evidențiem în newsletter și pe Instagram">
-            <p>
-              Un scor automat estimează cât interesează o lege un cetățean obișnuit. Îl folosim doar ca să alegem ce
-              comunicăm. Nu apare pe site și nu schimbă cifrele sau clasamentele.
-            </p>
-          </Method>
-
           <Method title="Limite">
             <p>
               Doar voturile nominale din plen, fără comisii și voturi secrete. Actualizare zilnică, cu până la 24 de ore
