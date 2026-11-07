@@ -30,19 +30,34 @@ async function getAbsenceTop(db: ReturnType<typeof getDB>): Promise<{ senators: 
   return { senators: s.data ?? [], deputies: d.data ?? [] }
 }
 
+type Decided = { law_id: string; code: string; text: string; date: string | null }
+
+async function decided(db: ReturnType<typeof getDB>, stage: 'promulgat' | 'respins_definitiv'): Promise<Decided[]> {
+  const { data } = await db.from('initiatives')
+    .select('law_id, stage_date, laws(code, headline, summary, title)')
+    .eq('stage', stage).not('law_id', 'is', null)
+    .order('stage_date', { ascending: false }).limit(3)
+  type Row = { law_id: string; stage_date: string | null; laws: { code: string; headline: string | null; summary: string | null; title: string } | null }
+  return ((data ?? []) as unknown as Row[]).filter(r => r.laws).map(r => ({
+    law_id: r.law_id,
+    code: r.laws!.code,
+    text: r.laws!.headline || plainSummary(r.laws!.summary) || r.laws!.title,
+    date: r.stage_date,
+  }))
+}
+
 export default async function Dashboard() {
   const db = getDB()
 
   // Romania's date, not UTC — after RO midnight (but before UTC midnight) the
   // UTC date is yesterday, which would keep just-expired tacit deadlines alive.
   const today = todayRo()
-  const [r2, abs, r9, r10, leaders] = await Promise.all([
-    // Recently promulgated laws — the "finished, now it's law" feed. More alive
-    // than raw votes (which stop during recess) and reads in plain language.
-    db.from('law_status')
-      .select('law_id, code, title, summary, law_category, presidential_date')
-      .eq('presidential_status', 'promulgat').not('presidential_date', 'is', null)
-      .order('presidential_date', { ascending: false }).limit(3),
+  const [promLaws, rejLaws, abs, r9, r10, leaders] = await Promise.all([
+    // Decided recently: the last laws promulgated and the last ones rejected for
+    // good (initiatives.stage, dated by stage_date), shown side by side. Short
+    // headline when the law has one, else the plain summary.
+    decided(db, 'promulgat'),
+    decided(db, 'respins_definitiv'),
     // Absențe — precomputed daily by scraper/absence_top.py (scrape_meta.absence_top):
     // the live sort over the stats views times out under anon often enough to cache
     // an empty chamber. Same guards: no gov_role, no context_note (a teaser has no
@@ -60,8 +75,6 @@ export default async function Dashboard() {
     getCountyLeaders(),
   ])
 
-  type PromLaw = { law_id: string; code: string; title: string; summary: string | null; law_category: string | null; presidential_date: string | null }
-  const promLaws      = (r2.data as PromLaw[] | null) ?? []
   type LowPresence = { politician_id: string; name: string; first_name: string; party_abbr: string; party_color: string; presence_pct: number; chamber_votes: number | null; context_note: string | null; href: string }
   // Split by chamber: a senator and a deputy have different denominators, so
   // ranking them in one list mixes incomparable numbers.
@@ -127,12 +140,12 @@ export default async function Dashboard() {
         <div className="lg:w-[300px] lg:flex-shrink-0 mt-8 lg:mt-9">
           <h2 className="font-serif text-[16px] font-normal text-foreground border-b-2 border-sidebar pb-[5px]">Parlamentul, pe email</h2>
           <p className="text-[12px] text-muted mt-2 mb-3">
-            Un rezumat scurt al voturilor, direct în inbox.{' '}
+            Ce s-a votat săptămâna asta: sâmbăta, pe scurt. Te poți dezabona oricând.{' '}
             <a href="/newsletter-exemplu" target="_blank" rel="noopener" className="underline decoration-rim underline-offset-2 hover:text-foreground">
               Vezi un exemplu
             </a>
           </p>
-          <NewsletterForm compact />
+          <NewsletterForm compact hideNote />
         </div>
        </div>
       </header>
@@ -189,29 +202,34 @@ export default async function Dashboard() {
           )}
 
           <h2 className="font-serif text-[20px] font-normal text-foreground border-b-2 border-sidebar pb-[5px]">
-            Legi promulgate recent
+            Decise recent
           </h2>
-          <div>
-            {promLaws.map(l => (
-              <Link
-                key={l.law_id}
-                href={`/legi/${lawSlug(l.code)}`}
-                className="block py-2.5 border-b border-rim hover:bg-raised/60 transition-colors"
-              >
-                {/* plain-language summary is the headline; official title/code below */}
-                <span className="block text-[13.5px] font-medium text-foreground leading-snug line-clamp-2">
-                  {plainSummary(l.summary) || l.title}
-                </span>
-                <span className="flex items-center gap-2 mt-1 font-mono text-[10px] text-muted">
-                  <span>{l.code}</span>
-                  <span className="text-adoptat font-semibold">Promulgată{l.presidential_date ? ` · ${formatDate(l.presidential_date)}` : ''}</span>
-                </span>
-              </Link>
+          <div className="grid sm:grid-cols-2 gap-x-8">
+            {([
+              { label: 'Promulgate', color: 'var(--color-for-dark)', rows: promLaws, href: '/legi?tab=promulgate' },
+              { label: 'Respinse definitiv', color: 'var(--color-against-dark)', rows: rejLaws, href: '/legi?tab=respinse' },
+            ] as const).map(col => (
+              <div key={col.label} className="min-w-0">
+                <div className="flex items-baseline justify-between py-2 border-b border-rim">
+                  <h3 className="text-[13px] font-semibold" style={{ color: col.color }}>{col.label}</h3>
+                  <Link href={col.href} className="text-[11px] text-muted hover:text-foreground transition-colors">Toate</Link>
+                </div>
+                {col.rows.map(l => (
+                  <Link
+                    key={l.law_id}
+                    href={`/legi/${lawSlug(l.code)}`}
+                    className="block py-2.5 border-b border-rim hover:bg-raised/60 transition-colors"
+                  >
+                    <span className="block text-[13.5px] font-medium text-foreground leading-snug line-clamp-2">{l.text}</span>
+                    <span className="flex items-center gap-2 mt-1 font-mono text-[10px] text-muted">
+                      <span>{l.code}</span>
+                      {l.date && <span>{formatDate(l.date)}</span>}
+                    </span>
+                  </Link>
+                ))}
+              </div>
             ))}
           </div>
-          <Link href="/legi?tab=promulgate" className="inline-block mt-5 text-[13px] text-muted hover:text-foreground transition-colors">
-            Toate legile
-          </Link>
 
         </section>
 

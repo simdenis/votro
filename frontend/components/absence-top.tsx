@@ -36,10 +36,9 @@ export function AbsenceTop({ senators, deputies }: { senators: Item[]; deputies:
   const tab = (c: 'senate' | 'deputies', label: string) => (
     <button
       onClick={() => { setChamber(c); setPage(0) }}
-      className={`text-[11px] px-2.5 py-1 rounded-md border transition-colors ${
-        chamber === c
-          ? 'border-foreground/30 text-foreground font-semibold bg-raised'
-          : 'border-rim text-muted hover:text-foreground'
+      aria-pressed={chamber === c}
+      className={`text-[12px] transition-colors ${
+        chamber === c ? 'text-foreground font-semibold' : 'text-muted hover:text-foreground'
       }`}
     >
       {label}
@@ -48,12 +47,12 @@ export function AbsenceTop({ senators, deputies }: { senators: Item[]; deputies:
 
   return (
     <>
-      <div className="flex items-center gap-1.5 mb-2.5">
+      <div className="flex items-center gap-3 mb-2">
         {tab('senate', 'Senat')}
         {tab('deputies', 'Cameră')}
       </div>
 
-      <div className="space-y-2">
+      <div>
         {slice.map((s, i) => (
           <Link
             key={s.politician_id}
@@ -98,7 +97,7 @@ export function AbsenceTop({ senators, deputies }: { senators: Item[]; deputies:
           <button
             onClick={() => setPage(p => Math.max(0, p - 1))}
             disabled={page === 0}
-            className="text-[11px] px-2 py-1 rounded-md border border-rim text-muted disabled:opacity-40 hover:text-foreground transition-colors"
+            className="text-[11px] text-muted disabled:opacity-40 hover:text-foreground transition-colors"
           >
             ← Anterior
           </button>
@@ -106,7 +105,7 @@ export function AbsenceTop({ senators, deputies }: { senators: Item[]; deputies:
           <button
             onClick={() => setPage(p => Math.min(pages - 1, p + 1))}
             disabled={page === pages - 1}
-            className="text-[11px] px-2 py-1 rounded-md border border-rim text-muted disabled:opacity-40 hover:text-foreground transition-colors"
+            className="text-[11px] text-muted disabled:opacity-40 hover:text-foreground transition-colors"
           >
             Următorii
           </button>

@@ -3,7 +3,7 @@
 import { useState } from 'react'
 
 /** Newsletter signup — posts to /api/newsletter (double opt-in; confirm via email). */
-export function NewsletterForm({ compact = false }: { compact?: boolean }) {
+export function NewsletterForm({ compact = false, hideNote = false }: { compact?: boolean; hideNote?: boolean }) {
   const [email, setEmail] = useState('')
   const [state, setState] = useState<'idle' | 'busy' | 'done' | 'error'>('idle')
   const [message, setMessage] = useState('')
@@ -61,7 +61,7 @@ export function NewsletterForm({ compact = false }: { compact?: boolean }) {
         </button>
       </div>
       {state === 'error' && <p className="text-[12px] text-respins">{message}</p>}
-      <p className="text-[11px] text-faint">Ce s-a votat săptămâna asta: sâmbăta, pe scurt. Te poți dezabona oricând.</p>
+      {!hideNote && <p className="text-[11px] text-faint">Ce s-a votat săptămâna asta: sâmbăta, pe scurt. Te poți dezabona oricând.</p>}
     </form>
   )
 }
