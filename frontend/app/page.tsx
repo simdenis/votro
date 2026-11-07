@@ -159,7 +159,7 @@ export default async function Dashboard() {
               when the plenary is quiet. Kept above the promulgated/vote feeds. */}
           {tacitBills.length > 0 && (
             <div className="mb-10">
-              <div className="flex items-baseline justify-between border-b-2 border-respins/60 pb-[5px]">
+              <div className="flex items-baseline justify-between border-b-2 border-sidebar pb-[5px]">
                 <h2 className="font-serif text-[20px] font-normal text-foreground">Legi care pot trece fără vot de prima cameră</h2>
                 <Link href="/tacite" className="text-[11px] text-muted hover:text-foreground transition-colors">Toate</Link>
               </div>
@@ -173,8 +173,8 @@ export default async function Dashboard() {
                       className="flex items-center justify-between gap-2 py-2.5 border-b border-rim hover:bg-raised/60 transition-colors"
                     >
                       <span className="min-w-0">
-                        <span className="block text-[13px] font-medium text-foreground line-clamp-2 leading-snug">{plainSummary(b.summary) || b.title || b.code}</span>
-                        <span className="block font-mono text-[10px] text-muted mt-0.5">{b.code}</span>
+                        <span className="block text-[13.5px] font-medium text-foreground leading-snug line-clamp-2">{plainSummary(b.summary) || b.title || b.code}</span>
+                        <span className="block font-mono text-[10px] text-muted mt-1">{b.code}</span>
                       </span>
                       {days != null && (
                         <span className={`text-[12px] font-bold tabular-nums flex-shrink-0 ${days <= 7 ? 'text-respins' : days <= 30 ? 'text-deviere' : 'text-muted'}`}>
@@ -234,7 +234,7 @@ export default async function Dashboard() {
             {(absSenators.length > 0 || absDeputies.length > 0) && (
               <>
                 {/* caveats live on the methodology page; the link stays as the one pointer */}
-                <div className="flex items-baseline justify-between border-b-2 border-respins/60 pb-[5px] mb-3">
+                <div className="flex items-baseline justify-between border-b-2 border-sidebar pb-[5px] mb-3">
                   <h2 className="font-serif text-[16px] font-normal text-foreground">Cine lipsește cel mai mult</h2>
                   <Link href="/despre#metodologie-absente" className="text-[11px] text-muted hover:text-foreground transition-colors">Metodologie</Link>
                 </div>
