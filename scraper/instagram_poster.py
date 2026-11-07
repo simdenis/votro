@@ -275,6 +275,14 @@ def _wait_ready(cfg: Config, creation_id: str, tries: int = 10, delay: float = 2
 _RETRY_SUBCODES = {2207006, 2207027}
 
 
+def _graph_error(r: requests.Response) -> dict:
+    """The Graph error object, or {} when the body isn't JSON."""
+    try:
+        return (r.json() or {}).get("error", {})
+    except ValueError:
+        return {}
+
+
 def _publish(cfg: Config, creation_id: str) -> str:
     for attempt in range(4):
         r = requests.post(
@@ -284,8 +292,9 @@ def _publish(cfg: Config, creation_id: str) -> str:
         )
         if r.ok:
             return r.json()["id"]
-        err = (r.json() if r.headers.get("content-type", "").startswith("application/json") else {}).get("error", {})
-        if attempt < 3 and (err.get("error_subcode") in _RETRY_SUBCODES or err.get("code") == 9007):
+        err = _graph_error(r)
+        # a 5xx (sometimes with an empty body under a JSON content-type, 3 Nov) is Graph's own hiccup
+        if attempt < 3 and (r.status_code >= 500 or err.get("error_subcode") in _RETRY_SUBCODES or err.get("code") == 9007):
             time.sleep(5 * (attempt + 1))
             continue
         raise RuntimeError(f"publish failed ({r.status_code}): {r.text}")
@@ -598,13 +607,24 @@ def _month_label(dfrom: str, dto: str) -> str:
 def _sb_rows(cfg: Config, table: str, params: list[tuple[str, str]]) -> list[dict]:
     """GET with list-of-tuples params so a column can be filtered twice (vote_date
     gte AND lte)."""
-    r = requests.get(
-        f"{cfg.supabase_url}/rest/v1/{table}", params=params,
-        headers={"apikey": cfg.supabase_key, "Authorization": f"Bearer {cfg.supabase_key}"},
-        timeout=_TIMEOUT,
-    )
-    r.raise_for_status()
-    return r.json()
+    # The week's politician_votes join can hit the statement timeout (500, story
+    # absenți 7 Nov): retry with backoff before giving up.
+    for attempt in range(4):
+        try:
+            r = requests.get(
+                f"{cfg.supabase_url}/rest/v1/{table}", params=params,
+                headers={"apikey": cfg.supabase_key, "Authorization": f"Bearer {cfg.supabase_key}"},
+                timeout=_TIMEOUT,
+            )
+        except requests.RequestException:
+            if attempt == 3:
+                raise
+        else:
+            if r.status_code < 500 or attempt == 3:
+                r.raise_for_status()
+                return r.json()
+        time.sleep(3 * 2 ** attempt)
+    raise RuntimeError("unreachable")
 
 
 # Below this many plenary votes in the window a per-chamber ranking is noise
