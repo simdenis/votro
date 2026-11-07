@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
-import { keyMatches, mintSession, verifyLoginToken, ADMIN_COOKIE, ADMIN_COOKIE_MAX_AGE } from '@/lib/admin-auth'
+import { keyAllowed, isLockedOut, recordFailure, mintSession, verifyLoginToken, ADMIN_COOKIE, ADMIN_COOKIE_MAX_AGE } from '@/lib/admin-auth'
 
 // Exchange proof-of-key for an httpOnly session cookie, so the key never rides
 // in URLs or page HTML.
@@ -25,7 +25,10 @@ function sessionCookie() {
 export async function POST(req: Request) {
   let key: unknown
   try { ({ key } = await req.json()) } catch { return NextResponse.json({ error: 'body invalid' }, { status: 400 }) }
-  if (!keyMatches(typeof key === 'string' ? key : null)) {
+  if (await isLockedOut(req)) {
+    return NextResponse.json({ error: 'prea multe încercări, revino peste o oră' }, { status: 429 })
+  }
+  if (!(await keyAllowed(req, typeof key === 'string' ? key : null))) {
     await failDelay()
     return NextResponse.json({ error: 'cheie greșită' }, { status: 401 })
   }
@@ -40,7 +43,9 @@ export async function GET(req: Request) {
   // treats "\" as "/", so "/\evil.com" and "//evil.com" are both off-origin.
   const nextParam = sp.get('next') || '/admin'
   const dest = /^\/(?![/\\])/.test(nextParam) ? nextParam : '/admin'
-  if (!verifyLoginToken(sp.get('t'))) {
+  const t = sp.get('t')
+  if (await isLockedOut(req) || !verifyLoginToken(t)) {
+    if (t) await recordFailure(req)
     await failDelay()
     return NextResponse.redirect(new URL('/admin', req.url))
   }

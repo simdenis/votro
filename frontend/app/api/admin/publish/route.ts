@@ -15,7 +15,7 @@
 // Images are restricted to our own origin so a leaked key can't turn the
 // account into an open relay for arbitrary pictures.
 
-import { isAdmin, keyMatches } from '@/lib/admin-auth'
+import { isAdmin, keyAllowed } from '@/lib/admin-auth'
 
 const GRAPH = 'https://graph.instagram.com'
 const V = process.env.GRAPH_API_VERSION || 'v21.0'
@@ -56,7 +56,7 @@ async function waitReady(ids: string[], token: string): Promise<void> {
 
 export async function POST(req: Request) {
   // cookie (normal path) OR X-Admin-Key header (legacy/scripts)
-  if (!(await isAdmin()) && !keyMatches(req.headers.get('x-admin-key'))) {
+  if (!(await isAdmin()) && !(await keyAllowed(req, req.headers.get('x-admin-key')))) {
     return new Response('Not found', { status: 404 })
   }
   const userId = process.env.IG_USER_ID

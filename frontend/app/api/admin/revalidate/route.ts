@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import { revalidatePath } from 'next/cache'
-import { isAdmin, keyMatches } from '@/lib/admin-auth'
+import { isAdmin, keyAllowed } from '@/lib/admin-auth'
 
 // On-demand ISR refresh. The homepage (and other detail pages) cache for ~10
 // min; after a data change (e.g. moving senators into PACE) you don't want to
@@ -10,7 +10,7 @@ import { isAdmin, keyMatches } from '@/lib/admin-auth'
 // Auth mirrors /api/admin/publish: the httpOnly admin cookie, or X-Admin-Key.
 // Unauthorized → 404 (don't advertise the endpoint).
 export async function POST(req: NextRequest) {
-  if (!(await isAdmin()) && !keyMatches(req.headers.get('x-admin-key'))) {
+  if (!(await isAdmin()) && !(await keyAllowed(req, req.headers.get('x-admin-key')))) {
     return new Response('Not found', { status: 404 })
   }
 

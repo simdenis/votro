@@ -36,5 +36,12 @@
 			"binding": "NEXT_INC_CACHE_R2_BUCKET",
 			"bucket_name": "votro-cache"
 		}
+	],
+	// Admin brute-force lockout: per-IP failed-key counter (lib/admin-auth.ts).
+	"kv_namespaces": [
+		{
+			"binding": "ADMIN_LOCK",
+			"id": "90dd13a6869b4b62a052a4740cd13a23"
+		}
 	]
 }

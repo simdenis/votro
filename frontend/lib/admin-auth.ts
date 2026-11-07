@@ -38,6 +38,70 @@ export function keyMatches(candidate: string | undefined | null): boolean {
   return timingSafeEqual(a, b)
 }
 
+// ── Brute-force lockout ────────────────────────────────────────────────────
+// After MAX_FAILS wrong keys/tokens from one IP, that IP is refused (even with
+// the right key) for LOCK_SECONDS after its last failure. Counter lives in the
+// ADMIN_LOCK KV namespace; cf-connecting-ip is set by Cloudflare and can't be
+// spoofed. Cloudflare Access (isAdmin) is not affected — the owner can always
+// get in through Access. KV is eventually consistent, so a burst of parallel
+// guesses may squeeze a couple past 3; still caps guessing at a handful/hour.
+const MAX_FAILS = 3
+const LOCK_SECONDS = 60 * 60
+
+type LockKV = {
+  get(k: string): Promise<string | null>
+  put(k: string, v: string, o?: { expirationTtl?: number }): Promise<void>
+  delete(k: string): Promise<void>
+}
+
+async function lockKV(): Promise<LockKV | null> {
+  try {
+    const { getCloudflareContext } = await import('@opennextjs/cloudflare')
+    return ((getCloudflareContext().env as Record<string, unknown>).ADMIN_LOCK as LockKV) ?? null
+  } catch {
+    return null // next dev / no binding: fall back to the fail delay only
+  }
+}
+
+export function clientIp(req: Request): string {
+  const h = req.headers
+  return (h.get('cf-connecting-ip') || (h.get('x-forwarded-for') ?? '').split(',')[0].trim() || 'unknown').slice(0, 64)
+}
+
+const lockKey = (ip: string) => `fail:${ip}`
+
+export async function isLockedOut(req: Request): Promise<boolean> {
+  const kv = await lockKV()
+  if (!kv) return false
+  return Number(await kv.get(lockKey(clientIp(req)))) >= MAX_FAILS
+}
+
+export async function recordFailure(req: Request): Promise<void> {
+  const kv = await lockKV()
+  if (!kv) return
+  const k = lockKey(clientIp(req))
+  const n = Number(await kv.get(k)) || 0
+  await kv.put(k, String(n + 1), { expirationTtl: LOCK_SECONDS })
+}
+
+async function clearFailures(req: Request): Promise<void> {
+  const kv = await lockKV()
+  if (kv) await kv.delete(lockKey(clientIp(req)))
+}
+
+/** Key check with lockout. A missing key is not a failure (plain visitors
+ *  hitting an admin route without credentials don't count against the IP). */
+export async function keyAllowed(req: Request, candidate: string | null | undefined): Promise<boolean> {
+  if (!candidate) return false
+  if (await isLockedOut(req)) return false
+  if (keyMatches(candidate)) {
+    await clearFailures(req)
+    return true
+  }
+  await recordFailure(req)
+  return false
+}
+
 /** Session token for the cookie: `iat.<hmac>`, no server-side store. */
 export function mintSession(): string {
   const iat = Math.floor(Date.now() / 1000)
