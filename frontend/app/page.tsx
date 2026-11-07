@@ -88,7 +88,7 @@ export default async function Dashboard() {
         <p className="text-[11px] uppercase tracking-[0.18em] text-faint mb-2.5">
           Parlamentul României · Legislatura 2024–2028
         </p>
-        <h1 className="font-serif text-[42px] font-normal tracking-[-0.01em] leading-[1.04] text-foreground">
+        <h1 className="font-serif text-[30px] sm:text-[40px] font-normal tracking-[-0.01em] leading-[1.05] text-foreground">
           Cum votează Parlamentul?
         </h1>
         {/* One line above the fold; sources and neutrality live on /despre */}

@@ -67,7 +67,7 @@ export default async function PartyPage({ params }: { params: Promise<{ abbr: st
           >
             {cohesion.abbreviation}
           </span>
-          <h1 className="font-serif text-[34px] font-normal text-foreground leading-[1.05] tracking-tight">{cohesion.name}</h1>
+          <h1 className="font-serif text-[26px] sm:text-[32px] font-normal tracking-[-0.01em] leading-[1.15] text-foreground">{cohesion.name}</h1>
           {noLine && (
             <p className="text-sm text-muted mt-1.5">
               Grup de parlamentari fără partid comun — nu există linie de partid, deci nu calculăm coeziune sau devieri.
@@ -119,7 +119,7 @@ export default async function PartyPage({ params }: { params: Promise<{ abbr: st
         { label: 'Deputați',  members: deputies,  basePath: '/deputati' },
       ].map(({ label, members, basePath }) => (
         <div key={label}>
-          <h2 className="text-xs font-semibold text-muted mb-4">
+          <h2 className="font-serif text-[20px] font-normal text-foreground border-b-2 border-sidebar pb-[5px] mb-4">
             {label} ({members?.length ?? 0})
           </h2>
           {!members?.length ? (
@@ -168,7 +168,7 @@ export default async function PartyPage({ params }: { params: Promise<{ abbr: st
       {/* Vote history — a "party position" only exists for real parties */}
       {!noLine && (
       <div>
-        <h2 className="text-xs font-semibold text-muted mb-4">
+        <h2 className="font-serif text-[20px] font-normal text-foreground border-b-2 border-sidebar pb-[5px] mb-4">
           Poziție partid (ultimele 20 voturi) <InfoHint title="Poziție partid" tip={METRIC_TIPS.pozitie} />
         </h2>
         {!recentVotes?.length ? (

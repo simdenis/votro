@@ -142,7 +142,7 @@ export default async function LawDetail({ params }: { params: Promise<{ id: stri
           {law.law_category && <CategoryBadge category={law.law_category} className="text-[10px]" />}
           <BaseLawBadges title={law.title} />
         </div>
-        <h1 className="font-serif text-[30px] font-normal text-foreground leading-[1.12] tracking-[-0.01em]">{capFirst(law.title)}</h1>
+        <h1 className="font-serif text-[26px] sm:text-[32px] font-normal tracking-[-0.01em] leading-[1.15] text-foreground">{capFirst(law.title)}</h1>
 
         {lawRow?.explainer && (
           <div className="mt-5">

@@ -29,7 +29,7 @@ export default function ContribuiePage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-sm font-semibold text-muted">Propune funcționalități</h2>
+        <h2 className="font-serif text-[20px] font-normal text-foreground border-b-2 border-sidebar pb-[5px]">Propune funcționalități</h2>
         <p className="text-foreground leading-relaxed text-sm">
           Ai o idee sau un feedback? Spune-ne. Cele mai cerute ajung în roadmap.
         </p>
@@ -37,7 +37,7 @@ export default function ContribuiePage() {
       </section>
 
       <section className="space-y-3 border-t border-rim pt-6">
-        <h2 className="text-sm font-semibold text-muted">Susținători</h2>
+        <h2 className="font-serif text-[20px] font-normal text-foreground border-b-2 border-sidebar pb-[5px]">Susținători</h2>
         <p className="text-sm text-muted">
           Primii susținători vor apărea aici.
         </p>

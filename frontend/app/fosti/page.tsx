@@ -82,7 +82,7 @@ export default async function FostiPage() {
             ([label, group, base]) =>
               group.length > 0 && (
                 <section key={label}>
-                  <h2 className="text-xs font-semibold text-muted mb-4 border-b border-rim pb-2">
+                  <h2 className="font-serif text-[20px] font-normal text-foreground border-b-2 border-sidebar pb-[5px] mb-4">
                     {label} ({group.length})
                   </h2>
                   <div className="space-y-3">

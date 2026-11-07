@@ -22,7 +22,7 @@ function MemberTable({ title, members, basePath }: {
 }) {
   return (
     <div>
-      <h2 className="text-xs font-semibold text-muted mb-4">
+      <h2 className="font-serif text-[20px] font-normal text-foreground border-b-2 border-sidebar pb-[5px] mb-4">
         {title} ({members.length})
       </h2>
       {!members.length ? (

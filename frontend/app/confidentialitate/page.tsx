@@ -16,7 +16,7 @@ export default function ConfidentialitatePage() {
       </div>
 
       <section className="space-y-3">
-        <h2 className="text-sm font-semibold text-muted">Ce date colectăm</h2>
+        <h2 className="font-serif text-[20px] font-normal text-foreground border-b-2 border-sidebar pb-[5px]">Ce date colectăm</h2>
         <p className="text-foreground leading-relaxed">
           Ca să vizitezi site-ul nu îți cerem nimic: fără cont, fără date personale. Singurul moment
           în care ne dai o informație e când te abonezi voluntar:
@@ -28,7 +28,7 @@ export default function ConfidentialitatePage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-sm font-semibold text-muted">Cum folosim emailul</h2>
+        <h2 className="font-serif text-[20px] font-normal text-foreground border-b-2 border-sidebar pb-[5px]">Cum folosim emailul</h2>
         <p className="text-foreground leading-relaxed">
           Doar ca să-ți trimitem exact ce ai cerut (newsletterul sau alertele). Nu-l folosim în alt scop,
           nu-l vindem și nu-l dăm nimănui pentru marketing. Abonarea la alerte cere o confirmare pe email
@@ -37,7 +37,7 @@ export default function ConfidentialitatePage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-sm font-semibold text-muted">Cu cine lucrăm (procesatori)</h2>
+        <h2 className="font-serif text-[20px] font-normal text-foreground border-b-2 border-sidebar pb-[5px]">Cu cine lucrăm (procesatori)</h2>
         <p className="text-foreground leading-relaxed">
           Emailurile pleacă prin <a href="https://resend.com" target="_blank" rel="noopener noreferrer" className="underline hover:text-muted">Resend</a>;
           datele stau la <a href="https://supabase.com" target="_blank" rel="noopener noreferrer" className="underline hover:text-muted">Supabase</a>;
@@ -47,7 +47,7 @@ export default function ConfidentialitatePage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-sm font-semibold text-muted">Drepturile tale</h2>
+        <h2 className="font-serif text-[20px] font-normal text-foreground border-b-2 border-sidebar pb-[5px]">Drepturile tale</h2>
         <p className="text-foreground leading-relaxed">
           Te poți dezabona instant din linkul aflat în fiecare email. Vrei să-ți ștergem
           complet adresa sau vrei să știi ce date avem despre tine? Scrie-ne la{' '}
@@ -56,7 +56,7 @@ export default function ConfidentialitatePage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-sm font-semibold text-muted">Datele parlamentarilor</h2>
+        <h2 className="font-serif text-[20px] font-normal text-foreground border-b-2 border-sidebar pb-[5px]">Datele parlamentarilor</h2>
         <p className="text-foreground leading-relaxed">
           Voturile, absențele și afilierile afișate provin din surse publice oficiale
           (<a href="https://senat.ro" target="_blank" rel="noopener noreferrer" className="underline hover:text-muted">senat.ro</a>,{' '}

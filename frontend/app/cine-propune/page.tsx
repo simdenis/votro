@@ -103,7 +103,7 @@ export default async function CinePropunePage() {
                 </span>
               ))}
             </div>
-            <h2 className="text-sm font-semibold text-muted pt-2">Pe partide</h2>
+            <h2 className="font-serif text-[20px] font-normal text-foreground border-b-2 border-sidebar pb-[5px] pt-2">Pe partide</h2>
             <ul className="divide-y divide-rim border-y border-rim">
               {parties.map(g => (
                 <li key={g.key}>
@@ -142,7 +142,7 @@ export default async function CinePropunePage() {
           </section>
 
           <section className="space-y-2 max-w-2xl text-[13px] text-muted leading-relaxed">
-            <h2 className="text-sm font-semibold text-muted">Cum citești cifrele</h2>
+            <h2 className="font-serif text-[20px] font-normal text-foreground border-b-2 border-sidebar pb-[5px]">Cum citești cifrele</h2>
             <p>
               Un proiect semnat de parlamentari din mai multe partide apare la fiecare dintre ele, așa că
               rândurile partidelor nu se adună. «Doar de parlamentari» înseamnă că toți semnatarii identificați

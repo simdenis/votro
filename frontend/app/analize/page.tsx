@@ -114,7 +114,7 @@ export default async function AnalizePage() {
 
       {/* ── 1. Agreement matrix ─────────────────────────────── */}
       <section className="space-y-3">
-        <h2 className="font-serif text-[22px] font-normal text-foreground">Cine votează cu cine</h2>
+        <h2 className="font-serif text-[20px] font-normal text-foreground border-b-2 border-sidebar pb-[5px]">Cine votează cu cine</h2>
         <p className="text-[13px] text-muted max-w-2xl">
           Cât de des au votat la fel majoritățile a două partide, pe <strong className="text-foreground">voturile disputate</strong>.
           Nuanța închisă = acord mare. Voturile aproape unanime sunt excluse — altfel toate partidele ar părea aliate.
@@ -130,7 +130,7 @@ export default async function AnalizePage() {
 
       {/* ── 2. Closest votes ────────────────────────────────── */}
       <section className="space-y-3">
-        <h2 className="font-serif text-[22px] font-normal text-foreground">Cele mai strânse voturi</h2>
+        <h2 className="font-serif text-[20px] font-normal text-foreground border-b-2 border-sidebar pb-[5px]">Cele mai strânse voturi</h2>
         <p className="text-[13px] text-muted max-w-2xl">Voturile decise la cea mai mică diferență — unde fiecare prezență a contat.</p>
         <div className="divide-y divide-rim border-t border-rim">
           {closest.map(v => (
@@ -165,7 +165,7 @@ export default async function AnalizePage() {
 
       {/* ── 3. Attendance trend ─────────────────────────────── */}
       <section className="space-y-3">
-        <h2 className="font-serif text-[22px] font-normal text-foreground">Prezența în timp</h2>
+        <h2 className="font-serif text-[20px] font-normal text-foreground border-b-2 border-sidebar pb-[5px]">Prezența în timp</h2>
         <p className="text-[13px] text-muted max-w-2xl">
           Prezența medie la voturile din plen, lună de lună, pe cameră. Vacanțele parlamentare apar ca goluri.
         </p>

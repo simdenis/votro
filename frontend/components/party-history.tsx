@@ -48,7 +48,7 @@ export function PartyHistory({ history, currentParty }: Props) {
   const rendered = collapsed
   return (
     <div className="border-t border-rim py-5">
-      <h2 className="text-xs font-semibold text-muted mb-5">
+      <h2 className="font-serif text-[20px] font-normal text-foreground border-b-2 border-sidebar pb-[5px] mb-5">
         Parcurs politic
       </h2>
 

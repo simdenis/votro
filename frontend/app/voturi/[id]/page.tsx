@@ -200,7 +200,7 @@ export default async function VoteDetail({
               )}
               <span className="text-xs text-muted">{formatDate(vote.vote_date)}</span>
             </div>
-            <h1 className="font-serif text-[26px] font-normal text-foreground leading-[1.1]">{capFirst(vote.laws?.title ?? vote.description ?? '') || 'Vot fără lege asociată'}</h1>
+            <h1 className="font-serif text-[26px] sm:text-[32px] font-normal tracking-[-0.01em] leading-[1.15] text-foreground">{capFirst(vote.laws?.title ?? vote.description ?? '') || 'Vot fără lege asociată'}</h1>
           </div>
 
           {/* Vote counts — boxed full-width row on small screens so long
@@ -271,7 +271,7 @@ export default async function VoteDetail({
 
           {/* Seat arc */}
           <div className="xl:col-start-1">
-            <h2 className="text-xs font-semibold text-muted mb-3">
+            <h2 className="font-serif text-[20px] font-normal text-foreground border-b-2 border-sidebar pb-[5px] mb-3">
               Distribuție în plen · {vote.present_count ?? '—'} {memberNoun(vote.present_count ?? 2)} prezenți
             </h2>
             <div className="border-t border-rim py-4 flex flex-col items-center">
@@ -309,7 +309,7 @@ export default async function VoteDetail({
         {/* Party stance cards — right column on xl, second on mobile */}
         {breakdownRows.length > 0 && (
           <div className="xl:col-start-2 xl:row-start-1 xl:row-span-2">
-            <h2 className="text-xs font-semibold text-muted mb-3">
+            <h2 className="font-serif text-[20px] font-normal text-foreground border-b-2 border-sidebar pb-[5px] mb-3">
               Poziție partide
             </h2>
             <PartyBreakdown rows={breakdownRows} voters={voters} />
@@ -319,7 +319,7 @@ export default async function VoteDetail({
           {/* Individual senator votes */}
           {individualVotes.length > 0 && (
             <div className="xl:col-start-1">
-              <h2 className="text-xs font-semibold text-muted mb-3">
+              <h2 className="font-serif text-[20px] font-normal text-foreground border-b-2 border-sidebar pb-[5px] mb-3">
                 Voturi individuale
               </h2>
               {deviatorCount > 0 && (

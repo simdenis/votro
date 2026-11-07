@@ -73,7 +73,7 @@ export function PoliticianProfile({ stats, history, deviationRows, partyHistory,
         </div>
 
         <div className="flex-1 min-w-0">
-          <h1 className="font-serif text-[28px] font-normal text-foreground tracking-[-0.01em] leading-[1.1]">
+          <h1 className="font-serif text-[26px] sm:text-[32px] font-normal tracking-[-0.01em] leading-[1.15] text-foreground">
             {stats.first_name} {stats.name}
           </h1>
           <div className="flex items-center gap-2 mt-1 flex-wrap">
@@ -177,7 +177,7 @@ export function PoliticianProfile({ stats, history, deviationRows, partyHistory,
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
         <div className="border-t border-rim py-5">
-          <h2 className="text-xs font-semibold text-muted mb-4">
+          <h2 className="font-serif text-[20px] font-normal text-foreground border-b-2 border-sidebar pb-[5px] mb-4">
             Comportament vot
             <span className="normal-case tracking-normal font-normal text-faint"> · din {denom} {countNoun(denom, 'vot de plen', 'voturi de plen')}</span>
           </h2>
@@ -205,7 +205,7 @@ export function PoliticianProfile({ stats, history, deviationRows, partyHistory,
         </div>
 
         <div className="border-t border-rim py-5">
-          <h2 className="text-xs font-semibold text-muted mb-1">
+          <h2 className="font-serif text-[20px] font-normal text-foreground border-b-2 border-sidebar pb-[5px] mb-1">
             Devieri de la linia de partid
           </h2>
           {noLine ? (

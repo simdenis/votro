@@ -14,7 +14,7 @@ export default function DesprePage() {
       <h1 className="font-serif text-[30px] sm:text-[40px] font-normal tracking-[-0.01em] leading-[1.05] text-foreground">Despre LaButoane</h1>
 
       <section className="space-y-3">
-        <h2 className="text-sm font-semibold text-muted">Ce este LaButoane</h2>
+        <h2 className="font-serif text-[20px] font-normal text-foreground border-b-2 border-sidebar pb-[5px]">Ce este LaButoane</h2>
         <p className="text-foreground leading-relaxed">
           LaButoane urmărește voturile plenare ale Senatului și Camerei Deputaților din România și le face
           accesibile publicului larg într-un format clar și comparabil.
@@ -22,7 +22,7 @@ export default function DesprePage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-sm font-semibold text-muted">Cum sunt colectate datele</h2>
+        <h2 className="font-serif text-[20px] font-normal text-foreground border-b-2 border-sidebar pb-[5px]">Cum sunt colectate datele</h2>
         <p className="text-foreground leading-relaxed">
           Un scraper automat descarcă zilnic datele de vot publice de pe{' '}
           <a href="https://senat.ro" target="_blank" rel="noopener noreferrer" className="underline hover:text-muted">
@@ -37,7 +37,7 @@ export default function DesprePage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-sm font-semibold text-muted">Ce înseamnă devierea de la linia de partid</h2>
+        <h2 className="font-serif text-[20px] font-normal text-foreground border-b-2 border-sidebar pb-[5px]">Ce înseamnă devierea de la linia de partid</h2>
         <p className="text-foreground leading-relaxed">
           Pentru fiecare vot, calculăm poziția dominantă (cea mai frecventă) a fiecărui partid (pentru / împotrivă / abținere).
           Un parlamentar este marcat cu <span className="text-deviere font-semibold">⚠ deviere</span> dacă
@@ -66,7 +66,7 @@ export default function DesprePage() {
       </section>
 
       <section id="metodologie-absente" className="space-y-3 scroll-mt-20">
-        <h2 className="text-sm font-semibold text-muted">Cum calculăm prezența și absența</h2>
+        <h2 className="font-serif text-[20px] font-normal text-foreground border-b-2 border-sidebar pb-[5px]">Cum calculăm prezența și absența</h2>
         <p className="text-foreground leading-relaxed">
           Prezența unui parlamentar = voturile la care apare în listele oficiale, împărțite la
           toate voturile ținute în camera sa de la validarea mandatului. Absența este restul
@@ -93,7 +93,7 @@ export default function DesprePage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-sm font-semibold text-muted">Drumul unei legi și adoptarea tacită</h2>
+        <h2 className="font-serif text-[20px] font-normal text-foreground border-b-2 border-sidebar pb-[5px]">Drumul unei legi și adoptarea tacită</h2>
         <p className="text-foreground leading-relaxed">
           O lege trece prin ambele camere: prima cameră sesizată, apoi camera decizională, apoi
           merge la Președinte pentru promulgare (care o poate retrimite Parlamentului sau sesiza
@@ -112,7 +112,7 @@ export default function DesprePage() {
       </section>
 
       <section id="metodologie-initiative" className="space-y-3 scroll-mt-20">
-        <h2 className="text-sm font-semibold text-muted">Inițiative și timpul fără vot în plen</h2>
+        <h2 className="font-serif text-[20px] font-normal text-foreground border-b-2 border-sidebar pb-[5px]">Inițiative și timpul fără vot în plen</h2>
         <p className="text-foreground leading-relaxed">
           Pagina „Inițiative" urmărește toate inițiativele legislative înregistrate la Parlament,
           din două registre oficiale: registrul PL-x al Camerei Deputaților (cdep.ro) și registrul
@@ -139,7 +139,7 @@ export default function DesprePage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-sm font-semibold text-muted">Rezumatele „Pe scurt"</h2>
+        <h2 className="font-serif text-[20px] font-normal text-foreground border-b-2 border-sidebar pb-[5px]">Rezumatele „Pe scurt"</h2>
         <p className="text-foreground leading-relaxed">
           Pentru multe legi afișăm un rezumat în limbaj simplu, generat automat (AI) din expunerea
           de motive oficială — documentul în care inițiatorii explică ce vrea legea. Important:
@@ -151,7 +151,7 @@ export default function DesprePage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-sm font-semibold text-muted">Cum alegem ce evidențiem</h2>
+        <h2 className="font-serif text-[20px] font-normal text-foreground border-b-2 border-sidebar pb-[5px]">Cum alegem ce evidențiem</h2>
         <p className="text-foreground leading-relaxed">
           Nu putem citi manual fiecare proiect, așa că <strong className="text-foreground">intern</strong> folosim
           un scor automat (AI) care estimează cât de mult ar interesa o lege un cetățean obișnuit. Ne ajută
@@ -165,7 +165,7 @@ export default function DesprePage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-sm font-semibold text-muted">Limitări ale datelor</h2>
+        <h2 className="font-serif text-[20px] font-normal text-foreground border-b-2 border-sidebar pb-[5px]">Limitări ale datelor</h2>
         <ul className="text-foreground leading-relaxed space-y-1.5 list-disc list-inside text-sm">
           <li>Acoperă voturile nominale din plenul Senatului și Camerei Deputaților.</li>
           <li>Nu include comisii parlamentare sau voturi prin vot electronic secret.</li>
@@ -175,7 +175,7 @@ export default function DesprePage() {
       </section>
 
       <section id="in-presa" className="space-y-3 scroll-mt-20">
-        <h2 className="text-sm font-semibold text-muted">În presă</h2>
+        <h2 className="font-serif text-[20px] font-normal text-foreground border-b-2 border-sidebar pb-[5px]">În presă</h2>
         <p className="text-sm text-muted leading-relaxed">
           Analize și articole care folosesc sau citează datele LaButoane:
         </p>
@@ -202,7 +202,7 @@ export default function DesprePage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-sm font-semibold text-muted">Contact</h2>
+        <h2 className="font-serif text-[20px] font-normal text-foreground border-b-2 border-sidebar pb-[5px]">Contact</h2>
         <p className="text-foreground leading-relaxed text-sm">
           Pentru întrebări sau sesizări:{' '}
           <a href="mailto:siminiucdenis@gmail.com" className="underline hover:text-muted">
@@ -215,7 +215,7 @@ export default function DesprePage() {
       </section>
 
       <section className="space-y-2 border-t border-rim pt-6">
-        <h2 className="text-sm font-semibold text-muted">Surse de date</h2>
+        <h2 className="font-serif text-[20px] font-normal text-foreground border-b-2 border-sidebar pb-[5px]">Surse de date</h2>
         <div className="flex gap-4 text-sm">
           <a href="https://senat.ro" target="_blank" rel="noopener noreferrer" className="text-muted hover:text-foreground underline">
             senat.ro
