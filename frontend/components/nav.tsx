@@ -25,7 +25,7 @@ export function Nav() {
             <HeaderSearch />
             <Feedback label="Feedback" className="whitespace-nowrap" />
             <ReportMistake label="Eroare" className="whitespace-nowrap" />
-            <span className="hidden xl:inline-block font-mono text-[9.5px] tracking-[0.1em] text-muted border border-[var(--ink)] rounded-[3px] px-2 py-[3px] select-none whitespace-nowrap">
+            <span className="hidden xl:inline-block font-mono text-[9.5px] tracking-[0.1em] text-muted select-none whitespace-nowrap">
               NEAFILIAT POLITIC
             </span>
           </div>
