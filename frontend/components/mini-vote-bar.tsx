@@ -4,24 +4,19 @@ interface Props {
   abstentionCount: number | null
 }
 
+/** Vote split as numbers (pentru · împotrivă · abțineri), each in its vote colour. */
 export function MiniVoteBar({ forCount, againstCount, abstentionCount }: Props) {
   const f = forCount ?? 0
   const a = againstCount ?? 0
   const b = abstentionCount ?? 0
-  const total = f + a + b
-  if (total === 0) return <div className="h-2 w-24 bg-rim rounded-full" />
-
-  const pct = (n: number) => `${((n / total) * 100).toFixed(1)}%`
-
+  if (f + a + b === 0) return <span className="text-[11px] text-faint">—</span>
   return (
-    <div
-      className="flex h-2 w-24 rounded-full overflow-hidden"
-      role="img"
-      aria-label={`${f} pentru, ${a} împotrivă, ${b} abțineri`}
-    >
-      {f > 0 && <div className="bg-adoptat" style={{ width: pct(f) }} />}
-      {a > 0 && <div className="bg-respins" style={{ width: pct(a) }} />}
-      {b > 0 && <div className="bg-abstention" style={{ width: pct(b) }} />}
-    </div>
+    <span className="font-mono text-[12px] tabular-nums whitespace-nowrap" aria-label={`${f} pentru, ${a} împotrivă, ${b} abțineri`}>
+      <span style={{ color: 'var(--color-for-dark)' }}>{f}</span>
+      <span className="text-faint"> · </span>
+      <span style={{ color: 'var(--color-against-dark)' }}>{a}</span>
+      <span className="text-faint"> · </span>
+      <span style={{ color: 'var(--color-abstention-dark)' }}>{b}</span>
+    </span>
   )
 }

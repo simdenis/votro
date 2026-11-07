@@ -46,7 +46,7 @@ export function AiSummary({
         </p>
         {isAi && (
           <span
-            className="text-[9px] uppercase tracking-wide font-semibold text-muted bg-raised border border-rim rounded px-1.5 py-px"
+            className="text-[9px] font-semibold text-muted bg-raised border border-rim rounded px-1.5 py-px"
             title="Text generat automat dintr-un model AI pe baza documentelor oficiale ale proiectului. Poate conține erori — verifică sursa."
           >
             generat automat · poate conține erori
@@ -54,7 +54,7 @@ export function AiSummary({
         )}
         {titleOnly && (
           <span
-            className="text-[9px] uppercase tracking-wide font-semibold text-amber-700 dark:text-amber-500 bg-raised border border-rim rounded px-1.5 py-px"
+            className="text-[9px] font-semibold text-amber-700 dark:text-amber-500 bg-raised border border-rim rounded px-1.5 py-px"
             title="Documentele oficiale (textul proiectului, expunerea de motive) nu au putut fi citite — rezumatul reflectă doar titlul oficial."
           >
             rezumat generat doar din titlu

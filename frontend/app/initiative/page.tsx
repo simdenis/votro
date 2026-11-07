@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { SelectNav } from '@/components/select-nav'
 import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
 import { allRows } from '@/lib/paging'
@@ -33,14 +34,6 @@ const CAMERE: { id: 'toate' | 'deputies' | 'senate'; label: string }[] = [
   { id: 'senate',   label: 'Senat' },
 ]
 
-function chipClass(active: boolean) {
-  return `text-[13.5px] px-3.5 py-1.5 rounded-full border font-medium transition-colors ${
-    active
-      ? 'border-[var(--ink)] text-white bg-[var(--ink)]'
-      : 'border-rim text-foreground/75 hover:text-foreground hover:border-foreground/40 hover:bg-raised'
-  }`
-}
-
 /** Whole days from a past date to today (RO calendar dates, tz-safe). */
 function daysSince(dateStr: string, today: string): number {
   const ms = Date.parse(today + 'T00:00:00Z') - Date.parse(dateStr.slice(0, 10) + 'T00:00:00Z')
@@ -66,7 +59,7 @@ function StagePill({ stage }: { stage: Stage }) {
           : { color: 'var(--muted)', bg: 'var(--raised)' }
   return (
     <span
-      className="inline-flex items-center text-[10px] font-bold uppercase tracking-wide rounded px-1.5 py-0.5 whitespace-nowrap"
+      className="inline-flex items-center text-[10px] font-bold rounded px-1.5 py-0.5 whitespace-nowrap"
       style={{ color: tone.color, backgroundColor: tone.bg }}
     >
       {STAGE_LABELS[stage]}
@@ -144,36 +137,15 @@ export default async function InitiativePage({
         de când proiectul e la comisia sesizată în fond. Actualizat zilnic.
       </p>
 
-      {/* Filters — plain GET links, same chip style as /legi */}
-      <div className="space-y-3">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-[12px] uppercase tracking-[0.12em] font-semibold text-faint mr-1">Stadiu</span>
-          {STADII.map(s => (
-            <Link key={s.id} href={buildUrl({ stadiu: s.id })} className={chipClass(stadiu === s.id)}>
-              {s.label}
-            </Link>
-          ))}
-        </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-[12px] uppercase tracking-[0.12em] font-semibold text-faint mr-1">Prima cameră</span>
-          {CAMERE.map(c => (
-            <Link key={c.id} href={buildUrl({ camera: c.id })} className={chipClass(camera === c.id)}>
-              {c.label}
-            </Link>
-          ))}
-        </div>
+      {/* Filters: dropdowns, each pick is a URL */}
+      <div className="flex flex-wrap gap-x-6 gap-y-3">
+        <SelectNav label="Stadiu" value={buildUrl({ stadiu })}
+          options={STADII.map(o => ({ label: o.label, href: buildUrl({ stadiu: o.id }) }))} />
+        <SelectNav label="Prima cameră" value={buildUrl({ camera })}
+          options={CAMERE.map(o => ({ label: o.label, href: buildUrl({ camera: o.id }) }))} />
         {categories.length > 0 && (
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-[12px] uppercase tracking-[0.12em] font-semibold text-faint mr-1">Categorie</span>
-            <Link href={buildUrl({ categorie: null })} className={chipClass(categorie === null)}>
-              Toate
-            </Link>
-            {categories.map(c => (
-              <Link key={c} href={buildUrl({ categorie: c })} className={chipClass(categorie === c)}>
-                {c}
-              </Link>
-            ))}
-          </div>
+          <SelectNav label="Categorie" value={buildUrl({ categorie })}
+            options={[{ label: 'Toate', href: buildUrl({ categorie: null }) }, ...categories.map(c => ({ label: c, href: buildUrl({ categorie: c }) }))]} />
         )}
       </div>
 
@@ -196,7 +168,7 @@ export default async function InitiativePage({
         <div className="overflow-x-auto">
           <table className="w-full text-[15px]">
             <thead>
-              <tr className="border-b-2 border-sidebar text-[11px] uppercase tracking-[0.14em] text-faint">
+              <tr className="border-b-2 border-sidebar text-[11px] tracking-[0.14em] text-faint">
                 <th
                   className="text-left py-3 pr-4 font-medium"
                   title="De la înregistrarea inițiativei în Parlament — alt termen decât cel al raportului de comisie"

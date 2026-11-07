@@ -80,7 +80,7 @@ export function PoliticianProfile({ stats, history, deviationRows, partyHistory,
             <PartyBadge abbreviation={stats.party_abbr} color={stats.party_color} size="md" />
             {stats.gov_role && (
               <span
-                className="text-[10px] uppercase font-semibold tracking-wide bg-sidebar text-white rounded-[3px] px-1.5 py-px"
+                className="text-[10px] font-semibold bg-sidebar text-white rounded-[3px] px-1.5 py-px"
                 title="Membru al Guvernului actual: în funcție nu votează în plen, deci absența e structurală, nu o alegere."
               >
                 guvern · {stats.gov_role}
@@ -93,7 +93,7 @@ export function PoliticianProfile({ stats, history, deviationRows, partyHistory,
                 erases a reserved-seat mandate. county carries the category. */}
             {stats.county === 'Minorități' && stats.party_abbr !== 'MIN' && (
               <span
-                className="text-[10px] uppercase font-semibold tracking-wide border border-rim text-muted rounded-[3px] px-1.5 py-px"
+                className="text-[10px] font-semibold border border-rim text-muted rounded-[3px] px-1.5 py-px"
                 title="Ales pe un mandat rezervat organizațiilor minorităților naționale, dar nu face parte din grupul parlamentar al minorităților. Categoria electorală ține tot mandatul; apartenența la grup se poate schimba."
               >
                 minorități

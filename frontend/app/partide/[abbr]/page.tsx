@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
-import { formatDate, choiceLabel, choiceColor, pct, hasPartyLine , personSlug } from '@/lib/utils'
+import { formatDate, choiceLabel, choiceColor, pct, hasPartyLine, personSlug, dec1 } from '@/lib/utils'
 import { OutcomeBadge } from '@/components/outcome-badge'
 import { StatsCard } from '@/components/stats-card'
 import { DonutChart } from '@/components/donut-chart'
@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: { params: Promise<{ abbr: str
   // real 404 for unknown abbreviations — see deputati/[id]
   if (!data) notFound()
   const desc = hasPartyLine(data.abbreviation)
-    ? `Coeziune internă ${data.cohesion_pct != null ? `${data.cohesion_pct.toFixed(1)}%` : '—'}. Vezi cum au votat senatorii și deputații ${data.abbreviation}.`
+    ? `Coeziune internă ${data.cohesion_pct != null ? `${dec1(data.cohesion_pct)}%` : '—'}. Vezi cum au votat senatorii și deputații ${data.abbreviation}.`
     : `Vezi cum au votat parlamentarii din grupul ${data.name}.`
   const title = `${data.abbreviation} — Coeziune și voturi`
   return {
@@ -98,7 +98,7 @@ export default async function PartyPage({ params }: { params: Promise<{ abbr: st
         )}
         {!noLine && (
           <StatsCard
-            value={cohesion.total_active_votes ? (cohesion.deviation_count / cohesion.total_active_votes * 100).toFixed(1) : '—'}
+            value={cohesion.total_active_votes ? dec1(cohesion.deviation_count / cohesion.total_active_votes * 100) : '—'}
             label={<>Devieri / 100 voturi <InfoHint title="Devieri / 100 voturi" tip={METRIC_TIPS.devieri} /></>}
             accent="var(--color-deviation)"
           />
@@ -128,7 +128,7 @@ export default async function PartyPage({ params }: { params: Promise<{ abbr: st
             <div className="overflow-x-auto">
               <table className="w-full text-[15px]">
                 <thead>
-                  <tr className="border-b-2 border-sidebar text-[11px] uppercase tracking-[0.14em] text-faint">
+                  <tr className="border-b-2 border-sidebar text-[11px] tracking-[0.14em] text-faint">
                     <th className="text-left py-2.5 px-3 font-medium">Nume</th>
                     <th className="text-right py-2.5 px-3 font-medium hidden md:table-cell">Voturi</th>
                     <th className="text-right py-2.5 px-3 font-medium">Devieri</th>
@@ -177,7 +177,7 @@ export default async function PartyPage({ params }: { params: Promise<{ abbr: st
           <div className="overflow-x-auto">
             <table className="w-full text-[15px]">
               <thead>
-                <tr className="border-b-2 border-sidebar text-[11px] uppercase tracking-[0.14em] text-faint">
+                <tr className="border-b-2 border-sidebar text-[11px] tracking-[0.14em] text-faint">
                   <th className="text-left py-2.5 px-3 font-medium">Cod</th>
                   <th className="text-left py-2.5 px-3 font-medium hidden md:table-cell">Titlu</th>
                   <th className="text-left py-2.5 px-3 font-medium hidden sm:table-cell">Dată</th>

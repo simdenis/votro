@@ -27,7 +27,7 @@ export default async function VotesPage({
 
   // inner join only when filtering on a law column — a plain join would
   // hide the ~100 plenary votes that have no law attached
-  const lawCols = 'laws(code, title, law_category)'
+  const lawCols = 'laws(code, title, headline, law_category)'
   let q = db
     .from('votes')
     .select(`id, vote_date, chamber, outcome, for_count, against_count, abstention_count, description, ${sp.category ? lawCols.replace('laws(', 'laws!inner(') : lawCols}`, { count: 'exact' })
@@ -77,7 +77,7 @@ export default async function VotesPage({
         <div className="overflow-x-auto">
           <table className="w-full text-[15px]">
             <thead>
-              <tr className="border-b-2 border-sidebar text-[11px] uppercase tracking-[0.14em] text-faint">
+              <tr className="border-b-2 border-sidebar text-[11px] tracking-[0.14em] text-faint">
                 <th className="text-left py-3 pr-4 font-medium">Cod</th>
                 <th className="text-left py-3 pr-4 font-medium">Titlu</th>
                 <th className="text-left py-3 pr-4 font-medium hidden lg:table-cell">Categorie</th>
@@ -103,11 +103,11 @@ export default async function VotesPage({
                       className="line-clamp-1 text-foreground hover:underline"
                       title={vote.laws?.title ?? vote.description ?? undefined}
                     >
-                      {vote.laws?.title ?? vote.description ?? 'Vot procedural (fără lege identificată)'}
+                      {(vote.laws as { headline?: string | null } | null)?.headline || vote.laws?.title || vote.description || 'Vot procedural (fără lege identificată)'}
                     </Link>
                     {vote.laws?.law_category && (
                       <div className="lg:hidden mt-1">
-                        <CategoryBadge category={vote.laws.law_category} className="text-[10px] px-1.5 py-px rounded" href={`/voturi?category=${encodeURIComponent(vote.laws.law_category)}`} />
+                        <CategoryBadge category={vote.laws.law_category} className="text-[11px]" href={`/voturi?category=${encodeURIComponent(vote.laws.law_category)}`} />
                       </div>
                     )}
                   </td>

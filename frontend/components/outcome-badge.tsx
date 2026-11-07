@@ -1,17 +1,11 @@
 interface Props { outcome: 'adoptat' | 'respins' | null | undefined }
 
+/** Vote result as plain coloured text (no chip). */
 export function OutcomeBadge({ outcome }: Props) {
   if (!outcome) return <span className="text-[11px] text-faint">—</span>
   const adopted = outcome === 'adoptat'
   return (
-    <span
-      className="inline-flex items-center text-[9px] uppercase font-bold tracking-[0.06em] px-[7px] py-[1px] rounded-[3px]"
-      style={
-        adopted
-          ? { backgroundColor: '#eef7f2', color: 'var(--color-for)' }
-          : { backgroundColor: '#fdf0ef', color: 'var(--color-against)' }
-      }
-    >
+    <span className="text-[12.5px] font-medium" style={{ color: adopted ? 'var(--color-for-dark)' : 'var(--color-against-dark)' }}>
       {adopted ? 'Adoptat' : 'Respins'}
     </span>
   )

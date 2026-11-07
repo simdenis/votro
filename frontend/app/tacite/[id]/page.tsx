@@ -66,7 +66,7 @@ export default async function TacitBillPage({ params }: { params: Promise<{ id: 
       <div>
         <div className="flex items-center gap-3 mb-3 flex-wrap">
           <span className="font-mono text-sm font-bold text-muted">{bill.code}</span>
-          <span className="text-[11px] uppercase tracking-wide text-faint">Camera Deputaților · primă cameră sesizată</span>
+          <span className="text-[11px] text-faint">Camera Deputaților · primă cameră sesizată</span>
         </div>
         {/* plain-language summary is the headline; official title below it */}
         <h1 className="font-serif text-[26px] sm:text-[32px] font-normal tracking-[-0.01em] leading-[1.15] text-foreground">

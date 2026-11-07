@@ -70,7 +70,7 @@ export default async function TacitePage() {
         <div className="overflow-x-auto">
           <table className="w-full text-[15px]">
             <thead>
-              <tr className="border-b-2 border-sidebar text-[11px] uppercase tracking-[0.14em] text-faint">
+              <tr className="border-b-2 border-sidebar text-[11px] tracking-[0.14em] text-faint">
                 <th className="text-left py-3 pr-4 font-medium">Expiră</th>
                 <th className="text-left py-3 pr-4 font-medium">Proiect</th>
                 <th className="text-left py-3 pr-4 font-medium hidden md:table-cell">Termen</th>

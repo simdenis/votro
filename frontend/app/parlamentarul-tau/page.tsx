@@ -31,7 +31,7 @@ function MemberTable({ title, members, basePath }: {
         <div className="overflow-x-auto">
           <table className="w-full text-[15px]">
             <thead>
-              <tr className="border-b-2 border-sidebar text-[11px] uppercase tracking-[0.14em] text-faint">
+              <tr className="border-b-2 border-sidebar text-[11px] tracking-[0.14em] text-faint">
                 <th className="text-left py-2.5 pr-4 font-medium">Nume</th>
                 <th className="text-left py-2.5 pr-4 font-medium">Partid</th>
                 <th className="text-right py-2.5 pr-4 font-medium hidden sm:table-cell">Prezență</th>

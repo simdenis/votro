@@ -24,7 +24,7 @@ export function LawStatusPill({ law }: { law: Parameters<typeof lawStatusPill>[0
   const { label, color, bg } = lawStatusPill(law)
   return (
     <span
-      className="inline-flex items-center text-[10px] font-bold uppercase tracking-wide rounded px-1.5 py-0.5 flex-shrink-0"
+      className="inline-flex items-center text-[10px] font-bold rounded px-1.5 py-0.5 flex-shrink-0"
       style={{ color, backgroundColor: bg }}
     >
       {label}

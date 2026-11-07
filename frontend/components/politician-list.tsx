@@ -99,7 +99,7 @@ export function PoliticianList({ title, basePath, people, switcherIds }: Props) 
   }
 
   const th = (col: string, label: string) => (
-    <button type="button" onClick={() => clickSort(col)} className="hover:text-foreground uppercase tracking-[0.14em] font-medium cursor-pointer">
+    <button type="button" onClick={() => clickSort(col)} className="hover:text-foreground tracking-[0.14em] font-medium cursor-pointer">
       {label} {sortIcon(col)}
     </button>
   )
@@ -158,7 +158,7 @@ export function PoliticianList({ title, basePath, people, switcherIds }: Props) 
                         </span>
                         {s.gov_role && (
                           <span
-                            className="text-[10px] uppercase font-semibold tracking-wide bg-sidebar text-white rounded-[3px] px-1.5 py-px flex-shrink-0"
+                            className="text-[10px] font-semibold bg-sidebar text-white rounded-[3px] px-1.5 py-px flex-shrink-0"
                             title="Membru al Guvernului actual: în funcție nu votează în plen"
                           >
                             guvern · {s.gov_role}

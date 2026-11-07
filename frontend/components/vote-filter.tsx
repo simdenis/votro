@@ -4,6 +4,19 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
 import { Skeleton } from './skeleton'
 
+const RO_MONTHS = ['ianuarie', 'februarie', 'martie', 'aprilie', 'mai', 'iunie',
+  'iulie', 'august', 'septembrie', 'octombrie', 'noiembrie', 'decembrie']
+
+/** Every month of the legislature (from Dec 2024), newest first. */
+const MONTHS: { value: string; label: string }[] = (() => {
+  const out = []
+  const now = new Date()
+  for (let d = new Date(now.getFullYear(), now.getMonth(), 1); d >= new Date(2024, 11, 1); d.setMonth(d.getMonth() - 1)) {
+    out.push({ value: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`, label: `${RO_MONTHS[d.getMonth()]} ${d.getFullYear()}` })
+  }
+  return out
+})()
+
 function FilterInner({ categories }: { categories: string[] }) {
   const router = useRouter()
   const params = useSearchParams()
@@ -16,7 +29,7 @@ function FilterInner({ categories }: { categories: string[] }) {
     router.push(`/voturi?${next.toString()}`)
   }
 
-  const baseInput = 'border border-rim rounded-md text-sm px-3 py-1.5 bg-surface text-foreground focus:outline-none focus:ring-1 focus:ring-[#5050c0]'
+  const baseInput = 'border border-rim rounded-[2px] text-sm px-2.5 py-1.5 bg-surface text-foreground focus:outline-none focus:border-foreground/50'
 
   return (
     <div className="flex flex-wrap gap-3 items-center">
@@ -45,26 +58,32 @@ function FilterInner({ categories }: { categories: string[] }) {
         </select>
       )}
 
-      <input
-        type="date"
+      {/* one month at a time, written the Romanian way (a native date input shows
+          the browser's locale, mm/dd/yyyy for US visitors) */}
+      <select
         className={baseInput}
-        aria-label="De la data"
-        value={params.get('from') ?? ''}
-        onChange={e => update('from', e.target.value)}
-      />
-
-      <input
-        type="date"
-        className={baseInput}
-        aria-label="Până la data"
-        value={params.get('to') ?? ''}
-        onChange={e => update('to', e.target.value)}
-      />
+        aria-label="Filtrează după lună"
+        value={params.get('from')?.slice(0, 7) ?? ''}
+        onChange={e => {
+          const m = e.target.value
+          const next = new URLSearchParams(params.toString())
+          next.delete('page')
+          if (m) {
+            const [y, mo] = m.split('-').map(Number)
+            next.set('from', `${m}-01`)
+            next.set('to', `${m}-${String(new Date(y, mo, 0).getDate()).padStart(2, '0')}`)
+          } else { next.delete('from'); next.delete('to') }
+          router.push(`/voturi?${next.toString()}`)
+        }}
+      >
+        <option value="">Toate lunile</option>
+        {MONTHS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+      </select>
 
       {(params.get('outcome') || params.get('category') || params.get('from') || params.get('to')) && (
         <button
           onClick={() => router.push('/voturi')}
-          className="text-sm text-muted underline underline-offset-2"
+          className="text-sm text-muted hover:text-foreground"
         >
           Resetează filtrele
         </button>

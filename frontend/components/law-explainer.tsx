@@ -36,7 +36,7 @@ export function LawExplainer({ data, source, code }: { data: LawExplainerData; s
       <div className="flex items-center gap-2 mb-2.5 flex-wrap">
         <h2 id="pe-scurt" className="text-[11px] font-semibold text-muted">Pe scurt</h2>
         <span
-          className="text-[9px] uppercase tracking-wide font-semibold text-muted bg-raised border border-rim rounded px-1.5 py-px"
+          className="text-[9px] font-semibold text-muted bg-raised border border-rim rounded px-1.5 py-px"
           title="Text generat automat dintr-un model AI pe baza textului oficial al legii. Poate conține erori — verifică sursa."
         >
           generat automat · poate conține erori

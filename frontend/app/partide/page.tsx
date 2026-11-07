@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
-import { pct, textOnColor, hasPartyLine } from '@/lib/utils'
+import { pct, dec1, textOnColor, hasPartyLine } from '@/lib/utils'
 import { InfoHint, METRIC_TIPS } from '@/components/info-hint'
 import type { PartyCohesion, PartyAbsence } from '@/lib/types'
 
@@ -20,6 +20,8 @@ export default async function PartiesPage() {
   ])
   const data = r0.data as PartyCohesion[] | null
   // IND/MIN are catch-all labels, not parties — "cohesion" is meaningless there
+  // a party with no sitting members (PACE after its senators went independent,
+  // 26 Oct 2026) has history but nothing to show here
   const parties = data?.filter(p => hasPartyLine(p.abbreviation))
   const absenceByParty: Record<string, number | null> = {}
   for (const a of (r1.data ?? []) as PartyAbsence[]) absenceByParty[a.party_id] = a.absence_pct
@@ -30,6 +32,8 @@ export default async function PartiesPage() {
     membersByParty[row.party_id] = (membersByParty[row.party_id] ?? 0) + 1
   }
 
+  const shown = parties?.filter(p => membersByParty[p.party_id])
+
   return (
     <div className="space-y-6">
       <div>
@@ -37,20 +41,20 @@ export default async function PartiesPage() {
         <p className="text-[12.5px] text-muted mt-1.5">
           Numărul de membri activi,{' '}
           <InfoHint title="Devieri / 100 voturi" tip={METRIC_TIPS.devieri}>
-            <span className="font-semibold text-foreground underline decoration-dotted decoration-rim underline-offset-2">rata de deviere</span>
+            <span>rata de deviere</span>
           </InfoHint>{' '}
           de la linia de partid și{' '}
           <InfoHint title="Absență medie" tip={METRIC_TIPS.absenta}>
-            <span className="font-semibold text-foreground underline decoration-dotted decoration-rim underline-offset-2">absența medie</span>
+            <span>absența medie</span>
           </InfoHint>{' '}
-          — pe baza <strong className="text-foreground">afilierii curente</strong> a parlamentarilor.
+          pe baza afilierii curente a parlamentarilor.
         </p>
       </div>
-      {!parties?.length ? (
+      {!shown?.length ? (
         <p className="text-sm text-muted">Nu există date.</p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-          {parties.map(p => (
+          {shown.map(p => (
             <Link
               key={p.party_id}
               href={`/partide/${p.abbreviation}`}
@@ -77,8 +81,8 @@ export default async function PartiesPage() {
                 {/* rate, not raw count — raw deviations scale with member count ×
                     votes cast, so big present parties look worse than they are */}
                 <div>
-                  <div className="text-2xl font-semibold tabular-nums text-deviere">
-                    {p.total_active_votes ? (p.deviation_count / p.total_active_votes * 100).toFixed(1) : '—'}
+                  <div className="text-2xl font-semibold tabular-nums text-foreground">
+                    {p.total_active_votes ? dec1(p.deviation_count / p.total_active_votes * 100) : '—'}
                   </div>
                   <div className="text-xs text-muted">Devieri / 100 voturi</div>
                 </div>

@@ -5,7 +5,7 @@ import { formatDate, capFirst, lawSlug, plainSummary } from '@/lib/utils'
 import { OutcomeBadge } from '@/components/outcome-badge'
 import { BaseLawBadges } from '@/components/base-law-badge'
 import { CategoryBadge } from '@/components/category-badge'
-import { LawStatusPill } from '@/components/law-status-pill'
+import { SelectNav } from '@/components/select-nav'
 import type { LawStatus, PresidentialStatus } from '@/lib/types'
 import { SectionNav, LEGI_SECTIONS } from '@/components/section-nav'
 
@@ -42,14 +42,6 @@ const CATEGORIES = [
   'Agricultură', 'Mediu', 'Energie', 'Apărare', 'Economie', 'Tehnologie',
   'Administrație', 'Electoral',
 ] as const
-
-function chipClass(active: boolean) {
-  return `text-[13.5px] px-3.5 py-1.5 rounded-full border font-medium transition-colors ${
-    active
-      ? 'border-[var(--ink)] text-white bg-[var(--ink)]'
-      : 'border-rim text-foreground/75 hover:text-foreground hover:border-foreground/40 hover:bg-raised'
-  }`
-}
 
 function outcomeCell(outcome: 'adoptat' | 'respins' | null, voteId: string | null, date: string | null, passed = false) {
   if (!voteId) {
@@ -142,6 +134,11 @@ export default async function LegiPage({
 
   const { data, count } = await q
   const laws       = (data as LawStatus[] | null) ?? []
+  // short headline (laws.headline; law_status doesn't carry it) for the title column
+  const { data: heads } = laws.length
+    ? await db.from('laws').select('id, headline').in('id', laws.map(l => l.law_id))
+    : { data: [] }
+  const headline = new Map(((heads ?? []) as { id: string; headline: string | null }[]).map(h => [h.id, h.headline]))
   const totalPages = Math.ceil((count ?? 0) / PAGE_SIZE)
 
   // Build a /legi URL from the current state with selective overrides.
@@ -184,27 +181,12 @@ export default async function LegiPage({
         ))}
       </div>
 
-      {/* Sort + category controls */}
-      <div className="space-y-3">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-[12px] uppercase tracking-[0.12em] font-semibold text-faint mr-1">Sortează</span>
-          {SORTS.map(s => (
-            <Link key={s.id} href={buildUrl({ sort: s.id })} className={chipClass(sort === s.id)}>
-              {s.label}
-            </Link>
-          ))}
-        </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-[12px] uppercase tracking-[0.12em] font-semibold text-faint mr-1">Categorie</span>
-          <Link href={buildUrl({ category: null })} className={chipClass(category === null)}>
-            Toate
-          </Link>
-          {CATEGORIES.map(c => (
-            <Link key={c} href={buildUrl({ category: c })} className={chipClass(category === c)}>
-              {c}
-            </Link>
-          ))}
-        </div>
+      {/* Sort + category: dropdowns, each pick is a URL */}
+      <div className="flex flex-wrap gap-x-6 gap-y-3">
+        <SelectNav label="Sortează după" value={buildUrl({ sort })}
+          options={SORTS.map(o => ({ label: o.label, href: buildUrl({ sort: o.id }) }))} />
+        <SelectNav label="Categorie" value={buildUrl({ category })}
+          options={[{ label: 'Toate', href: buildUrl({ category: null }) }, ...CATEGORIES.map(c => ({ label: c, href: buildUrl({ category: c }) }))]} />
       </div>
 
       {tab === 'purgatoriu' && (
@@ -230,7 +212,7 @@ export default async function LegiPage({
         <div className="overflow-x-auto">
           <table className="w-full text-[15px]">
             <thead>
-              <tr className="border-b-2 border-sidebar text-[11px] uppercase tracking-[0.14em] text-faint">
+              <tr className="border-b-2 border-sidebar text-[11px] tracking-[0.14em] text-faint">
                 <th className="text-left py-2.5 pr-4 font-medium">Cod</th>
                 <th className="text-left py-2.5 pr-4 font-medium">Titlu</th>
                 <th className="text-left py-2.5 pr-4 font-medium hidden lg:table-cell">Categorie</th>
@@ -248,21 +230,18 @@ export default async function LegiPage({
                     </Link>
                   </td>
                   <td className="py-3.5 pr-4 max-w-xs align-top">
-                    {/* at-a-glance verdict pill so the list is scannable without
-                        reading the three per-stage columns (hidden on mobile) */}
-                    <div className="mb-1"><LawStatusPill law={law} /></div>
-                    {/* plain-language summary is the headline where we have one;
-                        the official title stays as the small verifiable subtitle */}
-                    <Link href={`/legi/${lawSlug(law.code)}`} className="block hover:underline" title={capFirst(law.title)}>
-                      <span className="line-clamp-2 text-foreground">{plainSummary(law.summary) || capFirst(law.title)}</span>
-                      {law.summary && (
+                    {/* short headline where we have one, else the plain summary; the
+                        official title stays as the small verifiable subtitle */}
+                    <Link href={`/legi/${lawSlug(law.code)}`} className="block hover:text-muted transition-colors" title={capFirst(law.title)}>
+                      <span className="line-clamp-2 text-foreground font-medium">{headline.get(law.law_id) || plainSummary(law.summary) || capFirst(law.title)}</span>
+                      {(headline.get(law.law_id) || law.summary) && (
                         <span className="line-clamp-1 text-[11px] text-faint mt-0.5">{capFirst(law.title)}</span>
                       )}
                     </Link>
                     <div className="flex gap-1 mt-1 flex-wrap items-center">
                       {law.law_category && law.summary_is_ai && (
                         <span className="lg:hidden inline-flex">
-                          <CategoryBadge category={law.law_category} className="text-[10px] px-1.5 py-px rounded" />
+                          <CategoryBadge category={law.law_category} className="text-[11px]" />
                         </span>
                       )}
                       <BaseLawBadges title={law.title} />

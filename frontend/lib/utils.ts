@@ -132,7 +132,12 @@ export function capFirst(s: string | null | undefined): string {
 
 export function pct(n: number | null | undefined): string {
   if (n == null) return '—'
-  return `${n.toFixed(1)}%`
+  return `${dec1(n)}%`
+}
+
+/** One decimal, Romanian style (decimal comma): 15.7 → «15,7». */
+export function dec1(n: number): string {
+  return n.toFixed(1).replace('.', ',')
 }
 
 /** Contested-vote threshold used by party cohesion: the minority camp
