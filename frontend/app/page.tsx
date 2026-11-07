@@ -138,17 +138,6 @@ export default async function Dashboard() {
         </form>
         </div>
 
-        {/* Newsletter in the hero's right column, where the Senate donut was */}
-        <div className="lg:w-[300px] lg:flex-shrink-0 mt-8 lg:mt-9">
-          <h2 className="font-serif text-[16px] font-normal text-foreground border-b-2 border-sidebar pb-[5px]">Parlamentul, pe email</h2>
-          <p className="text-[12px] text-muted mt-2 mb-3">
-            Ce s-a votat săptămâna asta: sâmbăta, pe scurt. Te poți dezabona oricând.{' '}
-            <a href="/newsletter-exemplu" target="_blank" rel="noopener" className="underline decoration-rim underline-offset-2 hover:text-foreground">
-              Vezi un exemplu
-            </a>
-          </p>
-          <NewsletterForm compact hideNote />
-        </div>
        </div>
       </header>
 
@@ -237,6 +226,17 @@ export default async function Dashboard() {
 
         {/* Sidebar: find-your-MP map · top absences */}
         <aside>
+            {/* newsletter signup, above the map */}
+            <div className="mb-10">
+              <h2 className="font-serif text-[16px] font-normal text-foreground border-b-2 border-sidebar pb-[5px]">Parlamentul, pe email</h2>
+              <p className="text-[12px] text-muted mt-2 mb-3">
+                Ce s-a votat săptămâna asta: sâmbăta, pe scurt. Te poți dezabona oricând.{' '}
+                <a href="/newsletter-exemplu" target="_blank" rel="noopener" className="underline decoration-rim underline-offset-2 hover:text-foreground">
+                  Vezi un exemplu
+                </a>
+              </p>
+              <NewsletterForm compact hideNote />
+            </div>
             {/* personal hook at the top of the sidebar — "find your MP"
                 converts a first-time visitor, an email form doesn't */}
             <div className="flex items-baseline justify-between border-b-2 border-sidebar pb-[5px] mb-3">
