@@ -118,8 +118,8 @@ export default async function Dashboard() {
         {/* Search-anything: many visitors arrive wanting one person or one law.
             Plain GET form → /cautare (works with no JS). Covers name, party, code. */}
         <form action="/cautare" method="GET" className="mt-6 max-w-2xl" role="search">
-          <div className="flex gap-2">
-            <div className="relative flex-1">
+          <div className="flex border border-foreground rounded-[2px] focus-within:ring-1 focus-within:ring-foreground">
+            <div className="relative flex-1 min-w-0">
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="absolute left-3.5 top-1/2 -translate-y-1/2 text-faint pointer-events-none">
                 <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
               </svg>
@@ -128,12 +128,12 @@ export default async function Dashboard() {
                 type="search"
                 aria-label="Caută un parlamentar, un partid sau o lege"
                 placeholder="Caută un parlamentar, un partid sau o lege…"
-                className="w-full bg-surface border border-rim rounded-lg pl-10 pr-3 py-3 text-[15px] text-foreground placeholder:text-faint focus:outline-none focus:border-foreground/50 transition-colors"
+                className="w-full bg-surface rounded-[2px] pl-10 pr-3 py-3 text-[15px] text-foreground placeholder:text-faint focus:outline-none"
               />
             </div>
             <button
               type="submit"
-              className="btn-tactile shrink-0 rounded-lg px-5 py-3 text-[14px] font-semibold text-white"
+              className="btn-tactile shrink-0 px-5 sm:px-6 py-3 text-[14px] font-semibold text-white"
               style={{ background: 'var(--sidebar-bg)' }}
             >
               Caută
