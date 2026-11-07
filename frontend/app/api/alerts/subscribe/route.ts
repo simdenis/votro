@@ -42,8 +42,7 @@ export async function POST(req: Request) {
   let result: { status?: string; token?: string }
   try {
     const rpc = await signupRpc('subscribe_alert',
-      { p_email: email.trim(), p_type: targetType, p_id: targetId, p_ip: clientIp(req) },
-      { p_email: email.trim(), p_type: targetType, p_id: targetId })
+      { p_email: email.trim(), p_type: targetType, p_id: targetId, p_ip: clientIp(req) })
     if (!rpc.ok) return NextResponse.json({ error: 'Nu am putut salva abonarea.' }, { status: 502 })
     result = await rpc.json()
   } catch {

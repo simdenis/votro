@@ -22,7 +22,7 @@ function authed(req: Request): boolean {
 async function purge() {
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL) return
   await Promise.all(['purge_unconfirmed_alerts', 'purge_newsletter_pending'].map(fn =>
-    signupRpc(fn, {}, {}).catch(() => {}),
+    signupRpc(fn, {}).catch(() => {}),
   ))
 }
 
