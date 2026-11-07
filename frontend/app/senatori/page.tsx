@@ -1,8 +1,7 @@
 import type { Metadata } from 'next'
-import { getDB } from '@/lib/supabase'
+import { getChamberList } from '@/lib/stats-list'
 import { PoliticianList } from '@/components/politician-list'
 import { getSwitcherIds } from '@/lib/switchers'
-import type { PoliticianStats } from '@/lib/types'
 import { SectionNav, PARLAMENTARI_SECTIONS } from '@/components/section-nav'
 
 export const revalidate = 3600
@@ -16,11 +15,8 @@ export const metadata: Metadata = {
 export default async function SenatorsPage() {
   // columns trimmed to what PoliticianList renders — the whole array is
   // serialized into the client component's props
-  const [{ data }, switcherIds] = await Promise.all([
-    getDB().from('senator_stats')
-      .select('politician_id, name, first_name, party_abbr, party_color, total_votes, votes_for, votes_against, votes_abstention, votes_absent, votes_not_voted, chamber_votes, presence_pct, deviation_pct, gov_role')
-      .eq('active', true)
-      .order('name', { ascending: true }) as unknown as Promise<{ data: PoliticianStats[] | null }>,
+  const [data, switcherIds] = await Promise.all([
+    getChamberList('senator_stats'),
     getSwitcherIds(),
   ])
 
