@@ -8,26 +8,121 @@ export const metadata: Metadata = {
     'Drumul unei legi în România: cine o propune, prima cameră și camera decizională, adoptarea tacită, promulgarea, Curtea Constituțională și Monitorul Oficial.',
 }
 
-// Static explainer. Every rule cites the article of the Constitution
-// (revised 2003) so a reader can check it; wording follows the site's style
-// rules (no em dashes, plain sentences).
+// Static explainer, pictures first. Every rule cites the article of the
+// Constitution (revised 2003) so a reader can check it; wording follows the
+// site's style rules (no em dashes, plain sentences).
 
 const STEPS = [
-  { n: '1', title: 'Cineva propune legea', body: 'Guvernul, un deputat, un senator sau 100.000 de cetățeni.' },
-  { n: '2', title: 'Prima cameră', body: 'Senatul sau Camera Deputaților, după domeniu. Are 45 de zile.' },
-  { n: '3', title: 'Camera decizională', body: 'Cealaltă cameră. Votul ei e cel final.' },
-  { n: '4', title: 'Președintele', body: 'Promulgă legea în 20 de zile sau o retrimite o dată.' },
-  { n: '5', title: 'Monitorul Oficial', body: 'Legea intră în vigoare la 3 zile după publicare.' },
+  { title: 'Propunerea', lines: ['Guvernul, parlamentari', 'sau 100.000 de cetățeni'] },
+  { title: 'Prima cameră', lines: ['45 de zile să voteze'] },
+  { title: 'Camera decizională', lines: ['votul final'] },
+  { title: 'Președintele', lines: ['20 de zile să promulge'] },
+  { title: 'Monitorul Oficial', lines: ['în vigoare după 3 zile'] },
 ]
 
+// Seats won in December 2024. Majorities below are computed from these.
+const DEPUTIES = 331
+const SENATORS = 134
+
 function H2({ id, children }: { id: string; children: React.ReactNode }) {
-  return <h2 id={id} className="text-sm font-semibold text-muted scroll-mt-20">{children}</h2>
+  return (
+    <h2 id={id} className="font-serif text-[20px] font-normal text-foreground border-b-2 border-sidebar pb-[5px] scroll-mt-20">
+      {children}
+    </h2>
+  )
 }
 function Art({ n }: { n: string }) {
   return <span className="text-muted whitespace-nowrap">{`(art. ${n})`}</span>
 }
 
+/** Desktop: the five steps on one line, with the three detours drawn as arcs. */
+function PathDiagram() {
+  const x = (i: number) => 68 + i * 134
+  const Y = 120
+  return (
+    <svg viewBox="0 0 672 220" className="hidden sm:block w-full h-auto" role="img"
+      aria-label="Drumul unei legi: propunere, prima cameră, camera decizională, Președinte, Monitorul Oficial">
+      <defs>
+        <marker id="arr" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L8,4 L0,8 z" fill="var(--muted)" />
+        </marker>
+      </defs>
+
+      <line x1={x(0)} y1={Y} x2={x(4)} y2={Y} stroke="var(--text)" strokeWidth="2" />
+
+      {/* tacit: first chamber does not vote in time */}
+      <path d={`M${x(1)},${Y - 10} Q${(x(1) + x(2)) / 2},${Y - 70} ${x(2) - 4},${Y - 12}`}
+        fill="none" stroke="var(--color-deviation)" strokeWidth="1.5" strokeDasharray="4 3" markerEnd="url(#arr)" />
+      <text x={(x(1) + x(2)) / 2} y={Y - 74} textAnchor="middle" fontSize="12" fill="var(--color-deviation)">fără vot în termen:</text>
+      <text x={(x(1) + x(2)) / 2} y={Y - 60} textAnchor="middle" fontSize="12" fill="var(--color-deviation)">adoptată tacit</text>
+
+      {/* President sends it back once */}
+      <path d={`M${x(3)},${Y - 10} Q${(x(2) + x(3)) / 2},${Y - 92} ${x(2) + 4},${Y - 12}`}
+        fill="none" stroke="var(--muted)" strokeWidth="1.5" markerEnd="url(#arr)" />
+      <text x={(x(2) + x(3)) / 2} y={Y - 74} textAnchor="middle" fontSize="12" fill="var(--muted)">retrimisă o dată</text>
+
+      {/* Constitutional Court, only if someone challenges the law */}
+      <circle cx={(x(2) + x(3)) / 2} cy={Y} r="5" fill="var(--bg)" stroke="var(--text)" strokeWidth="1.5" />
+      <text x={(x(2) + x(3)) / 2} y={Y + 20} textAnchor="middle" fontSize="11" fill="var(--muted)">CCR, dacă e sesizată</text>
+
+      {STEPS.map((s, i) => (
+        <g key={s.title}>
+          <circle cx={x(i)} cy={Y} r="9" fill="var(--text)" />
+          <text x={x(i)} y={Y + 4} textAnchor="middle" fontSize="11" fontFamily="var(--font-mono, monospace)" fill="var(--bg)">{i + 1}</text>
+          <text x={x(i)} y={Y + 44} textAnchor="middle" fontSize="13" fontWeight="600" fill="var(--text)">{s.title}</text>
+          {s.lines.map((l, j) => (
+            <text key={l} x={x(i)} y={Y + 62 + j * 16} textAnchor="middle" fontSize="12" fill="var(--muted)">{l}</text>
+          ))}
+        </g>
+      ))}
+    </svg>
+  )
+}
+
+/** Phone: the same path, top to bottom, detours as side notes. */
+function PathList() {
+  const detour: Record<number, { text: string; color: string }> = {
+    1: { text: 'Fără vot în termen: adoptată tacit, merge mai departe.', color: 'var(--color-deviation)' },
+    2: { text: 'Curtea Constituțională, dacă e sesizată.', color: 'var(--muted)' },
+    3: { text: 'Poate retrimite legea o dată Parlamentului.', color: 'var(--muted)' },
+  }
+  return (
+    <ol className="sm:hidden relative ml-[9px] border-l-2 border-foreground">
+      {STEPS.map((s, i) => (
+        <li key={s.title} className="relative pl-6 pb-5 last:pb-0">
+          <span className="absolute -left-[11px] top-0 h-5 w-5 rounded-full font-mono text-[11px] flex items-center justify-center" style={{ background: "var(--text)", color: "var(--bg)" }}>
+            {i + 1}
+          </span>
+          <div className="text-[15px] font-semibold text-foreground leading-5">{s.title}</div>
+          <div className="text-[13px] text-muted">{s.lines.join(' ')}</div>
+          {detour[i] && (
+            <div className="mt-2 pl-3 border-l-2 border-dashed text-[13px]" style={{ borderColor: detour[i].color, color: detour[i].color }}>
+              {detour[i].text}
+            </div>
+          )}
+        </li>
+      ))}
+    </ol>
+  )
+}
+
+/** One square per seat; the first `filled` are ink, `absent` trailing ones are hollow. */
+function Seats({ total, filled = total, absent = 0 }: { total: number; filled?: number; absent?: number }) {
+  return (
+    <div className="flex flex-wrap gap-[2px]" aria-hidden>
+      {Array.from({ length: total }, (_, i) => (
+        <span key={i} className="h-[7px] w-[7px]" style={
+          i < filled ? { background: 'var(--text)' }
+            : i >= total - absent ? { boxShadow: 'inset 0 0 0 1px var(--color-absent)' }
+              : { background: 'var(--color-absent)' }
+        } />
+      ))}
+    </div>
+  )
+}
+
 export default function CumFunctioneazaPage() {
+  const present = 250
   return (
     <div className="max-w-2xl space-y-10">
       <SectionNav items={LEGI_SECTIONS} />
@@ -36,149 +131,102 @@ export default function CumFunctioneazaPage() {
           Cum funcționează Parlamentul
         </h1>
         <p className="text-sm text-muted mt-3 leading-relaxed">
-          Ce trebuie să știi ca să citești voturile de pe LaButoane. Fiecare regulă are trimitere la articolul
-          din Constituția României (revizuită în 2003), ca să o poți verifica.
+          Ce trebuie să știi ca să citești voturile. Trimiterile sunt la articolele din Constituție.
         </p>
       </div>
 
-      <ol className="grid gap-2 sm:grid-cols-5">
-        {STEPS.map(s => (
-          <li key={s.n} className="border-t border-rim py-3.5">
-            <div className="font-mono text-[12px] text-muted">{s.n}</div>
-            <div className="mt-1 text-[14px] font-semibold text-foreground leading-snug">{s.title}</div>
-            <div className="mt-1 text-[13px] text-muted leading-snug">{s.body}</div>
-          </li>
-        ))}
-      </ol>
+      <section className="space-y-4">
+        <H2 id="drum">Drumul unei legi</H2>
+        <PathDiagram />
+        <PathList />
+        <p className="text-[14px] text-foreground leading-relaxed">
+          Domeniul legii decide care cameră votează prima <Art n="75" />. O respingere la prima cameră nu oprește
+          legea: contează votul camerei decizionale. Termenele tacite care expiră curând sunt pe{' '}
+          <Link href="/tacite" className="text-info hover:underline">Legi tacite</Link>.
+        </p>
+      </section>
 
-      <section className="space-y-3">
+      <section className="space-y-4">
         <H2 id="camere">Două camere</H2>
-        <p className="text-foreground leading-relaxed">
-          Parlamentul are două camere, Camera Deputaților și Senatul <Art n="61" />, alese o dată la patru ani{' '}
-          <Art n="63" />. Lucrează în două sesiuni pe an: februarie–iunie și septembrie–decembrie <Art n="66" />.
-          În vacanța parlamentară nu se votează, decât dacă e convocată o sesiune extraordinară.
+        <div className="space-y-3">
+          <div>
+            <div className="text-[13px] text-muted mb-1.5">{`Camera Deputaților · ${DEPUTIES}`}</div>
+            <Seats total={DEPUTIES} />
+          </div>
+          <div>
+            <div className="text-[13px] text-muted mb-1.5">{`Senatul · ${SENATORS}`}</div>
+            <Seats total={SENATORS} />
+          </div>
+        </div>
+        <p className="text-[14px] text-foreground leading-relaxed">
+          Alese pentru patru ani <Art n="63" />. Se votează în sesiuni, februarie–iunie și septembrie–decembrie{' '}
+          <Art n="66" />, în rest doar în sesiuni extraordinare.
         </p>
       </section>
 
-      <section className="space-y-3">
-        <H2 id="initiativa">Cine poate propune o lege</H2>
-        <p className="text-foreground leading-relaxed">
-          Guvernul, deputații, senatorii și cel puțin 100.000 de cetățeni cu drept de vot, din cel puțin un sfert
-          din județe, cu minimum 5.000 de semnături în fiecare dintre ele și în București <Art n="74" />. Ce vine
-          de la Guvern se numește <em>proiect de lege</em>. Ce vine de la parlamentari sau cetățeni se numește{' '}
-          <em>propunere legislativă</em>.
-        </p>
-        <p className="text-foreground leading-relaxed">
-          Pe <Link href="/cine-propune" className="text-info hover:underline">Cine propune legile</Link> vezi câte
-          proiecte a semnat fiecare partid și câte au devenit lege.
-        </p>
-      </section>
-
-      <section className="space-y-3">
-        <H2 id="ordonante">Ordonanțele Guvernului</H2>
-        <p className="text-foreground leading-relaxed">
-          Guvernul poate face reguli și singur, prin ordonanțe <Art n="115" />. O ordonanță de urgență se aplică
-          imediat ce e trimisă Parlamentului și publicată, dar Parlamentul trebuie apoi să o aprobe sau să o respingă
-          printr-o lege. De aceea multe voturi din plen au titlul «pentru aprobarea Ordonanței…». Dacă votul respinge
-          ordonanța, regulile ei încetează să se aplice. Dacă prima cameră nu se pronunță în 30 de zile, ordonanța
-          de urgență e considerată adoptată de ea și merge la cealaltă cameră.
-        </p>
-      </section>
-
-      <section className="space-y-3">
-        <H2 id="camere-rol">Prima cameră și camera decizională</H2>
-        <p className="text-foreground leading-relaxed">
-          Constituția împarte domeniile între camere: pentru unele legi Senatul votează primul, pentru altele Camera
-          Deputaților <Art n="75" />. Prima cameră are 45 de zile să voteze (60 pentru coduri și legi foarte
-          complexe). Apoi proiectul merge la cealaltă cameră, care decide definitiv.
-        </p>
-        <p className="text-foreground leading-relaxed">
-          Asta înseamnă că o respingere la prima cameră nu oprește legea. Camera decizională o poate adopta oricum,
-          și atunci legea a trecut de Parlament. Pe LaButoane, starea unei legi urmează ultimul vot: o lege respinsă
-          de prima cameră și adoptată apoi de camera decizională apare adoptată.
-        </p>
-      </section>
-
-      <section className="space-y-3">
-        <H2 id="tacit">Adoptarea tacită</H2>
-        <p className="text-foreground leading-relaxed">
-          Dacă prima cameră nu votează în termen, proiectul e considerat adoptat fără vot și merge mai departe{' '}
-          <Art n="75" />. Nimeni nu apasă niciun buton, deci nu există un vot nominal. Pe{' '}
-          <Link href="/tacite" className="text-info hover:underline">Termene tacite</Link> vezi proiectele al căror
-          termen e pe cale să expire.
-        </p>
-      </section>
-
-      <section className="space-y-3">
+      <section className="space-y-4">
         <H2 id="majoritati">Câte voturi trebuie</H2>
-        <ul className="space-y-2 text-foreground leading-relaxed list-disc pl-5">
+        <div className="space-y-4">
+          <div>
+            <div className="text-[13px] text-foreground mb-1.5">
+              {`Lege ordinară: majoritatea celor prezenți. Cu ${present} de deputați în sală, ${Math.floor(present / 2) + 1}.`}
+            </div>
+            <Seats total={DEPUTIES} filled={Math.floor(present / 2) + 1} absent={DEPUTIES - present} />
+          </div>
+          <div>
+            <div className="text-[13px] text-foreground mb-1.5">
+              {`Lege organică: ${Math.floor(DEPUTIES / 2) + 1} din ${DEPUTIES}, oricâți sunt în sală.`}
+            </div>
+            <Seats total={DEPUTIES} filled={Math.floor(DEPUTIES / 2) + 1} />
+          </div>
+        </div>
+        <p className="text-[14px] text-foreground leading-relaxed">
+          Legile organice privesc, de exemplu, alegerile, partidele și organizarea Guvernului <Art n="73, 76" />. La
+          ele, o absență cântărește cât un vot împotrivă. Revizuirea Constituției cere două treimi din fiecare cameră
+          și un referendum <Art n="151" />.
+        </p>
+        <div className="flex items-center gap-4 text-[12px] text-muted">
+          <span className="flex items-center gap-1.5"><span className="h-[7px] w-[7px]" style={{ background: 'var(--text)' }} />voturi necesare</span>
+          <span className="flex items-center gap-1.5"><span className="h-[7px] w-[7px]" style={{ background: 'var(--color-absent)' }} />restul</span>
+          <span className="flex items-center gap-1.5"><span className="h-[7px] w-[7px]" style={{ boxShadow: 'inset 0 0 0 1px var(--color-absent)' }} />absenți</span>
+        </div>
+      </section>
+
+      <section className="space-y-3">
+        <H2 id="guvern">Guvernul</H2>
+        <ul className="space-y-2 text-[14px] text-foreground leading-relaxed">
           <li>
-            <strong>Legile ordinare</strong> trec cu majoritatea celor prezenți în sală <Art n="76" />.
+            Proiectele Guvernului se numesc <em>proiecte de lege</em>, cele ale parlamentarilor <em>propuneri
+            legislative</em> <Art n="74" />. Cine propune ce:{' '}
+            <Link href="/cine-propune" className="text-info hover:underline">Cine propune</Link>.
           </li>
           <li>
-            <strong>Legile organice</strong> (de exemplu cele despre alegeri, partide, organizarea Guvernului,
-            statutul funcționarilor) au nevoie de majoritatea tuturor membrilor camerei, oricâți ar fi prezenți{' '}
-            <Art n="73, 76" />.
+            Ordonanțele de urgență se aplică imediat, iar Parlamentul le aprobă sau le respinge apoi prin lege{' '}
+            <Art n="115" />. De aici voturile «pentru aprobarea Ordonanței…».
           </li>
           <li>
-            <strong>Revizuirea Constituției</strong> cere două treimi din membrii fiecărei camere și apoi un
-            referendum <Art n="151" />.
+            Guvernul se instalează cu vot de încredere <Art n="103" /> și poate fi demis prin moțiune de cenzură{' '}
+            <Art n="113" />.
           </li>
         </ul>
-        <p className="text-sm text-muted leading-relaxed">
-          De aceea, la o lege organică, absențele contează ca un vot împotrivă: legea trebuie să strângă un număr fix
-          de voturi «pentru».
-        </p>
       </section>
 
       <section className="space-y-3">
-        <H2 id="presedinte">Președintele și Curtea Constituțională</H2>
-        <p className="text-foreground leading-relaxed">
-          Legea adoptată de ambele camere ajunge la Președinte, care are 20 de zile să o promulge <Art n="77" />. O
-          poate retrimite Parlamentului o singură dată, pentru reexaminare. Dacă Parlamentul o votează din nou,
-          Președintele trebuie să o promulge în 10 zile.
-        </p>
-        <p className="text-foreground leading-relaxed">
-          Înainte de promulgare, legea poate fi contestată la Curtea Constituțională de Președinte, de președinții
-          camerelor, de Guvern, de Înalta Curte, de Avocatul Poporului, de cel puțin 50 de deputați sau de cel puțin
-          25 de senatori <Art n="146" />. Dacă Curtea spune că legea încalcă Constituția, Parlamentul trebuie să o
-          corecteze.
-        </p>
-        <p className="text-foreground leading-relaxed">
-          După promulgare, legea se publică în Monitorul Oficial și intră în vigoare la 3 zile după publicare sau la
-          data scrisă în ea <Art n="78" />.
-        </p>
-      </section>
-
-      <section className="space-y-3">
-        <H2 id="guvern">Parlamentul și Guvernul</H2>
-        <p className="text-foreground leading-relaxed">
-          Guvernul are nevoie de votul de încredere al Parlamentului ca să se instaleze <Art n="103" />. Îl poate
-          demite printr-o moțiune de cenzură, inițiată de cel puțin un sfert din deputați și senatori și adoptată cu
-          majoritatea tuturor deputaților și senatorilor, în ședință comună <Art n="113" />.
-        </p>
-      </section>
-
-      <section className="space-y-3">
-        <H2 id="coduri">Codurile de pe LaButoane</H2>
-        <ul className="space-y-2 text-foreground leading-relaxed list-disc pl-5">
-          <li>
-            <strong>L123/2026</strong> e numărul din registrul Senatului. Camera Deputaților numerotează aceleași
-            proiecte separat, de forma <strong>PL-x 456/2026</strong>. Pe site folosim numărul Senatului când există.
-          </li>
-          <li>
-            <strong>PHCD</strong> e o hotărâre a Camerei Deputaților, adică o decizie care privește doar Camera (de
-            exemplu regulamentul ei). Nu trece prin Senat și nu ajunge la Președinte.
-          </li>
-          <li>
-            <strong>Votul final</strong> e votul pe întregul proiect. Înainte de el, plenul poate vota și amendamente
-            sau rapoarte de comisie. Pe LaButoane numărăm la prezență toate voturile, dar «cum a votat legea» arată
-            votul final.
-          </li>
-        </ul>
-        <p className="text-sm text-muted leading-relaxed">
-          Cum calculăm prezența, devierile de la linia de partid și coeziunea e explicat pe{' '}
-          <Link href="/despre" className="text-info hover:underline">Despre</Link>.
+        <H2 id="coduri">Codurile de pe site</H2>
+        <dl className="divide-y divide-rim border-y border-rim text-[14px]">
+          {[
+            ['L123/2026', 'numărul de la Senat. Camera folosește alt număr, PL-x 456/2026, pentru același proiect.'],
+            ['PHCD', 'hotărâre a Camerei Deputaților, despre Camera însăși. Nu trece prin Senat.'],
+            ['Vot final', 'votul pe tot proiectul. Prezența numără toate voturile, inclusiv amendamentele.'],
+          ].map(([k, v]) => (
+            <div key={k} className="py-2.5 flex gap-4">
+              <dt className="font-mono text-[13px] text-foreground w-[92px] flex-shrink-0">{k}</dt>
+              <dd className="text-muted">{v}</dd>
+            </div>
+          ))}
+        </dl>
+        <p className="text-[13px] text-muted">
+          Cum calculăm prezența și devierile: <Link href="/despre" className="text-info hover:underline">Despre</Link>.
         </p>
       </section>
     </div>

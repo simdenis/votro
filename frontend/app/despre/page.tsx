@@ -1,5 +1,7 @@
+import Link from 'next/link'
 import type { Metadata } from 'next'
 import { SectionNav, DESPRE_SECTIONS } from '@/components/section-nav'
+import { OpenOnHash } from '@/components/open-on-hash'
 import { PRESS_MENTIONS } from '@/lib/press'
 
 export const metadata: Metadata = {
@@ -7,224 +9,144 @@ export const metadata: Metadata = {
   description: 'Cum funcționează LaButoane, cum sunt colectate datele și ce înseamnă devierea de la linia de partid.',
 }
 
+const SEC = 'font-serif text-[20px] font-normal text-foreground border-b-2 border-sidebar pb-[5px]'
+
+// Methodology folds away so the page reads short; #metodologie-* deep links
+// (homepage absence list, /initiative) open their block via OpenOnHash.
+function Method({ id, title, children }: { id?: string; title: string; children: React.ReactNode }) {
+  return (
+    <details id={id} className="group py-3 scroll-mt-20">
+      <summary className="cursor-pointer list-none flex items-baseline justify-between gap-4 text-[15px] text-foreground [&::-webkit-details-marker]:hidden">
+        {title}
+        <span className="font-mono text-[13px] text-muted group-open:hidden">+</span>
+        <span className="font-mono text-[13px] text-muted hidden group-open:inline">−</span>
+      </summary>
+      <div className="mt-2 space-y-2 text-[14px] text-muted leading-relaxed">{children}</div>
+    </details>
+  )
+}
+
+const ext = 'underline underline-offset-2 hover:text-foreground'
+
 export default function DesprePage() {
   return (
     <div className="max-w-2xl space-y-10">
+      <OpenOnHash />
       <SectionNav items={DESPRE_SECTIONS} />
-      <h1 className="font-serif text-[30px] sm:text-[40px] font-normal tracking-[-0.01em] leading-[1.05] text-foreground">Despre LaButoane</h1>
+      <div>
+        <h1 className="font-serif text-[30px] sm:text-[40px] font-normal tracking-[-0.01em] leading-[1.05] text-foreground">Despre LaButoane</h1>
+        <div className="mt-4 space-y-3 text-foreground leading-relaxed">
+          <p>
+            LaButoane arată cum votează fiecare senator și deputat. Datele vin zilnic, nemodificate, de pe{' '}
+            <a href="https://senat.ro" target="_blank" rel="noopener noreferrer" className={ext}>senat.ro</a> și{' '}
+            <a href="https://cdep.ro" target="_blank" rel="noopener noreferrer" className={ext}>cdep.ro</a>.
+          </p>
+          <p className="text-[14px] text-muted">
+            Nu suntem afiliați niciunui partid, organizații sau publicații. Întrebări și sesizări:{' '}
+            <a href="mailto:siminiucdenis@gmail.com" className={ext}>siminiucdenis@gmail.com</a>
+          </p>
+        </div>
+      </div>
 
-      <section className="space-y-3">
-        <h2 className="font-serif text-[20px] font-normal text-foreground border-b-2 border-sidebar pb-[5px]">Ce este LaButoane</h2>
-        <p className="text-foreground leading-relaxed">
-          LaButoane urmărește voturile plenare ale Senatului și Camerei Deputaților din România și le face
-          accesibile publicului larg într-un format clar și comparabil.
-        </p>
-      </section>
+      <section>
+        <h2 className={SEC}>Metodologie</h2>
+        <div className="divide-y divide-rim border-b border-rim">
+          <Method id="metodologie-absente" title="Prezență și absență">
+            <p>
+              Prezența = voturile la care apare în listele oficiale, împărțite la toate voturile din camera sa de la
+              validarea mandatului. «Prezent, fără vot» contează ca prezent. Absența medie a unui partid e media
+              membrilor activi.
+            </p>
+            <p>
+              Membrii Guvernului din această legislatură nu votează cât sunt în funcție, așa că nu intră în topul
+              absențelor și nici în media partidului, nici după ce pleacă din Guvern.
+            </p>
+            <p>
+              Sursele oficiale nu spun de ce lipsește cineva. Când avem o justificare documentată (concediu medical,
+              delegație), o punem ca notă pe fișă, iar în top numele apare cu «ⓘ». Orice cifră poate fi contestată
+              din butonul de pe fișă.
+            </p>
+          </Method>
 
-      <section className="space-y-3">
-        <h2 className="font-serif text-[20px] font-normal text-foreground border-b-2 border-sidebar pb-[5px]">Cum sunt colectate datele</h2>
-        <p className="text-foreground leading-relaxed">
-          Un scraper automat descarcă zilnic datele de vot publice de pe{' '}
-          <a href="https://senat.ro" target="_blank" rel="noopener noreferrer" className="underline hover:text-muted">
-            senat.ro
-          </a>{' '}
-          și{' '}
-          <a href="https://cdep.ro" target="_blank" rel="noopener noreferrer" className="underline hover:text-muted">
-            cdep.ro
-          </a>
-          . Datele sunt stocate într-o bază de date proprie și nu sunt modificate față de sursa originală.
-        </p>
-      </section>
+          <Method title="Devieri, loialitate, coeziune">
+            <p>
+              Pentru fiecare vot luăm poziția cea mai frecventă din partid. Cine a votat altfel are o deviere. Absenții
+              nu contează, nici neafiliații și minoritățile, care nu au linie de partid.
+            </p>
+            <p>
+              Loialitatea și prezența sunt separate, cu numitori expliciți: cineva poate fi loial la 96% (397/415) și
+              prezent la 43% (415/958). Într-o singură cifră, un absent ar părea rebel.
+            </p>
+            <p>
+              Coeziunea se calculează doar pe voturile disputate, unde tabăra minoritară are cel puțin 20%. Pe voturile
+              aproape unanime toate partidele ar avea peste 90%.
+            </p>
+          </Method>
 
-      <section className="space-y-3">
-        <h2 className="font-serif text-[20px] font-normal text-foreground border-b-2 border-sidebar pb-[5px]">Ce înseamnă devierea de la linia de partid</h2>
-        <p className="text-foreground leading-relaxed">
-          Pentru fiecare vot, calculăm poziția dominantă (cea mai frecventă) a fiecărui partid (pentru / împotrivă / abținere).
-          Un parlamentar este marcat cu <span className="text-deviere font-semibold">⚠ deviere</span> dacă
-          a votat altfel decât poziția dominantă a colegilor săi de partid în acel vot specific.
-        </p>
-        <p className="text-sm text-muted leading-relaxed">
-          Nota: absenții și cei care nu au votat nu intră în calculul devierilor. Contează doar voturile
-          exprimate (pentru, împotrivă sau abținere). Parlamentarii neafiliați și grupul minorităților
-          naționale nu au o linie de partid, așa că nu le calculăm devieri sau coeziune.
-        </p>
-        <p className="text-sm text-muted leading-relaxed">
-          Loialitatea și prezența sunt două lucruri diferite, așa că le arătăm separat, cu numitori
-          expliciți. Dacă le pui într-o singură cifră, un absent ajunge să pară un rebel. Loialitatea e
-          raportul dintre voturile aliniate cu partidul și voturile exprimate (de exemplu 397/415 = 96%).
-          Prezența e raportul dintre voturile la care e prezent (cele exprimate plus „prezent, fără vot")
-          și toate voturile de plen ținute în camera sa (de exemplu 415/958 = 43%). Un parlamentar poate
-          fi 96% loial și, în același timp, prezent la doar 43% din voturi.
-        </p>
-        <p className="text-sm text-muted leading-relaxed">
-          Coeziunea unui partid se calculează doar pe voturile disputate, adică cele în care tabăra
-          minoritară (pentru față de împotrivă plus abțineri) a strâns cel puțin 20% din voturile
-          exprimate. Cele mai multe voturi din plen sunt procedurale sau aproape unanime; dacă le-am
-          include, toate partidele ar ajunge la peste 90% și cifra n-ar mai spune nimic. Pe voturile
-          disputate se vede diferența reală dintre partide.
-        </p>
-      </section>
+          <Method id="metodologie-initiative" title="Inițiative">
+            <p>
+              Toate inițiativele din registrul PL-x (cdep.ro) și registrul L (senat.ro), legate prin trimiterea din
+              fișa cdep. «Zile de la depunere» curge de la înregistrare; «zile fără raport», de când proiectul e la
+              comisia de fond.
+            </p>
+            <p>
+              «Fără vot în plen» înseamnă în lucru la prima cameră, înainte de orice vot. Nu include proiectele adoptate
+              tacit. Timpul în comisie depinde de avize și sesiuni, deci nu explică singur de ce așteaptă un proiect.
+            </p>
+            <p>
+              La «ordonanță în vigoare», regulile se aplică deja de la publicarea în Monitorul Oficial. Votul doar le
+              confirmă sau le respinge.
+            </p>
+          </Method>
 
-      <section id="metodologie-absente" className="space-y-3 scroll-mt-20">
-        <h2 className="font-serif text-[20px] font-normal text-foreground border-b-2 border-sidebar pb-[5px]">Cum calculăm prezența și absența</h2>
-        <p className="text-foreground leading-relaxed">
-          Prezența unui parlamentar = voturile la care apare în listele oficiale, împărțite la
-          toate voturile ținute în camera sa de la validarea mandatului. Absența este restul
-          (100% minus prezența). Cine e consemnat prezent dar nu apasă butonul („prezent, fără vot")
-          contează ca prezent; îl afișăm separat pe fișă, nu ca absență. Absența medie a unui
-          partid este media absențelor membrilor săi activi.
-        </p>
-        <p className="text-sm text-muted leading-relaxed">
-          Parlamentarii care fac sau au făcut parte din Guvern în această legislatură (premier,
-          vicepremieri, miniștri) nu votează în plen cât sunt în funcție. Îi marcăm cu o
-          etichetă distinctă, nu apar în topul absențelor și nu intră în media de absență a
-          partidului, pentru că absența lor e structurală, nu o alegere. Eticheta rămâne și după
-          plecarea din Guvern: absențele adunate în mandatul de ministru nu devin retroactiv
-          „chiul".
-        </p>
-        <p className="text-sm text-muted leading-relaxed">
-          Sursele oficiale nu spun de ce lipsește cineva: o delegație parlamentară în
-          străinătate sau un concediu medical arată în date la fel ca o absență nemotivată. Afișăm
-          cifrele brute, iar interpretarea rămâne a cititorului. Când avem o justificare documentată
-          (concediu medical, delegație oficială), o adăugăm ca notă de context pe fișa parlamentarului,
-          iar în topul absențelor numele apare marcat cu „ⓘ". Orice parlamentar sau cetățean poate
-          contesta o cifră prin butonul de pe fiecare fișă; verificăm și, dacă e cazul, adăugăm nota.
-        </p>
-      </section>
+          <Method title="Legi fără votul unei camere">
+            <p>
+              Apar cu «Adoptată*»: au fost adoptate tacit sau votate înainte de 20 decembrie 2024, de când avem date.
+              Drumul complet al unei legi e pe{' '}
+              <Link href="/cum-functioneaza" className={ext}>Cum funcționează</Link>.
+            </p>
+          </Method>
 
-      <section className="space-y-3">
-        <h2 className="font-serif text-[20px] font-normal text-foreground border-b-2 border-sidebar pb-[5px]">Drumul unei legi și adoptarea tacită</h2>
-        <p className="text-foreground leading-relaxed">
-          O lege trece prin ambele camere: prima cameră sesizată, apoi camera decizională, apoi
-          merge la Președinte pentru promulgare (care o poate retrimite Parlamentului sau sesiza
-          Curtea Constituțională). Constituția (art. 75) dă primei camere 45 de zile să se
-          pronunțe (60 pentru coduri și legi complexe). Dacă termenul expiră fără vot, proiectul
-          e considerat adoptat fără ca cineva să fi votat („adoptare tacită") și merge mai departe.
-          Pagina „Termene tacite" arată proiectele cu termenul în curs, cu datele oficiale publicate
-          de Camera Deputaților.
-        </p>
-        <p className="text-sm text-muted leading-relaxed">
-          De aceea unele legi promulgate apar la noi fără votul uneia dintre camere: au fost
-          adoptate tacit (nu există un vot de consemnat) sau votul a avut loc înainte de
-          20 decembrie 2024, începutul actualei legislaturi, data de la care baza noastră de date acoperă voturile plenului.
-          Le marcăm cu „Adoptată*".
-        </p>
-      </section>
+          <Method title="Rezumate și titluri scurte">
+            <p>
+              Sunt generate automat (AI) din expunerea de motive, adică argumentația inițiatorilor, nu o analiză
+              neutră. Linkul spre documentul oficial e mereu alături. Tot automat atribuim și categoria.
+            </p>
+          </Method>
 
-      <section id="metodologie-initiative" className="space-y-3 scroll-mt-20">
-        <h2 className="font-serif text-[20px] font-normal text-foreground border-b-2 border-sidebar pb-[5px]">Inițiative și timpul fără vot în plen</h2>
-        <p className="text-foreground leading-relaxed">
-          Pagina „Inițiative" urmărește toate inițiativele legislative înregistrate la Parlament,
-          din două registre oficiale: registrul PL-x al Camerei Deputaților (cdep.ro) și registrul
-          L al Senatului (senat.ro), legate între ele prin referința încrucișată din fișa cdep.
-          Pentru fiecare inițiativă afișăm două contoare diferite: „zile de la depunere" curge de
-          la înregistrarea inițiativei în Parlament, iar „zile fără raport" de când proiectul se
-          află la comisia sesizată în fond, în așteptarea raportului. Sunt termene separate, care
-          curg diferit — un proiect poate fi depus de mult, dar trimis recent la comisie.
-        </p>
-        <p className="text-sm text-muted leading-relaxed">
-          Filtrul „fără vot în plen" arată inițiativele aflate în lucru la prima cameră sesizată,
-          înainte de orice vot în plen. Nu include proiectele adoptate tacit — acelea au trecut de
-          prima cameră fără vot și au mers mai departe — și nici proiectele deja votate, în orice
-          sens. Durata petrecută în comisie depinde și de avize, de termenele stabilite și de
-          sesiunile parlamentare, așa că nu spune prin ea însăși de ce un proiect așteaptă.
-        </p>
-        <p className="text-sm text-muted leading-relaxed">
-          Proiectele marcate „ordonanță în vigoare" sunt un caz aparte: ele aprobă sau resping o
-          ordonanță a Guvernului (OUG/OG), iar ordonanța produce efecte de la publicarea în
-          Monitorul Oficial, nu de la votul Parlamentului. O astfel de inițiativă care așteaptă
-          nu ține regulile pe loc — ele se aplică deja; așteptarea amână doar confirmarea sau
-          infirmarea lor de către legiuitor.
-        </p>
-      </section>
+          <Method title="Ce evidențiem în newsletter și pe Instagram">
+            <p>
+              Un scor automat estimează cât interesează o lege un cetățean obișnuit. Îl folosim doar ca să alegem ce
+              comunicăm. Nu apare pe site și nu schimbă cifrele sau clasamentele.
+            </p>
+          </Method>
 
-      <section className="space-y-3">
-        <h2 className="font-serif text-[20px] font-normal text-foreground border-b-2 border-sidebar pb-[5px]">Rezumatele „Pe scurt"</h2>
-        <p className="text-foreground leading-relaxed">
-          Pentru multe legi afișăm un rezumat în limbaj simplu, generat automat (AI) din expunerea
-          de motive oficială — documentul în care inițiatorii explică ce vrea legea. Important:
-          expunerea de motive e <strong>argumentația inițiatorilor</strong>, nu o analiză neutră —
-          rezumatul îi preia inevitabil perspectiva. Citiți-l ca „ce spun inițiatorii că face legea";
-          linkul către PDF-ul oficial e mereu alături. Tot automat atribuim și categoria legii
-          (Sănătate, Justiție, Economie…).
-        </p>
-      </section>
-
-      <section className="space-y-3">
-        <h2 className="font-serif text-[20px] font-normal text-foreground border-b-2 border-sidebar pb-[5px]">Cum alegem ce evidențiem</h2>
-        <p className="text-foreground leading-relaxed">
-          Nu putem citi manual fiecare proiect, așa că <strong className="text-foreground">intern</strong> folosim
-          un scor automat (AI) care estimează cât de mult ar interesa o lege un cetățean obișnuit. Ne ajută
-          doar să decidem ce merită scos în față în newsletter și pe Instagram.
-        </p>
-        <p className="text-sm text-muted leading-relaxed">
-          Acest scor <strong>nu apare pe site</strong>, nu ordonează datele publice și nu influențează în
-          niciun fel cifrele de vot, prezența sau clasamentele afișate. Datele publice rămân neutre și
-          neordonate editorial — scorul e strict un ajutor de redacție pentru ce anume comunicăm mai departe.
-        </p>
-      </section>
-
-      <section className="space-y-3">
-        <h2 className="font-serif text-[20px] font-normal text-foreground border-b-2 border-sidebar pb-[5px]">Limitări ale datelor</h2>
-        <ul className="text-foreground leading-relaxed space-y-1.5 list-disc list-inside text-sm">
-          <li>Acoperă voturile nominale din plenul Senatului și Camerei Deputaților.</li>
-          <li>Nu include comisii parlamentare sau voturi prin vot electronic secret.</li>
-          <li>Datele sunt actualizate zilnic — poate exista un decalaj de până la 24 de ore față de votul live.</li>
-          <li>Calitatea datelor depinde de sursa oficială (senat.ro / cdep.ro).</li>
-        </ul>
-      </section>
-
-      <section id="in-presa" className="space-y-3 scroll-mt-20">
-        <h2 className="font-serif text-[20px] font-normal text-foreground border-b-2 border-sidebar pb-[5px]">În presă</h2>
-        <p className="text-sm text-muted leading-relaxed">
-          Analize și articole care folosesc sau citează datele LaButoane:
-        </p>
-        <ul className="space-y-3">
-          {PRESS_MENTIONS.map((m) => (
-            <li key={m.url} className="text-sm leading-relaxed">
-              <span className="font-semibold text-foreground">{m.outlet}</span>
-              <span className="text-muted">
-                {' · '}
-                {new Date(m.date).toLocaleDateString('ro-RO', { day: 'numeric', month: 'long', year: 'numeric' })}
-              </span>
-              <br />
-              <a
-                href={m.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-foreground underline hover:text-muted"
-              >
-                {m.title}
-              </a>
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <section className="space-y-3">
-        <h2 className="font-serif text-[20px] font-normal text-foreground border-b-2 border-sidebar pb-[5px]">Contact</h2>
-        <p className="text-foreground leading-relaxed text-sm">
-          Pentru întrebări sau sesizări:{' '}
-          <a href="mailto:siminiucdenis@gmail.com" className="underline hover:text-muted">
-            siminiucdenis@gmail.com
-          </a>
-        </p>
-        <p className="text-sm text-muted">
-          LaButoane nu este afiliat niciunui partid politic, organizație sau publicație.
-        </p>
-      </section>
-
-      <section className="space-y-2 border-t border-rim pt-6">
-        <h2 className="font-serif text-[20px] font-normal text-foreground border-b-2 border-sidebar pb-[5px]">Surse de date</h2>
-        <div className="flex gap-4 text-sm">
-          <a href="https://senat.ro" target="_blank" rel="noopener noreferrer" className="text-muted hover:text-foreground underline">
-            senat.ro
-          </a>
-          <a href="https://cdep.ro" target="_blank" rel="noopener noreferrer" className="text-muted hover:text-foreground underline">
-            cdep.ro
-          </a>
+          <Method title="Limite">
+            <p>
+              Doar voturile nominale din plen, fără comisii și voturi secrete. Actualizare zilnică, cu până la 24 de ore
+              întârziere. Calitatea depinde de senat.ro și cdep.ro.
+            </p>
+          </Method>
         </div>
       </section>
+
+      {PRESS_MENTIONS.length > 0 && (
+        <section id="in-presa" className="scroll-mt-20">
+          <h2 className={SEC}>În presă</h2>
+          <ul className="divide-y divide-rim">
+            {PRESS_MENTIONS.map((m) => (
+              <li key={m.url} className="py-3 text-[14px] leading-relaxed">
+                <a href={m.url} target="_blank" rel="noopener noreferrer" className="text-foreground hover:underline">
+                  {m.title}
+                </a>
+                <div className="text-[13px] text-muted">
+                  {`${m.outlet} · ${new Date(m.date).toLocaleDateString('ro-RO', { day: 'numeric', month: 'long', year: 'numeric' })}`}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </div>
   )
 }
