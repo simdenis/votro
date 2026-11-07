@@ -46,7 +46,7 @@ function senatUrl(code: string): string | null {
   return m ? `https://www.senat.ro/legis/lista.aspx?nr_cls=L${m[1]}&an_cls=${m[2]}#tabFisaAct` : null
 }
 
-/** Small stage pill — only terminal outcomes get a soft tint (law-status-pill
+/** Small stage pill — only terminal outcomes get a soft tint (the law pages
     tones); everything in-flight stays muted. Neutral labels, no verdicts. */
 function StagePill({ stage }: { stage: Stage }) {
   const tone =

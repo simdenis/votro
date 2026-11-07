@@ -29,7 +29,6 @@ const C = {
 }
 const SERIF = 'Plex Display'   // IBM Plex Sans 700 (see og-fonts)
 const SANS = 'IBM Plex Sans'
-const MONO = 'IBM Plex Mono'
 
 /** Summaries are ≤ ~50 words, but shrink gracefully anyway. */
 function summaryFont(len: number): number {

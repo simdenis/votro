@@ -10,7 +10,6 @@ import type { PendingBill } from '@/lib/types'
 
 export const revalidate = 600 // ISR — the countdown only needs day granularity
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://la-butoane.ro'
 
 // Addressed by code slug (/tacite/BP186-2026); UUIDs still resolve.
 // cache(): generateMetadata and the page share one query per render.

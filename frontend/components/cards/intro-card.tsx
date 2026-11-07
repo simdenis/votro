@@ -17,7 +17,6 @@ const C = {
 }
 const SERIF = 'Plex Display'   // IBM Plex Sans 700 (see og-fonts)
 const SANS = 'IBM Plex Sans'
-const MONO = 'IBM Plex Mono'
 
 function Frame({ children, kicker }: { children: React.ReactNode; kicker: string }) {
   return (

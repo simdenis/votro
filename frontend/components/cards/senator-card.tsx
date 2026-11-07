@@ -44,7 +44,6 @@ const C = {
 }
 const SERIF = 'Plex Display'   // IBM Plex Sans 700 (see og-fonts)
 const SANS = 'IBM Plex Sans'
-const MONO = 'IBM Plex Mono'
 
 function textOn(bg: string) {
   const h = bg.replace('#', '')

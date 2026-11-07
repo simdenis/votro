@@ -16,8 +16,6 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 const SB = { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
 
-const MONTHS = ['ianuarie', 'februarie', 'martie', 'aprilie', 'mai', 'iunie',
-                'iulie', 'august', 'septembrie', 'octombrie', 'noiembrie', 'decembrie']
 
 async function verifySig(d: string, sig: string | null, secret: string | undefined): Promise<boolean> {
   if (!secret || !sig) return false

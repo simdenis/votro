@@ -32,7 +32,6 @@ const C = {
 }
 const SERIF = 'Plex Display'   // IBM Plex Sans 700 (see og-fonts)
 const SANS = 'IBM Plex Sans'
-const MONO = 'IBM Plex Mono'
 
 export function ShameCard({ data }: { data: ShameCardData }) {
   // Top-10 rankings reuse the layout with tighter rows (same 1080×1350 canvas).

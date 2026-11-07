@@ -2,7 +2,7 @@ import { hasPartyLine, loyaltyPct } from './utils'
 import type { VoteCardData, PartyVote } from '@/components/cards/vote-card'
 import type { SenatorCardData } from '@/components/cards/senator-card'
 import type { LawCardData, JourneyStep } from '@/components/cards/law-card'
-import { trueAbsent, type PoliticianStats, type LawStatus } from '@/lib/types'
+import { type PoliticianStats, type LawStatus } from '@/lib/types'
 import { formatDate, capFirst } from '@/lib/utils'
 import { lawRejected, passedParliament, tacitChambers, type LawStage } from '@/lib/law-stage'
 

@@ -14,7 +14,6 @@ const RO_MONTHS = ['ianuarie', 'februarie', 'martie', 'aprilie', 'mai', 'iunie',
 const C = { bg: '#FFFFFF', text: '#171A1F', accent: '#4E86D8', hair: '#E7E9EC', faint: '#6E7480' }
 const SERIF = 'Plex Display'
 const SANS = 'IBM Plex Sans'
-const MONO = 'IBM Plex Mono'
 
 function Pill({ abbr, color }: { abbr: string; color: string | null }) {
   const bg = color ?? '#9e9e9e'

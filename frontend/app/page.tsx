@@ -224,10 +224,27 @@ export default async function Dashboard() {
 
         </section>
 
-        {/* Sidebar: find-your-MP map · top absences */}
+        {/* Sidebar: top absences · find-your-MP map · newsletter */}
         <aside>
-            {/* newsletter signup, above the map */}
-            <div className="mb-10">
+            {/* Absențe — lowest plenary presence, split Senat / Cameră */}
+            {(absSenators.length > 0 || absDeputies.length > 0) && (
+              <>
+                {/* caveats live on the methodology page; the link stays as the one pointer */}
+                <div className="flex items-baseline justify-between border-b-2 border-sidebar pb-[5px] mb-3">
+                  <h2 className="font-serif text-[16px] font-normal text-foreground">Cine lipsește cel mai mult</h2>
+                  <Link href="/despre#metodologie-absente" className="text-[11px] text-muted hover:text-foreground transition-colors">Metodologie</Link>
+                </div>
+                <div className="mb-10"><AbsenceTop senators={absSenators} deputies={absDeputies} /></div>
+              </>
+            )}
+            {/* find your MP */}
+            <div className="flex items-baseline justify-between border-b-2 border-sidebar pb-[5px] mb-3">
+              <h2 className="font-serif text-[16px] font-normal text-foreground">Cine te reprezintă?</h2>
+            </div>
+            <p className="text-[11px] text-faint mb-2">Apasă pe județul tău.</p>
+            <CountyMap leaders={leaders} />
+            {/* newsletter signup, last in the sidebar */}
+            <div className="mt-10">
               <h2 className="font-serif text-[16px] font-normal text-foreground border-b-2 border-sidebar pb-[5px]">Parlamentul, pe email</h2>
               <p className="text-[12px] text-muted mt-2 mb-3">
                 Ce s-a votat săptămâna asta: sâmbăta, pe scurt. Te poți dezabona oricând.{' '}
@@ -237,27 +254,6 @@ export default async function Dashboard() {
               </p>
               <NewsletterForm compact hideNote />
             </div>
-            {/* personal hook at the top of the sidebar — "find your MP"
-                converts a first-time visitor, an email form doesn't */}
-            <div className="flex items-baseline justify-between border-b-2 border-sidebar pb-[5px] mb-3">
-              <h2 className="font-serif text-[16px] font-normal text-foreground">Cine te reprezintă?</h2>
-            </div>
-            <p className="text-[11px] text-faint mb-2">Apasă pe județul tău.</p>
-            <div className="mb-10">
-              <CountyMap leaders={leaders} />
-            </div>
-
-            {/* Absențe — lowest plenary presence, split Senat / Cameră */}
-            {(absSenators.length > 0 || absDeputies.length > 0) && (
-              <>
-                {/* caveats live on the methodology page; the link stays as the one pointer */}
-                <div className="flex items-baseline justify-between border-b-2 border-sidebar pb-[5px] mb-3">
-                  <h2 className="font-serif text-[16px] font-normal text-foreground">Cine lipsește cel mai mult</h2>
-                  <Link href="/despre#metodologie-absente" className="text-[11px] text-muted hover:text-foreground transition-colors">Metodologie</Link>
-                </div>
-                <AbsenceTop senators={absSenators} deputies={absDeputies} />
-              </>
-            )}
 
           </aside>
       </div>

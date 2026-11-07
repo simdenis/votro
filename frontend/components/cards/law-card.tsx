@@ -38,7 +38,6 @@ const C = {
 }
 const SERIF = 'Plex Display'   // IBM Plex Sans 700 (see og-fonts)
 const SANS = 'IBM Plex Sans'
-const MONO = 'IBM Plex Mono'
 
 /** Shrink the serif title as it grows so it always fits — never clip it. */
 function titleFont(len: number): number {

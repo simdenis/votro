@@ -67,13 +67,14 @@ export default async function AnalizePage() {
 
   // ── 2. Closest votes ───────────────────────────────────────────────────
   const closestAll = (closestRes.data ?? []) as ClosestRow[]
-  // the view has no summary column — pull the AI summaries by law code
+  // the view has no text columns: pull the short headline (else the summary) by law code
   const closestCodes = [...new Set(closestAll.map(v => v.law_code).filter((c): c is string => !!c))]
   const summaryOf: Record<string, string> = {}
   if (closestCodes.length) {
-    const { data: sumRows } = await db.from('laws').select('code, summary').in('code', closestCodes)
-    for (const r of (sumRows ?? []) as { code: string; summary: string | null }[]) {
-      if (r.summary) summaryOf[r.code] = plainSummary(r.summary)
+    const { data: sumRows } = await db.from('laws').select('code, headline, summary').in('code', closestCodes)
+    for (const r of (sumRows ?? []) as { code: string; headline: string | null; summary: string | null }[]) {
+      const t = r.headline || (r.summary ? plainSummary(r.summary) : '')
+      if (t) summaryOf[r.code] = t
     }
   }
   // only votes that have a plain-language summary (skip bare titles), top 12
@@ -132,7 +133,7 @@ export default async function AnalizePage() {
       {/* ── 2. Closest votes ────────────────────────────────── */}
       <section className="space-y-3">
         <h2 className="font-serif text-[20px] font-normal text-foreground border-b-2 border-sidebar pb-[5px]">Cele mai strânse voturi</h2>
-        <p className="text-[13px] text-muted max-w-2xl">Voturile decise la cea mai mică diferență — unde fiecare prezență a contat.</p>
+        <p className="text-[13px] text-muted max-w-2xl">Voturile decise la cea mai mică diferență.</p>
         <div className="divide-y divide-rim border-t border-rim">
           {closest.map(v => (
             <Link key={v.id} href={`/voturi/${v.id}`} className="flex items-center gap-4 py-3 hover:bg-raised transition-colors">
@@ -142,16 +143,12 @@ export default async function AnalizePage() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 text-[11px] text-faint mb-0.5">
                   <span className="font-mono">{v.law_code ?? 'Plen'}</span>
-                  <span className="uppercase font-semibold">{v.chamber === 'deputies' ? 'Cameră' : 'Senat'}</span>
+                  <span>{v.chamber === 'deputies' ? 'Cameră' : 'Senat'}</span>
                   <span>{formatDate(v.vote_date)}</span>
                 </div>
-                {/* plain-language summary is the headline; official title below */}
-                <p className="text-[13.5px] text-foreground line-clamp-2">
+                <p className="text-[14px] text-foreground line-clamp-2">
                   {v.law_code ? summaryOf[v.law_code] : capFirst(v.law_title ?? '') || 'Vot de plen'}
                 </p>
-                {v.law_title && (
-                  <p className="text-[11.5px] text-faint mt-0.5 truncate">{capFirst(v.law_title)}</p>
-                )}
               </div>
               <span className="text-[12px] tabular-nums flex-shrink-0 font-medium">
                 <span style={{ color: 'var(--color-for)' }}>{v.for_count}</span>

@@ -23,11 +23,12 @@ interface Cabinet { source: string; fetched_at: string; members: Member[] }
 type Outcome = 'lege' | 'trecuta' | 'respinsa' | 'in_lucru'
 interface GovGroup { total: number; out: Partial<Record<Outcome, number>>; laws: { id: string; code: string; t: string; o: Outcome }[] }
 
-const OUTCOMES: { key: Outcome; label: string; color: string }[] = [
-  { key: 'lege', label: 'au devenit lege', color: 'var(--color-for-dark)' },
-  { key: 'trecuta', label: 'trecute de Parlament', color: 'var(--color-for)' },
-  { key: 'respinsa', label: 'respinse', color: 'var(--color-against-dark)' },
-  { key: 'in_lucru', label: 'încă în lucru', color: '#C3C8CF' },
+// label for 1 / for many
+const OUTCOMES: { key: Outcome; label: [string, string]; color: string }[] = [
+  { key: 'lege', label: ['a devenit lege', 'au devenit lege'], color: 'var(--color-for-dark)' },
+  { key: 'trecuta', label: ['trecut de Parlament', 'trecute de Parlament'], color: 'var(--color-for)' },
+  { key: 'respinsa', label: ['respins', 'respinse'], color: 'var(--color-against-dark)' },
+  { key: 'in_lucru', label: ['încă în lucru', 'încă în lucru'], color: '#C3C8CF' },
 ]
 const CHIP: Record<Outcome, string> = { lege: 'Lege', trecuta: 'Trecută de Parlament', respinsa: 'Respinsă', in_lucru: 'În lucru' }
 
@@ -112,14 +113,26 @@ export default async function GuvernPage() {
               <span className="font-serif text-[40px] leading-none text-foreground">{pct(gov.out.lege ?? 0, gov.total)}%</span>
               <span className="text-sm text-muted">au devenit lege</span>
             </div>
-            <p className="mt-2 text-[13px] text-muted">
-              {`${gov.out.lege ?? 0} din ${gov.total} proiecte votate în plen · ${gov.out.trecuta ?? 0} trecute de Parlament · ${gov.out.respinsa ?? 0} respinse · ${gov.out.in_lucru ?? 0} încă în lucru. Toate guvernele din legislatura 2024–2028, nu doar cabinetul de acum.`}
-            </p>
-            <div className="mt-3 flex h-2.5 w-full overflow-hidden rounded-full bg-raised" aria-hidden>
+            <div className="mt-4 flex h-2.5 w-full overflow-hidden bg-raised" aria-hidden>
               {OUTCOMES.map(o => (gov.out[o.key] ?? 0) > 0 && (
                 <div key={o.key} style={{ width: `${((gov.out[o.key] ?? 0) / gov.total) * 100}%`, background: o.color }} />
               ))}
             </div>
+            <ul className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5 text-[13px] text-muted">
+              {OUTCOMES.map(o => {
+                const n = gov.out[o.key] ?? 0
+                return (
+                  <li key={o.key} className="flex items-center gap-1.5">
+                    <span className="h-2.5 w-2.5 flex-shrink-0" style={{ background: o.color }} />
+                    <span className="font-mono text-foreground">{n}</span>
+                    {o.label[n === 1 ? 0 : 1]}
+                  </li>
+                )
+              })}
+            </ul>
+            <p className="mt-3 text-[12px] text-muted">
+              {`Din ${gov.total} de proiecte ale Guvernului, din toată legislatura 2024–2028, nu doar ale cabinetului de acum.`}
+            </p>
           </div>
           <div>
             <h3 className="text-sm font-semibold text-muted mb-2">Cele mai recente</h3>

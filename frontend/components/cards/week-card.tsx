@@ -37,7 +37,6 @@ const C = {
 }
 const SERIF = 'Plex Display'   // IBM Plex Sans 700 (see og-fonts)
 const SANS = 'IBM Plex Sans'
-const MONO = 'IBM Plex Mono'
 
 export function WeekCard({ data }: { data: WeekCardData }) {
   const stats = [
