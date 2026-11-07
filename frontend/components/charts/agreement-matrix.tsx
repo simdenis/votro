@@ -82,7 +82,7 @@ export function AgreementMatrix({ parties, months, monthLabels, buckets, contest
       {/* cute hover readout — reserved height so the layout doesn't jump */}
       <div className="min-h-[38px] flex items-center">
         {hov ? (
-          <div className="flex items-center gap-2 text-[13px] bg-raised border border-rim rounded-lg px-3 py-1.5 animate-in fade-in duration-150">
+          <div className="flex items-center gap-2 text-[13px] py-1.5">
             <span className="w-[10px] h-[10px] rounded-[2px]" style={{ backgroundColor: colorOf(hov.a) }} />
             <span className="font-semibold text-foreground">{hov.a}</span>
             <span className="text-faint">↔</span>
@@ -97,7 +97,7 @@ export function AgreementMatrix({ parties, months, monthLabels, buckets, contest
       </div>
 
       <div className="overflow-x-auto">
-        <div className="grid gap-[2px] min-w-[480px]" style={{ gridTemplateColumns: cols }}>
+        <div className="grid gap-[2px] min-w-[400px] max-w-[520px]" style={{ gridTemplateColumns: cols }}>
           <div />
           {parties.map(p => (
             <div key={p.abbr} className="flex items-center justify-center pb-1.5">

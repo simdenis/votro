@@ -14,6 +14,7 @@ export const metadata: Metadata = {
 
 // Preferred party order (big → small); only those present in the data show up.
 const PARTY_ORDER = ['PSD', 'AUR', 'PNL', 'USR', 'UDMR', 'POT', 'SOSRO', 'PACE']
+const MONTHS_RO_FULL = ['ianuarie', 'februarie', 'martie', 'aprilie', 'mai', 'iunie', 'iulie', 'august', 'septembrie', 'octombrie', 'noiembrie', 'decembrie']
 const MONTHS_RO = ['ian', 'feb', 'mar', 'apr', 'mai', 'iun', 'iul', 'aug', 'sep', 'oct', 'nov', 'dec']
 
 type AttendRow = { month: string; chamber: 'senate' | 'deputies'; attendance_pct: number }
@@ -61,7 +62,7 @@ export default async function AnalizePage() {
   const agMonths = [...new Set(buckets.map(b => b.month))].sort()
   const agMonthLabels = agMonths.map(mk => {
     const [y, m] = mk.split('-').map(Number)
-    return `${MONTHS_RO[m - 1]} '${String(y).slice(2)}`
+    return `${MONTHS_RO_FULL[m - 1]} ${y}`
   })
 
   // ── 2. Closest votes ───────────────────────────────────────────────────
@@ -100,7 +101,7 @@ export default async function AnalizePage() {
   ]
   const monthLabels = monthKeys.map(mk => {
     const [y, m] = mk.split('-').map(Number)
-    return `${MONTHS_RO[m - 1]} '${String(y).slice(2)}`
+    return `${MONTHS_RO[m - 1]} ${y}`
   })
 
   return (

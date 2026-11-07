@@ -43,7 +43,7 @@ function daysSince(dateStr: string, today: string): number {
 /** senat.ro registry search from "L108/2026". */
 function senatUrl(code: string): string | null {
   const m = code.match(/^L?(\d+)\/(\d{4})$/)
-  return m ? `https://www.senat.ro/legis/lista.aspx?nr_cls=L${m[1]}&an_cls=${m[2]}` : null
+  return m ? `https://www.senat.ro/legis/lista.aspx?nr_cls=L${m[1]}&an_cls=${m[2]}#tabFisaAct` : null
 }
 
 /** Small stage pill — only terminal outcomes get a soft tint (law-status-pill
