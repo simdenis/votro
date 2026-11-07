@@ -37,7 +37,7 @@ async function decided(db: ReturnType<typeof getDB>, stage: 'promulgat' | 'respi
   const { data } = await db.from('initiatives')
     .select('law_id, stage_date, laws(code, headline, summary, title)')
     .eq('stage', stage).not('law_id', 'is', null)
-    .order('stage_date', { ascending: false }).limit(3)
+    .order('stage_date', { ascending: false }).limit(4)
   type Row = { law_id: string; stage_date: string | null; laws: { code: string; headline: string | null; summary: string | null; title: string } | null }
   return ((data ?? []) as unknown as Row[]).filter(r => r.laws).map(r => ({
     law_id: r.law_id,
@@ -68,7 +68,7 @@ export default async function Dashboard() {
     // thing that doesn't stop during recess, so it belongs on the homepage.
     db.from('pending_bills').select('id, code, title, summary, tacit_deadline')
       .not('tacit_deadline', 'is', null).gte('tacit_deadline', today)
-      .order('tacit_deadline', { ascending: true }).limit(3),
+      .order('tacit_deadline', { ascending: true }).limit(5),
     // Latest final vote — only its date, for the recess banner.
     db.from('votes').select('vote_date')
       .eq('vote_type', 'vot final').not('law_id', 'is', null)
@@ -96,10 +96,14 @@ export default async function Dashboard() {
   return (
     <div>
 
-      {/* ── Header ───────────────────────────────────────── */}
-      <header className="mb-9">
-       <div className="flex flex-col lg:flex-row lg:items-start lg:gap-10">
-        <div className="min-w-0 flex-1">
+
+
+      {/* ── Hero + feeds on the left, sidebar on the right, ending together ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-x-12 gap-y-10 items-start">
+
+        {/* Recently promulgated laws — the "it's now law" feed, in plain language */}
+        <section className="min-w-0">
+          <header className="mb-10">
         <p className="text-[11px] tracking-[0.18em] text-faint mb-2.5">
           Parlamentul României · Legislatura 2024–2028
         </p>
@@ -136,17 +140,8 @@ export default async function Dashboard() {
             </button>
           </div>
         </form>
-        </div>
+          </header>
 
-       </div>
-      </header>
-
-
-      {/* ── Vote list + cohesion sidebar ─────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-x-12 gap-y-10 items-start">
-
-        {/* Recently promulgated laws — the "it's now law" feed, in plain language */}
-        <section className="min-w-0">
           {recess && (
             <div className="border-t border-rim mb-6 py-3">
               <p className="text-[13.5px] text-foreground font-medium">Parlamentul e în vacanță</p>
@@ -237,6 +232,7 @@ export default async function Dashboard() {
                 <div className="mb-10"><AbsenceTop senators={absSenators} deputies={absDeputies} /></div>
               </>
             )}
+
             {/* find your MP */}
             <div className="flex items-baseline justify-between border-b-2 border-sidebar pb-[5px] mb-3">
               <h2 className="font-serif text-[16px] font-normal text-foreground">Cine te reprezintă?</h2>
