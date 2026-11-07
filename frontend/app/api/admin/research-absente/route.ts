@@ -12,7 +12,7 @@
 // (plus pause_turn resumes) — IO-bound, no CPU-cap concern.
 
 import Anthropic from '@anthropic-ai/sdk'
-import { isAdmin, keyAllowed } from '@/lib/admin-auth'
+import { adminRequest } from '@/lib/admin-auth'
 import { getDB } from '@/lib/supabase'
 
 const RO_MONTHS = ['ianuarie', 'februarie', 'martie', 'aprilie', 'mai', 'iunie',
@@ -44,7 +44,7 @@ function extractJson(text: string): ResearchEntry[] | null {
 }
 
 export async function POST(req: Request) {
-  if (!(await isAdmin()) && !(await keyAllowed(req, req.headers.get('x-admin-key')))) {
+  if (!(await adminRequest(req))) {
     return new Response('Not found', { status: 404 })
   }
   const apiKey = process.env.ANTHROPIC_API_KEY

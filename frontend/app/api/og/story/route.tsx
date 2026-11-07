@@ -32,6 +32,7 @@ async function render(req: Request): Promise<Response> {
   let card: URL
   try { card = new URL(src) } catch { return new Response('bad src', { status: 400 }) }
   const ok = (card.origin === SITE || card.origin === new URL(req.url).origin) && card.pathname.startsWith('/api/og/')
+    && !card.pathname.startsWith('/api/og/story') // no story-of-a-story render chains
   if (!ok) return new Response('src must be an own /api/og card', { status: 400 })
   // force a fresh card render (bypass its per-colo edge cache) so names/data are current
   // card.toString() re-encodes what the query decoded (a space in &label=,

@@ -677,7 +677,7 @@ export default async function AdminPage({ searchParams }: {
               // button keeps showing the previous card until it expires. Bump
               // this whenever session-open-card.tsx changes.
               image={`${SITE}/api/og/sessioncard?v=${recentSitting.voteIds.join(',')}`
-                     + `&label=${encodeURIComponent(recentSitting.label)}&sv=2&b=${cardBust}`}
+                     + `&sv=2&b=${cardBust}`}
               initialCaption={[
                 `${recentSitting.absent} din ${recentSitting.total} de deputați nu apar în apelul nominal la niciunul dintre cele ${recentSitting.voteIds.length === 1 ? 'vot' : `${recentSitting.voteIds.length} voturi`} din ${recentSitting.date}.`,
                 '',

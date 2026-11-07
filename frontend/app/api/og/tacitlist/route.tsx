@@ -15,12 +15,19 @@ const SB = { apikey: K, Authorization: `Bearer ${K}` }
 const RO_MONTHS = ['ianuarie', 'februarie', 'martie', 'aprilie', 'mai', 'iunie',
                    'iulie', 'august', 'septembrie', 'octombrie', 'noiembrie', 'decembrie']
 
+/** ?at pins the countdown's reference day, clamped to [today-1, today+7] so a
+ *  public URL can't render a far-off (fake) countdown under the brand. */
+function refDay(at: string | null): Date {
+  const now = Date.now()
+  if (!at || !/^\d{4}-\d{2}-\d{2}$/.test(at)) return new Date(now)
+  const t = new Date(`${at}T12:00:00Z`).getTime()
+  return new Date(Math.min(Math.max(t, now - 86400_000), now + 7 * 86400_000))
+}
+
 export async function GET(req: Request) {
   // ?at=YYYY-MM-DD pins the reference day — preview a future window, and pin
   // the render on publish day so the countdown can't drift past midnight.
-  // Harmless as a public param: it only shifts the DB query window.
-  const at = new URL(req.url).searchParams.get('at')
-  const today = at && /^\d{4}-\d{2}-\d{2}$/.test(at) ? new Date(`${at}T12:00:00Z`) : new Date()
+  const today = refDay(new URL(req.url).searchParams.get('at'))
   const iso = today.toISOString().slice(0, 10)
   const limitDate = new Date(today.getTime() + 7 * 86400_000).toISOString().slice(0, 10)
   // soonest deadline first — objective urgency, no editorial ranking

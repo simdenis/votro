@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 
 // Newsletter signup — double opt-in. POST stages the address (newsletter_request
-// RPC, anon-callable, rate-limited) and emails a confirmation link; the address
+// RPC, needs the server-only SIGNUP_RPC_KEY — migration 060 — rate-limited) and emails a confirmation link; the address
 // only enters the Resend audience once /api/newsletter/confirm is POSTed. This
 // stops anyone subscribing a third-party address on an unauthenticated POST.
 // Env: NEXT_PUBLIC_SUPABASE_URL/ANON_KEY, RESEND_API_KEY, NEWSLETTER_FROM.
@@ -40,7 +40,7 @@ export async function POST(request: Request) {
   try {
     const rpc = await fetch(`${U}/rest/v1/rpc/newsletter_request`, {
       method: 'POST', headers: SB,
-      body: JSON.stringify({ p_email: addr, p_ip: clientIp(request) }),
+      body: JSON.stringify({ p_email: addr, p_ip: clientIp(request), p_key: process.env.SIGNUP_RPC_KEY }),
     })
     if (!rpc.ok) return NextResponse.json({ error: 'Nu am putut salva abonarea. Încearcă din nou.' }, { status: 502 })
     result = await rpc.json()

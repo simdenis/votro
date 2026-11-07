@@ -9,7 +9,10 @@ export async function POST(req: NextRequest) {
   const len = Number(req.headers.get('content-length') ?? 0)
   if (len > 10_240) return new Response(null, { status: 413 })
   try {
-    const b = (await req.json().catch(() => ({}))) as Record<string, unknown>
+    // content-length is absent on chunked bodies: cap the actual text too
+    const raw = await req.text()
+    if (raw.length > 10_240) return new Response(null, { status: 413 })
+    const b = (() => { try { return JSON.parse(raw) } catch { return {} } })() as Record<string, unknown>
     const clip = (v: unknown, n: number) => String(v ?? '').slice(0, n)
     console.error('[clientlog]', JSON.stringify({
       msg: clip(b.msg, 500),

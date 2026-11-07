@@ -283,7 +283,7 @@ def do_recap_week(cfg, db, day, dry):
     # v2: the cover lists every law (ids, slide order); each slide says what happened that week
     slides = [f"{cfg.site_url}/api/og/weekcover?kind=votate&n={len(slides_laws)}&ids={','.join(v['laws']['id'] for v in shown)}&v={ig.CARD_V}{day}"] + \
              [f"{cfg.site_url}/api/og/recapcard?id={v['laws']['id']}&kind=votate&pos={i}/{len(shown) + 1}"
-              f"&ch={v['chamber']}&out={v['outcome']}&t={v['for_count']}-{v['against_count']}&d={v['vote_date']}&v={ig.CARD_V}"
+              f"&vote={v['id']}&v={ig.CARD_V}"
               for i, v in enumerate(shown, 2)]
     rng = f"{monday.day} {ig_month(monday)} – {sunday.day} {ig_month(sunday)}"
     chambers = {v["chamber"] for v in votes}
@@ -517,7 +517,7 @@ def do_rejected_week(cfg, db, day, dry, rows):
     """Laws rejected for good this week: the second chamber voted them down (Mon–today)."""
     d = dt.date.fromisoformat(day)
     monday = d - dt.timedelta(days=d.isoweekday() - 1)
-    votes = db.get("votes", select="law_id,chamber,vote_date,for_count,against_count", vote_type="eq.vot final", outcome="eq.respins",
+    votes = db.get("votes", select="id,law_id,chamber,vote_date,for_count,against_count", vote_type="eq.vot final", outcome="eq.respins",
                    law_id="not.is.null", **{"and": f"(vote_date.gte.{monday},vote_date.lte.{day})"}, limit="200")
     seen = posted_keys(rows, "rejected-week")
     st = statuses(db, sorted({v["law_id"] for v in votes}))
@@ -531,8 +531,7 @@ def do_rejected_week(cfg, db, day, dry, rows):
         return []
     meta = laws_by_id(db, list(final))
     laws = sorted(meta.values(), key=lambda l: -(l.get("interest_score") or 0))
-    q = lambda l: (f"&ch={final[l['id']]['chamber']}&out=respins&t={final[l['id']]['for_count']}-{final[l['id']]['against_count']}"
-                   f"&d={final[l['id']]['vote_date']}")
+    q = lambda l: f"&vote={final[l['id']]['id']}"
     return post_law_carousels(cfg, db, day, dry, "rejected-week", laws, "respinse",
                               "Respinse definitiv de Parlament săptămâna asta",
                               "Respinse de a doua cameră, după votul primei camere: nu mai pot deveni lege în forma asta. Detalii pe la-butoane.ro, link în bio.",

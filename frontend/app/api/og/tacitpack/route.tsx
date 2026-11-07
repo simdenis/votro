@@ -25,13 +25,21 @@ const deboilerplate = (s: string) => {
   return t === s ? s : t.charAt(0).toUpperCase() + t.slice(1)
 }
 
+/** ?at pins the countdown's reference day, clamped to [today-1, today+7] so a
+ *  public URL can't render a far-off (fake) countdown under the brand. */
+function refDay(at: string | null): Date {
+  const now = Date.now()
+  if (!at || !/^\d{4}-\d{2}-\d{2}$/.test(at)) return new Date(now)
+  const t = new Date(`${at}T12:00:00Z`).getTime()
+  return new Date(Math.min(Math.max(t, now - 86400_000), now + 7 * 86400_000))
+}
+
 export async function GET(req: Request) {
   const sp = new URL(req.url).searchParams
   const d = sp.get('d')
   if (!d || !/^\d{4}-\d{2}-\d{2}$/.test(d)) return new Response('bad d', { status: 400 })
   const slide = Math.max(0, parseInt(sp.get('slide') ?? '0', 10) || 0)
-  const at = sp.get('at')
-  const today = at && /^\d{4}-\d{2}-\d{2}$/.test(at) ? new Date(`${at}T12:00:00Z`) : new Date()
+  const today = refDay(sp.get('at'))
 
   const rows: { code: string; chamber: string; summary: string | null; title: string | null }[] =
     (await (await fetch(

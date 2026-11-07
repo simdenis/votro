@@ -16,7 +16,7 @@ function authed(req: Request): boolean {
     || secretMatches(bearer || null, secret)
 }
 
-// Housekeeping RPCs (migrations 055/056): drop stale unconfirmed alert/newsletter
+// Housekeeping RPCs (migrations 055/056/060 — need SIGNUP_RPC_KEY): drop stale unconfirmed alert/newsletter
 // signups. Piggy-backs on the nightly cron so no extra cron entry is needed.
 async function purge() {
   const U = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -24,7 +24,7 @@ async function purge() {
   if (!U || !K) return
   const hdrs = { apikey: K, Authorization: `Bearer ${K}`, 'Content-Type': 'application/json' }
   await Promise.all(['purge_unconfirmed_alerts', 'purge_newsletter_pending'].map(fn =>
-    fetch(`${U}/rest/v1/rpc/${fn}`, { method: 'POST', headers: hdrs, body: '{}' }).catch(() => {}),
+    fetch(`${U}/rest/v1/rpc/${fn}`, { method: 'POST', headers: hdrs, body: JSON.stringify({ p_key: process.env.SIGNUP_RPC_KEY }) }).catch(() => {}),
   ))
 }
 

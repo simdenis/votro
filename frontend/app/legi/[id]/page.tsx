@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
-import { formatDate, capFirst, isUuid, lawSlug, plainSummary, slugToCode } from '@/lib/utils'
+import { formatDate, capFirst, isUuid, lawSlug, plainSummary, slugToCode, jsonLd } from '@/lib/utils'
 import { activeSeats } from '@/lib/seats'
 import { OutcomeBadge } from '@/components/outcome-badge'
 import { PartyBreakdown } from '@/components/party-breakdown'
@@ -120,7 +120,7 @@ export default async function LawDetail({ params }: { params: Promise<{ id: stri
 
   return (
     <div className="space-y-10">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(lawLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(lawLd) }} />
 
       {/* Breadcrumb */}
       <div className="flex items-center justify-between gap-3 flex-wrap">

@@ -4,7 +4,9 @@ import { getCardFonts } from '@/lib/og-fonts'
 import { withEdgeCache } from '@/lib/og-edge-cache'
 
 // 1080×1350 (4:5) Instagram card — who did not vote at a session opening.
-//   /api/og/sessioncard?v=<uuid>,<uuid>&label=…&headline=…
+//   /api/og/sessioncard?v=<uuid>,<uuid>
+// No free-text params: the date label comes from the votes' own date, so this
+// public route can't print caller-supplied text under the brand.
 //
 // Everything is recomputed from the vote rows at render time; nothing about the
 // count is hardcoded, so re-rendering after a party-label fix or a re-scrape
@@ -41,6 +43,17 @@ async function presentIds(voteId: string): Promise<string[]> {
   return rows.map(x => x.politician_id)
 }
 
+const RO_MONTHS = ['ianuarie', 'februarie', 'martie', 'aprilie', 'mai', 'iunie',
+                   'iulie', 'august', 'septembrie', 'octombrie', 'noiembrie', 'decembrie']
+
+async function sittingLabel(voteId: string): Promise<string | null> {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/votes?select=vote_date&id=eq.${voteId}&limit=1`,
+    { headers: SB, cache: 'no-store' })
+  const iso: string | undefined = ((await r.json()) ?? [])[0]?.vote_date
+  const m = iso && /^(\d{4})-(\d{2})-(\d{2})/.exec(iso)
+  return m ? `${Number(m[3])} ${RO_MONTHS[Number(m[2]) - 1]} ${m[1]} · camera deputaților` : null
+}
+
 async function activeDeputies(): Promise<Deputy[]> {
   // politicians + parties, not deputy_stats: that view aggregates every one of
   // the ~351k politician_votes rows to produce counts this card never reads, and
@@ -72,9 +85,10 @@ async function renderCard(req: Request): Promise<Response> {
   const voteIds = (sp.get('v')?.split(',').filter(x => UUID.test(x)) ?? [])
   const votes = voteIds.length ? voteIds.slice(0, 4) : DEFAULT_VOTES
 
-  const [presentLists, deputies] = await Promise.all([
+  const [presentLists, deputies, label] = await Promise.all([
     Promise.all(votes.map(presentIds)),
     activeDeputies(),
+    sittingLabel(votes[0]),
   ])
 
   const present = new Set(presentLists.flat())
@@ -109,10 +123,10 @@ async function renderCard(req: Request): Promise<Response> {
   const ministers = absent.filter(d => d.gov_role).length
 
   const data: SessionOpenCardData = {
-    dateLabel: (sp.get('label') ?? '27 iulie 2026 · camera deputaților').slice(0, 60),
+    dateLabel: label ?? '27 iulie 2026 · camera deputaților',
     absent: absent.length,
     total: deputies.length,
-    headline: (sp.get('headline') ?? 'deputați n-au votat la deschiderea sesiunii extraordinare').slice(0, 90),
+    headline: 'deputați n-au votat la deschiderea sesiunii extraordinare',
     note: ministers > 0
       ? `Bara arată cât din mandatele grupului au lipsit. ${ministers} dintre cei absenți sunt membri ai Guvernului. Lista pe nume: la-butoane.ro`
       : 'Bara arată cât din mandatele grupului au lipsit. Lista pe nume: la-butoane.ro',

@@ -1,4 +1,4 @@
-import { pct, countNoun, hasPartyLine, loyaltyParts , personSlug } from '@/lib/utils'
+import { pct, countNoun, hasPartyLine, loyaltyParts, personSlug, jsonLd } from '@/lib/utils'
 import { PartyBadge } from '@/components/party-badge'
 import { LoyaltyMeter } from '@/components/loyalty-meter'
 import { ShareButtons } from '@/components/share-buttons'
@@ -62,7 +62,7 @@ export function PoliticianProfile({ stats, history, deviationRows, partyHistory,
 
   return (
     <div className="space-y-6">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(personLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(personLd) }} />
 
       {/* ── Header card ─────────────────────────────────── */}
       <div

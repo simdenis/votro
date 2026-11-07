@@ -1,5 +1,5 @@
 import { getDB } from '@/lib/supabase'
-import { isAdmin, keyAllowed } from '@/lib/admin-auth'
+import { adminRequest } from '@/lib/admin-auth'
 import { lawSlides, lawCarouselCaption, initiatorLineFromRows } from '@/lib/ig-carousel'
 import { isUuid } from '@/lib/utils'
 import type { LawStatus } from '@/lib/types'
@@ -13,7 +13,7 @@ export const dynamic = 'force-dynamic'
 const SITE = (process.env.NEXT_PUBLIC_SITE_URL || 'https://la-butoane.ro').replace(/\/$/, '')
 
 export async function GET(req: Request) {
-  if (!(await isAdmin()) && !(await keyAllowed(req, req.headers.get('x-admin-key')))) {
+  if (!(await adminRequest(req))) {
     return new Response('Not found', { status: 404 })
   }
   const id = isUuid(new URL(req.url).searchParams.get('id')) ? new URL(req.url).searchParams.get('id') : null

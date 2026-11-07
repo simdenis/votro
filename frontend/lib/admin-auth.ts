@@ -84,6 +84,17 @@ export async function recordFailure(req: Request): Promise<void> {
   await kv.put(k, String(n + 1), { expirationTtl: LOCK_SECONDS })
 }
 
+/** Email login links are single-use: the first redemption burns the token
+ *  (kept in KV until it would have expired anyway). */
+export async function consumeLoginToken(token: string): Promise<boolean> {
+  const kv = await lockKV()
+  if (!kv) return true
+  const k = `used:${token.slice(-32)}`
+  if (await kv.get(k)) return false
+  await kv.put(k, '1', { expirationTtl: 60 * 60 })
+  return true
+}
+
 async function clearFailures(req: Request): Promise<void> {
   const kv = await lockKV()
   if (kv) await kv.delete(lockKey(clientIp(req)))
@@ -162,4 +173,24 @@ export async function isAdmin(): Promise<boolean> {
     ?? (await cookies()).get('CF_Authorization')?.value
   if (await verifyAccessJwt(jwt)) return true
   return verifySession((await cookies()).get(ADMIN_COOKIE)?.value)
+}
+
+/** Browser cookies (lb_admin, and Access's CF_Authorization, which defaults to
+ *  SameSite=None) ride along on cross-site requests, so a cookie session alone
+ *  must not authorize an admin action — any page the owner visits could POST
+ *  text/plain to /api/admin/publish. Require the request to come from our own
+ *  pages: Sec-Fetch-Site (every current browser sends it), else Origin. */
+export function sameOrigin(req: Request): boolean {
+  const sfs = req.headers.get('sec-fetch-site')
+  if (sfs) return sfs === 'same-origin'
+  const origin = req.headers.get('origin')
+  return !!origin && origin === new URL(req.url).origin
+}
+
+/** Gate for every /api/admin/* route: x-admin-key (scripts/VPS, with lockout)
+ *  or a same-origin browser request carrying an admin session. */
+export async function adminRequest(req: Request): Promise<boolean> {
+  const key = req.headers.get('x-admin-key')
+  if (key) return keyAllowed(req, key)
+  return sameOrigin(req) && isAdmin()
 }

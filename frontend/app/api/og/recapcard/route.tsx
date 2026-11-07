@@ -7,10 +7,12 @@ import { nextAfterVote, nextAfterParliament } from '@/lib/next-step'
 import type { Tone } from '@/components/cards/kit'
 
 // One law inside a multi-law carousel (1080×1350):
-//   /api/og/recapcard?id=<law>&kind=votate&pos=3/8&ch=senate&out=adoptat&t=46-18&d=2026-10-05
+//   /api/og/recapcard?id=<law>&kind=votate&pos=3/8&vote=<vote uuid>
 //   /api/og/recapcard?id=<law>&kind=parlament&pos=3/8
-// kind=votate: the event is the week's final vote (passed by auto_post, which
-// already picked it); kind=parlament: the event is where the law stands with
+// kind=votate: the event is the week's final vote — auto_post passes its id and
+// chamber/outcome/tally/date are read from the DB, never from the URL (a public
+// route must not print caller-supplied results under the brand); without
+// ?vote the law's latest final vote is used. kind=parlament: the event is where the law stands with
 // the President. Text = the final-text explainer when there is one.
 
 const U = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -46,14 +48,21 @@ async function render(request: Request): Promise<Response> {
   let event: RecapCardData['event']
   let next: string | null
   if (kind === 'votate') {
-    const ch = sp.get('ch') === 'senate' ? 'senate' : 'deputies'
-    const out = sp.get('out') === 'respins' ? 'respins' : 'adoptat'
+    const voteId = isUuid(sp.get('vote')) ? sp.get('vote') : null
+    const sel = 'select=chamber,outcome,for_count,against_count,vote_date'
+    const vRows = await get(voteId
+      ? `votes?id=eq.${voteId}&law_id=eq.${id}&${sel}&limit=1`
+      : `votes?law_id=eq.${id}&vote_type=eq.vot%20final&outcome=in.(adoptat,respins)&${sel}&order=vote_date.desc&limit=1`)
+    const v = vRows?.[0]
+    if (!v) return new Response('vote not found', { status: 404 })
+    const ch = v.chamber === 'senate' ? 'senate' : 'deputies'
+    const out = v.outcome === 'respins' ? 'respins' : 'adoptat'
     const where = ch === 'senate' ? 'Senat' : 'Cameră'
     event = {
       label: `${out === 'adoptat' ? 'Adoptat' : 'Respins'} de ${where}`,
       tone: (out === 'adoptat' ? 'for' : 'against') as Tone,
-      tally: (sp.get('t') ?? '').replace(/[^0-9]+/g, '–').replace(/^–|–$/g, '') || null,
-      date: shortDate(sp.get('d')),
+      tally: v.for_count != null && v.against_count != null ? `${v.for_count}–${v.against_count}` : null,
+      date: shortDate(v.vote_date),
     }
     next = nextAfterVote({ chamber: ch, outcome: out }, statusRows?.[0] ?? null, law.code)
   } else {

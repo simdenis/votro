@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { clientIp } from '@/lib/admin-auth'
 import { isUuid } from '@/lib/utils'
 
 // POST { email, targetType: 'law'|'politician', targetId } → create a pending
@@ -34,13 +35,17 @@ export async function POST(req: Request) {
   }
 
   // create/upsert the pending subscription → {status, token}. The RPC enforces
-  // the rate limit (no repeat within 10 min, ≤5/hour per address); a "throttled"
+  // the rate limit (no repeat within 10 min, ≤5/hour per normalized address, ≤10/hour per IP;
+  // p_key = server-only secret, migration 060); a "throttled"
   // status means we must NOT send another confirmation email.
   let result: { status?: string; token?: string }
   try {
     const rpc = await fetch(`${U}/rest/v1/rpc/subscribe_alert`, {
       method: 'POST', headers: SB,
-      body: JSON.stringify({ p_email: email.trim(), p_type: targetType, p_id: targetId }),
+      body: JSON.stringify({
+        p_email: email.trim(), p_type: targetType, p_id: targetId,
+        p_ip: clientIp(req), p_key: process.env.SIGNUP_RPC_KEY,
+      }),
     })
     if (!rpc.ok) return NextResponse.json({ error: 'Nu am putut salva abonarea.' }, { status: 502 })
     result = await rpc.json()

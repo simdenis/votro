@@ -215,3 +215,7 @@ export function formatRelativeTime(dateStr: string | null | undefined): string {
   if (days  <  7)  return `acum ${days} zile`
   return formatDateShort(dateStr.slice(0, 10))
 }
+
+/** JSON for an inline <script type="application/ld+json">: escapes `<` so a
+ *  scraped title or AI text containing `</script>` can't close the tag. */
+export const jsonLd = (v: unknown) => JSON.stringify(v).replace(/</g, '\\u003c')

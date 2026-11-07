@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
-import { keyAllowed, isLockedOut, recordFailure, mintSession, verifyLoginToken, ADMIN_COOKIE, ADMIN_COOKIE_MAX_AGE } from '@/lib/admin-auth'
+import { keyAllowed, isLockedOut, recordFailure, consumeLoginToken, sameOrigin, mintSession, verifyLoginToken, ADMIN_COOKIE, ADMIN_COOKIE_MAX_AGE } from '@/lib/admin-auth'
 
 // Exchange proof-of-key for an httpOnly session cookie, so the key never rides
 // in URLs or page HTML.
@@ -23,6 +23,7 @@ function sessionCookie() {
 }
 
 export async function POST(req: Request) {
+  if (!sameOrigin(req)) return NextResponse.json({ error: 'forbidden' }, { status: 403 })
   let key: unknown
   try { ({ key } = await req.json()) } catch { return NextResponse.json({ error: 'body invalid' }, { status: 400 }) }
   if (await isLockedOut(req)) {
@@ -38,17 +39,29 @@ export async function POST(req: Request) {
 
 export async function GET(req: Request) {
   const sp = new URL(req.url).searchParams
-  // only ever redirect to a same-origin path — never an absolute/attacker URL.
-  // Must start with a single "/" not followed by "/" or "\": WHATWG parsing
-  // treats "\" as "/", so "/\evil.com" and "//evil.com" are both off-origin.
-  const nextParam = sp.get('next') || '/admin'
-  const dest = /^\/(?![/\\])/.test(nextParam) ? nextParam : '/admin'
+  // only ever redirect to a same-origin path. Resolve first, then compare
+  // origins: a regex on the raw string is fooled by "/\t/evil.com" (the URL
+  // parser strips tabs/newlines, leaving "//evil.com").
+  const self = new URL(req.url)
+  // Redirect to the checked absolute URL, never re-resolve a path: a pathname
+  // like "//evil.com" (from "/.//evil.com") would turn off-origin again.
+  let dest = new URL('/admin', self)
+  try {
+    const u = new URL(sp.get('next') || '/admin', self)
+    if (u.origin === self.origin) dest = u
+  } catch { /* keep /admin */ }
   const t = sp.get('t')
-  if (await isLockedOut(req) || !verifyLoginToken(t)) {
+  if (await isLockedOut(req)) {
+    await failDelay()
+    return NextResponse.redirect(new URL('/admin', req.url))
+  }
+  if (!verifyLoginToken(t)) {
     if (t) await recordFailure(req)
     await failDelay()
     return NextResponse.redirect(new URL('/admin', req.url))
   }
+  // a valid but already-used link: not a guess, so no failure recorded
+  if (!(await consumeLoginToken(t!))) return NextResponse.redirect(new URL('/admin', req.url))
   ;(await cookies()).set(sessionCookie())
-  return NextResponse.redirect(new URL(dest, req.url))
+  return NextResponse.redirect(dest)
 }

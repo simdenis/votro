@@ -4,6 +4,7 @@ import './globals.css'
 import { Analytics } from '@vercel/analytics/react'
 import { Nav } from '@/components/nav'
 import { Footer } from '@/components/footer'
+import { jsonLd } from '@/lib/utils'
 
 // Brand type: IBM Plex Sans for display + UI (latin-ext for ă â î ș ț).
 // `font-serif` classes stay in markup but render Plex Sans 600 (globals.css).
@@ -87,7 +88,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <link rel="preconnect" href="https://zmxewrkykbxawfhzxbni.supabase.co" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(SITE_LD) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(SITE_LD) }} />
       </head>
       <body className="flex flex-col min-h-screen">
         <Nav />
