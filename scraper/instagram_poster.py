@@ -310,7 +310,7 @@ def _create_media(cfg: Config, params: dict) -> requests.Response:
     for attempt in range(3):
         r = requests.post(f"{GRAPH}/{cfg.version}/{cfg.ig_user_id}/media",
                           params={**params, "access_token": cfg.token}, timeout=_TIMEOUT)
-        err = {} if r.ok else (r.json() if r.headers.get("content-type", "").startswith("application/json") else {}).get("error", {})
+        err = {} if r.ok else _graph_error(r)
         if attempt < 2 and err.get("error_subcode") in _FETCH_SUBCODES:
             print(f"IG could not fetch the image, retry {attempt + 1}", file=sys.stderr)
             time.sleep(15)
