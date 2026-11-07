@@ -235,6 +235,8 @@ log "=== Initiatives (cdep + senat registries) ==="
 # weekly "pe cale să treacă tacit" post by hotness instead of deadline alone.
 log "=== Pending-bill AI scores (Gemini) ==="
 "$PY" scraper/pending_bills_scorer.py >>"$LOG" 2>&1 || { rc=1; log "Pending-bill scorer FAILED"; }
+# short titles for the tacit list (scrape_meta.tacit_headlines), after the summaries exist
+"$PY" scraper/tacit_headlines.py >>"$LOG" 2>&1 || log "WARN: tacit headlines failed"
 
 # Data-integrity gate: deterministic invariants over everything produced above
 # (no law promulgated-yet-respins, presence in range, participations ≤ chamber

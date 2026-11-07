@@ -6,6 +6,7 @@ import { AbsenceTop } from '@/components/absence-top'
 import { daysLeft } from '@/components/deadline-badge'
 import { CountyMap } from '@/components/county-map'
 import { getCountyLeaders } from '@/lib/county-leaders'
+import { getTacitHeadlines } from '@/lib/tacit-headlines'
 import { NewsletterForm } from '@/components/newsletter-form'
 
 // ISR: CDN-cache the homepage for 10 min instead of rendering from origin on
@@ -52,7 +53,7 @@ export default async function Dashboard() {
   // Romania's date, not UTC — after RO midnight (but before UTC midnight) the
   // UTC date is yesterday, which would keep just-expired tacit deadlines alive.
   const today = todayRo()
-  const [promLaws, rejLaws, abs, r9, r10, leaders] = await Promise.all([
+  const [promLaws, rejLaws, abs, r9, r10, leaders, tacitHeads] = await Promise.all([
     // Decided recently: the last laws promulgated and the last ones rejected for
     // good (initiatives.stage, dated by stage_date), shown side by side. Short
     // headline when the law has one, else the plain summary.
@@ -73,6 +74,7 @@ export default async function Dashboard() {
       .eq('vote_type', 'vot final').not('law_id', 'is', null)
       .order('vote_date', { ascending: false }).limit(1),
     getCountyLeaders(),
+    getTacitHeadlines(),
   ])
 
   type LowPresence = { politician_id: string; name: string; first_name: string; party_abbr: string; party_color: string; presence_pct: number; chamber_votes: number | null; context_note: string | null; href: string }
@@ -186,7 +188,7 @@ export default async function Dashboard() {
                       className="flex items-center justify-between gap-2 py-2.5 border-b border-rim hover:bg-raised/60 transition-colors"
                     >
                       <span className="min-w-0">
-                        <span className="block text-[13.5px] font-medium text-foreground leading-snug line-clamp-2">{plainSummary(b.summary) || b.title || b.code}</span>
+                        <span className="block text-[13.5px] font-medium text-foreground leading-snug line-clamp-2">{tacitHeads[b.code] || plainSummary(b.summary) || b.title || b.code}</span>
                         <span className="block font-mono text-[10px] text-muted mt-1">{b.code}</span>
                       </span>
                       {days != null && (

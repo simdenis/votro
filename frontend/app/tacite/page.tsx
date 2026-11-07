@@ -2,6 +2,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getDB } from '@/lib/supabase'
 import { formatDate, lawSlug, plainSummary } from '@/lib/utils'
+import { getTacitHeadlines } from '@/lib/tacit-headlines'
 import { DeadlineBadge } from '@/components/deadline-badge'
 import type { PendingBill } from '@/lib/types'
 import { SectionNav, LEGI_SECTIONS } from '@/components/section-nav'
@@ -15,10 +16,10 @@ export const metadata: Metadata = {
 }
 
 export default async function TacitePage() {
-  const { data, error } = await getDB()
-    .from('pending_bills')
-    .select('*')
-    .order('tacit_deadline', { ascending: true })
+  const [{ data, error }, heads] = await Promise.all([
+    getDB().from('pending_bills').select('*').order('tacit_deadline', { ascending: true }),
+    getTacitHeadlines(),
+  ])
   const bills = (data as PendingBill[] | null) ?? []
 
   return (
@@ -90,10 +91,10 @@ export default async function TacitePage() {
                   <td className="py-3 pr-4 max-w-xl">
                     {/* title links to our own detail page (countdown + context);
                         the official fișa/PDF links stay as secondary sources */}
-                    {/* the plain-language summary is the headline; official
-                        title drops to a secondary line */}
+                    {/* short headline (scraper/tacit_headlines.py), else the plain
+                        summary; the official title drops to a secondary line */}
                     <Link href={`/tacite/${lawSlug(b.code)}`} className="text-foreground hover:underline font-medium">
-                      {plainSummary(b.summary) || b.title || b.code}
+                      {heads[b.code] || plainSummary(b.summary) || b.title || b.code}
                     </Link>
                     {b.summary && b.title && (
                       <span className="block text-[11.5px] text-faint mt-1 leading-snug">
