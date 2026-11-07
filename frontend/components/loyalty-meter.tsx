@@ -71,7 +71,6 @@ export function LoyaltyMeter({ loyaltyPct, size = 128 }: Props) {
         fill="var(--text)"
         fontSize={size * 0.18}
         fontWeight={800}
-        fontFamily="system-ui, sans-serif"
       >
         {loyaltyPct}%
       </text>
@@ -82,7 +81,6 @@ export function LoyaltyMeter({ loyaltyPct, size = 128 }: Props) {
         fill="var(--muted)"
         fontSize={size * 0.07}
         letterSpacing={0.5}
-        fontFamily="system-ui, sans-serif"
       >
         LOIALITATE
       </text>

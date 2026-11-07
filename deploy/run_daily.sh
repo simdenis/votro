@@ -217,6 +217,9 @@ log "=== Law initiators (senat.ro fisa) ==="
 "$PY" scraper/initiator_scraper.py >>"$LOG" 2>&1 || { rc=1; log "Initiator scrape FAILED"; }
 # /cine-propune reads one precomputed row (scrape_meta.initiator_stats)
 "$PY" scraper/initiator_stats.py >>"$LOG" 2>&1 || log "WARN: initiator stats failed"
+# homepage absence ranking: one precomputed row (scrape_meta.absence_top), the
+# live sort over the stats views times out under the anon role
+"$PY" scraper/absence_top.py >>"$LOG" 2>&1 || log "WARN: absence top failed"
 
 # Bills with running tacit-adoption terms (cdep "Verificare termene legale").
 log "=== Tacit deadlines ==="

@@ -94,7 +94,6 @@ export function SeatArc({
         fill={heroColor}
         fontSize={Math.round(width * 0.065)}
         fontWeight={900}
-        fontFamily="system-ui, sans-serif"
       >
         {heroSymbol}
       </text>
@@ -105,7 +104,6 @@ export function SeatArc({
         fill="var(--muted)"
         fontSize={Math.round(width * 0.026)}
         letterSpacing={2}
-        fontFamily="system-ui, sans-serif"
       >
         {outcome?.toUpperCase() ?? ''}
       </text>

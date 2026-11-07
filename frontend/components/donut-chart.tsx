@@ -63,7 +63,6 @@ export function DonutChart({ segments, size = 140, ring = 26, centerLabel, cente
           x={cx} y={centerSub ? cy - size * 0.08 : cy}
           textAnchor="middle" dominantBaseline="middle"
           fill="var(--text)" fontSize={size * 0.2} fontWeight="600"
-          fontFamily="system-ui, sans-serif"
         >
           {centerLabel}
         </text>
@@ -73,7 +72,6 @@ export function DonutChart({ segments, size = 140, ring = 26, centerLabel, cente
           x={cx} y={cy + size * 0.12}
           textAnchor="middle" dominantBaseline="middle"
           fill="var(--muted)" fontSize={size * 0.11}
-          fontFamily="system-ui, sans-serif"
         >
           {centerSub}
         </text>

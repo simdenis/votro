@@ -15,29 +15,39 @@ export const revalidate = 600
 // absolute: the "%s | LaButoane" template would burn the homepage SERP line on "Acasă"
 export const metadata: Metadata = { title: { absolute: 'LaButoane — Cum votează Parlamentul României' } }
 
+const ABS_COLS = 'politician_id, name, first_name, party_abbr, party_color, presence_pct, chamber_votes, context_note'
+
+async function getAbsenceTop(db: ReturnType<typeof getDB>): Promise<{ senators: unknown[]; deputies: unknown[] }> {
+  const { data } = await db.from('scrape_meta').select('value').eq('key', 'absence_top').maybeSingle()
+  try {
+    const v = data?.value ? JSON.parse(data.value) : null
+    if (v?.senators?.length && v?.deputies?.length) return v
+  } catch { /* fall through to the live query */ }
+  const live = (view: string) => db.from(view).select(ABS_COLS)
+    .eq('active', true).is('gov_role', null).is('context_note', null)
+    .order('presence_pct', { ascending: true }).limit(15)
+  const [s, d] = await Promise.all([live('senator_stats'), live('deputy_stats')])
+  return { senators: s.data ?? [], deputies: d.data ?? [] }
+}
+
 export default async function Dashboard() {
   const db = getDB()
 
   // Romania's date, not UTC — after RO midnight (but before UTC midnight) the
   // UTC date is yesterday, which would keep just-expired tacit deadlines alive.
   const today = todayRo()
-  const [r2, r7, r8, r9, r10, leaders] = await Promise.all([
+  const [r2, abs, r9, r10, leaders] = await Promise.all([
     // Recently promulgated laws — the "finished, now it's law" feed. More alive
     // than raw votes (which stop during recess) and reads in plain language.
     db.from('law_status')
       .select('law_id, code, title, summary, law_category, presidential_date')
       .eq('presidential_status', 'promulgat').not('presidential_date', 'is', null)
       .order('presidential_date', { ascending: false }).limit(3),
-    // Absențe top 5 — lowest presence since mandate start, both chambers.
-    // Government members (gov_role) never vote in plen — structural absence; a
-    // context_note (ex-ministers, medical leave, delegations) keeps them off this
-    // short list too, like on the cards: a teaser has no room for the ⓘ caveat.
-    db.from('senator_stats').select('politician_id, name, first_name, party_abbr, party_color, presence_pct, chamber_votes, context_note')
-      .eq('active', true).is('gov_role', null).is('context_note', null)
-      .order('presence_pct', { ascending: true }).limit(15),
-    db.from('deputy_stats').select('politician_id, name, first_name, party_abbr, party_color, presence_pct, chamber_votes, context_note')
-      .eq('active', true).is('gov_role', null).is('context_note', null)
-      .order('presence_pct', { ascending: true }).limit(15),
+    // Absențe — precomputed daily by scraper/absence_top.py (scrape_meta.absence_top):
+    // the live sort over the stats views times out under anon often enough to cache
+    // an empty chamber. Same guards: no gov_role, no context_note (a teaser has no
+    // room for the ⓘ caveat). Falls back to the live query when the row is missing.
+    getAbsenceTop(db),
     // Legi tacite — soonest upcoming constitutional deadlines (art. 75). The one
     // thing that doesn't stop during recess, so it belongs on the homepage.
     db.from('pending_bills').select('id, code, title, summary, tacit_deadline')
@@ -55,10 +65,10 @@ export default async function Dashboard() {
   type LowPresence = { politician_id: string; name: string; first_name: string; party_abbr: string; party_color: string; presence_pct: number; chamber_votes: number | null; context_note: string | null; href: string }
   // Split by chamber: a senator and a deputy have different denominators, so
   // ranking them in one list mixes incomparable numbers.
-  const absSenators: LowPresence[] = ((r7.data ?? []) as Omit<LowPresence, 'href'>[])
+  const absSenators: LowPresence[] = (abs.senators as Omit<LowPresence, 'href'>[])
     .map(s => ({ ...s, href: `/senatori/${personSlug(s.first_name, s.name)}` }))
     .sort((a, b) => a.presence_pct - b.presence_pct)
-  const absDeputies: LowPresence[] = ((r8.data ?? []) as Omit<LowPresence, 'href'>[])
+  const absDeputies: LowPresence[] = (abs.deputies as Omit<LowPresence, 'href'>[])
     .map(s => ({ ...s, href: `/deputati/${personSlug(s.first_name, s.name)}` }))
     .sort((a, b) => a.presence_pct - b.presence_pct)
   const tacitBills = (r9.data ?? []) as { id: string; code: string; title: string | null; summary: string | null; tacit_deadline: string | null }[]
