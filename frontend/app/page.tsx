@@ -13,6 +13,16 @@ import { NewsletterForm } from '@/components/newsletter-form'
 // every hit — votes change daily at most, so freshness is unaffected while
 // Fast Origin Transfer drops sharply.
 export const revalidate = 600
+
+// Calendar days in Romania, not hours: a law promulgated yesterday evening is «ieri»
+// at 08:00 today. Older than a week falls back to the full date.
+function dayAgo(date: string): string {
+  const days = Math.round((Date.parse(todayRo()) - Date.parse(date.slice(0, 10))) / 86_400_000)
+  if (days <= 0) return 'azi'
+  if (days === 1) return 'ieri'
+  if (days < 7) return `acum ${days} zile`
+  return formatDate(date)
+}
 // absolute: the "%s | LaButoane" template would burn the homepage SERP line on "Acasă"
 export const metadata: Metadata = { title: { absolute: 'LaButoane: cum votează deputații și senatorii' } }
 
@@ -209,7 +219,7 @@ export default async function Dashboard() {
                     <span className="block text-[13.5px] font-medium text-foreground leading-snug line-clamp-2">{l.text}</span>
                     <span className="flex items-center gap-2 mt-1 font-mono text-[10px] text-muted">
                       <span>{l.code}</span>
-                      {l.date && <span>{formatDate(l.date)}</span>}
+                      {l.date && <span title={formatDate(l.date)}>{dayAgo(l.date)}</span>}
                     </span>
                   </Link>
                 ))}
