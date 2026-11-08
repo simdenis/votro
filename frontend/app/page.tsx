@@ -14,7 +14,7 @@ import { NewsletterForm } from '@/components/newsletter-form'
 // Fast Origin Transfer drops sharply.
 export const revalidate = 600
 // absolute: the "%s | LaButoane" template would burn the homepage SERP line on "Acasă"
-export const metadata: Metadata = { title: { absolute: 'LaButoane — Cum votează Parlamentul României' } }
+export const metadata: Metadata = { title: { absolute: 'LaButoane: cum votează deputații și senatorii' } }
 
 const ABS_COLS = 'politician_id, name, first_name, party_abbr, party_color, presence_pct, chamber_votes, context_note'
 

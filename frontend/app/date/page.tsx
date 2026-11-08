@@ -5,7 +5,7 @@ import { ApiBuilder } from '@/components/api-builder'
 
 export const metadata: Metadata = {
   title: 'Date deschise',
-  description: 'API public și export CSV/JSON cu toate voturile Parlamentului României — pentru jurnaliști, cercetători și dezvoltatori.',
+  description: 'API public și export CSV/JSON cu toate voturile Parlamentului României, pentru jurnaliști, cercetători și dezvoltatori.',
 }
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://la-butoane.ro'

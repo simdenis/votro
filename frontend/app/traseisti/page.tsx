@@ -7,7 +7,7 @@ import { SectionNav, PARLAMENTARI_SECTIONS } from '@/components/section-nav'
 export const revalidate = 600 // ISR — CDN-cache for 10 min
 export const metadata: Metadata = {
   title: 'Schimbări de afiliere',
-  description: 'Parlamentarii care au schimbat partidul în timpul mandatului actual — cu traseul complet.',
+  description: 'Parlamentarii care au schimbat partidul în timpul mandatului actual, cu traseul complet.',
 }
 
 function fmt(d: string) {

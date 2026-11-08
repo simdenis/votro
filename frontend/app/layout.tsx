@@ -31,11 +31,11 @@ export const metadata: Metadata = {
   // serves identical content and would otherwise split indexing
   alternates: { canonical: './' },
   title: {
-    default: 'LaButoane — Cum votează parlamentarii români',
+    default: 'LaButoane: cum votează deputații și senatorii',
     template: '%s | LaButoane',
   },
   description:
-    'Urmărește voturile senatorilor și deputaților români. Transparență parlamentară în timp real.',
+    'Cum votează fiecare deputat și senator: voturi, absențe și devieri de la linia de partid. Date oficiale de pe cdep.ro și senat.ro, actualizate zilnic.',
   openGraph: {
     siteName: 'LaButoane',
     locale: 'ro_RO',
@@ -72,8 +72,9 @@ const SITE_LD = {
   '@context': 'https://schema.org',
   '@type': 'WebSite',
   name: 'LaButoane',
+  alternateName: ['La Butoane', 'la-butoane.ro'],
   url: SITE_URL,
-  description: 'Cum votează Parlamentul României — voturi, absențe, devieri de la linia de partid.',
+  description: 'Cum votează Parlamentul României: voturi, absențe, devieri de la linia de partid.',
   inLanguage: 'ro',
   potentialAction: {
     '@type': 'SearchAction',

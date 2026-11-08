@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Confidențialitate — LaButoane',
+  title: 'Confidențialitate',
   description: 'Ce date colectăm (doar emailul, dacă te abonezi), cum le folosim și cum te dezabonezi.',
 }
 

@@ -3,7 +3,7 @@ import { SectionNav, DESPRE_SECTIONS } from '@/components/section-nav'
 import { Feedback } from '@/components/feedback'
 
 export const metadata: Metadata = {
-  title: 'Contribuie — LaButoane',
+  title: 'Contribuie',
   description: 'Susține LaButoane și ajută-ne să menținem transparența parlamentară din România.',
 }
 
