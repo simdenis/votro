@@ -177,6 +177,7 @@ export interface PendingBill {
   scraped_at: string
   /** AI fields (migration 037, pending_bills_scorer.py) */
   summary?: string | null
+  summary_source?: SummarySource | null
   interest_score?: number | null
   interest_reason?: string | null
 }

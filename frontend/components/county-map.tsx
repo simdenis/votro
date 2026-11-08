@@ -60,7 +60,7 @@ export function CountyMap({ selected, leaders = {} }: { selected?: string; leade
                 onMouseEnter={() => setHover(name)}
                 onMouseLeave={() => setHover(h => (h === name ? null : h))}
               >
-                <title>{leaders[name] ? `${name} · cei mai mulți parlamentari: ${leaders[name].parties.map(p => p.abbr).join(' și ')} (${leaders[name].seats} din ${leaders[name].total}${leaders[name].parties.length > 1 ? ' fiecare' : ''})` : name}</title>
+                <title>{leaders[name] ? `${name} · cei mai mulți parlamentari: ${leaders[name].parties.map(p => p.abbr).join(', ')} (${leaders[name].parties.length > 1 ? 'câte ' : ''}${leaders[name].seats} din ${leaders[name].total})` : name}</title>
               </path>
             )
           })}

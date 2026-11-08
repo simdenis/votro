@@ -12,7 +12,7 @@ export const revalidate = 600 // ISR — CDN-cache for 10 min
 export const metadata: Metadata = {
   title: 'Termene tacite',
   description:
-    'Proiecte de lege care trec fără vot dacă prima cameră nu le dezbate la timp — termenele constituționale de adoptare tacită (art. 75).',
+    'Proiecte de lege care trec de prima cameră fără vot dacă aceasta nu se pronunță la timp: termenele constituționale de adoptare tacită (art. 75).',
 }
 
 export default async function TacitePage() {

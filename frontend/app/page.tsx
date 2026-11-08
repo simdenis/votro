@@ -122,7 +122,8 @@ export default async function Dashboard() {
         </h1>
         {/* One line above the fold; sources and neutrality live on /despre */}
         <p className="text-[15px] text-muted leading-relaxed mt-3.5 max-w-2xl">
-          Cum votează fiecare senator și deputat. Date oficiale, actualizate zilnic.
+          Cum votează fiecare senator și deputat. Date oficiale, actualizate zilnic.{' '}
+          <Link href="/despre#in-presa" className="text-faint hover:text-foreground">Citat de Edupedu.ro</Link>
         </p>
 
         {/* Search-anything: many visitors arrive wanting one person or one law.

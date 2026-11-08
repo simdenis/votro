@@ -73,8 +73,6 @@ export function Footer() {
           <ReportMistake />
           <span className="text-faint">·</span>
           <Feedback />
-          <span className="text-faint">·</span>
-          <span>Neafiliat politic</span>
         </span>
       </div>
     </footer>

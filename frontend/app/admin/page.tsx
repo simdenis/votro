@@ -495,7 +495,7 @@ export default async function AdminPage({ searchParams }: {
       const from = s.segments[s.segments.length - 2], to = s.segments[s.segments.length - 1]
       return `• ${s.first_name} ${s.name} (${s.chamber === 'senate' ? 'Senat' : 'Cameră'}): ${from?.abbreviation ?? '?'} → ${to?.abbreviation ?? '?'}`
     }),
-    '', `Parcursul fiecăruia: ${SITE}/traseisti`, '', HASHTAGS,
+    '', `Parcursul fiecăruia: ${SITE}/schimbari-afiliere`, '', HASHTAGS,
   ].join('\n') : ''
 
   // Cumulative "de la alegeri" — the launch stat (origin → current party).
@@ -507,7 +507,7 @@ export default async function AdminPage({ searchParams }: {
       return `• ${s.first_name} ${s.name}: ${from?.abbreviation ?? '?'} → ${to?.abbreviation ?? '?'}`
     }),
     ...(allSwitchers.length > 12 ? ['…și alții.'] : []),
-    '', `Parcursul fiecăruia: ${SITE}/traseisti`, '', HASHTAGS,
+    '', `Parcursul fiecăruia: ${SITE}/schimbari-afiliere`, '', HASHTAGS,
   ].join('\n') : ''
 
   return (

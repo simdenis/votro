@@ -7,8 +7,17 @@ import { formatDate, isUuid, lawSlug, slugToCode, countNoun, plainSummary } from
 import { DeadlineBadge, daysLeft } from '@/components/deadline-badge'
 import { SectionNav, LEGI_SECTIONS } from '@/components/section-nav'
 import type { PendingBill } from '@/lib/types'
+import { getTacitHeadlines } from '@/lib/tacit-headlines'
 
 export const revalidate = 600 // ISR — the countdown only needs day granularity
+
+// What the summarizer actually read (pending_bills.summary_source)
+const SOURCE_LABEL: Record<string, string> = {
+  'em+text': 'textul proiectului și expunerea de motive',
+  em: 'expunerea de motive',
+  text: 'textul proiectului',
+  title: 'titlul oficial',
+}
 
 
 // Addressed by code slug (/tacite/BP186-2026); UUIDs still resolve.
@@ -30,7 +39,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     bill.title ?? bill.code,
     bill.tacit_deadline
       ? d != null && d >= 0
-        ? `Devine lege fără vot pe ${formatDate(bill.tacit_deadline)} dacă Camera Deputaților nu îl dezbate — mai sunt ${d} ${countNoun(d, 'zi', 'zile')}.`
+        ? `Trece de Camera Deputaților fără vot pe ${formatDate(bill.tacit_deadline)} dacă aceasta nu se pronunță până atunci. Mai sunt ${d} ${countNoun(d, 'zi', 'zile')}.`
         : `Termenul constituțional a expirat pe ${formatDate(bill.tacit_deadline)}.`
       : '',
   ].filter(Boolean).join(' ')
@@ -46,6 +55,7 @@ export default async function TacitBillPage({ params }: { params: Promise<{ id: 
   const { id } = await params
   const bill = await getBill(id)
   if (!bill) notFound()
+  const headline = (await getTacitHeadlines())[bill.code] ?? null
 
   const d = bill.tacit_deadline ? daysLeft(bill.tacit_deadline) : null
   const expired = d != null && d < 0
@@ -67,19 +77,23 @@ export default async function TacitBillPage({ params }: { params: Promise<{ id: 
           <span className="font-mono text-sm font-bold text-muted">{bill.code}</span>
           <span className="text-[11px] text-faint">Camera Deputaților · primă cameră sesizată</span>
         </div>
-        {/* plain-language summary is the headline; official title below it */}
+        {/* Short neutral title (or the official one) is the H1; the AI summary sits
+            under it, labelled before it is read, never in the place of authority. */}
         <h1 className="font-serif text-[26px] sm:text-[32px] font-normal tracking-[-0.01em] leading-[1.15] text-foreground">
-          {plainSummary(bill.summary) || bill.title || bill.code}
+          {headline || bill.title || bill.code}
         </h1>
-        {bill.summary && bill.title && (
+        {headline && bill.title && (
           <p className="text-[13px] text-muted mt-3 leading-relaxed">
             <span className="text-faint">Titlul oficial:</span> {bill.title}
           </p>
         )}
         {bill.summary && (
-          <p className="text-[11px] text-faint mt-2">
-            Rezumat generat automat (AI) din expunerea de motive — nu e text oficial.
-          </p>
+          <div className="mt-5 max-w-2xl">
+            <p className="text-[11px] text-faint mb-1">
+              {`Rezumat generat automat (AI) din ${SOURCE_LABEL[bill.summary_source ?? 'text'] ?? 'textul proiectului'}. Nu e text oficial.`}
+            </p>
+            <p className="text-[15px] text-foreground leading-relaxed">{plainSummary(bill.summary)}</p>
+          </div>
         )}
       </div>
 
@@ -91,11 +105,11 @@ export default async function TacitBillPage({ params }: { params: Promise<{ id: 
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <div>
               <p className="text-[11px] text-muted font-semibold mb-1.5">
-                {expired ? 'Termenul a expirat' : 'Devine lege fără vot pe'}
+                {expired ? 'Termenul a expirat' : 'Trece de Cameră fără vot pe'}
               </p>
               <p className="text-[20px] font-bold text-foreground">{formatDate(bill.tacit_deadline)}</p>
               {bill.term_days && (
-                <p className="text-[12px] text-muted mt-1">Termen constituțional: {bill.term_days}</p>
+                <p className="text-[12px] text-muted mt-1">{`Termen constituțional: ${bill.term_days} de zile`}</p>
               )}
             </div>
             <DeadlineBadge deadline={bill.tacit_deadline} size="lg" />

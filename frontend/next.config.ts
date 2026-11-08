@@ -21,6 +21,8 @@ const baseConfig: NextConfig = {
       { source: '/saptamana', destination: '/voturi', permanent: true },
       // /search was the last English route — renamed to match the RO scheme
       { source: '/search', destination: '/cautare', permanent: true },
+      // /traseisti carried the pejorative the page label avoids; old links (IG cards, emails) still land
+      { source: '/traseisti', destination: '/schimbari-afiliere', permanent: true },
       // Bare section routes need their OWN exact redirect: with :path* empty,
       // Next emits the literal "/voturi/:path*" as the Location (a redirect into
       // a 404). These exact rules must precede the wildcard ones to win the match.

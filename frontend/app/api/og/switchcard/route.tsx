@@ -101,7 +101,7 @@ export async function GET(req: Request) {
 
             {all && (
               <div style={{ display: 'flex', fontSize: 24, fontWeight: 700, color: C.accent, marginTop: 18 }}>
-                {isLastPage ? 'Parcursul fiecăruia pe la-butoane.ro/traseisti' : `…continuă (${total - (from0 + switchers.length)} rămași)`}
+                {isLastPage ? 'Parcursul fiecăruia pe la-butoane.ro/schimbari-afiliere' : `…continuă (${total - (from0 + switchers.length)} rămași)`}
               </div>
             )}
 

@@ -450,7 +450,7 @@ export function SwitchMonthCard({ site, months, hashtags }: {
   const defaultCaption = data && data.entries.length ? [
     `Cine a schimbat partidul, ${data.label}`, '',
     ...data.entries.map(e => `• ${e.name} (${e.chamber}): ${e.from} → ${e.to}`),
-    '', `Parcursul fiecăruia: ${site}/traseisti`, '', hashtags,
+    '', `Parcursul fiecăruia: ${site}/schimbari-afiliere`, '', hashtags,
   ].join('\n') : ''
 
   const [caption, setCaption] = useState(defaultCaption)
