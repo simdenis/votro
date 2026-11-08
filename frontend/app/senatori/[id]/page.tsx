@@ -59,7 +59,7 @@ export default async function SenatorProfile({ params }: { params: Promise<{ id:
 
   // history columns trimmed to what VoteHistory/DeviationList render —
   // votes!inner(*, laws(*)) dragged every law summary into the client props
-  const HISTORY_COLS = 'id, vote_id, vote_choice, party_line_deviation, votes!inner(vote_date, vote_type, outcome, description, laws(code, title, law_category))'
+  const HISTORY_COLS = 'id, vote_id, vote_choice, party_line_deviation, votes!inner(vote_date, vote_type, outcome, description, laws(code, title, headline, law_category))'
   const [stats, r1, r3, r4, mandate] = await Promise.all([
     getStats(pid),
     db

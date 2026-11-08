@@ -79,6 +79,8 @@ export interface Law {
   scraped_at: string
   /** Gemini public-interest score 1–100 (migration 025) — "hotness". */
   interest_score: number | null
+  /** Short plain title (interest_scorer.py); lists prefer it over the official title. */
+  headline?: string | null
 }
 
 export interface Vote {

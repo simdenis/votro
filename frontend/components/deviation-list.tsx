@@ -2,8 +2,9 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { formatDateShort, choiceLabel, choiceColor, capFirst, isRejectionVote } from '@/lib/utils'
+import { formatDateShort, choiceLabel, choiceColor, countNoun, isRejectionVote } from '@/lib/utils'
 import type { VoteHistoryRow } from '@/lib/types'
+import { lawLabel } from '@/components/vote-history'
 
 const INITIAL = 8
 
@@ -34,8 +35,8 @@ export function DeviationList({ rows, total }: { rows: VoteHistoryRow[]; total: 
                 {row.votes.vote_type}
               </span>
             )}
-            <span className="text-xs text-muted truncate flex-1">
-              {capFirst(row.votes.laws?.title ?? row.votes.description ?? '') || 'Vot procedural (fără lege identificată)'}
+            <span className="text-xs text-muted truncate flex-1" title={row.votes.laws?.title ?? undefined}>
+              {lawLabel(row)}
             </span>
             <span className="text-xs font-bold flex-shrink-0" style={{ color: choiceColor(row.vote_choice) }}>
               {choiceLabel(row.vote_choice, isRejectionVote(row.votes.vote_type))}
@@ -48,7 +49,7 @@ export function DeviationList({ rows, total }: { rows: VoteHistoryRow[]; total: 
           onClick={() => setExpanded(v => !v)}
           className="mt-3 text-xs text-muted underline underline-offset-2 hover:text-foreground"
         >
-          {expanded ? 'Arată mai puțin' : `Toate cele ${rows.length} devieri`}
+          {expanded ? 'Arată mai puțin' : `Toate cele ${rows.length} ${countNoun(rows.length, 'deviere', 'devieri')}`}
         </button>
       )}
       {total > rows.length && (

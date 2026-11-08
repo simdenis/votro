@@ -6,6 +6,12 @@ import { formatDate, choiceLabel, choiceColor, capFirst, isRejectionVote } from 
 import { OutcomeBadge } from '@/components/outcome-badge'
 import type { VoteHistoryRow } from '@/lib/types'
 
+/** Short headline when the law has one, else the official title, else the vote subject. */
+export function lawLabel(row: VoteHistoryRow): string {
+  const l = row.votes.laws
+  return capFirst(l?.headline || l?.title || row.votes.description || '') || 'Vot procedural (fără lege identificată)'
+}
+
 const PAGE = 20
 
 /**
@@ -87,8 +93,8 @@ export function VoteHistory({ rows }: { rows: VoteHistoryRow[] }) {
                       <span className="text-[10px] bg-deviere/10 text-deviere font-bold rounded px-1.5 py-px">⚠ deviere</span>
                     )}
                   </div>
-                  <p className="text-sm text-foreground truncate">
-                    {capFirst(row.votes.laws?.title ?? row.votes.description ?? '') || 'Vot procedural (fără lege identificată)'}
+                  <p className="text-sm text-foreground truncate" title={row.votes.laws?.title ?? undefined}>
+                    {lawLabel(row)}
                   </p>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
