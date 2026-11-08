@@ -7,6 +7,12 @@ import { capFirst, formatDate, lawSlug, todayRo } from '@/lib/utils'
 import { CategoryBadge } from '@/components/category-badge'
 import { formatCdepCode, isOrdinanceBill, NO_PLENARY_VOTE, STAGE_LABELS, type Stage } from '@/lib/initiative-stage'
 import type { Initiative } from '@/lib/types'
+
+/** {initiative id: short headline}, written daily by scraper/initiative_headlines.py. */
+async function getInitiativeHeadlines(): Promise<Record<string, string>> {
+  const { data } = await getDB().from('scrape_meta').select('value').eq('key', 'initiative_headlines').maybeSingle()
+  try { return data?.value ? JSON.parse(data.value) : {} } catch { return {} }
+}
 import { SectionNav, LEGI_SECTIONS } from '@/components/section-nav'
 
 export const revalidate = 600 // ISR — CDN-cache for 10 min
@@ -79,11 +85,12 @@ export default async function InitiativePage({
   // The registry holds ~2500+ rows — a single select silently truncates at 1000.
   // explicit columns, not '*': smaller payload, and a distinct fetch-cache key
   // from the deploy-time render that cached the then-empty table
-  const rows = await allRows<Initiative>(async (lo, hi) => {
+  const headlines = await getInitiativeHeadlines()
+  const rows = await allRows<Initiative & { laws: { headline: string | null } | null }>(async (lo, hi) => {
     const res = await getDB()
       .from('initiatives')
-      .select('id,cdep_code,senat_code,cdep_idp,title,obiect,registered_date,'
-        + 'chamber_first,stage,stage_date,committee_since,law_category,law_id')
+      .select('id,cdep_code,senat_code,cdep_idp,title,registered_date,'
+        + 'chamber_first,stage,stage_date,committee_since,law_category,law_id,laws(headline)')
       .order('registered_date', { ascending: true, nullsFirst: false })
       .range(lo, hi)
     if (res.error) console.error('initiatives query failed:', JSON.stringify(res.error))
@@ -188,9 +195,9 @@ export default async function InitiativePage({
             <tbody>
               {visible.map(r => {
                 const code = r.senat_code ?? r.cdep_code
-                const obiect = r.obiect && r.obiect.length > 200
-                  ? r.obiect.slice(0, 197).trimEnd() + '…'
-                  : r.obiect
+                // short headline (linked law's, else scraper/initiative_headlines.py);
+                // the official title stays on hover
+                const label = r.laws?.headline || headlines[r.id] || capFirst(r.title) || code
                 return (
                   <tr key={r.id} className="border-b border-rim hover:bg-raised transition-colors">
                     <td className="py-3 pr-4 whitespace-nowrap align-top">
@@ -215,14 +222,11 @@ export default async function InitiativePage({
                       {/* rows matched to a law get our own detail page; the rest
                           show the official title with the fișă links below */}
                       {r.law_id && code ? (
-                        <Link href={`/legi/${lawSlug(code)}`} className="text-foreground hover:underline font-medium">
-                          {capFirst(r.title) || code}
+                        <Link href={`/legi/${lawSlug(code)}`} title={r.title ?? undefined} className="text-foreground hover:underline font-medium">
+                          {label}
                         </Link>
                       ) : (
-                        <span className="text-foreground font-medium">{capFirst(r.title) || code}</span>
-                      )}
-                      {obiect && (
-                        <span className="block text-[11.5px] text-faint mt-1 leading-snug">{capFirst(obiect)}</span>
+                        <span title={r.title ?? undefined} className="text-foreground font-medium">{label}</span>
                       )}
                       <span className="flex flex-wrap items-center gap-x-3 font-mono text-[11px] text-muted mt-0.5">
                         {r.cdep_code && <span>{formatCdepCode(r.cdep_code)}</span>}
