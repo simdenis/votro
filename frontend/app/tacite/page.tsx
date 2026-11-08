@@ -32,7 +32,7 @@ export default async function TacitePage() {
         <p className="text-sm text-muted mt-3 max-w-2xl">
           Constituția (art. 75) dă primei camere sesizate 45 de zile să se pronunțe asupra
           unui proiect de lege — 60 pentru coduri și legi complexe. Dacă termenul expiră fără
-          vot, proiectul e <strong className="text-foreground">considerat adoptat, fără ca cineva să fi votat</strong>,
+          vot, proiectul e <span className="text-foreground">considerat adoptat, fără ca cineva să fi votat</span>,
           și merge mai departe la camera decizională. Mai jos: proiectele înregistrate la
           Camera Deputaților ca primă cameră, cu termenul constituțional în curs (sursa:{' '}
           <a

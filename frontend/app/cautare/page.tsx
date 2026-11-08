@@ -111,7 +111,7 @@ export default async function SearchPage({
 
       {searched && !hasResults && (
         <p className="text-sm text-muted">
-          Niciun rezultat pentru <strong className="text-foreground">"{q}"</strong>.
+          Niciun rezultat pentru <span className="text-foreground">"{q}"</span>.
         </p>
       )}
 

@@ -88,7 +88,7 @@ export function AgreementMatrix({ parties, months, monthLabels, buckets, contest
             <span className="text-faint">↔</span>
             <span className="w-[10px] h-[10px] rounded-[2px]" style={{ backgroundColor: colorOf(hov.b) }} />
             <span className="font-semibold text-foreground">{hov.b}</span>
-            <span className="text-muted">— au votat la fel de <strong className="text-foreground">{hov.agreed}</strong> ori din <strong className="text-foreground">{hov.shared}</strong></span>
+            <span className="text-muted">— au votat la fel de <span className="text-foreground">{hov.agreed}</span> ori din <span className="text-foreground">{hov.shared}</span></span>
             <span className="ml-auto text-[15px] font-bold tabular-nums text-foreground">{hov.pct}%</span>
           </div>
         ) : (

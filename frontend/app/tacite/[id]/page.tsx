@@ -105,7 +105,7 @@ export default async function TacitBillPage({ params }: { params: Promise<{ id: 
               ? 'Termenul constituțional a trecut fără vot în plen — proiectul este considerat adoptat tacit de prima cameră și merge la camera decizională. Statutul oficial se confirmă pe fișa cdep.ro.'
               : <>Constituția (art. 75) dă primei camere sesizate 45 de zile — 60 pentru coduri și legi
                  complexe — să se pronunțe. Dacă termenul expiră fără vot, proiectul e{' '}
-                 <strong className="text-foreground">considerat adoptat, fără ca cineva să fi votat</strong>,
+                 <span className="text-foreground">considerat adoptat, fără ca cineva să fi votat</span>,
                  și merge la camera decizională. Termenul se suspendă în vacanțele parlamentare.</>}
           </p>
         </div>

@@ -118,11 +118,11 @@ export default async function AnalizePage() {
       <section className="space-y-3">
         <h2 className="font-serif text-[20px] font-normal text-foreground border-b-2 border-sidebar pb-[5px]">Cine votează cu cine</h2>
         <p className="text-[13px] text-muted max-w-2xl">
-          Cât de des au votat la fel majoritățile a două partide, pe <strong className="text-foreground">voturile disputate</strong>.
+          Cât de des au votat la fel majoritățile a două partide, pe <span className="text-foreground">voturile disputate</span>.
           Nuanța închisă = acord mare. Voturile aproape unanime sunt excluse — altfel toate partidele ar părea aliate.
         </p>
         <p className="text-[12.5px] text-faint max-w-2xl">
-          Citește o celulă așa: <strong className="text-muted">X%</strong> = din voturile disputate din perioada aleasă,
+          Citește o celulă așa: <span className="text-muted">X%</span> = din voturile disputate din perioada aleasă,
           de câte ori majoritățile celor două partide au ales la fel (pentru / împotrivă / abținere).
         </p>
         {parties.length >= 2 && buckets.length > 0

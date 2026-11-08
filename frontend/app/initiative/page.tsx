@@ -13,7 +13,7 @@ export const revalidate = 600 // ISR — CDN-cache for 10 min
 export const metadata: Metadata = {
   title: 'Inițiative legislative',
   description:
-    'Toate inițiativele legislative înregistrate la Parlament — inclusiv cele aflate încă în comisie, fără vot în plen — cu stadiul oficial și timpul scurs de la depunere.',
+    'Toate inițiativele legislative înregistrate la Parlament, inclusiv cele aflate încă în comisie, fără vot în plen, cu stadiul oficial și timpul scurs de la depunere.',
 }
 
 type StadiuId = 'fara-vot' | 'adoptate' | 'respinse' | 'la-ccr' | 'promulgate' | 'incetate' | 'toate'
@@ -130,10 +130,10 @@ export default async function InitiativePage({
       </div>
       <p className="text-sm text-muted max-w-2xl">
         Toate inițiativele înregistrate la Parlament, din registrele oficiale ale celor două
-        camere — inclusiv cele aflate încă în lucru la prima cameră sesizată, înainte de orice
+        camere, inclusiv cele aflate încă în lucru la prima cameră sesizată, înainte de orice
         vot în plen. Două contoare, două lucruri diferite:{' '}
-        <strong className="text-foreground">zile de la depunere</strong> curge de la
-        înregistrarea inițiativei, <strong className="text-foreground">zile fără raport</strong>{' '}
+        <span className="text-foreground">zile de la depunere</span> curge de la
+        înregistrarea inițiativei, <span className="text-foreground">zile fără raport</span>{' '}
         de când proiectul e la comisia sesizată în fond. Actualizat zilnic.
       </p>
 
@@ -152,7 +152,7 @@ export default async function InitiativePage({
       {stadiu === 'fara-vot' && (
         <p className="text-sm text-muted max-w-2xl">
           Inițiative aflate în lucru la prima cameră sesizată, înainte de orice vot sau adoptare
-          tacită în plen. Proiectele adoptate tacit nu apar aici — au mers mai departe fără vot.
+          tacită în plen. Proiectele adoptate tacit nu apar aici, au mers mai departe fără vot.
         </p>
       )}
 
@@ -162,7 +162,7 @@ export default async function InitiativePage({
         </p>
       ) : !filtered.length ? (
         <p className="text-sm text-muted py-8">
-          Nicio inițiativă pentru filtrul selectat — lista se actualizează zilnic.
+          Nicio inițiativă pentru filtrul selectat. Lista se actualizează zilnic.
         </p>
       ) : (
         <div className="overflow-x-auto">
@@ -171,13 +171,13 @@ export default async function InitiativePage({
               <tr className="border-b-2 border-sidebar text-[11px] tracking-[0.14em] text-faint">
                 <th
                   className="text-left py-3 pr-4 font-medium"
-                  title="De la înregistrarea inițiativei în Parlament — alt termen decât cel al raportului de comisie"
+                  title="De la înregistrarea inițiativei în Parlament. Alt termen decât cel al raportului de comisie"
                 >
                   Zile de la depunere
                 </th>
                 <th
                   className="text-left py-3 pr-4 font-medium hidden md:table-cell"
-                  title="De când proiectul e la comisia sesizată în fond, în așteptarea raportului — termenul curge diferit de cel de la depunere"
+                  title="De când proiectul e la comisia sesizată în fond, în așteptarea raportului. Termenul curge diferit de cel de la depunere"
                 >
                   Zile fără raport
                 </th>
@@ -230,7 +230,7 @@ export default async function InitiativePage({
                         {isOrdinanceBill(r.title) && (
                           <span
                             className="cursor-help border-b border-dotted border-muted/60"
-                            title="Ordonanța (OUG/OG) pe care acest proiect o aprobă sau o respinge e deja în vigoare de la publicarea în Monitorul Oficial — așteptarea privește doar confirmarea Parlamentului. Vezi nota de sub tabel."
+                            title="Ordonanța (OUG/OG) pe care acest proiect o aprobă sau o respinge e deja în vigoare de la publicarea în Monitorul Oficial. Așteptarea privește doar confirmarea Parlamentului. Vezi nota de sub tabel."
                           >
                             ordonanță în vigoare *
                           </span>
@@ -296,11 +296,11 @@ export default async function InitiativePage({
         la prima cameră sesizată, înainte de orice vot sau adoptare tacită în plen; adoptarea
         tacită nu apare în acest filtru pentru că proiectul a mers mai departe fără vot.
         „Zile de la depunere" curge de la înregistrarea inițiativei; „zile fără raport" de când
-        proiectul e la comisia sesizată în fond — două termene diferite. Timpul petrecut în
+        proiectul e la comisia sesizată în fond. Sunt două termene diferite. Timpul petrecut în
         comisie nu implică prin sine rea-voință: termenele depind de complexitate, avize și
         sesiunile parlamentare. * Proiectele marcate „ordonanță în vigoare" aprobă sau resping
         o ordonanță a Guvernului (OUG/OG) care produce deja efecte de la publicarea în Monitorul
-        Oficial — până la votul final, regulile se aplică oricum; în discuție e doar confirmarea
+        Oficial. Până la votul final, regulile se aplică oricum; în discuție e doar confirmarea
         sau infirmarea lor de către Parlament.{' '}
         <Link href="/despre#metodologie-initiative" className="text-info hover:underline">
           Metodologia completă

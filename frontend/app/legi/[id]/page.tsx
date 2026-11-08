@@ -363,7 +363,7 @@ function ChamberSection({
                     <span key={label} className="flex items-center gap-1.5 text-xs text-muted">
                       <span className="w-2 h-2 rounded-[2px] flex-shrink-0" style={{ backgroundColor: color }} />
                       {label}
-                      <strong className="text-foreground tabular-nums">{value ?? '—'}</strong>
+                      <span className="text-foreground tabular-nums">{value ?? '—'}</span>
                     </span>
                   ))}
                 </div>
